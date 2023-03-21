@@ -6,13 +6,10 @@
 String buttonMain;
 String buttonGrande;
 
-//float actualWeight;
-//bool recentStateChange = false;
 bool flagEvent;
 
-//event_t lastEvent;
 
-volatile float weight;
+volatile float weight = 0;
 volatile bool pesado;
 
 #endif

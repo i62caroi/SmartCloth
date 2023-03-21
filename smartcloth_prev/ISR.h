@@ -27,12 +27,12 @@ byte doIntScale;
 //--------------------------------------------------
 /* Interrupciones botoneras */
 /*  -----   MAIN  ----- */
-const byte interruptPinMain = 31;                      // Pin de interrupcion RISING para Main
+const byte interruptPinMain = 28;                      // Pin de interrupcion RISING para Main
 volatile bool pulsandoMain = false;                    // Flag de estar pulsando algo en Main   
 byte doIntMainRising; 
 
 /*  -----   GRANDE  ----- */
-const byte interruptPinGrande = 30;                    // Pin de interrupcion RISING para Grande
+const byte interruptPinGrande = 29;                    // Pin de interrupcion RISING para Grande
 volatile bool pulsandoGrande = false;                  // Flag de estar pulsando algo en Grande
 byte doIntGrandeRising;
 //--------------------------------------------------
@@ -76,7 +76,6 @@ void ISR_pesarBascula(){
     if(doIntScale){
         weight = weighScale();
         pesado = true; 
-        //flagEvent = true;
     }
 }
 

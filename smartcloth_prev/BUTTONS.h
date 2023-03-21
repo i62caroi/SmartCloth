@@ -12,8 +12,8 @@ const byte countColumns = 5;
 const byte countButtons = 5; /* Main keyboard */
 
 /* Buttons */
-const byte buttonsMain[countButtons] = {26,25,24,23,22};
-const byte rowsPins[countRows] = {36,37,38,39};
+const byte buttonsMain[countButtons] = {25,23,24,22,26};
+const byte rowsPins[countRows] = {32,33,30,31};
 const byte columnsPins[countColumns] = {49,50,51,52,53};
 
 /* Buttons info */
@@ -42,7 +42,7 @@ void readButtonsMain(){
    readButtonsGrande(): Función para encontrar botón pulsado en botonera Grande
 ----------------------------------------------------------------------------------------------------------*/
 void readButtonsGrande(){
-    for (byte c = 0; c < countColumns; c++){
+    for (byte c = 0; c < countColumns; c++){   
         digitalWrite(columnsPins[c], LOW);
     }
     

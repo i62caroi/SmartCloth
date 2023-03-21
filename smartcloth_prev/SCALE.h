@@ -13,8 +13,9 @@ const int LOADCELL_SCK_PIN = 2;
 
 HX711 scale;
 
-float newWeight;
-float lastWeight;
+float newWeight = 0.0;
+float lastWeight = 0.0; 
+float diffWeight = 0.0;
 
 //float getWeight(){ return weight; }
 
@@ -33,16 +34,22 @@ void checkBascula(){
     if (pesado){
         lastWeight = newWeight;
         newWeight = weight;
-        if (abs(lastWeight - newWeight) > 1.0){
-            //Serial.println(F("\nSe ha colocado o retirado algo"));
+        diffWeight = abs(lastWeight - newWeight);
+        if (diffWeight > 1.0){
             if(lastWeight < newWeight){
                 Serial.print(F("\nINCREMENTO"));
                 eventoBascula = INCREMENTO;
                 flagEvent = true;
             }
             else if(lastWeight > newWeight){
-                Serial.print(F("\nDECREMENTO"));
-                eventoBascula = DECREMENTO;
+                if(newWeight < 1.0){ //Se ha vaciado la báscula
+                    Serial.print(F("\nLIBERADA"));
+                    eventoBascula = LIBERAR;
+                }
+                else{
+                    Serial.print(F("\nDECREMENTO"));
+                    eventoBascula = DECREMENTO;
+                }
                 flagEvent = true;
             }
             Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 

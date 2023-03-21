@@ -113,32 +113,18 @@ void printStateInit(){
    printStateA(): Información del STATE_groupA
 ----------------------------------------------------------------------------------------------------------*/
 void printStateA(){
-    char buffer[100];
-    char button[50];
-    buttonGrande.toCharArray(button, 50);
-    sprintf(buffer, "Alimento de tipo A: %s \n\nIndique si el alimento es crudo o cocinado \n    o escoja otro grupo", button);
-    simplePrint(String(buffer));
-    /*simplePrint("Alimento de tipo A:  ");
-    simplePrint(buttonGrande); //Grupo pulsado
-    //TODO ejemplos grupo
-    simplePrint("Indique si el alimento es crudo o cocinado o escoja otro grupo");
-    */
+  //TODO ejemplos grupo
+    String buffer = "Alimento de tipo A: " + buttonGrande + " \n\nIndique si el alimento es crudo o cocinado \n    o escoja otro grupo";
+    simplePrint(buffer);
 }
 
 /*---------------------------------------------------------------------------------------------------------
    printStateB(): Información del STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void printStateB(){
-    char buffer[100];
-    char button[50];
-    buttonGrande.toCharArray(button, 50);
-    sprintf(buffer, "Alimento de tipo B: %s \n\nColoque el alimento sobre la báscula \n    o escoja otro grupo", button);
-    simplePrint(String(buffer));
-    /*simplePrint("Alimento de tipo B");
-    simplePrint(buttonGrande); //grupo pulsado
-    //TODO ejemplos grupo
-    simplePrint("Coloque el alimento o escoja otro grupo");
-    */
+  //TODO ejemplos grupo
+    String buffer = "Alimento de tipo B: " + buttonGrande + " \n\nColoque el alimento sobre la báscula \n    o escoja otro grupo";
+    simplePrint(buffer);
 }
 
 /*---------------------------------------------------------------------------------------------------------
@@ -163,7 +149,6 @@ void printStateCooked(){
 void printStateWeighted(){
     printScale();
     //TODO valores alimento grupo X según peso
-    //simplePrint("Puede añadir otro alimento, guardar el plato, eliminarlo o guardar la comida completa");
 }
 
 /*---------------------------------------------------------------------------------------------------------

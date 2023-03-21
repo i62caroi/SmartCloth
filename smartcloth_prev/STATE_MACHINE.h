@@ -2,12 +2,12 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 20 
+#define RULES 30 
 
 #include "SCREEN.h"
 #include "aux.h"
 
-//bool doneINI, doneGroupA, doneGroupB, doneProcessed, doneWeighted, doneAdded, doneDeleted, doneSaved;
+
 bool doneState;
 
 /*----------------------------------------------------------------------------------------------*/
@@ -41,7 +41,8 @@ typedef enum {
               DELETE_PLATO    = (6),    // ROJO
               GUARDAR         = (7),    // NEGRO 
               INCREMENTO      = (8),    // Báscula
-              DECREMENTO      = (9)    // Báscula
+              DECREMENTO      = (9),    // Báscula
+              LIBERAR         = (10)    // Báscula a 0
 } event_t;
 
 /* Buffer de eventos al que se irán añadiendo conforme ocurran */
@@ -62,21 +63,25 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_INI,STATE_groupB,TIPO_B},                   // INI --tipoB--> grupoB
                                         {STATE_groupA,STATE_groupA,TIPO_A},                // grupoA --tipoA--> grupoA
                                         {STATE_groupA,STATE_groupB,TIPO_B},                // grupoA --tipoB--> grupoB  
-                                        {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> procesado      
-                                        {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> procesado      
+                                        {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
+                                        {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
+                                        {STATE_raw,STATE_cooked,COCINADO},                 // raw --cocinado--> cooked
+                                        {STATE_cooked,STATE_raw,CRUDO},                    // cooked --raw--> crudo
                                         {STATE_groupB,STATE_groupB,TIPO_B},                // grupoB --tipoB--> grupoB
                                         {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
                                         {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
                                         {STATE_raw,STATE_weighted,INCREMENTO},             // crudo --incremento--> pesado
                                         {STATE_cooked,STATE_weighted,INCREMENTO},          // cocinado --incremento--> pesado
+                                        {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
+                                        {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
                                         {STATE_weighted,STATE_groupA,TIPO_A},              // pesado --tipoA--> grupoA
                                         {STATE_weighted,STATE_groupB,TIPO_B},              // pesado --tipoA--> grupoA 
                                         {STATE_weighted,STATE_added,ADD_PLATO},            // pesado --add--> plato añadido
                                         {STATE_weighted,STATE_deleted,DELETE_PLATO},       // pesado --delete--> plato eliminado
                                         {STATE_weighted,STATE_saved,GUARDAR},              // pesado --save--> comida guardada
-                                        {STATE_added,STATE_INI,DECREMENTO},                // añadido --decremento--> INI
-                                        {STATE_deleted,STATE_INI,DECREMENTO},              // eliminado --decremento--> INI
-                                        {STATE_saved,STATE_INI,DECREMENTO}                 // guardar --decremento--> INI         
+                                        {STATE_added,STATE_INI,LIBERAR},                   // añadido --liberar_bascula--> INI
+                                        {STATE_deleted,STATE_INI,LIBERAR},                 // eliminado --liberar_bascula--> INI
+                                        {STATE_saved,STATE_INI,LIBERAR}                    // guardar --liberar_bascula--> INI         
                                       };
 
 
@@ -89,7 +94,7 @@ states_t state_actual;
 states_t state_new;
 
 event_t lastEvent;          //Ultimo evento ocurrido, válido o no
-//event_t lastValidEvent;     //Ultimo evento valido ocurrido
+
 event_t eventoMain;         //Evento ocurrido en botonera Main
 event_t eventoGrande;       //Evento ocurrido en botonera grande
 event_t eventoBascula;      //Timer
@@ -109,13 +114,9 @@ event_t eventoBascula;      //Timer
 ----------------------------------------------------------------------------------------------------------*/
 bool checkStateConditions(){
     //Serial.println("\nComprobando reglas de transición...");
-    //event_t lastEvent = getLastEvent();
     for (int i = 0; i < RULES; i++){
         if(rules[i].state_i == state_actual){
             //Serial.print(F("\nRegla encontrada ")); Serial.println(i);
-            /* Inicialmente asumimos que la lista de condiciones es igual al
-               buffer de eventos. Si se encuentra un elemento que no lo sea,
-               en el mismo orden, se salta a la siguiente regla de transición. */
             //Serial.print(F("Condicion: ")); Serial.print(rules[i].condition);
             if(rules[i].condition == lastEvent){
                 state_new = rules[i].state_j;
@@ -126,14 +127,6 @@ bool checkStateConditions(){
             }
         }
     }
-    /*if (lastEvent == INCREMENTO){
-        Serial.println(F("\nRetire lo que haya colocado"));
-        simplePrint("Retire lo que haya colocado en la bascula");
-    }
-    else if (lastEvent == DECREMENTO){
-        Serial.println(F("\nVuelva a colocar lo que haya retirado"));
-        simplePrint("Vuelva a colocar lo que haya retirado");
-    }*/
     return false; //Si no se ha cumplido ninguna regla de transición
 }
 
@@ -305,6 +298,9 @@ bool isBufferFull(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   firstGapBuffer(): Primer hueco libre del buffer
+----------------------------------------------------------------------------------------------------------*/
 int firstGapBuffer(){
     for (int i = 0; i < MAX_EVENTS; i++){
         if (event_buffer[i] == NONE){ //Primer hueco
@@ -315,7 +311,8 @@ int firstGapBuffer(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   clearEventBuffer(): Limpiar el buffer de eventos (poner elementos a NONE)
+   rotateEventBuffer(): Mover elementos del buffer a la izq para liberar un hueco sin perder 
+                        los eventos previos.
 ----------------------------------------------------------------------------------------------------------*/
 void rotateEventBuffer(){ 
     Serial.println(F("\nRotando buffer de eventos..."));
