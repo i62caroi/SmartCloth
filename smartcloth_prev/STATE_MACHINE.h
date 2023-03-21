@@ -74,6 +74,7 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_cooked,STATE_weighted,INCREMENTO},          // cocinado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
+                                        {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --liberar_bascula--> pesado
                                         {STATE_weighted,STATE_groupA,TIPO_A},              // pesado --tipoA--> grupoA
                                         {STATE_weighted,STATE_groupB,TIPO_B},              // pesado --tipoA--> grupoA 
                                         {STATE_weighted,STATE_added,ADD_PLATO},            // pesado --add--> plato añadido

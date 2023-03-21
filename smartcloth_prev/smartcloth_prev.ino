@@ -84,7 +84,7 @@ void loop() {
     if (millis() - prevMillis > period){
         prevMillis = millis();
 
-        Serial.print(F("\n\nEstado actual: ")); Serial.println(state_actual);
+        //Serial.print(F("\n\nEstado actual: ")); Serial.println(state_actual);
 
         /* Actividades del estado actual. Comienza en STATE_INI */
         doStateActions(); //state_machine.h 
