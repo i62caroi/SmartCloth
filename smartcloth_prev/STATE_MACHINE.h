@@ -221,7 +221,7 @@ void actStateAdded(){
     if(!doneState){
         //TODO añadir plato
         Serial.println(F("\nPlato anadido...")); 
-        //printStateAdded(); 
+        printStateAdded(); 
         doneState = true;
     }
 }
@@ -234,7 +234,7 @@ void actStateDeleted(){
     if(!doneState){
         //TODO eliminar plato
         Serial.println(F("\nPlato eliminado..."));
-        //printStateDeleted();
+        printStateDeleted();
         doneState = true;
     }
 }
@@ -247,7 +247,7 @@ void actStateSaved(){
     if(!doneState){
         //TODO guardar comida
         Serial.println(F("\nComida guardada..."));
-        //printStateSaved();
+        printStateSaved();
         doneState = true;
     }
 }
@@ -316,16 +316,14 @@ int firstGapBuffer(){
 ----------------------------------------------------------------------------------------------------------*/
 void rotateEventBuffer(){ 
     Serial.println(F("\nRotando buffer de eventos..."));
-    //if(!isBufferEmpty()){
-        for (int i = 0; i < MAX_EVENTS; i++){
-            if(i < (MAX_EVENTS-1)){
-                event_buffer[i] = event_buffer[i+1];
-            }
-            else if (i == (MAX_EVENTS-1)){
-                event_buffer[i] = NONE;
-            }
+    for (int i = 0; i < MAX_EVENTS; i++){
+        if(i < (MAX_EVENTS-1)){
+            event_buffer[i] = event_buffer[i+1];
         }
-    //}
+        else if (i == (MAX_EVENTS-1)){
+            event_buffer[i] = NONE;
+        }
+    }
 }
 
 
@@ -334,7 +332,6 @@ void rotateEventBuffer(){
 ----------------------------------------------------------------------------------------------------------*/
 void addEventToBuffer(event_t evento){
     Serial.println(F("\nAnadiendo evento al buffer..."));
-    //int nEventsBuffer = sizeof(event_buffer)/sizeof(event_t);
     int pos;
     bool found = false;
     if(isBufferEmpty()){
@@ -346,14 +343,6 @@ void addEventToBuffer(event_t evento){
             pos = MAX_EVENTS-1; //Último hueco
         }
         else{
-            /*for (int i = 0; i < MAX_EVENTS; i++){
-                if (event_buffer[i] == NONE){
-                    if (!found){
-                        pos = i; //Primer espacio vacío (NONE)
-                        found = true;
-                    }
-                }
-            }*/
             pos = firstGapBuffer();
         }
     }

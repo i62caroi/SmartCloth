@@ -154,26 +154,23 @@ void printStateWeighted(){
 /*---------------------------------------------------------------------------------------------------------
    printStateAdded(): Información del STATE_Added
 ----------------------------------------------------------------------------------------------------------*/
-/*void printStateAdded(){
-    simplePrint("Plato añadido");
-    simplePrint("Retire el plato");
-}*/
+void printStateAdded(){
+    simplePrint("Plato añadido\n\n Retire el plato");
+}
 
 /*---------------------------------------------------------------------------------------------------------
    printStateDeleted(): Información del STATE_Deleted
 ----------------------------------------------------------------------------------------------------------*/
-/*void printStateDeleted(){
-    simplePrint("Plato añadido");
-    simplePrint("Retire el plato");
-}*/
+void printStateDeleted(){
+    simplePrint("Plato eliminado\n\n Retire el plato");
+}
 
 /*---------------------------------------------------------------------------------------------------------
    printStateSaved(): Información del STATE_Saved
 ----------------------------------------------------------------------------------------------------------*/
-/*void printStateSaved(){
-    simplePrint("Comida guardada");
-    simplePrint("Retire el plato");
-}*/
+void printStateSaved(){
+    simplePrint("Comida guardada\n\n Retire el plato");
+}
 
 
 

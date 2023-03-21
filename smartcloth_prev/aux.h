@@ -8,7 +8,6 @@ String buttonGrande;
 
 bool flagEvent;
 
-
 volatile float weight = 0;
 volatile bool pesado;
 
