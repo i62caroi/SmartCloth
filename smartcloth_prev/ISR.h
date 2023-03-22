@@ -20,7 +20,7 @@ SAMDUE_ISR_Timer ISR_Timer;
 
 //volatile float weight;
 //volatile bool pesado = false;
-byte doIntScale;
+//byte doIntScale;
 //--------------------------------------------------
 
 
@@ -29,12 +29,12 @@ byte doIntScale;
 /*  -----   MAIN  ----- */
 const byte interruptPinMain = 28;                      // Pin de interrupcion RISING para Main
 volatile bool pulsandoMain = false;                    // Flag de estar pulsando algo en Main   
-byte doIntMainRising; 
+///byte doIntMainRising; 
 
 /*  -----   GRANDE  ----- */
 const byte interruptPinGrande = 29;                    // Pin de interrupcion RISING para Grande
 volatile bool pulsandoGrande = false;                  // Flag de estar pulsando algo en Grande
-byte doIntGrandeRising;
+//byte doIntGrandeRising;
 //--------------------------------------------------
 
 
@@ -46,20 +46,32 @@ byte doIntGrandeRising;
    ISR_pulsandoButtonsMain(): Función ativada por interrupción RISING de botonera Main
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_pulsandoButtonsMain(){
-    if(doIntMainRising){
-        pulsandoMain = true;
-        flagEvent = true;
-    }
+   // if(doIntMainRising){
+        static unsigned long last_interrupt_time_Main = 0;
+        unsigned long interrupt_time_Main = millis();
+        // If interrupts come faster than 200ms, assume it's a bounce and ignore
+        if (interrupt_time_Main - last_interrupt_time_Main > 200) {
+            pulsandoMain = true;
+            flagEvent = true;
+        }
+        last_interrupt_time_Main = interrupt_time_Main;
+    //}
 }
 
 /*---------------------------------------------------------------------------------------------------------
    ISR_pulsandoButtonsGrande(): Función ativada por interrupción RISING de botonera Grande
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_pulsandoButtonsGrande(){
-    if(doIntGrandeRising){
-        pulsandoGrande = true;
-        flagEvent = true;
-    }
+    //if(doIntGrandeRising){
+        static unsigned long last_interrupt_time_Grande = 0;
+        unsigned long interrupt_time_Grande = millis();
+        // If interrupts come faster than 200ms, assume it's a bounce and ignore
+        if (interrupt_time_Grande - last_interrupt_time_Grande > 200) {
+            pulsandoGrande = true;
+            flagEvent = true;
+        }
+        last_interrupt_time_Grande = interrupt_time_Grande;
+    //}
 }
 
 //--------------------------------------------------
@@ -73,10 +85,10 @@ void TimerHandler() { ISR_Timer.run(); }
    ISR_pesarBascula(): Función para pesar por interrupción
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_pesarBascula(){  
-    if(doIntScale){
+    //if(doIntScale){
         weight = weighScale();
         pesado = true; 
-    }
+    //}
 }
 
 /*---------------------------------------------------------------------------------------------------------

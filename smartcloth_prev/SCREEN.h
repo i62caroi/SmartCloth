@@ -10,6 +10,25 @@
 #define RA8876_RESET     11
 #define RA8876_BACKLIGHT 10
 
+int ANCHO;
+int ALTO;
+
+
+// Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
+
+#define   NEGRO         0x0000
+#define   BLANCO        0xFFFF
+#define   ROJO          0xF920
+#define   NARANJA       0xFC80
+#define   AMARILLO      0xFFC0
+#define   VERDE         0x07C0
+#define   CIAN          0x07FF
+#define   AZUL          0x019F
+#define   ROSA          0xFA1F
+#define   MORADO        0x9112
+#define   MARRON        0xABC8
+
+
 /* Screen */
 RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 
@@ -23,59 +42,13 @@ void setupScreen(){
     if (!tft.init()){
       Serial.println(F("Could not initialize RA8876"));
     }
-    tft.clearScreen(0);
+    tft.clearScreen(0); //0x0000 --> Negro
     tft.setTextScale(2);
     tft.selectInternalFont(RA8876_FONT_SIZE_32, RA8876_FONT_ENCODING_8859_1);
-    Serial.println(F("Startup complete..."));
-}
-
-
-
-/*---------------------------------------------------------------------------------------------------------
-   printInit(): Imprimir texto inicial en pantalla (pedir que se pulse botón)
-   
-                **Esta función se modificará por una que muestre la bienvenida a SmartCloth.**
-----------------------------------------------------------------------------------------------------------*/
-/*void printInit(){
-    //tft.clearScreen(0);
-    tft.setCursor((tft.getWidth() / 3), tft.getHeight() / 2);
-    tft.print("                 ");
-    tft.setCursor((tft.getWidth() / 3), tft.getHeight() / 2);
-    tft.print("Pulsa un boton");
-}*/ 
-
-
-/*---------------------------------------------------------------------------------------------------------
-   printButton(): Mostrar por pantalla la información asignada al botón pulsado
-                    Parámetro: 
-                            button   -  botón pulsado
-----------------------------------------------------------------------------------------------------------*/
-/*void printButton(String button){
-    tft.clearScreen(0);
-    tft.selectInternalFont(RA8876_FONT_SIZE_32, RA8876_FONT_ENCODING_8859_1);
-    tft.setCursor((tft.getWidth() / 3), tft.getHeight() / 2);
-    tft.print("                 ");
-    tft.setCursor((tft.getWidth() / 5), tft.getHeight() / 2);
-    tft.print("Boton pulsado: ");
-    tft.print(button);
-    delay(500);
-    tft.clearScreen(0);
-}*/
-
-
-/*---------------------------------------------------------------------------------------------------------
-   printScale(): Mostrar por pantalla el peso actual (último tomado)
-----------------------------------------------------------------------------------------------------------*/
-void printScale(){
-    tft.clearScreen(0);
-    tft.setCursor((tft.getWidth() / 3), tft.getHeight() / 3);
-    tft.print("Peso: ");
-    tft.print(weight);
-    tft.println(" g\n\n");
-    tft.selectInternalFont(RA8876_FONT_SIZE_24, RA8876_FONT_ENCODING_8859_1);
-    tft.setCursor((tft.getWidth() / 5), tft.getHeight() / 2);
-    tft.print("Puede a\xF1""adir otro alimento, guardar el plato, eliminarlo o guardar la comida completa");
-    //delay(1000);
+    ANCHO = tft.getWidth();
+    ALTO = tft.getHeight();
+    Serial.println(F("\nStartup complete..."));
+    delay(200);
 }
 
 
@@ -86,16 +59,68 @@ void printScale(){
                             cad   -  cadena a mostrar
 ----------------------------------------------------------------------------------------------------------*/
 void simplePrint(String cad){
-    tft.clearScreen(0);
-    tft.selectInternalFont(RA8876_FONT_SIZE_24, RA8876_FONT_ENCODING_8859_1);
-    //tft.setCursor((tft.getWidth() / 3), tft.getHeight() / 2);
-    //tft.print("                 ");
-    tft.setCursor((tft.getWidth() / 5), tft.getHeight() / 3);
+    tft.clearScreen(0); //0x0000 --> Negro
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); //RA8876_FONT_ENCODING_8859_1
+    tft.setTextColor(BLANCO);
+    tft.setCursor((ANCHO / 5), ALTO / 3);
     tft.print(cad);
-    //delay(50);
 }
 
 
+
+/*---------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------*/
+void printEjemplos(){    
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);                // Tamaño texto
+    tft.setCursor(50, 40);                                     // Posicion inicio texto
+    tft.setTextColor(AMARILLO);                                   // Color texto                  
+    tft.println(grupoEscogido.Ejemplos_grupo); tft.print("\n");                    // Imprimir texto
+}
+
+/*---------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------*/
+void printGrupo(){
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);                // Tamaño texto
+    tft.setCursor(50, tft.getCursorY());                            // Posicion inicio texto
+    tft.setTextColor(BLANCO);                                 // Color texto      
+    tft.setTextScale(2);        
+    tft.println(grupoEscogido.Nombre_grupo); tft.print("\n");                      // Imprimir texto
+}
+
+/*---------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------*/
+void printValoresActuales(){
+    tft.setCursor(50, tft.getCursorY());
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextColor(ROJO);
+    tft.print("Alimento: "); tft.print(weight); tft.println(" g\n");
+   
+    tft.setCursor(50, tft.getCursorY());
+    tft.setTextColor(BLANCO);
+    tft.println("Comida Actual");
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.setCursor(50, tft.getCursorY()+20);
+    tft.print("Carb: "); tft.print(valoresActuales.Carb); tft.println(" g");
+    tft.setCursor(50, tft.getCursorY());
+    tft.print("Lip: "); tft.print(valoresActuales.Lip); tft.println(" g");
+    tft.setCursor(50, tft.getCursorY());
+    tft.print("Prot: "); tft.print(valoresActuales.Prot); tft.println(" g");
+    tft.setCursor(50, tft.getCursorY());
+    tft.print("Kcal: "); tft.print(valoresActuales.Kcal); tft.println(" Kcal");
+    tft.setCursor(50, tft.getCursorY());
+}
+
+
+void generalPrint(){
+    tft.clearScreen(0);   
+    printEjemplos();   
+    printGrupo();      
+    printValoresActuales(); 
+}
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*---------------------------------- INFORMACIÓN POR ESTADO ---------------------------------------------*/
@@ -108,47 +133,100 @@ void printStateInit(){
     simplePrint("BIENVENIDO\n\n           Escoja grupo de alimentos");
 }
 
+
 /*---------------------------------------------------------------------------------------------------------
    printStateA(): Información del STATE_groupA
 ----------------------------------------------------------------------------------------------------------*/
-void printStateA(){
-    //String buffer = "Alimento de tipo A: " + String(buttonGrande) + " \n\nIndique si el alimento es crudo o cocinado \n    o escoja otro grupo";
-    String buffer = grupoEscogido.Nombre_grupo + "\n\n" + grupoEscogido.Ejemplos_grupo; 
-    simplePrint(buffer);
-}
+/*void printStateA(){
+    //String cad = "Alimento de tipo A: " + String(buttonGrande) + " \n\nIndique si el alimento es crudo o cocinado \n    o escoja otro grupo";
+    //String cad = grupoEscogido.Nombre_grupo + "\n\n" + grupoEscogido.Ejemplos_grupo; 
+    //simplePrint(cad);
+
+    tft.clearScreen(0);   
+    printEjemplos();   
+    printGrupo();      
+    printValoresActuales();                     
+}*/
+
+
 
 /*---------------------------------------------------------------------------------------------------------
    printStateB(): Información del STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
-void printStateB(){
-    //String buffer = "Alimento de tipo B: " + String(buttonGrande) + " \n\nColoque el alimento sobre la báscula \n    o escoja otro grupo";
-    String buffer = grupoEscogido.Nombre_grupo + "\n\n" + grupoEscogido.Ejemplos_grupo; 
-    simplePrint(buffer);
+/*void printStateB(){
+    //String cad = "Alimento de tipo B: " + String(buttonGrande) + " \n\nColoque el alimento sobre la báscula \n    o escoja otro grupo";
+    //String cad = grupoEscogido.Nombre_grupo + "\n\n" + grupoEscogido.Ejemplos_grupo; 
+    //simplePrint(cad);
+
+    tft.clearScreen(0);
+    printEjemplos();  
+    printGrupo();     
+    printValoresActuales();
 }
+*/
+
 
 /*---------------------------------------------------------------------------------------------------------
    printStateRaw(): Información del STATE_Raw
 ----------------------------------------------------------------------------------------------------------*/
-void printStateRaw(){
-    simplePrint("Alimento CRUDO\n\n Coloque el alimento sobre la báscula");
-}
+/*void printStateRaw(){
+    //simplePrint("Alimento CRUDO\n\n Coloque el alimento sobre la báscula");
+    String cad = "CRUDO";
+    tft.clearScreen(0); 
+    printGrupo(1); //Menor tamaño que antes
+    tft.setCursor(700, 80);                        
+    tft.setTextColor(ROJO);      
+    tft.print(cad);                 
+    //tft.setCursor(     
+}*/
 
 
 /*---------------------------------------------------------------------------------------------------------
    printStateCooked(): Información del STATE_Cooked
 ----------------------------------------------------------------------------------------------------------*/
-void printStateCooked(){
-     simplePrint("Alimento COCINADO\n\n Coloque el alimento sobre la báscula");
+/*void printStateCooked(){
+    //simplePrint("Alimento COCINADO\n\n Coloque el alimento sobre la báscula");
+    String cad = "COCINADO";
+    tft.clearScreen(0); 
+    printGrupo(1); //Menor tamaño que antes
+    tft.setCursor(700, 80);                        
+    tft.setTextColor(ROJO); 
+    tft.print(cad);                      
+}*/
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printStateRawCooked(): Información de STATE_Raw o STATE_Cooked
+----------------------------------------------------------------------------------------------------------*/
+void printStateRawCooked(String cad){
+    tft.clearScreen(0); 
+    printEjemplos();  
+    printGrupo();
+    tft.setCursor(700, tft.getCursorY()); // CRUDO/COCINADO arriba derecha
+    tft.setTextColor(MORADO);      
+    tft.print(cad);     
+    printValoresActuales();
 }
 
 
 /*---------------------------------------------------------------------------------------------------------
    printStateWeighted(): Información del STATE_Weighted
 ----------------------------------------------------------------------------------------------------------*/
-void printStateWeighted(){
-    printScale();
-    //TODO valores alimento grupo X según peso
-}
+//void printStateWeighted(){
+    /*tft.clearScreen(0); //0x0000 --> Negro
+    tft.setCursor((ANCHO / 3), ALTO / 3);
+    tft.print("Peso: ");
+    tft.print(weight);
+    tft.println(" g\n\n");
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); //RA8876_FONT_ENCODING_8859_1
+    tft.setCursor((ANCHO / 5), ALTO / 2);
+    tft.print("Puede a\xF1""adir otro alimento, guardar el plato, eliminarlo o guardar la comida completa");*/
+
+ /*   tft.clearScreen(0); 
+    printEjemplos();  
+    printGrupo(); 
+    printValoresActuales();
+}*/
 
 /*---------------------------------------------------------------------------------------------------------
    printStateAdded(): Información del STATE_Added

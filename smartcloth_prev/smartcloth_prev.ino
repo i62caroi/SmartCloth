@@ -36,20 +36,20 @@ void setup() {
     /* --------- INTERRUPTIONS ----------------- */
     //  -----   MAIN    -----
     attachInterrupt(digitalPinToInterrupt(interruptPinMain), ISR_pulsandoButtonsMain, RISING);
-    doIntMainRising = true;
+    //doIntMainRising = true;
     //attachInterrupt(digitalPinToInterrupt(interruptPinMainFalling), keyReleasedMain, FALLING);
     //doIntMainFalling = true;
     
     //  -----   Grande    -----
     attachInterrupt(digitalPinToInterrupt(interruptPinGrande), ISR_pulsandoButtonsGrande, RISING);
-    doIntGrandeRising = true;
+    //doIntGrandeRising = true;
     //attachInterrupt(digitalPinToInterrupt(interruptPinGFalling), keyReleasedGrande, FALLING);
     //doIntGrandeFalling = true;*/
 
     //  -----   Scale   ------
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");
     ISR_Timer.setInterval(TIMER_INTERVAL_1S,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 1S
-    doIntScale = true;
+    //doIntScale = true;
 
 
     //  ------ Buffer Eventos  ------
@@ -81,7 +81,6 @@ void setup() {
    loop(): Función principal ejecutada continuamente
 ----------------------------------------------------------------------------------------------------------*/
 void loop() {
-    //printInit();
     
     if (millis() - prevMillis > period){
         prevMillis = millis();

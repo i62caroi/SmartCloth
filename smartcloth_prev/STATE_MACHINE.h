@@ -160,7 +160,8 @@ void actStateInit(){
 void actStateGroupA(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        printStateA(); 
+        //printStateA(); 
+        generalPrint();
         doneState = true;
     }
 }
@@ -172,7 +173,8 @@ void actStateGroupA(){
 void actStateGroupB(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        printStateB(); 
+        //printStateB(); 
+        generalPrint();
         doneState = true;
     }
 }
@@ -184,7 +186,7 @@ void actStateGroupB(){
 void actStateRaw(){ 
     if(!doneState){
         Serial.println(F("\nAlimento crudo...")); 
-        printStateRaw(); 
+        printStateRawCooked("CRUDO"); 
         doneState = true;
     }
 }
@@ -196,7 +198,7 @@ void actStateRaw(){
 void actStateCooked(){ 
     if(!doneState){
         Serial.println(F("\nAlimento cocinado...")); 
-        printStateCooked(); 
+        printStateRawCooked("COCINADO"); 
         doneState = true;
     }
 }
@@ -209,7 +211,14 @@ void actStateWeighted(){
     if(!doneState){
         //TODO Valores de alimento grupo X según peso
         Serial.println(F("\nAlimento pesado...")); 
-        printStateWeighted(); 
+        
+        valoresActuales.Kcal = grupoEscogido.Kcal_g * weight; 
+        valoresActuales.Prot = grupoEscogido.Prot_g * weight;
+        valoresActuales.Lip = grupoEscogido.Lip_g * weight;
+        valoresActuales.Carb = grupoEscogido.Carb_g * weight;
+        
+        //printStateWeighted(); 
+        generalPrint();
         doneState = true;
     }
 }

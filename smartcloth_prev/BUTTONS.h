@@ -83,7 +83,6 @@ void checkAllButtons(){
             readButtonsMain(); // Qué tecla se está pulsando 
             //Serial.print(F("TECLA PULSADA (MAIN): "));
             //Serial.println(buttonsMainKeyboard[keyMain]);
-            //printButton(buttonsMainKeyboard[keyMain]);
             buttonMain = buttonsMainKeyboard[keyMain];
             
             /* ----- EVENTO ------- */ 
@@ -105,7 +104,6 @@ void checkAllButtons(){
         if (pulsandoGrande){ // Se está pulsando una tecla
             readButtonsGrande(); // Qué tecla se está pulsando 
             //Serial.print(F("tecla pulsada (teclado grande): ")); Serial.println(buttons[iRow][iCol]);
-            //printButton(buttons[iRow][iCol]); 
             buttonGrande = buttons[iRow][iCol];
             
             /* ----- EVENTO ------- */ 
