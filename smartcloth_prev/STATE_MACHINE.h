@@ -159,7 +159,7 @@ void actStateInit(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateGroupA(){ 
     if(!doneState){
-        Serial.println(F("\nAlimento de tipo A...")); 
+        Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         printStateA(); 
         doneState = true;
     }
@@ -171,7 +171,7 @@ void actStateGroupA(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateGroupB(){ 
     if(!doneState){
-        Serial.println(F("\nAlimento de tipo B...")); 
+        Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         printStateB(); 
         doneState = true;
     }
@@ -221,7 +221,7 @@ void actStateWeighted(){
 void actStateAdded(){ 
     if(!doneState){
         //TODO añadir plato
-        Serial.println(F("\nPlato anadido...")); 
+        Serial.println(F("\nPlato a\xF1""adido...")); 
         printStateAdded(); 
         doneState = true;
     }
@@ -332,7 +332,7 @@ void rotateEventBuffer(){
    addEventToBuffer(): Añadir el último evento al buffer de eventos
 ----------------------------------------------------------------------------------------------------------*/
 void addEventToBuffer(event_t evento){
-    Serial.println(F("\nAnadiendo evento al buffer..."));
+    Serial.println(F("\n\nA\xF1""adiendo evento al buffer..."));
     int pos;
     bool found = false;
     if(isBufferEmpty()){

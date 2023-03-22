@@ -2,7 +2,6 @@
 #define SCREEN_H
 
 #include "RA8876.h"
-//#include "BUTTONS.h"
 #include "aux.h"
 #include "STATE_MACHINE.h"
 
@@ -75,7 +74,7 @@ void printScale(){
     tft.println(" g\n\n");
     tft.selectInternalFont(RA8876_FONT_SIZE_24, RA8876_FONT_ENCODING_8859_1);
     tft.setCursor((tft.getWidth() / 5), tft.getHeight() / 2);
-    tft.print("Puede añadir otro alimento, guardar el plato, eliminarlo o guardar la comida completa");
+    tft.print("Puede a\xF1""adir otro alimento, guardar el plato, eliminarlo o guardar la comida completa");
     //delay(1000);
 }
 
@@ -113,8 +112,8 @@ void printStateInit(){
    printStateA(): Información del STATE_groupA
 ----------------------------------------------------------------------------------------------------------*/
 void printStateA(){
-  //TODO ejemplos grupo
-    String buffer = "Alimento de tipo A: " + buttonGrande + " \n\nIndique si el alimento es crudo o cocinado \n    o escoja otro grupo";
+    //String buffer = "Alimento de tipo A: " + String(buttonGrande) + " \n\nIndique si el alimento es crudo o cocinado \n    o escoja otro grupo";
+    String buffer = grupoEscogido.Nombre_grupo + "\n\n" + grupoEscogido.Ejemplos_grupo; 
     simplePrint(buffer);
 }
 
@@ -122,8 +121,8 @@ void printStateA(){
    printStateB(): Información del STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void printStateB(){
-  //TODO ejemplos grupo
-    String buffer = "Alimento de tipo B: " + buttonGrande + " \n\nColoque el alimento sobre la báscula \n    o escoja otro grupo";
+    //String buffer = "Alimento de tipo B: " + String(buttonGrande) + " \n\nColoque el alimento sobre la báscula \n    o escoja otro grupo";
+    String buffer = grupoEscogido.Nombre_grupo + "\n\n" + grupoEscogido.Ejemplos_grupo; 
     simplePrint(buffer);
 }
 
@@ -155,7 +154,7 @@ void printStateWeighted(){
    printStateAdded(): Información del STATE_Added
 ----------------------------------------------------------------------------------------------------------*/
 void printStateAdded(){
-    simplePrint("Plato añadido\n\n Retire el plato");
+    simplePrint("Plato a\xF1""adido\n\n Retire el plato");
 }
 
 /*---------------------------------------------------------------------------------------------------------

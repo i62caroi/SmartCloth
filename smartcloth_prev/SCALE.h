@@ -2,7 +2,6 @@
 #define SCALE_H
 
 #include "HX711.h"
-//#include "ISR.h" 
 #include "aux.h"
 #include "STATE_MACHINE.h"
 

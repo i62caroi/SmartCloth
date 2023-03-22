@@ -4,6 +4,8 @@
 #include "SCALE.h"
 #include "STATE_MACHINE.h"
 #include "aux.h"
+#include "grupos.h"
+//#include "plato.h"
 
 /* Time */
 const unsigned long period = 50;
