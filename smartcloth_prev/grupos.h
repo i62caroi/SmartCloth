@@ -1,16 +1,16 @@
 #ifndef GRUPOS_H
 #define GRUPOS_H
 
-#define NUM_GRUPOS 26
+#define NUM_GRUPOS 30
 
 typedef struct {
+    float Peso;
     float Kcal;
     float Prot;
     float Lip;
     float Carb;
-}valoresNutricionales;
+}ValoresNutricionales;
 
-valoresNutricionales valoresActuales;
 
 typedef struct {
     int ID_grupo;
@@ -20,7 +20,7 @@ typedef struct {
     float Prot_g;
     float Lip_g;
     float Carb_g;
-}grupo;
+}Grupo;
 
 
 
@@ -38,7 +38,7 @@ typedef struct {
 
                                     // ID |     Nombre     |           Ejemplos                  |   Kcal   |  Proteinas | Lipidos | Carbohidratos
                                     
-grupo gruposAlimentos[NUM_GRUPOS] = { {1,"L\xE1""cteos Enteros","Leche, cuajada, yogur de leche entera",0.684059925,0.038014981,0.037910112,0.047191011},
+Grupo gruposAlimentos[NUM_GRUPOS] = { {1,"L\xE1""cteos Enteros","Leche, cuajada, yogur de leche entera",0.684059925,0.038014981,0.037910112,0.047191011},
                                       {2,"L\xE1""cteos Semidesnatados","Leche, yogur de leche semidesnatada",0.465,0.033,0.016,0.046},
                                       {3,"L\xE1""cteos Desnatados","Leche, yogur de leche desnatada",0.391466667,0.041822222,0.0016,0.052133333},
                                       {4,"L\xE1""cteos Azucarados","Batidos, yogures azucarados",0.841395349,0.032483721,0.02067907,0.131274419},
@@ -67,7 +67,8 @@ grupo gruposAlimentos[NUM_GRUPOS] = { {1,"L\xE1""cteos Enteros","Leche, cuajada,
                                     };
 
 
-grupo grupoEscogido;
+Grupo grupoEscogido;
+ValoresNutricionales valoresActuales;
 
 
 

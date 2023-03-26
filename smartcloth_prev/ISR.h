@@ -49,8 +49,8 @@ void ISR_pulsandoButtonsMain(){
    // if(doIntMainRising){
         static unsigned long last_interrupt_time_Main = 0;
         unsigned long interrupt_time_Main = millis();
-        // If interrupts come faster than 200ms, assume it's a bounce and ignore
-        if (interrupt_time_Main - last_interrupt_time_Main > 200) {
+        // REBOTE
+        if ((interrupt_time_Main - last_interrupt_time_Main) > 200) {
             pulsandoMain = true;
             flagEvent = true;
         }
@@ -65,8 +65,8 @@ void ISR_pulsandoButtonsGrande(){
     //if(doIntGrandeRising){
         static unsigned long last_interrupt_time_Grande = 0;
         unsigned long interrupt_time_Grande = millis();
-        // If interrupts come faster than 200ms, assume it's a bounce and ignore
-        if (interrupt_time_Grande - last_interrupt_time_Grande > 200) {
+        // REBOTE
+        if ((interrupt_time_Grande - last_interrupt_time_Grande) > 200) {
             pulsandoGrande = true;
             flagEvent = true;
         }

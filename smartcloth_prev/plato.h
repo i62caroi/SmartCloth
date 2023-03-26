@@ -1,16 +1,65 @@
 #ifndef PLATO_H
 #define PLATO_H
 
-/*#include "grupos.h"
+#include "grupos.h"
+#include "STATE_MACHINE.h"
 
-#define NUM_ALIMENTOS 10
+#define NUM_ING 10
 
 typedef struct{
-    float Kcal;
-    float Prot,
-    float Lip;
-    float Carb;
-}ValoresNutricionales;
+    valoresNutricionales ingredientes[NUM_ING];
+    valoresNutricionales valoresPlato = {0.0,0.0,0.0,0.0,0.0};
+}Plato;
+
+
+Plato platoActual;
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   firstGapPlato(): Primer hueco libre en el vector plato
+----------------------------------------------------------------------------------------------------------*/
+int firstGapPlato(){
+    for (int i = 0; i < NUM_ING; i++){
+        if(platoActual.ingredientes[i] == 0){
+            return i;
+        }
+    }
+}
+
+
+void addIngredientePlato(){
+    int posIng;
+    /* Si se colocó algo en la báscula y se volvió a escoger un grupo de alimentos,
+       se guarda en el plato actual la información del ingrediente colocado.
+    */
+    if((prevEvent == INCREMENTO) and ((newEvent == TIPO_A) or (newEvent == TIPO_B)){
+      
+        //Añadimos ingrediente al plato
+        posIng = firstGapPlato();
+        platoActual.ingredientes[posIng] = valoresActuales;
+        
+        //Actualizamos valores totales del plato
+        platoActual.valoresPlato.Peso += valoresActuales.Peso;
+        platoActual.valoresPlato.Kcal += valoresActuales.Kcal;
+        platoActual.valoresPlato.Prot += valoresActuales.Prot;
+        platoActual.valoresPlato.Lip += valoresActuales.Lip;
+        platoActual.valoresPlato.Carb += valoresActuales.Carb;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+/*
+
 
 class Plato{
   
@@ -33,21 +82,6 @@ class Plato{
 
 
 
-Plato::Plato(){
-    _ID = 1;
-    _numAlimentos = 0;
-    for (int i = 0; i < NUM_ALIMENTOS; i++){
-          _alimentos[i] = 0;
-    }
-}
-
-int Plato::firstGapAlimentos(){
-    for (int i = 0; i < NUM_ALIMENTOS; i++){
-        if(_alimentos[i] == 0){
-            return i;
-        }
-    }
-}
 
 
 

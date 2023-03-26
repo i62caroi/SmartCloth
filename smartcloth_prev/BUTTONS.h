@@ -13,7 +13,7 @@ const byte countColumns = 5;
 const byte countButtons = 5; /* Main keyboard */
 
 /* Buttons */
-const byte buttonsMain[countButtons] = {25,23,24,22,26};
+const byte buttonsMain[countButtons] = {24,25,22,23,26};
 const byte rowsPins[countRows] = {32,33,30,31};
 const byte columnsPins[countColumns] = {49,50,51,52,53};
 
@@ -47,11 +47,12 @@ void readButtonsMain(){
    readButtonsGrande(): Función para encontrar botón pulsado en botonera Grande
 ----------------------------------------------------------------------------------------------------------*/
 void readButtonsGrande(){
-    for (byte c = 0; c < countColumns; c++){   
+    /*for (byte c = 0; c < countColumns; c++){  
         digitalWrite(columnsPins[c], LOW);
-    }
+    }*/
     
     for (byte c = 0; c < countColumns; c++){
+        pinMode(columnsPins[c], OUTPUT); 
         digitalWrite(columnsPins[c], HIGH);
         for (byte r = 0; r < countRows; r++){
             if (digitalRead(rowsPins[r]) == HIGH){ /* Activo en HIGH */
@@ -59,12 +60,13 @@ void readButtonsGrande(){
                   iCol = c;
             }
         }
-        digitalWrite(columnsPins[c], LOW);
+        //digitalWrite(columnsPins[c], LOW);
+        pinMode(columnsPins[c], INPUT); 
     }
     
-    for (byte c = 0; c < countColumns; c++){
+    /*for (byte c = 0; c < countColumns; c++){
         digitalWrite(columnsPins[c], HIGH);
-    }
+    }*/
 }
 
 
@@ -87,7 +89,7 @@ void checkAllButtons(){
             
             /* ----- EVENTO ------- */ 
             switch (keyMain) {
-                case 0:   eventoMain = CRUDO;           break;  // AMARILLO
+                case 0:   eventoMain = CRUDO;           break;  // AMARILLO       Crudo -> opción predeterminada
                 case 1:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) getGrupoAlimentos(buttonGrande+20);     break;  // BLANCO 
                 case 2:   eventoMain = ADD_PLATO;       break;  // VERDE 
                 case 3:   eventoMain = DELETE_PLATO;    break;  // ROJO 

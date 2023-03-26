@@ -6,6 +6,7 @@
 
 #include "SCREEN.h"
 #include "aux.h"
+#include "SCALE.h"
 
 
 bool doneState;
@@ -32,17 +33,17 @@ typedef enum {
 /*----------------------------------------------------------------------------------------------*/
 typedef enum {
               
-              NONE            = (0),    
-              TIPO_A          = (1),    // Botonera Main (...)
-              TIPO_B          = (2),    // Botonera Main (...)
-              CRUDO           = (3),    // AMARILLO
-              COCINADO        = (4),    // BLANCO
-              ADD_PLATO       = (5),    // VERDE
-              DELETE_PLATO    = (6),    // ROJO
-              GUARDAR         = (7),    // NEGRO 
-              INCREMENTO      = (8),    // Báscula
-              DECREMENTO      = (9),    // Báscula
-              LIBERAR         = (10)    // Báscula a 0
+              NONE                =   (0),    
+              TIPO_A              =   (1),    // Botonera Main (...)
+              TIPO_B              =   (2),    // Botonera Main (...)
+              CRUDO               =   (3),    // AMARILLO
+              COCINADO            =   (4),    // BLANCO
+              ADD_PLATO           =   (5),    // VERDE
+              DELETE_PLATO        =   (6),    // ROJO
+              GUARDAR             =   (7),    // NEGRO 
+              INCREMENTO          =   (8),    // Báscula
+              DECREMENTO          =   (9),    // Báscula
+              LIBERAR             =   (10)    // Báscula a 0
 } event_t;
 
 /* Buffer de eventos al que se irán añadiendo conforme ocurran */
@@ -94,7 +95,8 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
 states_t state_actual; 
 states_t state_new;
 
-event_t lastEvent;          //Ultimo evento ocurrido, válido o no
+event_t newEvent;          //Nuevo evento ocurrido
+event_t prevEvent;         //Evento previo
 
 event_t eventoMain;         //Evento ocurrido en botonera Main
 event_t eventoGrande;       //Evento ocurrido en botonera grande
@@ -119,11 +121,11 @@ bool checkStateConditions(){
         if(rules[i].state_i == state_actual){
             //Serial.print(F("\nRegla encontrada ")); Serial.println(i);
             //Serial.print(F("Condicion: ")); Serial.print(rules[i].condition);
-            if(rules[i].condition == lastEvent){
+            if(rules[i].condition == newEvent){
                 state_new = rules[i].state_j;
                 doneState = false;
                 //Serial.println(F("\nRegla utilizada"));
-                //lastValidEvent = lastEvent;
+                //lastValidEvent = newEvent;
                 return true;
             }
         }
@@ -148,6 +150,7 @@ bool checkStateConditions(){
 void actStateInit(){ 
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
+        tareScale(); 
         printStateInit(); 
         doneState = true;
     }
@@ -161,6 +164,8 @@ void actStateGroupA(){
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         //printStateA(); 
+        addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
+        tareScale(); 
         generalPrint();
         doneState = true;
     }
@@ -174,6 +179,8 @@ void actStateGroupB(){
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         //printStateB(); 
+        addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
+        tareScale(); 
         generalPrint();
         doneState = true;
     }
@@ -211,7 +218,8 @@ void actStateWeighted(){
     if(!doneState){
         //TODO Valores de alimento grupo X según peso
         Serial.println(F("\nAlimento pesado...")); 
-        
+
+        valoresActuales.Peso = weight;
         valoresActuales.Kcal = grupoEscogido.Kcal_g * weight; 
         valoresActuales.Prot = grupoEscogido.Prot_g * weight;
         valoresActuales.Lip = grupoEscogido.Lip_g * weight;
@@ -231,6 +239,7 @@ void actStateAdded(){
     if(!doneState){
         //TODO añadir plato
         Serial.println(F("\nPlato a\xF1""adido...")); 
+        tareScale(); 
         printStateAdded(); 
         doneState = true;
     }
@@ -244,6 +253,7 @@ void actStateDeleted(){
     if(!doneState){
         //TODO eliminar plato
         Serial.println(F("\nPlato eliminado..."));
+        tareScale(); 
         printStateDeleted();
         doneState = true;
     }
@@ -257,6 +267,7 @@ void actStateSaved(){
     if(!doneState){
         //TODO guardar comida
         Serial.println(F("\nComida guardada..."));
+        tareScale(); 
         printStateSaved();
         doneState = true;
     }
@@ -357,12 +368,13 @@ void addEventToBuffer(event_t evento){
         }
     }
     event_buffer[pos] = evento; //Añadir a buffer
-    lastEvent = evento;         //Ultimo evento
+    prevEvent = newEvent;       //Evento previo
+    newEvent = evento;         //Nuevo evento
     Serial.print("Buffer: "); 
     for (int i = 0; i < MAX_EVENTS; i++){
         Serial.print(event_buffer[i]); Serial.print(" ");
     }
-    Serial.print("Last event: "); Serial.println(lastEvent);
+    Serial.print("Last event: "); Serial.println(newEvent);
 }
 
 

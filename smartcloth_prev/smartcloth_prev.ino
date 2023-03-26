@@ -63,8 +63,8 @@ void setup() {
     }
     //  -----   Grande    -----
     for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], OUTPUT);
-        digitalWrite(columnsPins[c], HIGH);
+        pinMode(columnsPins[c], INPUT); //Para proteger eléctricmanete los puertos de los botones y que no llegue 0 y 1 a la vez
+        //digitalWrite(columnsPins[c], HIGH);
     }
     for (byte r = 0; r < countRows; r++){
         pinMode(rowsPins[r], INPUT);

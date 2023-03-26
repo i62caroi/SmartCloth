@@ -96,7 +96,7 @@ void printValoresActuales(){
     tft.setCursor(50, tft.getCursorY());
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextColor(ROJO);
-    tft.print("Alimento: "); tft.print(weight); tft.println(" g\n");
+    tft.print("Alimento: "); tft.print(weight); tft.println(" g\n"); //valoresActuales.peso
    
     tft.setCursor(50, tft.getCursorY());
     tft.setTextColor(BLANCO);
