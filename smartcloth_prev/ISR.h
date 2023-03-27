@@ -27,9 +27,17 @@ SAMDUE_ISR_Timer ISR_Timer;
 //--------------------------------------------------
 /* Interrupciones botoneras */
 /*  -----   MAIN  ----- */
-const byte interruptPinMain = 28;                      // Pin de interrupcion RISING para Main
+//const byte interruptPinMain = 28;                      // Pin de interrupcion RISING para Main
 volatile bool pulsandoMain = false;                    // Flag de estar pulsando algo en Main   
 ///byte doIntMainRising; 
+
+
+const byte intPinAddPlato = 22; //Verde
+const byte intPinCrudo = 23; //Amarillo
+const byte intPinDeletePlato = 24; //Rojo
+const byte intPinCocinado = 25; //Blanco
+const byte intPinGuardar = 26; //Negro
+
 
 /*  -----   GRANDE  ----- */
 const byte interruptPinGrande = 29;                    // Pin de interrupcion RISING para Grande
@@ -43,9 +51,9 @@ volatile bool pulsandoGrande = false;                  // Flag de estar pulsando
 
 
 /*---------------------------------------------------------------------------------------------------------
-   ISR_pulsandoButtonsMain(): Función ativada por interrupción RISING de botonera Main
+   ISR_pulsandoButtonsMain(): Función activada por interrupción RISING de botonera Main
 ----------------------------------------------------------------------------------------------------------*/
-void ISR_pulsandoButtonsMain(){
+/*void ISR_pulsandoButtonsMain(){
    // if(doIntMainRising){
         static unsigned long last_interrupt_time_Main = 0;
         unsigned long interrupt_time_Main = millis();
@@ -56,7 +64,76 @@ void ISR_pulsandoButtonsMain(){
         }
         last_interrupt_time_Main = interrupt_time_Main;
     //}
+}*/
+
+/*---------------------------------------------------------------------------------------------------------
+   ISR_crudo(): Función activada por interrupción RISING de botón CRUDO
+----------------------------------------------------------------------------------------------------------*/
+void ISR_crudo(){ //Amarillo
+    static unsigned long last_interrupt_time_Crudo = 0;
+    unsigned long interrupt_time_Crudo = millis();
+    if ((interrupt_time_Crudo - last_interrupt_time_Crudo) > 200) {
+        buttonMain = 1;
+        flagEvent = true;
+    }
+    last_interrupt_time_Crudo = interrupt_time_Crudo;
 }
+
+/*---------------------------------------------------------------------------------------------------------
+   ISR_cocinado(): Función activada por interrupción RISING de botón COCINADO
+----------------------------------------------------------------------------------------------------------*/
+void ISR_cocinado(){ //Blanco
+    static unsigned long last_interrupt_time_Cocinado = 0;
+    unsigned long interrupt_time_Cocinado = millis();
+    if ((interrupt_time_Cocinado - last_interrupt_time_Cocinado) > 200) {
+        buttonMain = 2;
+        flagEvent = true;
+    }
+    last_interrupt_time_Cocinado = interrupt_time_Cocinado;
+}
+
+/*---------------------------------------------------------------------------------------------------------
+   ISR_addPlato(): Función activada por interrupción RISING de botón ADDPLATO
+----------------------------------------------------------------------------------------------------------*/
+void ISR_addPlato(){ //Verde
+    static unsigned long last_interrupt_time_Add = 0;
+    unsigned long interrupt_time_Add = millis();
+    if ((interrupt_time_Add - last_interrupt_time_Add) > 200) {
+        buttonMain = 3;
+        flagEvent = true;
+    }
+    last_interrupt_time_Add = interrupt_time_Add;
+}
+
+/*---------------------------------------------------------------------------------------------------------
+   ISR_deletePlato(): Función activada por interrupción RISING de botón DELETE
+----------------------------------------------------------------------------------------------------------*/
+void ISR_deletePlato(){ //Rojo
+    static unsigned long last_interrupt_time_Delete = 0;
+    unsigned long interrupt_time_Delete = millis();
+    if ((interrupt_time_Delete - last_interrupt_time_Delete) > 200) {
+        buttonMain = 4;
+        flagEvent = true;
+    }
+    last_interrupt_time_Delete = interrupt_time_Delete;
+}
+
+/*---------------------------------------------------------------------------------------------------------
+   ISR_guardar(): Función activada por interrupción RISING de botón Guardar
+----------------------------------------------------------------------------------------------------------*/
+void ISR_guardar(){ //Negro
+    static unsigned long last_interrupt_time_Guardar = 0;
+    unsigned long interrupt_time_Guardar = millis();
+    if ((interrupt_time_Guardar - last_interrupt_time_Guardar) > 200) {
+        buttonMain = 5;
+        flagEvent = true;
+    }
+    last_interrupt_time_Guardar = interrupt_time_Guardar;
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------------------
    ISR_pulsandoButtonsGrande(): Función ativada por interrupción RISING de botonera Grande
@@ -65,7 +142,6 @@ void ISR_pulsandoButtonsGrande(){
     //if(doIntGrandeRising){
         static unsigned long last_interrupt_time_Grande = 0;
         unsigned long interrupt_time_Grande = millis();
-        // REBOTE
         if ((interrupt_time_Grande - last_interrupt_time_Grande) > 200) {
             pulsandoGrande = true;
             flagEvent = true;
@@ -73,6 +149,9 @@ void ISR_pulsandoButtonsGrande(){
         last_interrupt_time_Grande = interrupt_time_Grande;
     //}
 }
+
+
+
 
 //--------------------------------------------------
 

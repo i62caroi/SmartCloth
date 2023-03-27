@@ -6,7 +6,7 @@
 /*String buttonMain;
 String buttonGrande;
  */
-int buttonMain;
+volatile int buttonMain = 0;
 int buttonGrande;
 
 bool flagEvent;

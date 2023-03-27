@@ -35,42 +35,39 @@ void setup() {
   
     /* --------- INTERRUPTIONS ----------------- */
     //  -----   MAIN    -----
-    attachInterrupt(digitalPinToInterrupt(interruptPinMain), ISR_pulsandoButtonsMain, RISING);
+    //attachInterrupt(digitalPinToInterrupt(interruptPinMain), ISR_pulsandoButtonsMain, RISING);
     //doIntMainRising = true;
-    //attachInterrupt(digitalPinToInterrupt(interruptPinMainFalling), keyReleasedMain, FALLING);
-    //doIntMainFalling = true;
+    attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);
+    attachInterrupt(digitalPinToInterrupt(intPinCocinado), ISR_cocinado, RISING);
+    attachInterrupt(digitalPinToInterrupt(intPinAddPlato), ISR_addPlato, RISING);
+    attachInterrupt(digitalPinToInterrupt(intPinDeletePlato), ISR_deletePlato, RISING);
+    attachInterrupt(digitalPinToInterrupt(intPinGuardar), ISR_guardar, RISING);
     
     //  -----   Grande    -----
     attachInterrupt(digitalPinToInterrupt(interruptPinGrande), ISR_pulsandoButtonsGrande, RISING);
     //doIntGrandeRising = true;
-    //attachInterrupt(digitalPinToInterrupt(interruptPinGFalling), keyReleasedGrande, FALLING);
-    //doIntGrandeFalling = true;*/
 
     //  -----   Scale   ------
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");
     ISR_Timer.setInterval(TIMER_INTERVAL_1S,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 1S
     //doIntScale = true;
 
-
-    //  ------ Buffer Eventos  ------
-    //clearEventBuffer();
     
 
     /* ---------- BUTTONS PINS --------------- */
     //  -----   MAIN    -----
-    for (byte i = 0; i < countButtons; i++){
+    /*for (byte i = 0; i < countButtons; i++){
         pinMode(buttonsMain[i], INPUT);  
-    }
+    }*/
     //  -----   Grande    -----
     for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], INPUT); //Para proteger eléctricmanete los puertos de los botones y que no llegue 0 y 1 a la vez
-        //digitalWrite(columnsPins[c], HIGH);
+        pinMode(columnsPins[c], OUTPUT);
+        digitalWrite(columnsPins[c], HIGH);
     }
     for (byte r = 0; r < countRows; r++){
         pinMode(rowsPins[r], INPUT);
     }
     
-    //Serial.println(F("Pulsa una tecla"));
     
 }
 
@@ -94,7 +91,7 @@ void loop() {
         /* ---------------    PULSACIONES BOTONERAS   ----------------- */
         /*--------------------------------------------------------------*/
         checkAllButtons(); //buttons.h
-        checkBascula();
+        checkBascula(); //scale.h
 
 
         /*------------------------------------------------------------*/
@@ -108,7 +105,6 @@ void loop() {
             if(checkStateConditions()){ //state_machine.h 
                 Serial.print(F("\nNuevo estado: ")); Serial.println(state_new);
                 state_actual = state_new;
-                //recentStateChange = true;
             }
             else{
                 Serial.println(F("\nERROR DE EVENTO"));

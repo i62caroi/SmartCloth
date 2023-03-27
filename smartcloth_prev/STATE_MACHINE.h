@@ -34,8 +34,8 @@ typedef enum {
 typedef enum {
               
               NONE                =   (0),    
-              TIPO_A              =   (1),    // Botonera Main (...)
-              TIPO_B              =   (2),    // Botonera Main (...)
+              TIPO_A              =   (1),    // Botonera Grande (7,8,9,16,17,18)
+              TIPO_B              =   (2),    // Botonera Grande (1,2,3,4,5,6,10,11,12,13,14,15,19,20)
               CRUDO               =   (3),    // AMARILLO
               COCINADO            =   (4),    // BLANCO
               ADD_PLATO           =   (5),    // VERDE
@@ -67,12 +67,16 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
                                         {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
                                         {STATE_raw,STATE_cooked,COCINADO},                 // raw --cocinado--> cooked
+                                        {STATE_raw,STATE_groupA,TIPO_A},                   // raw --tipoA--> grupoA
+                                        {STATE_raw,STATE_groupB,TIPO_B},                   // raw --tipoB--> grupoB
+                                        {STATE_raw,STATE_weighted,INCREMENTO},             // raw --incremento--> pesado
                                         {STATE_cooked,STATE_raw,CRUDO},                    // cooked --raw--> crudo
+                                        {STATE_cooked,STATE_groupA,TIPO_A},                // cooked --tipoA--> grupoA
+                                        {STATE_cooked,STATE_groupB,TIPO_B},                // cooked --tipoB--> grupoB
+                                        {STATE_cooked,STATE_weighted,INCREMENTO},          // cooked --incremento--> pesado
                                         {STATE_groupB,STATE_groupB,TIPO_B},                // grupoB --tipoB--> grupoB
                                         {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
                                         {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
-                                        {STATE_raw,STATE_weighted,INCREMENTO},             // crudo --incremento--> pesado
-                                        {STATE_cooked,STATE_weighted,INCREMENTO},          // cocinado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
                                         {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --liberar_bascula--> pesado
@@ -95,8 +99,8 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
 states_t state_actual; 
 states_t state_new;
 
-event_t newEvent;          //Nuevo evento ocurrido
-event_t prevEvent;         //Evento previo
+event_t lastEvent;
+//event_t lastValidEvent;
 
 event_t eventoMain;         //Evento ocurrido en botonera Main
 event_t eventoGrande;       //Evento ocurrido en botonera grande
@@ -116,16 +120,13 @@ event_t eventoBascula;      //Timer
    checkStateConditions(): Comprobar reglas de transición para conocer el próximo estado
 ----------------------------------------------------------------------------------------------------------*/
 bool checkStateConditions(){
-    //Serial.println("\nComprobando reglas de transición...");
     for (int i = 0; i < RULES; i++){
         if(rules[i].state_i == state_actual){
-            //Serial.print(F("\nRegla encontrada ")); Serial.println(i);
-            //Serial.print(F("Condicion: ")); Serial.print(rules[i].condition);
-            if(rules[i].condition == newEvent){
+            //if((rules[i].condition == lastValidEvent) or (rules[i].condition == lastEvent)){
+            if(rules[i].condition == lastEvent){
+                //lastValidEvent = lastEvent;
                 state_new = rules[i].state_j;
                 doneState = false;
-                //Serial.println(F("\nRegla utilizada"));
-                //lastValidEvent = newEvent;
                 return true;
             }
         }
@@ -150,7 +151,7 @@ bool checkStateConditions(){
 void actStateInit(){ 
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
-        tareScale(); 
+        //tareScale(); 
         printStateInit(); 
         doneState = true;
     }
@@ -164,8 +165,8 @@ void actStateGroupA(){
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         //printStateA(); 
-        addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
-        tareScale(); 
+        //addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
+        //tareScale(); 
         generalPrint();
         doneState = true;
     }
@@ -179,8 +180,8 @@ void actStateGroupB(){
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         //printStateB(); 
-        addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
-        tareScale(); 
+        //addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
+        //tareScale(); 
         generalPrint();
         doneState = true;
     }
@@ -239,7 +240,7 @@ void actStateAdded(){
     if(!doneState){
         //TODO añadir plato
         Serial.println(F("\nPlato a\xF1""adido...")); 
-        tareScale(); 
+        //tareScale(); 
         printStateAdded(); 
         doneState = true;
     }
@@ -253,7 +254,7 @@ void actStateDeleted(){
     if(!doneState){
         //TODO eliminar plato
         Serial.println(F("\nPlato eliminado..."));
-        tareScale(); 
+        //tareScale(); 
         printStateDeleted();
         doneState = true;
     }
@@ -267,7 +268,7 @@ void actStateSaved(){
     if(!doneState){
         //TODO guardar comida
         Serial.println(F("\nComida guardada..."));
-        tareScale(); 
+        //tareScale(); 
         printStateSaved();
         doneState = true;
     }
@@ -368,13 +369,12 @@ void addEventToBuffer(event_t evento){
         }
     }
     event_buffer[pos] = evento; //Añadir a buffer
-    prevEvent = newEvent;       //Evento previo
-    newEvent = evento;         //Nuevo evento
+    lastEvent = evento;
     Serial.print("Buffer: "); 
     for (int i = 0; i < MAX_EVENTS; i++){
         Serial.print(event_buffer[i]); Serial.print(" ");
     }
-    Serial.print("Last event: "); Serial.println(newEvent);
+    Serial.print("Last event: "); Serial.println(lastEvent);
 }
 
 

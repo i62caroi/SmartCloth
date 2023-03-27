@@ -25,7 +25,6 @@ void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
     scale.set_scale(1093.48); // bad calibration!
     tareScale();  
-    // read
     //scale.get_units(10);
 }
 
@@ -38,7 +37,6 @@ void checkBascula(){
             if(lastWeight < newWeight){
                 Serial.print(F("\nINCREMENTO"));
                 eventoBascula = INCREMENTO;
-                flagEvent = true;
             }
             else if(lastWeight > newWeight){
                 if(newWeight < 1.0){ //Se ha vaciado la báscula
@@ -49,11 +47,11 @@ void checkBascula(){
                     Serial.print(F("\nDECREMENTO"));
                     eventoBascula = DECREMENTO;
                 }
-                flagEvent = true;
             }
             Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 
             Serial.print(F("Peso nuevo: ")); Serial.println(newWeight); 
             addEventToBuffer(eventoBascula);
+            flagEvent = true;
         }
         pesado = false;
     }
