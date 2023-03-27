@@ -3,6 +3,7 @@
 
 #include "RA8876.h"
 #include "aux.h"
+#include "grupos.h"
 #include "STATE_MACHINE.h"
 
 /* Screen circuit wiring */

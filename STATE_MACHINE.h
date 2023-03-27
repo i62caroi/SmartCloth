@@ -5,8 +5,9 @@
 #define RULES 30 
 
 #include "SCREEN.h"
-#include "aux.h"
 #include "SCALE.h"
+#include "aux.h"
+#include "grupos.h"
 
 
 bool doneState;
@@ -151,7 +152,7 @@ bool checkStateConditions(){
 void actStateInit(){ 
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
-        //tareScale(); 
+        tareScale(); 
         printStateInit(); 
         doneState = true;
     }
@@ -166,7 +167,7 @@ void actStateGroupA(){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         //printStateA(); 
         //addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
-        //tareScale(); 
+        tareScale(); 
         generalPrint();
         doneState = true;
     }
@@ -240,7 +241,7 @@ void actStateAdded(){
     if(!doneState){
         //TODO añadir plato
         Serial.println(F("\nPlato a\xF1""adido...")); 
-        //tareScale(); 
+        tareScale(); 
         printStateAdded(); 
         doneState = true;
     }
@@ -254,7 +255,7 @@ void actStateDeleted(){
     if(!doneState){
         //TODO eliminar plato
         Serial.println(F("\nPlato eliminado..."));
-        //tareScale(); 
+        tareScale(); 
         printStateDeleted();
         doneState = true;
     }
@@ -268,7 +269,7 @@ void actStateSaved(){
     if(!doneState){
         //TODO guardar comida
         Serial.println(F("\nComida guardada..."));
-        //tareScale(); 
+        tareScale(); 
         printStateSaved();
         doneState = true;
     }

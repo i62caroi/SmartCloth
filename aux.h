@@ -1,8 +1,6 @@
 #ifndef AUX_H
 #define AUX_H
 
-#include "grupos.h"
-
 /*String buttonMain;
 String buttonGrande;
  */
