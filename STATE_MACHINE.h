@@ -166,10 +166,18 @@ void actStateInit(){
 void actGruposAlimentos(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        if(!isScaleEmpty()){ //Si había algo en la báscula al pulsar este botón (tenemos grupoAnterior)
-            // Usamos grupoAnterior porque al entrar a este estado ya se ha actualizado grupoEscogido por el nuevo botón 
+        /* Comprobamos que haya cambiado el peso antes de añadir el ingrediente para
+           evitar que se incluya el mismo varias veces */
+        static float pesoAnterior;
+        static float pesoNuevo;
+        pesoAnterior = pesoNuevo;
+        pesoNuevo = weight;
+        if(abs(pesoAnterior - pesoNuevo) > 1.0){ /* Si se colocado algo en la báscula antes de pulsar este botón */
+            /* Usamos grupoAnterior porque al entrar a este estado ya se ha actualizado grupoEscogido por el nuevo botón */
+            Serial.println(F("Añadiendo ingrediente al plato..."));
             Ingrediente ing(grupoAnterior, weight);
             platoActual.addIngrediente(ing);
+            
         }
         //tareScale(); 
         printStateAB();
@@ -338,7 +346,8 @@ void rotateEventBuffer(){
    addEventToBuffer(): Añadir el último evento al buffer de eventos
 ----------------------------------------------------------------------------------------------------------*/
 void addEventToBuffer(event_t evento){
-    Serial.println(F("\n\nAñadiendo evento al buffer..."));
+    Serial.println(F("\n\n***********************************"));
+    Serial.println(F("Añadiendo evento al buffer..."));
     int pos;
     bool found = false;
     if(isBufferEmpty()){
@@ -359,7 +368,7 @@ void addEventToBuffer(event_t evento){
     for (int i = 0; i < MAX_EVENTS; i++){
         Serial.print(event_buffer[i]); Serial.print(" ");
     }
-    Serial.print("Last event: "); Serial.println(lastEvent);
+    Serial.print(F("Last event: ")); Serial.println(lastEvent);
 }
 
 

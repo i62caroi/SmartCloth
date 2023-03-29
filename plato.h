@@ -16,6 +16,7 @@ class Plato{
 
     inline void setNumIng(int num){ _nIng = num; };
     inline int getNumIng(){ return _nIng; };
+    inline int positionLastIng(){ return (this->getNumIng()-1); };
     inline int firstGapPlato(){ return this->getNumIng(); };
 
   public:
@@ -40,10 +41,10 @@ Plato::Plato(){
 
 
 void Plato::addIngrediente(Ingrediente ing){
-    _ingredientes[firstGapPlato()] = ing;                           // Añadir ingrediente
-    this->setNumIng(this->getNumIng() + 1);                         // Incrementar num ingredientes
-    this->setPesoPlato(this->getPesoPlato() + ing.getPesoIng());    // Incrementar peso del plato
-    this->updateValoresPlato(ing.getValoresIng());                  // Actualizar Valores Nutricionales
+    _ingredientes[firstGapPlato()] = ing;                                   // Añadir ingrediente
+    this->setNumIng(this->getNumIng() + 1);                                 // Incrementar num ingredientes
+    this->setPesoPlato(this->getPesoPlato() + ing.getPesoIng());            // Incrementar peso del plato
+    this->updateValoresPlato(ing.getValoresIng());                          // Actualizar Valores Nutricionales
 }
 
 

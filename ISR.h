@@ -39,13 +39,13 @@ volatile bool pulsandoGrande = false;     // Flag de estar pulsando algo en Gran
    ISR_crudo(): Función activada por interrupción RISING de botón CRUDO
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_crudo(){ 
-    static unsigned long last_interrupt_time_Crudo = 0;
-    unsigned long interrupt_time_Crudo = millis();
-    if ((interrupt_time_Crudo - last_interrupt_time_Crudo) > 200) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 1;
         flagEvent = true;
     }
-    last_interrupt_time_Crudo = interrupt_time_Crudo;
+    last_interrupt_time = interrupt_time;
 }
 
 
@@ -54,13 +54,13 @@ void ISR_crudo(){
    ISR_cocinado(): Función activada por interrupción RISING de botón COCINADO
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_cocinado(){ 
-    static unsigned long last_interrupt_time_Cocinado = 0;
-    unsigned long interrupt_time_Cocinado = millis();
-    if ((interrupt_time_Cocinado - last_interrupt_time_Cocinado) > 200) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 2;
         flagEvent = true;
     }
-    last_interrupt_time_Cocinado = interrupt_time_Cocinado;
+    last_interrupt_time = interrupt_time;
 }
 
 
@@ -69,13 +69,13 @@ void ISR_cocinado(){
    ISR_addPlato(): Función activada por interrupción RISING de botón ADDPLATO
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_addPlato(){ 
-    static unsigned long last_interrupt_time_Add = 0;
-    unsigned long interrupt_time_Add = millis();
-    if ((interrupt_time_Add - last_interrupt_time_Add) > 200) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 3;
         flagEvent = true;
     }
-    last_interrupt_time_Add = interrupt_time_Add;
+    last_interrupt_time = interrupt_time;
 }
 
 
@@ -84,13 +84,13 @@ void ISR_addPlato(){
    ISR_deletePlato(): Función activada por interrupción RISING de botón DELETE
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_deletePlato(){ 
-    static unsigned long last_interrupt_time_Delete = 0;
-    unsigned long interrupt_time_Delete = millis();
-    if ((interrupt_time_Delete - last_interrupt_time_Delete) > 200) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 4;
         flagEvent = true;
     }
-    last_interrupt_time_Delete = interrupt_time_Delete;
+    last_interrupt_time = interrupt_time;
 }
 
 
@@ -99,13 +99,13 @@ void ISR_deletePlato(){
    ISR_guardar(): Función activada por interrupción RISING de botón Guardar
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_guardar(){ 
-    static unsigned long last_interrupt_time_Guardar = 0;
-    unsigned long interrupt_time_Guardar = millis();
-    if ((interrupt_time_Guardar - last_interrupt_time_Guardar) > 200) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 5;
         flagEvent = true;
     }
-    last_interrupt_time_Guardar = interrupt_time_Guardar;
+    last_interrupt_time = interrupt_time;
 }
 
 
@@ -118,13 +118,13 @@ void ISR_guardar(){
    ISR_pulsandoButtonsGrande(): Función ativada por interrupción RISING de botonera Grande
 ----------------------------------------------------------------------------------------------------------*/
 void ISR_pulsandoButtonsGrande(){
-    static unsigned long last_interrupt_time_Grande = 0;
-    unsigned long interrupt_time_Grande = millis();
-    if ((interrupt_time_Grande - last_interrupt_time_Grande) > 200) {
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) {
         pulsandoGrande = true;
         flagEvent = true;
     }
-    last_interrupt_time_Grande = interrupt_time_Grande;
+    last_interrupt_time = interrupt_time;
 }
 
 
