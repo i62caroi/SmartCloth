@@ -2,8 +2,7 @@
 #define SCALE_H
 
 #include "HX711.h"
-#include "aux.h"
-#include "STATE_MACHINE.h"
+#include "State_Machine.h"
 
 
 // HX711 circuit wiring
@@ -16,11 +15,27 @@ float newWeight = 0.0;
 float lastWeight = 0.0; 
 float diffWeight = 0.0;
 
-//float getWeight(){ return weight; }
 
-void tareScale(){ scale.tare();  }
-float weighScale(){  return scale.get_units(1); }
 
+/*---------------------------------------------------------------------------------------------------------
+   tareScale(): Tarar báscula (TODO TARA MANUAL)
+----------------------------------------------------------------------------------------------------------*/
+void tareScale(){ 
+    scale.tare(); 
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   weighScale(): Pesar báscula
+----------------------------------------------------------------------------------------------------------*/
+float weighScale(){
+    return scale.get_units(1);
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   setupScale(): Inicializar báscula
+----------------------------------------------------------------------------------------------------------*/
 void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
     scale.set_scale(1093.48); // bad calibration!
@@ -28,6 +43,11 @@ void setupScale(){
     //scale.get_units(10);
 }
 
+
+
+/*---------------------------------------------------------------------------------------------------------
+   checkBascula(): Comprobar si ha habido algún evento de incremento/decremento en la báscula
+----------------------------------------------------------------------------------------------------------*/
 void checkBascula(){
     if (pesado){
         lastWeight = newWeight;
@@ -39,17 +59,25 @@ void checkBascula(){
                 eventoBascula = INCREMENTO;
             }
             else if(lastWeight > newWeight){
-                if(newWeight < 1.0){ //Se ha vaciado la báscula
-                    Serial.print(F("\nLIBERADA"));
-                    eventoBascula = LIBERAR;
-                }
-                else{
+                /*if(tarado){ //Decremento producido por la tara
                     Serial.print(F("\nDECREMENTO"));
                     eventoBascula = DECREMENTO;
+                    tarado = false;
                 }
+                else{*/
+                    if(newWeight > 1.0){ //Se ha quitado algo pero no todo
+                      Serial.print(F("\nDECREMENTO"));
+                      eventoBascula = DECREMENTO;
+                      //if(tarado) tarado = false;
+                    }
+                    else{ //Se ha quitado todo de la báscula
+                        Serial.print(F("\nLIBERADA"));
+                        eventoBascula = LIBERAR;
+                    }
+                //}
             }
             Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 
-            Serial.print(F("Peso nuevo: ")); Serial.println(newWeight); 
+            Serial.print(F("Peso actual: ")); Serial.println(newWeight); 
             addEventToBuffer(eventoBascula);
             flagEvent = true;
         }

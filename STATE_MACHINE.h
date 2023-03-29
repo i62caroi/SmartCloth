@@ -4,10 +4,8 @@
 #define MAX_EVENTS 5
 #define RULES 30 
 
-#include "SCREEN.h"
-#include "SCALE.h"
-#include "aux.h"
-#include "grupos.h"
+#include "Screen.h" // Incluye Variables.h
+#include "Plato.h"  // Ingrediente.h (Valores_Nutricionales.h)
 
 
 bool doneState;
@@ -64,6 +62,7 @@ typedef struct{
 static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},                   // INI --tipoA--> grupoA
                                         {STATE_INI,STATE_groupB,TIPO_B},                   // INI --tipoB--> grupoB
                                         {STATE_groupA,STATE_groupA,TIPO_A},                // grupoA --tipoA--> grupoA
+                                        {STATE_groupA,STATE_groupA,DECREMENTO},            // grupoA --decremento(tara)--> grupoA
                                         {STATE_groupA,STATE_groupB,TIPO_B},                // grupoA --tipoB--> grupoB  
                                         {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
                                         {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
@@ -78,6 +77,7 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_groupB,STATE_groupB,TIPO_B},                // grupoB --tipoB--> grupoB
                                         {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
                                         {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
+                                        {STATE_groupB,STATE_weighted,DECREMENTO},          // grupoB --decremento(tara)--> pesado
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
                                         {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --liberar_bascula--> pesado
@@ -152,7 +152,8 @@ bool checkStateConditions(){
 void actStateInit(){ 
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
-        tareScale(); 
+        //tareScale(); 
+        //Plato actual es global (Variables.h)
         printStateInit(); 
         doneState = true;
     }
@@ -160,33 +161,23 @@ void actStateInit(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   actStateGroupA(): Acciones del STATE_groupA
+   actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
-void actStateGroupA(){ 
+void actGruposAlimentos(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        //printStateA(); 
-        //addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
-        tareScale(); 
-        generalPrint();
-        doneState = true;
-    }
-}
-
-
-/*---------------------------------------------------------------------------------------------------------
-   actStateGroupB(): Acciones del STATE_groupB
-----------------------------------------------------------------------------------------------------------*/
-void actStateGroupB(){ 
-    if(!doneState){
-        Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        //printStateB(); 
-        //addIngredientePlato(); //Solo si se colocó un ingrediente en la báscula antes
+        if(!isScaleEmpty()){ //Si había algo en la báscula al pulsar este botón (tenemos grupoAnterior)
+            // Usamos grupoAnterior porque al entrar a este estado ya se ha actualizado grupoEscogido por el nuevo botón 
+            Ingrediente ing(grupoAnterior, weight);
+            platoActual.addIngrediente(ing);
+        }
         //tareScale(); 
-        generalPrint();
+        printStateAB();
         doneState = true;
     }
 }
+
+
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -218,17 +209,10 @@ void actStateCooked(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateWeighted(){ 
     if(!doneState){
-        //TODO Valores de alimento grupo X según peso
         Serial.println(F("\nAlimento pesado...")); 
-
-        valoresActuales.Peso = weight;
-        valoresActuales.Kcal = grupoEscogido.Kcal_g * weight; 
-        valoresActuales.Prot = grupoEscogido.Prot_g * weight;
-        valoresActuales.Lip = grupoEscogido.Lip_g * weight;
-        valoresActuales.Carb = grupoEscogido.Carb_g * weight;
-        
-        //printStateWeighted(); 
-        generalPrint();
+        //Al seleccionar otro grupo de alimentos se guardará el ingrediente pesado
+        Ingrediente ing(grupoEscogido, weight); //Ingrediente auxiliar usado para mostrar información variable de lo pesado
+        printStateWeighted(ing);
         doneState = true;
     }
 }
@@ -241,7 +225,7 @@ void actStateAdded(){
     if(!doneState){
         //TODO añadir plato
         Serial.println(F("\nPlato a\xF1""adido...")); 
-        tareScale(); 
+        //tareScale(); 
         printStateAdded(); 
         doneState = true;
     }
@@ -255,7 +239,7 @@ void actStateDeleted(){
     if(!doneState){
         //TODO eliminar plato
         Serial.println(F("\nPlato eliminado..."));
-        tareScale(); 
+        //tareScale(); 
         printStateDeleted();
         doneState = true;
     }
@@ -269,7 +253,7 @@ void actStateSaved(){
     if(!doneState){
         //TODO guardar comida
         Serial.println(F("\nComida guardada..."));
-        tareScale(); 
+        //tareScale(); 
         printStateSaved();
         doneState = true;
     }
@@ -280,15 +264,15 @@ void actStateSaved(){
 ----------------------------------------------------------------------------------------------------------*/
 void doStateActions(){
     switch (state_actual){
-      case 1:   actStateInit();       break;
-      case 2:   actStateGroupA();     break;
-      case 3:   actStateGroupB();     break;
-      case 4:   actStateRaw();        break;
-      case 5:   actStateCooked();     break;
-      case 6:   actStateWeighted();   break;
-      case 7:   actStateAdded();      break;
-      case 8:   actStateDeleted();    break;
-      case 9:   actStateSaved();      break;
+      case 1:   actStateInit();         break;
+      case 2:   actGruposAlimentos();   break;
+      case 3:   actGruposAlimentos();   break;
+      case 4:   actStateRaw();          break;
+      case 5:   actStateCooked();       break;
+      case 6:   actStateWeighted();     break;
+      case 7:   actStateAdded();        break;
+      case 8:   actStateDeleted();      break;
+      case 9:   actStateSaved();        break;
     }
 }
 
@@ -354,7 +338,7 @@ void rotateEventBuffer(){
    addEventToBuffer(): Añadir el último evento al buffer de eventos
 ----------------------------------------------------------------------------------------------------------*/
 void addEventToBuffer(event_t evento){
-    Serial.println(F("\n\nA\xF1""adiendo evento al buffer..."));
+    Serial.println(F("\n\nAñadiendo evento al buffer..."));
     int pos;
     bool found = false;
     if(isBufferEmpty()){

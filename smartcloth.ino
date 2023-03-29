@@ -1,11 +1,11 @@
-#include "BUTTONS.h"
-#include "ISR.h" 
-#include "SCREEN.h"
-#include "SCALE.h"
-#include "STATE_MACHINE.h"
-#include "aux.h"
-#include "grupos.h"
-//#include "plato.h"
+#include "Buttons.h"       /* Buttons.h => ISR.h y State_Machine.h
+                                -  ISR.h => Scale.h
+                                -  State_Machine.h => Screen.h y Plato.h
+                                     - Screen.h => Variables.h
+                                           - Variables.h => Grupos.h
+                                     - Plato.h => Ingrediente.h
+                                           - Ingrediente.h => Valores_Nutricionales.h
+                            */
 
 /* Time */
 const unsigned long period = 50;
@@ -35,8 +35,6 @@ void setup() {
   
     /* --------- INTERRUPTIONS ----------------- */
     //  -----   MAIN    -----
-    //attachInterrupt(digitalPinToInterrupt(interruptPinMain), ISR_pulsandoButtonsMain, RISING);
-    //doIntMainRising = true;
     attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinCocinado), ISR_cocinado, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinAddPlato), ISR_addPlato, RISING);
@@ -45,20 +43,14 @@ void setup() {
     
     //  -----   Grande    -----
     attachInterrupt(digitalPinToInterrupt(interruptPinGrande), ISR_pulsandoButtonsGrande, RISING);
-    //doIntGrandeRising = true;
 
     //  -----   Scale   ------
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");
-    ISR_Timer.setInterval(TIMER_INTERVAL_1S,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 1S
-    //doIntScale = true;
+    ISR_Timer.setInterval(TIMER_INTERVAL_5MS,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 500 ms
 
     
 
     /* ---------- BUTTONS PINS --------------- */
-    //  -----   MAIN    -----
-    /*for (byte i = 0; i < countButtons; i++){
-        pinMode(buttonsMain[i], INPUT);  
-    }*/
     //  -----   Grande    -----
     for (byte c = 0; c < countColumns; c++){
         pinMode(columnsPins[c], OUTPUT);

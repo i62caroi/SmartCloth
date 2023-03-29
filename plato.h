@@ -1,109 +1,59 @@
 #ifndef PLATO_H
 #define PLATO_H
 
-#include "grupos.h"
-#include "STATE_MACHINE.h"
+#include "Ingrediente.h"
 
 #define NUM_ING 10
 
-typedef struct{
-    valoresNutricionales ingredientes[NUM_ING];
-    valoresNutricionales valoresPlato = {0.0,0.0,0.0,0.0,0.0};
-}Plato;
-
-
-Plato platoActual;
-
-
-
-/*---------------------------------------------------------------------------------------------------------
-   firstGapPlato(): Primer hueco libre en el vector plato
-----------------------------------------------------------------------------------------------------------*/
-int firstGapPlato(){
-    for (int i = 0; i < NUM_ING; i++){
-        if(platoActual.ingredientes[i] == 0){
-            return i;
-        }
-    }
-}
-
-
-void addIngredientePlato(){
-    int posIng;
-    /* Si se colocó algo en la báscula y se volvió a escoger un grupo de alimentos,
-       se guarda en el plato actual la información del ingrediente colocado.
-    */
-    if((prevEvent == INCREMENTO) and ((newEvent == TIPO_A) or (newEvent == TIPO_B)){
-      
-        //Añadimos ingrediente al plato
-        posIng = firstGapPlato();
-        platoActual.ingredientes[posIng] = valoresActuales;
-        
-        //Actualizamos valores totales del plato
-        platoActual.valoresPlato.Peso += valoresActuales.Peso;
-        platoActual.valoresPlato.Kcal += valoresActuales.Kcal;
-        platoActual.valoresPlato.Prot += valoresActuales.Prot;
-        platoActual.valoresPlato.Lip += valoresActuales.Lip;
-        platoActual.valoresPlato.Carb += valoresActuales.Carb;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-/*
 
 
 class Plato{
-  
+  private:
+    int _nIng;
+    float _peso;
+    Ingrediente _ingredientes[NUM_ING];
+    ValoresNutricionales _valoresPlato;
+
+    inline void setNumIng(int num){ _nIng = num; };
+    inline int getNumIng(){ return _nIng; };
+    inline int firstGapPlato(){ return this->getNumIng(); };
+
   public:
     Plato();
-    inline void setIdPlato(int id){ _ID = id; };
-    void addGrupo(int botonGrande); //update valores
-    void deleteGrupo(int botonGrande); //borrar ultimo pulsado y update valores
-    inline int getIdPlato(){ return _ID; };
-    void showInfoPlato();
-
-  private:
-    int _ID;
-    grupo _alimentos[NUM_ALIMENTOS];
-    ValoresNutricionales _valores;
-    int firstGapAlimentos();
-    int getGrupo(int boton);
     
+    inline void setPesoPlato(float peso){ _peso = peso; };
+    inline float getPesoPlato(){ return _peso; };
+    
+    void addIngrediente(Ingrediente ing);     
+    
+    void updateValoresPlato(ValoresNutricionales val);
+    inline ValoresNutricionales getValoresPlato(){ return _valoresPlato; };
 };
 
 
 
 
-
-
-
-void Plato::updateValores(float Kcal, float Prot, float Lip, float Carb){
-    _valores._Kcal = Kcal;
-    _valores._Prot = Prot;
-    _valores._Lip = Lip;
-    _valores._Carb = Carb;
+Plato::Plato(){
+    this->setNumIng(0);
+    this->setPesoPlato(0.0);
 }
 
 
-void Plato::addGrupo(int boton){
-    int pos = this.firstGapAlimentos(); //Posicion del vector _Alimentos donde guardar
-    int grupoEscogido = this.getGrupo(boton);   //Grupo de alimentos escogido
-    ValoresNutricionales valoresAlimento;
-    valoresAlimento.Kcal = gruposAlimentos[grupoEscogido]
-    
-    updateValores(kcal, prot, lip, carb); 
-};
+void Plato::addIngrediente(Ingrediente ing){
+    _ingredientes[firstGapPlato()] = ing;                           // Añadir ingrediente
+    this->setNumIng(this->getNumIng() + 1);                         // Incrementar num ingredientes
+    this->setPesoPlato(this->getPesoPlato() + ing.getPesoIng());    // Incrementar peso del plato
+    this->updateValoresPlato(ing.getValoresIng());                  // Actualizar Valores Nutricionales
+}
 
 
-*/
+void Plato::updateValoresPlato(ValoresNutricionales val){
+    float carb = _valoresPlato.getCarbValores() + val.getCarbValores();
+    float lip = _valoresPlato.getLipValores() + val.getLipValores();
+    float prot = _valoresPlato.getProtValores() + val.getProtValores();
+    float kcal = _valoresPlato.getKcalValores() + val.getKcalValores();
+    ValoresNutricionales valAux(carb, lip, prot, kcal);
+    _valoresPlato.setValores(valAux);
+}
 
 #endif

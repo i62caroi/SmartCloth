@@ -1,15 +1,7 @@
 #ifndef GRUPOS_H
 #define GRUPOS_H
 
-#define NUM_GRUPOS 30
-
-typedef struct {
-    float Peso;
-    float Kcal;
-    float Prot;
-    float Lip;
-    float Carb;
-}ValoresNutricionales;
+#define NUM_GRUPOS 26
 
 
 typedef struct {
@@ -21,7 +13,6 @@ typedef struct {
     float Lip_g;
     float Carb_g;
 }Grupo;
-
 
 
 /*
@@ -66,16 +57,14 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,"L\xE1""cteos Enteros","Leche, cuajada,
                                       {38,"Prote\xED""nas semigrasas","Cerdo chuletas con grasa, conservas en aceite, jam\xF3""n curado con grasa, huevo",1.897038168,0.170259542,0.125801527,0.009282443}
                                     };
 
-
 Grupo grupoEscogido;
-ValoresNutricionales valoresActuales;
-
+Grupo grupoAnterior;
 
 
 /*---------------------------------------------------------------------------------------------------------
-   getGrupoAlimentos(): Grupo de alimentos seleccionado
+   getGrupoAlimentos(): Obtener grupo de alimentos seleccionado (checkAllButtons() en BUTTONS.h)
 ----------------------------------------------------------------------------------------------------------*/
-void getGrupoAlimentos(int id){
+void getGrupoAlimentos(int id){       // 'id' pasado es buttonGrande 
     int posGrupo;
     for(int i = 0; i < NUM_GRUPOS; i++){
         if(gruposAlimentos[i].ID_grupo == id){ 
@@ -84,8 +73,11 @@ void getGrupoAlimentos(int id){
         }
     }
     Serial.print(F("\nPosicion en vector grupo: ")); Serial.println(posGrupo);
+    grupoAnterior = grupoEscogido;
     grupoEscogido = gruposAlimentos[posGrupo]; 
 }
+
+
 
 
 
