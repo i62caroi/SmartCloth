@@ -124,9 +124,24 @@ void printEstatico(Ingrediente ing){
               val - ValoresNutricionales
 ----------------------------------------------------------------------------------------------------------*/
 void printValores(ValoresNutricionales val){
+    /*tft.setCursor(50, 210); //tft.getCursorY()
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextColor(VERDE);
+    tft.print("Alimento: "); tft.print(displayedWeight); tft.println(" g\n");
+
+    tft.setCursor(520, 210); 
+    tft.print("Plato: "); tft.print(platoActual.getPesoPlato()); tft.println(" g\n");
+
+    tft.setCursor(50, 300);
+    tft.setTextColor(BLANCO);
+    tft.println("Comida Actual\n");*/
+    
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(50, 375);
     tft.setTextColor(BLANCO);
+
+    //ValoresNutricionales val;
+    //val.setValores(platoActual.getValoresPlato());
     
     tft.print("Carb: "); tft.print(val.getCarbValores()); tft.println(" g");
     tft.setCursor(50, tft.getCursorY()+10);
@@ -200,9 +215,7 @@ void printStateRawCooked(String cad){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStateWeighted(): Incluye grupo de alimentos, ejemplos y valores nutricionales del alimento pesado
-            Parámetros:
-                ing - Ingrediente
+   printStateWeighted(): Incluye grupo de alimentos, ejemplos y valores nutricionales del alimento pe
 ----------------------------------------------------------------------------------------------------------*/
 void printStateWeighted(Ingrediente ing){
     tft.clearScreen(0);   
@@ -218,6 +231,8 @@ void printStateWeighted(Ingrediente ing){
     ing.setValoresIng(auxVal);
     
     printValoresAlimento(ing); 
+
+    //printValoresPlato();
 }
 
 

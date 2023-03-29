@@ -3,13 +3,12 @@
 
 #include "Grupos.h"
 #include "Plato.h"
-
+#include "Scale.h"
 
 
 /*  -----   BOTONERAS  ----- */
 int buttonGrande;                  //Botón pulsado en la botonera grande (checkAllButtons())
 volatile int buttonMain = 0;
-
 
 
 /* --------- EVENTOS ----------------- */
@@ -18,14 +17,25 @@ bool flagEvent;                   /* Para evitar que marque evento para cada int
                                      Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento) */
 
 
-
 /*  -----   BÁSCULA  ----- */
 volatile float weight = 0.0;
 volatile bool pesado = false;
+
+float diffWeight = 0.0;
+
 bool isScaleEmpty(){
     if(weight < 1.0) return true;
     else return false;
 }
+
+/*float displayedWeight;
+void updateDisplayedWeight(){
+    displayedWeight = diffWeight;
+}
+void tareScale(){ 
+  displayedWeight = 0.0; 
+};*/
+
 
 
 /* ----- PLATO/COMIDA ----- */

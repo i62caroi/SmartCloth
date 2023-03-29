@@ -13,16 +13,7 @@ HX711 scale;
 
 float newWeight = 0.0;
 float lastWeight = 0.0; 
-float diffWeight = 0.0;
 
-
-
-/*---------------------------------------------------------------------------------------------------------
-   tareScale(): Tarar báscula (TODO TARA MANUAL)
-----------------------------------------------------------------------------------------------------------*/
-void tareScale(){ 
-    scale.tare(); 
-}
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -39,7 +30,7 @@ float weighScale(){
 void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
     scale.set_scale(1093.48); // bad calibration!
-    tareScale();  
+    scale.tare();  
     //scale.get_units(10);
 }
 

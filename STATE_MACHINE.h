@@ -166,18 +166,18 @@ void actStateInit(){
 void actGruposAlimentos(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        /* Comprobamos que haya cambiado el peso antes de añadir el ingrediente para
+        /* Comprobamos que haya incrementado el peso antes de añadir el ingrediente para
            evitar que se incluya el mismo varias veces */
         static float pesoAnterior;
         static float pesoNuevo;
         pesoAnterior = pesoNuevo;
         pesoNuevo = weight;
-        if(abs(pesoAnterior - pesoNuevo) > 1.0){ /* Si se colocado algo en la báscula antes de pulsar este botón */
-            /* Usamos grupoAnterior porque al entrar a este estado ya se ha actualizado grupoEscogido por el nuevo botón */
+        if((pesoNuevo - pesoAnterior) > 1.0){ //INCREMENTO
+            /* Usamos 'grupoAnterior' porque al entrar a este estado ya se ha actualizado 'grupoEscogido' por el nuevo botón */
             Serial.println(F("Añadiendo ingrediente al plato..."));
-            Ingrediente ing(grupoAnterior, weight);
+            //Ingrediente ing(grupoAnterior, displayedWeight); /* Cálculo automático de valores nutricionales */
+            Ingrediente ing(grupoAnterior, weight); /* Cálculo automático de valores nutricionales */
             platoActual.addIngrediente(ing);
-            
         }
         //tareScale(); 
         printStateAB();
@@ -218,7 +218,11 @@ void actStateCooked(){
 void actStateWeighted(){ 
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
-        //Al seleccionar otro grupo de alimentos se guardará el ingrediente pesado
+        //updateDisplayedWeight();
+        /* Si ha decrementado el peso, eliminamos el último ingrediente añadido */
+        /*if(eventoBascula == DECREMENTO){ 
+            platoActual.deleteLastIngrediente();
+        }*/
         Ingrediente ing(grupoEscogido, weight); //Ingrediente auxiliar usado para mostrar información variable de lo pesado
         printStateWeighted(ing);
         doneState = true;
