@@ -75,6 +75,8 @@ void simplePrint(String cad){
    printEjemplosyGrupo(): Muestra ejemplos del grupo de alimentos seleccionado
 ----------------------------------------------------------------------------------------------------------*/
 void printEjemplosyGrupo(){    
+    tft.clearScreen(0);           // Limpiar
+    
     /* ----- EJEMPLOS ----- */
     tft.selectInternalFont(RA8876_FONT_SIZE_16);       // Tamaño texto
     tft.setCursor(50, 40);                             // Posicion inicio texto
@@ -193,8 +195,8 @@ void printStateInit(){
    printStateAB(): Incluye grupo de alimentos, ejemplos y valores nutricionales del plato actual
 ----------------------------------------------------------------------------------------------------------*/
 void printStateAB(){
-    tft.clearScreen(0);   
-    printEjemplosyGrupo();       
+    //tft.clearScreen(0);   
+    //printEjemplosyGrupo();       
     printValoresPlato(); 
 }
 
@@ -203,7 +205,7 @@ void printStateAB(){
    printStateRawCooked(): Información de STATE_Raw o STATE_Cooked
 ----------------------------------------------------------------------------------------------------------*/
 void printStateRawCooked(String cad){
-    tft.clearScreen(0);           // Limpiar
+    //tft.clearScreen(0);           // Limpiar
     printEjemplosyGrupo();        // Ejemplos y Grupo
     
     tft.setCursor(700, 230);      // Algo por debajo del grupo
@@ -215,12 +217,14 @@ void printStateRawCooked(String cad){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStateWeighted(): Incluye grupo de alimentos, ejemplos y valores nutricionales del alimento pe
+   printStateWeighted(): 
 ----------------------------------------------------------------------------------------------------------*/
-void printStateWeighted(Ingrediente ing){
-    tft.clearScreen(0);   
+void printStateWeighted(){
+    //tft.clearScreen(0);   
     printEjemplosyGrupo();  
-        
+
+    Ingrediente ing(grupoEscogido, weight); //Ingrediente auxiliar usado para mostrar información variable de lo pesado
+
     float carb = ing.getValoresIng().getCarbValores() + platoActual.getValoresPlato().getCarbValores();
     float lip = ing.getValoresIng().getLipValores() + platoActual.getValoresPlato().getLipValores();
     float prot = ing.getValoresIng().getProtValores() + platoActual.getValoresPlato().getProtValores();

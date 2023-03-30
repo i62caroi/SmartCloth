@@ -37,7 +37,7 @@ HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.
 
 void tareScale(){ 
   //displayedWeight = 0.0; 
-  scale.tare();  
+  scale.tare(1);  //1 toma de valor
 };
 
 
