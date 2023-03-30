@@ -31,10 +31,14 @@ bool isScaleEmpty(){
 /*float displayedWeight;
 void updateDisplayedWeight(){
     displayedWeight = diffWeight;
-}
+}*/
+
+HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h, aunque tenga el include 
+
 void tareScale(){ 
-  displayedWeight = 0.0; 
-};*/
+  //displayedWeight = 0.0; 
+  scale.tare();  
+};
 
 
 

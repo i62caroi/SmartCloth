@@ -2,7 +2,7 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 30 
+#define RULES 31
 
 #include "Screen.h" // Incluye Variables.h
 #include "Plato.h"  // Ingrediente.h (Valores_Nutricionales.h)
@@ -47,6 +47,10 @@ typedef enum {
 
 /* Buffer de eventos al que se irán añadiendo conforme ocurran */
 static event_t event_buffer[MAX_EVENTS];
+/* Este buffer no se llega a usar para nada, sino que se comprueba con
+   'lastEvent' si se cumple alguna regla de transición.
+   Si al final no se usara, se podría/debería eliminar para evitar ocupar
+   memoria innecesariamente */
 
 
 
@@ -78,6 +82,7 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
                                         {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
                                         {STATE_groupB,STATE_weighted,DECREMENTO},          // grupoB --decremento(tara)--> pesado
+                                        {STATE_groupB,STATE_groupB,DECREMENTO},            // grupoB --decremento(tara)--> grupoB
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
                                         {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --liberar_bascula--> pesado
@@ -101,7 +106,6 @@ states_t state_actual;
 states_t state_new;
 
 event_t lastEvent;
-//event_t lastValidEvent;
 
 event_t eventoMain;         //Evento ocurrido en botonera Main
 event_t eventoGrande;       //Evento ocurrido en botonera grande
@@ -123,9 +127,7 @@ event_t eventoBascula;      //Timer
 bool checkStateConditions(){
     for (int i = 0; i < RULES; i++){
         if(rules[i].state_i == state_actual){
-            //if((rules[i].condition == lastValidEvent) or (rules[i].condition == lastEvent)){
             if(rules[i].condition == lastEvent){
-                //lastValidEvent = lastEvent;
                 state_new = rules[i].state_j;
                 doneState = false;
                 return true;
@@ -152,7 +154,7 @@ bool checkStateConditions(){
 void actStateInit(){ 
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
-        //tareScale(); 
+        tareScale(); 
         //Plato actual es global (Variables.h)
         printStateInit(); 
         doneState = true;
@@ -166,18 +168,20 @@ void actStateInit(){
 void actGruposAlimentos(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        /* Comprobamos que haya incrementado el peso antes de añadir el ingrediente para
+        /* Comprobamos que haya cambiado el peso antes de añadir el ingrediente para
            evitar que se incluya el mismo varias veces */
         static float pesoAnterior;
         static float pesoNuevo;
         pesoAnterior = pesoNuevo;
         pesoNuevo = weight;
-        if((pesoNuevo - pesoAnterior) > 1.0){ //INCREMENTO
+        if(abs(pesoNuevo - pesoAnterior) > 1.0){ 
             /* Usamos 'grupoAnterior' porque al entrar a este estado ya se ha actualizado 'grupoEscogido' por el nuevo botón */
             Serial.println(F("Añadiendo ingrediente al plato..."));
             //Ingrediente ing(grupoAnterior, displayedWeight); /* Cálculo automático de valores nutricionales */
             Ingrediente ing(grupoAnterior, weight); /* Cálculo automático de valores nutricionales */
             platoActual.addIngrediente(ing);
+            
+            tareScale(); //Tarar
         }
         //tareScale(); 
         printStateAB();

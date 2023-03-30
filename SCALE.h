@@ -9,7 +9,7 @@
 const int LOADCELL_DOUT_PIN = 3;
 const int LOADCELL_SCK_PIN = 2;
 
-HX711 scale;
+//HX711 scale;
 
 float newWeight = 0.0;
 float lastWeight = 0.0; 
