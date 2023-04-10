@@ -170,7 +170,7 @@ void actStateInit(){
 void actGruposAlimentos(){ 
     if(!doneState){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        printEjemplosyGrupo();
+        procesamiento = "CRUDO";
         /* Comprobamos que haya cambiado el peso antes de añadir el ingrediente para
            evitar que se incluya el mismo varias veces 
            
@@ -189,7 +189,8 @@ void actGruposAlimentos(){
             
             tareScale(); //Tarar
         }
-        printStateAB(); //solo printValoresPlato()
+        //printStateAB(); 
+        printStateABandProcessed();
         doneState = true;
     }
 }
@@ -203,7 +204,9 @@ void actGruposAlimentos(){
 void actStateRaw(){ 
     if(!doneState){
         Serial.println(F("\nAlimento crudo...")); 
-        printStateRawCooked("CRUDO"); 
+        procesamiento = "CRUDO";
+        //printStateRawCooked(); 
+        printStateABandProcessed();
         doneState = true;
     }
 }
@@ -215,7 +218,9 @@ void actStateRaw(){
 void actStateCooked(){ 
     if(!doneState){
         Serial.println(F("\nAlimento cocinado...")); 
-        printStateRawCooked("COCINADO"); 
+        procesamiento = "COCINADO";
+        //printStateRawCooked(); 
+        printStateABandProcessed();
         doneState = true;
     }
 }
@@ -227,11 +232,6 @@ void actStateCooked(){
 void actStateWeighted(){ 
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
-        //updateDisplayedWeight();
-        /* Si ha decrementado el peso, eliminamos el último ingrediente añadido */
-        /*if(eventoBascula == DECREMENTO){ 
-            platoActual.deleteLastIngrediente();
-        }*/
         printStateWeighted();
         doneState = true;
     }
@@ -243,9 +243,12 @@ void actStateWeighted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateAdded(){ 
     if(!doneState){
-        //TODO añadir plato
-        Serial.println(F("\nPlato a\xF1""adido...")); 
-        //tareScale(); 
+        Serial.println(F("Añadiendo plato a la comida..."));
+        comidaActual.addPlato(platoActual); // Guardar plato actual
+        platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
+        
+        //tareScale(); //Tarar
+        
         printStateAdded(); 
         doneState = true;
     }

@@ -41,6 +41,9 @@ void tareScale(){
 };
 
 
+/* ----- CRUDO/COCINADO ----- */
+String procesamiento = "";
+
 
 /* ----- PLATO/COMIDA ----- */
 Plato platoActual;
