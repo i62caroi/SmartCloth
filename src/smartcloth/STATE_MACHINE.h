@@ -172,7 +172,11 @@ void actGruposAlimentos(){
         Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         printEjemplosyGrupo();
         /* Comprobamos que haya cambiado el peso antes de añadir el ingrediente para
-           evitar que se incluya el mismo varias veces */
+           evitar que se incluya el mismo varias veces 
+           
+           Solo se añade el ingrediente del grupo anterior al escoger otro grupo para
+           un nuevo ingrediente. 
+       */
         static float pesoAnterior;
         static float pesoNuevo;
         pesoAnterior = pesoNuevo;
@@ -180,7 +184,6 @@ void actGruposAlimentos(){
         if(abs(pesoNuevo - pesoAnterior) > 1.0){ 
             /* Usamos 'grupoAnterior' porque al entrar a este estado ya se ha actualizado 'grupoEscogido' por el nuevo botón */
             Serial.println(F("Añadiendo ingrediente al plato..."));
-            //Ingrediente ing(grupoAnterior, displayedWeight); /* Cálculo automático de valores nutricionales */
             Ingrediente ing(grupoAnterior, weight); /* Cálculo automático de valores nutricionales */
             platoActual.addIngrediente(ing);
             

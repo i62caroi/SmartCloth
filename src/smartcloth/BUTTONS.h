@@ -65,8 +65,8 @@ void checkAllButtons(){
         /* ---------------    TECLADO MAIN   ----------------- */
         if(buttonMain != 0){
             switch (buttonMain) {
-                case 1:   eventoMain = CRUDO;           break;  // AMARILLO       Crudo -> opción predeterminada
-                case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) getGrupoAlimentos(buttonGrande+20);     break;  // BLANCO 
+                case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // AMARILLO  Crudo -> opción predeterminada
+                case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  // BLANCO 
                 case 3:   eventoMain = ADD_PLATO;       break;  // VERDE 
                 case 4:   eventoMain = DELETE_PLATO;    break;  // ROJO 
                 case 5:   eventoMain = GUARDAR;         break;  // NEGRO 
@@ -95,7 +95,7 @@ void checkAllButtons(){
             addEventToBuffer(eventoGrande);
 
             /*----- Grupo alimentos ---- */
-            getGrupoAlimentos(buttonGrande);
+            setGrupoAlimentos(buttonGrande);
             
             pulsandoGrande = false;
         }

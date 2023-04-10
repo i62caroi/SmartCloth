@@ -97,11 +97,11 @@ void printEjemplosyGrupo(){
 /*------------------------------- ESTRUCTURA CENTRAL   --------------------------------------------*/
 /***************************************************************************************************/
 /*---------------------------------------------------------------------------------------------------------
-   printEstatico(): Muestra el peso del alimento y el plato
+   printCentral(): Muestra el peso del alimento y el plato
           Parámetros:
-              ing - Ingrediente
+              ing - Ingrediente auxiliar temporal
 ----------------------------------------------------------------------------------------------------------*/
-void printEstatico(Ingrediente ing){
+void printCentral(Ingrediente &ing){
     tft.setCursor(50, 210); //tft.getCursorY()
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextColor(VERDE);
@@ -126,24 +126,9 @@ void printEstatico(Ingrediente ing){
               val - ValoresNutricionales
 ----------------------------------------------------------------------------------------------------------*/
 void printValores(ValoresNutricionales val){
-    /*tft.setCursor(50, 210); //tft.getCursorY()
-    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
-    tft.setTextColor(VERDE);
-    tft.print("Alimento: "); tft.print(displayedWeight); tft.println(" g\n");
-
-    tft.setCursor(520, 210); 
-    tft.print("Plato: "); tft.print(platoActual.getPesoPlato()); tft.println(" g\n");
-
-    tft.setCursor(50, 300);
-    tft.setTextColor(BLANCO);
-    tft.println("Comida Actual\n");*/
-    
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(50, 375);
     tft.setTextColor(BLANCO);
-
-    //ValoresNutricionales val;
-    //val.setValores(platoActual.getValoresPlato());
     
     tft.print("Carb: "); tft.print(val.getCarbValores()); tft.println(" g");
     tft.setCursor(50, tft.getCursorY()+10);
@@ -152,25 +137,6 @@ void printValores(ValoresNutricionales val){
     tft.print("Prot: "); tft.print(val.getProtValores()); tft.println(" g");
     tft.setCursor(50, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(val.getKcalValores()); tft.println(" Kcal");
-}
-
-/*---------------------------------------------------------------------------------------------------------
-   printValoresAlimento(): Muestra los valores nutricionales del alimento indicado
-          Parámetros:
-              ing - Ingrediente
-----------------------------------------------------------------------------------------------------------*/
-void printValoresAlimento(Ingrediente ing){
-    printEstatico(ing);
-    printValores(ing.getValoresIng());
-}
-
-/*---------------------------------------------------------------------------------------------------------
-   printValoresPlato(): Muestra los valores nutricionales del plato actual
-----------------------------------------------------------------------------------------------------------*/
-void printValoresPlato(){
-    Ingrediente ing; //Peso 0.0
-    printEstatico(ing);
-    printValores(platoActual.getValoresPlato());
 }
 
 
@@ -194,10 +160,14 @@ void printStateInit(){
 /*---------------------------------------------------------------------------------------------------------
    printStateAB(): Incluye grupo de alimentos, ejemplos y valores nutricionales del plato actual
 ----------------------------------------------------------------------------------------------------------*/
+Ingrediente ingAux; // Ingrediente auxiliar vacío con peso 0.0
+
 void printStateAB(){
-    //tft.clearScreen(0);   
-    //printEjemplosyGrupo();       
-    printValoresPlato(); 
+    printEjemplosyGrupo();                          // 1 - Ejemplos y grupo 
+
+    printCentral(ingAux);                           // 2 - Estructura central (peso 0.0)
+    
+    printValores(platoActual.getValoresPlato());    // 3 - Valores nutricionales 
 }
 
 
@@ -205,14 +175,16 @@ void printStateAB(){
    printStateRawCooked(): Información de STATE_Raw o STATE_Cooked
 ----------------------------------------------------------------------------------------------------------*/
 void printStateRawCooked(String cad){
-    //tft.clearScreen(0);           // Limpiar
-    printEjemplosyGrupo();        // Ejemplos y Grupo
+    printEjemplosyGrupo();                          // 1 - Ejemplos y grupo     
     
-    tft.setCursor(700, 230);      // Algo por debajo del grupo
-    tft.setTextColor(MORADO);      
-    tft.print(cad);     
-    
-    printValoresPlato();          // Plato
+    printCentral(ingAux);                           // 2 - Estructura central (peso 0.0)
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.setCursor(850, 120);                        // 2 - 1 - CRUDO/COCINADO
+    tft.setTextColor(CIAN);      
+    tft.print(cad); 
+
+    printValores(platoActual.getValoresPlato());    // 3 - Valores nutricionales
 }
 
 
@@ -220,10 +192,10 @@ void printStateRawCooked(String cad){
    printStateWeighted(): 
 ----------------------------------------------------------------------------------------------------------*/
 void printStateWeighted(){
-    //tft.clearScreen(0);   
-    printEjemplosyGrupo();  
+    printEjemplosyGrupo();                          // 1 - Ejemplos y grupo 
 
-    Ingrediente ing(grupoEscogido, weight); //Ingrediente auxiliar usado para mostrar información variable de lo pesado
+    // ---------------
+    Ingrediente ing(grupoEscogido, weight);         // Ingrediente auxiliar usado para mostrar información variable de lo pesado
 
     float carb = ing.getValoresIng().getCarbValores() + platoActual.getValoresPlato().getCarbValores();
     float lip = ing.getValoresIng().getLipValores() + platoActual.getValoresPlato().getLipValores();
@@ -233,10 +205,11 @@ void printStateWeighted(){
     ValoresNutricionales auxVal(carb, lip, prot, kcal);
 
     ing.setValoresIng(auxVal);
+    // ---------------
     
-    printValoresAlimento(ing); 
-
-    //printValoresPlato();
+    printCentral(ing);                              // 2 - Estructura central
+    
+    printValores(ing.getValoresIng());              // 3 - Valores nutricionales
 }
 
 
