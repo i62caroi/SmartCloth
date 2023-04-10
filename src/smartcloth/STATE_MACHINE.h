@@ -5,7 +5,7 @@
 #define RULES 33
 
 #include "Screen.h" // Incluye Variables.h
-#include "Plato.h"  // Ingrediente.h (Valores_Nutricionales.h)
+#include "Comida.h"  // Plato.h (Ingrediente.h (Valores_Nutricionales.h))
 
 
 bool doneState;
@@ -67,7 +67,7 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_INI,STATE_groupB,TIPO_B},                   // INI --tipoB--> grupoB
                                         {STATE_groupA,STATE_groupA,TIPO_A},                // grupoA --tipoA--> grupoA
                                         {STATE_groupA,STATE_groupA,DECREMENTO},            // grupoA --decremento(tara)--> grupoA
-                                        {STATE_groupA,STATE_groupA,LIBERAR},               // grupoA --liberar_bascula(tara)--> grupoA **** Cuando se quita algo tras tarar pasa a negativo gracias a esta regla
+                                        {STATE_groupA,STATE_groupA,LIBERAR},               // grupoA --liberar_bascula(tara)--> grupoA **** Cuando se quita algo tras tarar pasa a negativo gracias a esta regla (tb afecta a los valores nutri)
                                         {STATE_groupA,STATE_groupB,TIPO_B},                // grupoA --tipoB--> grupoB  
                                         {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
                                         {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
@@ -84,7 +84,7 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
                                         {STATE_groupB,STATE_weighted,DECREMENTO},          // grupoB --decremento(tara)--> pesado
                                         {STATE_groupB,STATE_groupB,DECREMENTO},            // grupoB --decremento(tara)--> grupoB
-                                        {STATE_groupB,STATE_groupB,LIBERAR},               // grupoB --liberar_bascula(tara)--> grupoB **** Cuando se quita algo tras tarar pasa a negativo gracias a esta regla
+                                        {STATE_groupB,STATE_groupB,LIBERAR},               // grupoB --liberar_bascula(tara)--> grupoB **** Cuando se quita algo tras tarar pasa a negativo gracias a esta regla (tb afecta a los valores nutri)
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
                                         {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --liberar_bascula--> pesado

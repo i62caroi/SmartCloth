@@ -2,7 +2,7 @@
 #define VARIABLES_H
 
 #include "Grupos.h"
-#include "Plato.h"
+#include "Comida.h" //Plato.h
 #include "Scale.h"
 
 
@@ -44,6 +44,7 @@ void tareScale(){
 
 /* ----- PLATO/COMIDA ----- */
 Plato platoActual;
+Comida comidaActual;
 
 
 #endif
