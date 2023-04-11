@@ -27,6 +27,9 @@
 #define   MARRON        0xABC8
 
 
+#define   MARGEN_IZQ    30
+
+
 /* Screen */
 RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 
@@ -81,13 +84,13 @@ void printEjemplosyGrupo(){
     
     /* ----- EJEMPLOS ----- */
     tft.selectInternalFont(RA8876_FONT_SIZE_16);       // Tamaño texto
-    tft.setCursor(50, 40);                             // Posicion inicio texto
+    tft.setCursor(MARGEN_IZQ, 40);                             // Posicion inicio texto
     tft.setTextColor(AMARILLO);                        // Color texto                  
     tft.println(grupoEscogido.Ejemplos_grupo);         // Imprimir texto
 
     /* ----- GRUPO ----- */
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(50, 120);                            // Posicion inicio texto => tft.getCursorY()
+    tft.setCursor(MARGEN_IZQ, 120);                            // Posicion inicio texto => tft.getCursorY()
     tft.setTextColor(BLANCO);                          // Color texto      
     tft.setTextScale(2);        
     tft.println(grupoEscogido.Nombre_grupo);           // Imprimir texto
@@ -110,29 +113,33 @@ void printEjemplosyGrupo(){
               ing - Ingrediente auxiliar temporal
 ----------------------------------------------------------------------------------------------------------*/
 void printCentral(){
-    tft.setCursor(50, 210); //tft.getCursorY()
+    // ------------ ALIMENTO  -------------------------
+    tft.setCursor(MARGEN_IZQ, 210); //tft.getCursorY()
     tft.selectInternalFont(RA8876_FONT_SIZE_24);  
     tft.setTextColor(VERDE);
     tft.print("Alimento: "); 
     tft.setCursor(tft.getCursorX(), 215); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    tft.print(weight); tft.println("g\n");
+    tft.print(pesoBascula); tft.println(" g\n");
 
-    tft.setCursor(430, 210); 
+    // ------------ PLATO  -------------------------
+    tft.setCursor(410, 210); 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.print("Plato: "); 
     tft.setCursor(tft.getCursorX(), 215); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    tft.print(platoActual.getPesoPlato()); tft.println("g\n");
+    tft.print(platoActual.getPesoPlato()); tft.println(" g\n");
 
+    // ------------ TOTAL  -------------------------
+    /* El peso total se actualiza al guardar la comida final */
     tft.setCursor(700, 210); 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.print("Total: "); 
     tft.setCursor(tft.getCursorX(), 215); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    tft.print(comidaActual.getPesoComida()); tft.println("g\n");
+    tft.print(diaActual.getPesoDiario()); tft.println(" g\n");
 
-    tft.setCursor(50, 300);
+    tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextColor(BLANCO);
     tft.println("Comida Actual\n");
@@ -144,22 +151,46 @@ void printCentral(){
 /*------------------------------- VALORES NUTRICIONALES   -----------------------------------------*/
 /***************************************************************************************************/
 /*---------------------------------------------------------------------------------------------------------
-   printValores(): Muestra los valores nutricionales que se indiquen
-          Parámetros:
-              val - ValoresNutricionales
+   printValoresComida(): Muestra los valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
-void printValores(ValoresNutricionales val){
+void printValoresComida(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    tft.setCursor(50, 375);
+    tft.setCursor(MARGEN_IZQ, 375);
     tft.setTextColor(BLANCO);
     
-    tft.print("Carb: "); tft.print(val.getCarbValores()); tft.println(" g");
-    tft.setCursor(50, tft.getCursorY()+10);
-    tft.print("Lip: "); tft.print(val.getLipValores()); tft.println(" g");
-    tft.setCursor(50, tft.getCursorY()+10);
-    tft.print("Prot: "); tft.print(val.getProtValores()); tft.println(" g");
-    tft.setCursor(50, tft.getCursorY()+10);
-    tft.print("Kcal: "); tft.print(val.getKcalValores()); tft.println(" Kcal");
+    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.println(" g");
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Lip: "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.println(" g");
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.println(" g");
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Kcal: "); tft.print(comidaActual.getValoresComida().getKcalValores()); tft.println(" Kcal");
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printValoresTemporales(): Muestra los valores nutricionales temporales causados por el cambio de peso
+----------------------------------------------------------------------------------------------------------*/
+void printValoresTemporales(){
+    Ingrediente ingAux(grupoEscogido, pesoBascula);         // Ingrediente auxiliar usado para mostrar información variable de lo pesado
+    
+    float carb = ingAux.getValoresIng().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
+    float lip = ingAux.getValoresIng().getLipValores() + comidaActual.getValoresComida().getLipValores();
+    float prot = ingAux.getValoresIng().getProtValores() + comidaActual.getValoresComida().getProtValores();
+    float kcal = ingAux.getValoresIng().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
+    
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.setCursor(MARGEN_IZQ, 375);
+    tft.setTextColor(BLANCO);
+    
+    tft.print("Carb: "); tft.print(carb); tft.println(" g");
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Lip: "); tft.print(lip); tft.println(" g");
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Prot: "); tft.print(prot); tft.println(" g");
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Kcal: "); tft.print(kcal); tft.println(" Kcal");
 }
 
 
@@ -178,7 +209,26 @@ void printValores(ValoresNutricionales val){
    printStateInit(): Información del STATE_INI
 ----------------------------------------------------------------------------------------------------------*/
 void printStateInit(){
-    simplePrint("BIENVENIDO\n\n           Escoja grupo de alimentos");
+    //simplePrint("BIENVENIDO\n\n           Escoja grupo de alimentos");
+    String cad;
+    
+    tft.clearScreen(0);                                // Limpiar
+    
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+    tft.setCursor(300, 50);                            // Posicion inicio texto
+    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextScale(2);        
+    cad = "\xA1""BIENVENIDO/A\x21"""; // ¡BIENVENIDO/A!
+    tft.println(cad);                                  // Imprimir texto
+    
+    tft.setCursor(MARGEN_IZQ, 120);                             
+    tft.setTextColor(ROJO);                                
+    tft.setTextScale(2);        
+    cad = "Escoja grupo de alimentos";
+    tft.println(cad);           
+    
+    printCentral();                                    // 2 - Estructura central
+    printValoresComida();                              // 3 - Valores nutricionales
 }
 
 
@@ -186,43 +236,28 @@ void printStateInit(){
 
 /*---------------------------------------------------------------------------------------------------------
    printStateABandProcessed(): Incluye grupo de alimentos, ejemplos, procesamiento (crudo/cocinado)
-                                y valores nutricionales del plato actual
+                                y valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
 void printStateABandProcessed(){
-    printEjemplosyGrupo();                          // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
-    printCentral();                                 // 2 - Estructura central (peso 0.0)
-    printValores(platoActual.getValoresPlato());    // 3 - Valores nutricionales
-    //printValores(comidaActual.getValoresComida()); 
+    printEjemplosyGrupo();        // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
+    printCentral();               // 2 - Estructura central (peso 0.0)
+    printValoresComida();         // 3 - Valores nutricionales
 }
 
 
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStateWeighted(): 
+   printStateWeighted():  Incluye grupo de alimentos, ejemplos, procesamiento (crudo/cocinado)
+                          y valores nutricionales de la comida actual junto con lo pesado temporalmente
 ----------------------------------------------------------------------------------------------------------*/
 void printStateWeighted(){
-    printEjemplosyGrupo();                          // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
-    printCentral();                                 // 2 - Estructura central
-    
-    // ---------------
-    Ingrediente ingAux(grupoEscogido, weight);         // Ingrediente auxiliar usado para mostrar información variable de lo pesado
-    float carb = ingAux.getValoresIng().getCarbValores() + platoActual.getValoresPlato().getCarbValores();
-    float lip = ingAux.getValoresIng().getLipValores() + platoActual.getValoresPlato().getLipValores();
-    float prot = ingAux.getValoresIng().getProtValores() + platoActual.getValoresPlato().getProtValores();
-    float kcal = ingAux.getValoresIng().getKcalValores() + platoActual.getValoresPlato().getKcalValores();
-    /*
-    float carb = ingAux.getValoresIng().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
-    float lip = ingAux.getValoresIng().getLipValores() + comidaActual.getValoresComida().getLipValores();
-    float prot = ingAux.getValoresIng().getProtValores() + comidaActual.getValoresComida().getProtValores();
-    float kcal = ingAux.getValoresIng().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
-    */
-    ValoresNutricionales auxVal(carb, lip, prot, kcal);
-    ingAux.setValoresIng(auxVal);
-    // ---------------
-    
-    printValores(ingAux.getValoresIng());              // 3 - Valores nutricionales
+    printEjemplosyGrupo();         // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
+    printCentral();                // 2 - Estructura central
+    printValoresTemporales();      // 3 - Valores nutricionales
 }
+
+
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -230,33 +265,72 @@ void printStateWeighted(){
 ----------------------------------------------------------------------------------------------------------*/
 void printStateAdded(){
     //simplePrint("Plato a\xF1""adido\n\n Retire el plato");
-    //printEjemplosyGrupo();                          // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
     
-    tft.clearScreen(0);           // Limpiar
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(50, 120);                            // Posicion inicio texto => tft.getCursorY()
-    tft.setTextColor(ROJO);                          // Color texto      
+    tft.clearScreen(0);                               // Limpiar
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);      // Tamaño texto
+    tft.setCursor(MARGEN_IZQ, 120);                           // Posicion inicio texto => tft.getCursorY()
+    tft.setTextColor(ROJO);                           // Color texto      
     tft.setTextScale(2);        
-    String cad = "Comience nuevo plato";
-    tft.println(cad);           // Imprimir texto
+    String cad = "Retire el plato actual y comience uno nuevo";
+    tft.println(cad);                                 // Imprimir texto
     
-    printCentral();                                 // 2 - Estructura central
-    printValores(platoActual.getValoresPlato());    // 3 - Valores nutricionales
+    printCentral();                                   // 2 - Estructura central
+    printValoresComida();                             // 3 - Valores nutricionales
 }
+
+
+
+
 
 /*---------------------------------------------------------------------------------------------------------
    printStateDeleted(): Información del STATE_Deleted
 ----------------------------------------------------------------------------------------------------------*/
 void printStateDeleted(){
-    simplePrint("Plato eliminado\n\n Retire el plato");
+    //simplePrint("Plato eliminado\n\n Retire el plato");
+
+    tft.clearScreen(0);                                // Limpiar
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+    tft.setCursor(MARGEN_IZQ, 120);                            // Posicion inicio texto => tft.getCursorY()
+    tft.setTextColor(ROJO);                            // Color texto      
+    tft.setTextScale(2);        
+    String cad = "Plato eliminado. Ret\xED""relo y comience de nuevo";
+    tft.println(cad);                                  // Imprimir texto
+    
+    printCentral();                                    // 2 - Estructura central
+    printValoresComida();                              // 3 - Valores nutricionales
 }
+
+
+
 
 /*---------------------------------------------------------------------------------------------------------
    printStateSaved(): Información del STATE_Saved
 ----------------------------------------------------------------------------------------------------------*/
 void printStateSaved(){
-    simplePrint("Comida guardada\n\n Retire el plato");
+    //simplePrint("Comida guardada\n\n Retire el plato");
+
+    tft.clearScreen(0);                                // Limpiar
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+    tft.setCursor(MARGEN_IZQ, 120);                            // Posicion inicio texto => tft.getCursorY()
+    tft.setTextColor(ROJO);                            // Color texto      
+    tft.setTextScale(2);        
+    String cad = "Comida guardada";
+    tft.println(cad);                                  // Imprimir texto
+    
+    printCentral();                                    // 2 - Estructura central
+    printValoresComida();                              // 3 - Valores nutricionales
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 

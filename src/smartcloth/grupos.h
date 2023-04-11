@@ -15,7 +15,9 @@ typedef struct {
 }Grupo;
 
 
-/*
+/* 
+   Caracteres ASCII/ISO 8859-1 (Latin-1) en HEX ==> https://cs.stanford.edu/people/miles/iso8859.html
+ 
     á --> E1    Á --> C1
     é --> E9    É --> C9
     í --> ED    Í --> CD

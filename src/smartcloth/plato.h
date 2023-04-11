@@ -25,7 +25,7 @@ class Plato{
     inline void setPesoPlato(float peso){ _peso = peso; };
     inline float getPesoPlato(){ return _peso; };
     
-    void addIngrediente(Ingrediente &ing);         
+    void addIngPlato(Ingrediente ing);         
     
     inline ValoresNutricionales getValoresPlato(){ return _valoresPlato; };
     void updateValoresPlato(ValoresNutricionales val); 
@@ -43,7 +43,7 @@ Plato::Plato(){
 }
 
 
-void Plato::addIngrediente(Ingrediente &ing){
+void Plato::addIngPlato(Ingrediente ing){
     _ingredientes[this->firstGapPlato()] = ing;                                   // Añadir ingrediente
     this->setNumIng(this->getNumIng() + 1);                                 // Incrementar num ingredientes
     this->setPesoPlato(this->getPesoPlato() + ing.getPesoIng());            // Incrementar peso del plato

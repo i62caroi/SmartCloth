@@ -2,7 +2,7 @@
 #define VARIABLES_H
 
 #include "Grupos.h"
-#include "Comida.h" //Plato.h
+#include "Diario.h" // Comida.h (Plato.h)
 #include "Scale.h"
 
 
@@ -20,34 +20,28 @@ bool flagEvent;                   /* Para evitar que marque evento para cada int
 /*  -----   BÁSCULA  ----- */
 volatile float weight = 0.0;
 volatile bool pesado = false;
+float pesoBascula = 0.0;
 
-float diffWeight = 0.0;
 
-bool isScaleEmpty(){
-    if(weight < 1.0) return true;
-    else return false;
-}
+HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
-/*float displayedWeight;
-void updateDisplayedWeight(){
-    displayedWeight = diffWeight;
-}*/
-
-HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h, aunque tenga el include 
-
+//bool tarado = false;
 void tareScale(){ 
-  //displayedWeight = 0.0; 
-  scale.tare(1);  //1 toma de valor
+  scale.tare(1);  //5 tomas de valor
+  //tarado = true;
 };
 
 
+
 /* ----- CRUDO/COCINADO ----- */
-String procesamiento = "";
+String procesamiento; // "CRUDO" o "COCINADO"
 
 
-/* ----- PLATO/COMIDA ----- */
+/* ----- PLATO/COMIDA/DIARIO ----- */
 Plato platoActual;
+//bool platoNuevo = true;
 Comida comidaActual;
+Diario diaActual;
 
 
 #endif

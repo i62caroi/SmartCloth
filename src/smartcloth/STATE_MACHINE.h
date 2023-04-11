@@ -2,7 +2,7 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 33
+#define RULES 33 //31
 
 #include "Screen.h" // Incluye Variables.h
 #include "Comida.h"  // Plato.h (Ingrediente.h (Valores_Nutricionales.h))
@@ -14,7 +14,8 @@ bool doneState;
 /*-------------------------------------- ESTADOS -----------------------------------------------*/
 /*----------------------------------------------------------------------------------------------*/
 typedef enum {
-              STATE_INI           =   (1),    // Smartcloth encendido
+              //STATE_Bienvenida    =   (1),    // Estado inicial de bienvenida
+              STATE_INI    =   (1),    // Estado para transiciones intermedias
               STATE_groupA        =   (2),    // grupo A
               STATE_groupB        =   (3),    // grupo B
               STATE_raw           =   (4),    // (grupo A) crudo
@@ -42,7 +43,7 @@ typedef enum {
               GUARDAR             =   (7),    // NEGRO 
               INCREMENTO          =   (8),    // Báscula
               DECREMENTO          =   (9),    // Báscula
-              LIBERAR             =   (10)    // Báscula a 0
+              LIBERAR               =   (10)    // Báscula a 0
 } event_t;
 
 /* Buffer de eventos al que se irán añadiendo conforme ocurran */
@@ -66,11 +67,12 @@ typedef struct{
 static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},                   // INI --tipoA--> grupoA
                                         {STATE_INI,STATE_groupB,TIPO_B},                   // INI --tipoB--> grupoB
                                         {STATE_groupA,STATE_groupA,TIPO_A},                // grupoA --tipoA--> grupoA
-                                        {STATE_groupA,STATE_groupA,DECREMENTO},            // grupoA --decremento(tara)--> grupoA
-                                        {STATE_groupA,STATE_groupA,LIBERAR},               // grupoA --liberar_bascula(tara)--> grupoA **** Cuando se quita algo tras tarar pasa a negativo gracias a esta regla (tb afecta a los valores nutri)
+                                        //{STATE_groupA,STATE_groupA,DECREMENTO},            // grupoA --decremento(tara)--> grupoA
+                                        //{STATE_groupA,STATE_groupA,LIBERAR},               // grupoA --LIBERAR_bascula(tara)--> grupoA ==> para que permita tarar en estado groupA y no dé error de evento
                                         {STATE_groupA,STATE_groupB,TIPO_B},                // grupoA --tipoB--> grupoB  
                                         {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
                                         {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
+                                        {STATE_groupA,STATE_weighted,INCREMENTO},          // grupoA --incremento--> pesado   ==>  aprovechar 'crudo' predeterminado para pesar directamente
                                         {STATE_raw,STATE_cooked,COCINADO},                 // raw --cocinado--> cooked
                                         {STATE_raw,STATE_groupA,TIPO_A},                   // raw --tipoA--> grupoA
                                         {STATE_raw,STATE_groupB,TIPO_B},                   // raw --tipoB--> grupoB
@@ -80,22 +82,24 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_groupA,TIPO_A},        
                                         {STATE_cooked,STATE_groupB,TIPO_B},                // cooked --tipoB--> grupoB
                                         {STATE_cooked,STATE_weighted,INCREMENTO},          // cooked --incremento--> pesado
                                         {STATE_groupB,STATE_groupB,TIPO_B},                // grupoB --tipoB--> grupoB
+                                        //{STATE_groupB,STATE_groupB,LIBERAR},               // grupoB --LIBERAR_bascula(tara)--> grupoB ==> para que permita tarar en estado groupB y no dé error de evento
                                         {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
+                                        {STATE_groupB,STATE_raw,CRUDO},                    // grupoB --crudo--> raw      
+                                        {STATE_groupB,STATE_cooked,COCINADO},              // grupoB --cocinado--> cooked 
                                         {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
-                                        {STATE_groupB,STATE_weighted,DECREMENTO},          // grupoB --decremento(tara)--> pesado
-                                        {STATE_groupB,STATE_groupB,DECREMENTO},            // grupoB --decremento(tara)--> grupoB
-                                        {STATE_groupB,STATE_groupB,LIBERAR},               // grupoB --liberar_bascula(tara)--> grupoB **** Cuando se quita algo tras tarar pasa a negativo gracias a esta regla (tb afecta a los valores nutri)
+                                        //{STATE_groupB,STATE_weighted,DECREMENTO},          // grupoB --decremento(tara)--> pesado
+                                        //{STATE_groupB,STATE_groupB,DECREMENTO},            // grupoB --decremento(tara)--> grupoB
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
-                                        {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --liberar_bascula--> pesado
+                                        {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --LIBERAR_bascula--> pesado
                                         {STATE_weighted,STATE_groupA,TIPO_A},              // pesado --tipoA--> grupoA
                                         {STATE_weighted,STATE_groupB,TIPO_B},              // pesado --tipoA--> grupoA 
                                         {STATE_weighted,STATE_added,ADD_PLATO},            // pesado --add--> plato añadido
                                         {STATE_weighted,STATE_deleted,DELETE_PLATO},       // pesado --delete--> plato eliminado
                                         {STATE_weighted,STATE_saved,GUARDAR},              // pesado --save--> comida guardada
-                                        {STATE_added,STATE_INI,LIBERAR},                   // añadido --liberar_bascula--> INI
-                                        {STATE_deleted,STATE_INI,LIBERAR},                 // eliminado --liberar_bascula--> INI
-                                        {STATE_saved,STATE_INI,LIBERAR}                    // guardar --liberar_bascula--> INI         
+                                        {STATE_added,STATE_INI,LIBERAR},                   // añadido --LIBERAR_bascula--> INI
+                                        {STATE_deleted,STATE_INI,LIBERAR},                 // eliminado --LIBERAR_bascula--> INI
+                                        {STATE_saved,STATE_INI,LIBERAR}                    // guardar --LIBERAR_bascula--> INI         
                                       };
 
 
@@ -156,8 +160,9 @@ bool checkStateConditions(){
 void actStateInit(){ 
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
+        
         tareScale(); 
-        //Plato actual es global (Variables.h)
+        
         printStateInit(); 
         doneState = true;
     }
@@ -180,16 +185,32 @@ void actGruposAlimentos(){
         static float pesoAnterior;
         static float pesoNuevo;
         pesoAnterior = pesoNuevo;
-        pesoNuevo = weight;
+        pesoNuevo = pesoBascula;
         if(abs(pesoNuevo - pesoAnterior) > 1.0){ 
             /* Usamos 'grupoAnterior' porque al entrar a este estado ya se ha actualizado 'grupoEscogido' por el nuevo botón */
             Serial.println(F("Añadiendo ingrediente al plato..."));
-            Ingrediente ing(grupoAnterior, weight); /* Cálculo automático de valores nutricionales */
-            platoActual.addIngrediente(ing);
-            
-            tareScale(); //Tarar
+            /*  ----- INGREDIENTE ==> PLATO ----- */
+            Ingrediente ing(grupoAnterior, pesoBascula); /* Cálculo automático de valores nutricionales */
+            platoActual.addIngPlato(ing);
+            /*  ----- INGREDIENTE ==> COMIDA  ------ */
+            comidaActual.addIngComida(ing);
+            /*
+            //  ----- VALORES PLATO ==> COMIDA  ------ 
+            // Se ha invertido el orden de plato nuevo y luego no nuevo para evitar que, al marcar el 
+            //  plato como no nuevo, vuelva a añadir su información. 
+            if(!platoNuevo){ //No es la primera vez que se va a tratar el plato
+                Serial.println(F("\nActualizando comida"));
+                comidaActual.updateComida(platoActual, false);             // Actualizar comida actual. No se vuelve a añadir el plato (nuevo = false)
+            }
+              //  ----- ADD PLATO ==> COMIDA  ----- 
+            else{ 
+                Serial.println(F("\nPlato nuevo"));
+                comidaActual.updateComida(platoActual, true);       // Actualizar comida actual. Se añade el plato por primera vez(nuevo = true)
+                platoNuevo = false;
+            }*/
+            //tareScale(); //Tarar
         }
-        //printStateAB(); 
+        tareScale(); //Tarar
         printStateABandProcessed();
         doneState = true;
     }
@@ -244,7 +265,25 @@ void actStateWeighted(){
 void actStateAdded(){ 
     if(!doneState){
         Serial.println(F("Añadiendo plato a la comida..."));
-        comidaActual.addPlato(platoActual); // Guardar plato actual
+        /* Antes de guardar el plato se debe añadir el último ingrediente colocado
+           que no se ha guardado aún porque eso se hace al escoger otro grupo de
+           alimentos, lo cual no se ha hecho en este caso.
+           
+           Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
+           el ingrediente, pero al final no añada otro ingrediente de ese nuevo
+           grupo. Entonces habría que permitir que tras escoger grupo de alimentos
+           se guarde el plato sin añadirle nada. 
+           
+           Usamos 'grupoEscogido' porque no se ha modificado. */
+           
+        /*  ----- INGREDIENTE ==> PLATO ----- */
+        Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
+        platoActual.addIngPlato(ing);
+        /*  ----- INGREDIENTE ==> COMIDA  ------ */
+        comidaActual.addIngComida(ing);
+        /*  ----- PLATO ==> COMIDA  ------ */
+        comidaActual.addPlato(platoActual);
+        
         platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
         
         //tareScale(); //Tarar
@@ -260,9 +299,13 @@ void actStateAdded(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateDeleted(){
     if(!doneState){
-        //TODO eliminar plato
         Serial.println(F("\nPlato eliminado..."));
+        comidaActual.deletePlato(platoActual);
+        platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
+        //platoNuevo = true;
+        
         //tareScale(); 
+        
         printStateDeleted();
         doneState = true;
     }
@@ -276,7 +319,11 @@ void actStateSaved(){
     if(!doneState){
         //TODO guardar comida
         Serial.println(F("\nComida guardada..."));
+        diaActual.addComida(comidaActual);
+        //comidaActual.restoreComida();
+        
         //tareScale(); 
+        
         printStateSaved();
         doneState = true;
     }
