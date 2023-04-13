@@ -27,7 +27,8 @@
 #define   MARRON        0xABC8
 
 
-#define   MARGEN_IZQ    30
+#define   MARGEN_IZQ       25
+#define   MARGEN_IZQ_ACC   550 //Margen izquierdo del bloque de valores del acumulado de hoy
 
 
 /* Screen */
@@ -138,11 +139,6 @@ void printCentral(){
     tft.setCursor(tft.getCursorX(), 215); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.print(diaActual.getPesoDiario()); tft.println(" g\n");
-
-    tft.setCursor(MARGEN_IZQ, 300);
-    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
-    tft.setTextColor(BLANCO);
-    tft.println("Comida Actual\n");
 }
 
 
@@ -154,15 +150,22 @@ void printCentral(){
    printValoresComida(): Muestra los valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
 void printValoresComida(){
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    tft.setCursor(MARGEN_IZQ, 375);
+    tft.setCursor(MARGEN_IZQ, 300);
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextColor(BLANCO);
+    tft.println("Comida Actual\n");
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
+    tft.setCursor(MARGEN_IZQ, 375);
+    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.println(" g (X raciones)");
     
-    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.println(" g");
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Lip: "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.println(" g");
+    tft.print("Lip: "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.println(" g (X raciones)");
+    
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.println(" g");
+    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.println(" g (X raciones)");
+    
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(comidaActual.getValoresComida().getKcalValores()); tft.println(" Kcal");
 }
@@ -179,22 +182,50 @@ void printValoresTemporales(){
     float prot = ingAux.getValoresIng().getProtValores() + comidaActual.getValoresComida().getProtValores();
     float kcal = ingAux.getValoresIng().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
     
+    tft.setCursor(MARGEN_IZQ, 300);
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextColor(BLANCO);
+    tft.println("Comida Actual\n");
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
     tft.setCursor(MARGEN_IZQ, 375);
-    tft.setTextColor(BLANCO);
+    tft.print("Carb: "); tft.print(carb); tft.println(" g (X raciones)");
     
-    tft.print("Carb: "); tft.print(carb); tft.println(" g");
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Lip: "); tft.print(lip); tft.println(" g");
+    tft.print("Lip: "); tft.print(lip); tft.println(" g (X raciones)");
+    
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Prot: "); tft.print(prot); tft.println(" g");
+    tft.print("Prot: "); tft.print(prot); tft.println(" g (X raciones)");
+    
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(kcal); tft.println(" Kcal");
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   printValoresDiario(): Muestra los valores nutricionales del acumulado del día
+----------------------------------------------------------------------------------------------------------*/
+void printValoresDiario(){
+    tft.setCursor(MARGEN_IZQ_ACC, 300);
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextColor(BLANCO);
+    tft.println("Acumulado Hoy\n");
 
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
+    tft.setCursor(MARGEN_IZQ_ACC, 375);
+    tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.println(" g (X raciones)");
+    
+    tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
+    tft.print("Lip: "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.println(" g (X raciones)");
+    
+    tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
+    tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.println(" g (X raciones)");
+    
+    tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
+    tft.print("Kcal: "); tft.print(diaActual.getValoresDiario().getKcalValores()); tft.println(" Kcal");
+}
 
 
 /*********************************************************************************************************/
@@ -228,7 +259,8 @@ void printStateInit(){
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
-    printValoresComida();                              // 3 - Valores nutricionales
+    printValoresComida();                              // 3 - Valores comida actual
+    printValoresDiario();                              // 4 - Valores acumulado hoy
 }
 
 
@@ -241,7 +273,8 @@ void printStateInit(){
 void printStateABandProcessed(){
     printEjemplosyGrupo();        // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
     printCentral();               // 2 - Estructura central (peso 0.0)
-    printValoresComida();         // 3 - Valores nutricionales
+    printValoresComida();         // 3 - Valores comida actual
+    printValoresDiario();         // 4 - Valores acumulado hoy
 }
 
 
@@ -254,7 +287,8 @@ void printStateABandProcessed(){
 void printStateWeighted(){
     printEjemplosyGrupo();         // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
     printCentral();                // 2 - Estructura central
-    printValoresTemporales();      // 3 - Valores nutricionales
+    printValoresTemporales();      // 3 - Valores temporales de comida actual 
+    printValoresDiario();          // 4 - Valores acumulado hoy
 }
 
 
@@ -275,7 +309,8 @@ void printStateAdded(){
     tft.println(cad);                                 // Imprimir texto
     
     printCentral();                                   // 2 - Estructura central
-    printValoresComida();                             // 3 - Valores nutricionales
+    printValoresComida();                             // 3 - Valores comida actual
+    printValoresDiario();                             // 4 - Valores acumulado hoy
 }
 
 
@@ -297,7 +332,8 @@ void printStateDeleted(){
     tft.println(cad);                                  // Imprimir texto
     
     printCentral();                                    // 2 - Estructura central
-    printValoresComida();                              // 3 - Valores nutricionales
+    printValoresComida();                              // 3 - Valores comida actual
+    printValoresDiario();                              // 4 - Valores acumulado hoy
 }
 
 
@@ -318,7 +354,8 @@ void printStateSaved(){
     tft.println(cad);                                  // Imprimir texto
     
     printCentral();                                    // 2 - Estructura central
-    printValoresComida();                              // 3 - Valores nutricionales
+    printValoresComida();                              // 3 - Valores comida actual
+    printValoresDiario();                              // 4 - Valores acumulado hoy
 }
 
 

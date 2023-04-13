@@ -30,7 +30,7 @@ class Comida{
     void updateValoresComida(bool suma, ValoresNutricionales val);
     inline ValoresNutricionales getValoresComida(){ return _valoresComida; };
 
-    //void restoreComida();
+    void restoreComida();
 };
 
 
@@ -87,12 +87,12 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
 
 
 // "Reiniciar" comida
-/*void Comida::restoreComida(){
+void Comida::restoreComida(){
     this->setNumPlatos(0);                                   // Nº ing = 0
     this->setPesoComida(0.0);                              // Peso = 0.0
     ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);
     _valoresComida.setValores(valAux);                     // Valores = 0
-}*/
+}
 
 
 #endif

@@ -74,7 +74,7 @@ void setGrupoAlimentos(int id){       // 'id' pasado es buttonGrande
             break;
         }
     }
-    Serial.print(F("\nPosicion en vector grupo: ")); Serial.println(posGrupo);
+    //Serial.print(F("\nPosicion en vector grupo: ")); Serial.println(posGrupo);
     grupoAnterior = grupoEscogido;
     grupoEscogido = gruposAlimentos[posGrupo]; 
 }

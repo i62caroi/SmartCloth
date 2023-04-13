@@ -25,10 +25,17 @@ float pesoBascula = 0.0;
 
 HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
-//bool tarado = false;
+
+void fixPesoBascula(){
+  if(pesoBascula < 1.0) pesoBascula = 0.0;
+}
+
+bool tarado = false;
 void tareScale(){ 
   scale.tare(1);  //5 tomas de valor
-  //tarado = true;
+  pesoBascula = weight;
+  fixPesoBascula();
+  tarado = true;
 };
 
 
@@ -39,7 +46,7 @@ String procesamiento; // "CRUDO" o "COCINADO"
 
 /* ----- PLATO/COMIDA/DIARIO ----- */
 Plato platoActual;
-//bool platoNuevo = true;
+float pesoPlato = 0.0; //Para saber si se ha retirado el plato
 Comida comidaActual;
 Diario diaActual;
 

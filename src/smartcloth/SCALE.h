@@ -11,6 +11,7 @@ const int LOADCELL_SCK_PIN = 2;
 
 //HX711 scale; 
 
+float pesoRetirado = 0.0;
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -40,8 +41,9 @@ void checkBascula(){
     static float newWeight = 0.0;
     static float lastWeight = 0.0;
     static float diffWeight = 0.0;
+    
     if (pesado){
-        lastWeight = newWeight;
+        lastWeight = pesoBascula;
         newWeight = weight;
         diffWeight = abs(lastWeight - newWeight);
         if (diffWeight > 1.0){ // Cambio no causado por "interferencias" de la báscula
@@ -52,25 +54,53 @@ void checkBascula(){
                medidas de la báscula. */
                
             pesoBascula = newWeight;
-            if(abs(pesoBascula) < 1.0) pesoBascula = 0.0;
+            fixPesoBascula();
             
-            if(lastWeight < newWeight){
-                Serial.print(F("\nINCREMENTO"));
-                eventoBascula = INCREMENTO;
+            if(lastWeight < newWeight){ //INCREMENTO
+                Serial.println(F("\nIncremento..."));
+                if(lastWeight > -1.0){ //Incremento pero sin venir de negativo (salvando valores cercanos a 0)
+                    Serial.print(F("\nINCREMENTO"));
+                    eventoBascula = INCREMENTO;
+                    pesoRetirado = 0.0;
+                }
+                else if(lastWeight <= -1.0){ //Incremento por tara viniendo de negativo
+                    Serial.print(F("\nTARADO"));
+                    eventoBascula = TARAR;
+                    pesoRetirado = 0.0;
+                }
             }
-            else if(lastWeight > newWeight){
+            else{ //DECREMENTO
+              
+                    pesoRetirado += diffWeight; //Actualizamos el peso retirado
+                    Serial.println(F("\nDecremento..."));
                     if(newWeight > 1.0){ //Se ha quitado algo pero no todo
                       Serial.print(F("\nDECREMENTO"));
                       eventoBascula = DECREMENTO;
                     }
-                    else{ //Se ha quitado todo de la báscula
-                        Serial.print(F("\nLIBERADA"));
-                        eventoBascula = LIBERAR;
+                    else if(newWeight < 1.0){ //Se ha quitado todo de la báscula (newWeight < 1.0)
+                        if(tarado){ //Decremento debido a tara
+                            Serial.print(F("\nTARADO"));
+                            eventoBascula = TARAR;
+                        }
+                        else{ //Decremento por retirar objeto
+                            if((abs(pesoRetirado - pesoPlato ) < 5.0) or (newWeight < 1.0)){ //Bascula vacía real habiendo guardado el plato o no
+                                Serial.print(F("\nLIBERADA"));
+                                eventoBascula = LIBERAR;
+                            }
+                            else{ //Se están quitando elementos de la báscula
+                                Serial.print(F("\nQUITANDO"));
+                                eventoBascula = QUITAR;
+                            }
+                        }
                     }
             }
+            Serial.println(F("\n--------------------------------------"));
             Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 
             Serial.print(F("Peso actual: ")); Serial.println(newWeight); 
             Serial.print(F("Peso Bascula: ")); Serial.println(pesoBascula);
+            Serial.print(F("Peso retirado: ")); Serial.println(pesoRetirado);
+            Serial.print(F("Peso plato: ")); Serial.println(pesoPlato);
+            Serial.println(F("\n--------------------------------------"));
             addEventToBuffer(eventoBascula);
             flagEvent = true;
         }

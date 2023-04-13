@@ -34,7 +34,7 @@ Diario::Diario(){
   this->setPesoDiario(0.0);
 }
 
-
+// --------------------------------------------------------------------
 void Diario::addComida(Comida comida){
   _comidas[this->firstGapDiario()] = comida;                            // Añadir comida
   this->setNumComidas(this->getNumComidas()+1);                         // Incrementar num comidas
@@ -42,6 +42,9 @@ void Diario::addComida(Comida comida){
   this->updateValoresDiario(comida.getValoresComida());                       // Actualizar Valores Nutricionales
 }
 
+
+
+// --------------------------------------------------------------------
 
 void Diario::updateValoresDiario(ValoresNutricionales val){
   float carb = _valoresDiario.getCarbValores() + val.getCarbValores();
