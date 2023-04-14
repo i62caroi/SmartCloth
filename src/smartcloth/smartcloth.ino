@@ -100,7 +100,7 @@ void loop() {
             }
             else{
                 Serial.println(F("\nERROR DE EVENTO"));
-                //printEventError();
+                actEventError();
             }
             flagEvent = false;
        }

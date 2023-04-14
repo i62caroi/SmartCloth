@@ -50,8 +50,8 @@ void checkBascula(){
             /* 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
                Este valor es el que se usará como peso de los ingredientes.
                Hasta ahora se usaba 'weight' directamente, pero al añadir un nuevo ingrediente
-               al plato se tomaba el valor 'weight', que podría haber variado algo por sucesivas
-               medidas de la báscula. */
+               al plato se tomaba el último valor de 'weight', que podría haber variado algo 
+               respecto a lo que se mostraba por sucesivas medidas de la báscula. */
                
             pesoBascula = newWeight;
             fixPesoBascula();
@@ -71,7 +71,6 @@ void checkBascula(){
             }
             else{ //DECREMENTO
               
-                    pesoRetirado += diffWeight; //Actualizamos el peso retirado
                     Serial.println(F("\nDecremento..."));
                     if(newWeight > 1.0){ //Se ha quitado algo pero no todo
                       Serial.print(F("\nDECREMENTO"));
@@ -83,6 +82,7 @@ void checkBascula(){
                             eventoBascula = TARAR;
                         }
                         else{ //Decremento por retirar objeto
+                            pesoRetirado += diffWeight; //Actualizamos el peso retirado
                             if((abs(pesoRetirado - pesoPlato ) < 5.0) or (newWeight < 1.0)){ //Bascula vacía real habiendo guardado el plato o no
                                 Serial.print(F("\nLIBERADA"));
                                 eventoBascula = LIBERAR;
