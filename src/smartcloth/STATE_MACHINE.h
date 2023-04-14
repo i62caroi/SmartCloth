@@ -73,20 +73,22 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},            
                                         
                                         {STATE_Plato,STATE_Plato,INCREMENTO},        // plato --incremento--> plato   ==> cambios por recolocar plato
                                         {STATE_Plato,STATE_Plato,DECREMENTO},        // plato --decremento--> plato   ==> cambios por recolocar plato
-                                        {STATE_Plato,STATE_Plato,LIBERAR},           // plato --LIBERAR_bascula--> plato    ==> cambios por recolocar plato
+                                        {STATE_Plato,STATE_INI,LIBERAR},           // plato --LIBERAR_bascula--> INI    ==> se ha retirado el plato
                                         {STATE_Plato,STATE_groupA,TIPO_A},                   // INI --tipoA--> grupoA
                                         {STATE_Plato,STATE_groupB,TIPO_B},                   // INI --tipoB--> grupoB
                                         
+                                        {STATE_groupA,STATE_INI,LIBERAR},               // grupoA --LIBERAR_bascula--> INI  ==> se ha retirado el plato completo (+ recipiente)
                                         {STATE_groupA,STATE_groupA,TIPO_A},                // grupoA --tipoA--> grupoA
-                                        {STATE_groupA,STATE_groupA,LIBERAR},               // grupoA --LIBERAR_bascula--> grupoA
+                                        {STATE_groupA,STATE_groupA,QUITAR},               // grupoA --LIBERAR_bascula--> grupoA
                                         {STATE_groupA,STATE_groupA,TARAR},                 // grupoA --TARAR_bascula--> grupoA 
                                         {STATE_groupA,STATE_groupB,TIPO_B},                // grupoA --tipoB--> grupoB  
                                         {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
                                         {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
                                         {STATE_groupA,STATE_weighted,INCREMENTO},          // grupoA --incremento--> pesado   ==>  aprovechar 'crudo' predeterminado para pesar directamente
                                         
+                                        {STATE_groupB,STATE_INI,LIBERAR},               // grupoB --LIBERAR_bascula--> INI  ==> se ha retirado el plato completo (+ recipiente)
                                         {STATE_groupB,STATE_groupB,TIPO_B},                // grupoB --tipoB--> grupoB
-                                        {STATE_groupB,STATE_groupB,LIBERAR},               // grupoB --LIBERAR_bascula--> grupoB 
+                                        {STATE_groupB,STATE_groupB,QUITAR},               // grupoB --LIBERAR_bascula--> grupoB 
                                         {STATE_groupB,STATE_groupB,TARAR},                 // grupoB --TARAR_bascula--> grupoB 
                                         {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
                                         {STATE_groupB,STATE_raw,CRUDO},                    // grupoB --crudo--> raw      
@@ -103,9 +105,10 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},            
                                         {STATE_cooked,STATE_groupB,TIPO_B},                // cooked --tipoB--> grupoB
                                         {STATE_cooked,STATE_weighted,INCREMENTO},          // cooked --incremento--> pesado
                                         
+                                        {STATE_weighted,STATE_INI,LIBERAR},           // pesado --LIBERAR_bascula--> INI  ==> se ha retirado el plato completo (+ recipiente)
                                         {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
                                         {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
-                                        {STATE_weighted,STATE_weighted,LIBERAR},           // pesado --LIBERAR_bascula--> pesado
+                                        {STATE_weighted,STATE_weighted,QUITAR},        // pesado --quitar--> pesado
                                         {STATE_weighted,STATE_groupA,TIPO_A},              // pesado --tipoA--> grupoA
                                         {STATE_weighted,STATE_groupB,TIPO_B},              // pesado --tipoA--> grupoA 
                                         {STATE_weighted,STATE_added,ADD_PLATO},            // pesado --add--> plato añadido
@@ -185,7 +188,7 @@ void actStateInit(){
         Serial.println(F("\nSTATE_INI...")); 
         
         tareScale(); 
-        pesoPlato = 0.0; //Para saber si se ha retirado el plato
+        pesoPlatoTotal = 0.0; //Para saber si se ha retirado el plato
         
         printStateInit(); 
         doneState = true;
@@ -200,7 +203,9 @@ void actStatePlato(){
     if(!doneState){
         Serial.println(F("\nPlato colocado")); 
 
+        pesoPlatoTotal = pesoBascula; // Añadir peso del recipiente para saber cuándo se ha quitado todo
         tararPlato = true;
+        tarado = false;
         
         printStatePlato(); 
         doneState = true;
@@ -239,7 +244,9 @@ void actGruposAlimentos(){
                 Ingrediente ing(grupoAnterior, pesoBascula); /* Cálculo automático de valores nutricionales */
                 platoActual.addIngPlato(ing);
                 /*  ----- INGREDIENTE ==> COMIDA  ------ */
-                comidaActual.addIngComida(ing);     // Para ir actualizando la comida actual       
+                comidaActual.addIngComida(ing);     // Para ir actualizando la comida actual 
+
+                pesoPlatoTotal += pesoBascula; //Añadimos peso del ingrediente al peso total (+ recipiente) para saber si se ha retirado
             }
         }
         
@@ -260,7 +267,6 @@ void actStateRaw(){
         Serial.println(F("\nAlimento crudo...")); 
         procesamiento = "CRUDO";
         tarado = false;
-        //printStateRawCooked(); 
         printStateABandProcessed();
         doneState = true;
     }
@@ -275,7 +281,6 @@ void actStateCooked(){
         Serial.println(F("\nAlimento cocinado...")); 
         procesamiento = "COCINADO";
         tarado = false;
-        //printStateRawCooked(); 
         printStateABandProcessed();
         doneState = true;
     }
@@ -289,7 +294,9 @@ void actStateWeighted(){
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
         tarado = false;
-        pesoCopiado = false;
+        if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
+        else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
+        pesoCambiado = true;
         printStateWeighted();
         doneState = true;
     }
@@ -301,34 +308,36 @@ void actStateWeighted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateAdded(){ 
     if(!doneState){
-        Serial.println(F("Añadiendo plato a la comida..."));
-        /* Antes de guardar el plato se debe añadir el último ingrediente colocado
-           que no se ha guardado aún porque eso se hace al escoger otro grupo de
-           alimentos, lo cual no se ha hecho en este caso.
-           
-           Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
-           el ingrediente, pero al final no añada otro ingrediente de ese nuevo
-           grupo. Entonces habría que permitir que tras escoger grupo de alimentos
-           se guarde el plato sin añadirle nada. 
-           
-           Usamos 'grupoEscogido' porque no se ha modificado. */
-           
-        /*  ----- INGREDIENTE ==> PLATO ----- */
-        Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
-        platoActual.addIngPlato(ing);
-        /*  ----- INGREDIENTE ==> COMIDA  ------ */
-        comidaActual.addIngComida(ing);
-        /*  ----- PLATO ==> COMIDA  ------ */
-        comidaActual.addPlato(platoActual);
-
-        if(!pesoCopiado) {
-            pesoPlato = platoActual.getPesoPlato(); //Guardamos el peso para saber si se ha retirado
-            pesoCopiado = true;
+        if(eventoBascula != DECREMENTO){ //Si no se está retirando el plato, se guarda
+            Serial.println(F("Añadiendo plato a la comida..."));
+            /* Antes de guardar el plato se debe añadir el último ingrediente colocado
+               que no se ha guardado aún porque eso se hace al escoger otro grupo de
+               alimentos, lo cual no se ha hecho en este caso.
+               
+               Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
+               el ingrediente, pero al final no añada otro ingrediente de ese nuevo
+               grupo. Entonces habría que permitir que tras escoger grupo de alimentos
+               se guarde el plato sin añadirle nada. 
+               
+               Usamos 'grupoEscogido' porque no se ha modificado. */
+               
+            /*  ----- INGREDIENTE ==> PLATO ----- */
+            Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
+            platoActual.addIngPlato(ing);
+            /*  ----- INGREDIENTE ==> COMIDA  ------ */
+            comidaActual.addIngComida(ing);
+            /*  ----- PLATO ==> COMIDA  ------ */
+            comidaActual.addPlato(platoActual);
+    
+            if(!pesoCambiado) {
+                if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
+                else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
+                //pesoPlatoTotal += pesoBascula; //Guardamos el peso para saber si se ha retirado
+                pesoCambiado = true;
+            }
+            platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo    
         }
-        platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
-
         tarado = false;
-        
         printStateAdded();         
         doneState = true;
     }
@@ -340,23 +349,25 @@ void actStateAdded(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateDeleted(){
     if(!doneState){
-        Serial.println(F("\nPlato eliminado..."));
-        /*  ----- INGREDIENTE ==> PLATO ----- */
-        Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
-        platoActual.addIngPlato(ing);
-        /*  ----- INGREDIENTE ==> COMIDA  ------ */
-        comidaActual.addIngComida(ing);
-        /*  ----- PLATO !=> COMIDA  ------ */
-        comidaActual.deletePlato(platoActual);
-        
-        if(!pesoCopiado){
-          pesoPlato = platoActual.getPesoPlato(); //Guardamos el peso para saber si se ha retirado
-          pesoCopiado = true;
+        if(eventoBascula != DECREMENTO){ //Si no se está retirando el plato, se guarda
+            Serial.println(F("\nPlato eliminado..."));
+            /*  ----- INGREDIENTE ==> PLATO ----- */
+            Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
+            platoActual.addIngPlato(ing);
+            /*  ----- INGREDIENTE ==> COMIDA  ------ */
+            comidaActual.addIngComida(ing);
+            /*  ----- PLATO !=> COMIDA  ------ */
+            comidaActual.deletePlato(platoActual);
+            
+            if(!pesoCambiado){
+              if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
+              else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
+              //pesoPlatoTotal += pesoBascula; //Guardamos el peso para saber si se ha retirado
+              pesoCambiado = true;
+            }
+            platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
         }
-        platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
-        
         tarado = false;
-        
         printStateDeleted();        
         doneState = true;
     }
@@ -368,38 +379,39 @@ void actStateDeleted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateSaved(){
     if(!doneState){
-        //TODO guardar comida
-        Serial.println(F("\nComida guardada..."));  
-        /* Antes de guardar la comida se debe añadir el último ingrediente colocado
-           que no se ha guardado aún porque eso se hace al escoger otro grupo de
-           alimentos, lo cual no se ha hecho en este caso.
-           
-           TODO => Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
-           el ingrediente, pero al final no añada otro ingrediente de ese nuevo
-           grupo. Entonces habría que permitir que tras escoger grupo de alimentos
-           se guarde el plato sin añadirle nada. 
-           
-           Usamos 'grupoEscogido' porque no se ha modificado. */
-           
-        /*  ----- INGREDIENTE ==> PLATO ----- */
-        Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
-        platoActual.addIngPlato(ing);
-        /*  ----- INGREDIENTE ==> COMIDA  ------ */
-        comidaActual.addIngComida(ing);
-        /*  ----- PLATO ==> COMIDA  ------ */
-        comidaActual.addPlato(platoActual);
-        /*  ----- COMIDA ==> DIARIO ------ */
-        diaActual.addComida(comidaActual);
-
-        if(!pesoCopiado) {
-            pesoPlato = platoActual.getPesoPlato(); //Guardamos el peso para saber si se ha retirado
-            pesoCopiado = true;
+        if(eventoBascula != DECREMENTO){ //Si no se está retirando el plato, se guarda
+            Serial.println(F("\nComida guardada..."));  
+            /* Antes de guardar la comida se debe añadir el último ingrediente colocado
+               que no se ha guardado aún porque eso se hace al escoger otro grupo de
+               alimentos, lo cual no se ha hecho en este caso.
+               
+               TODO => Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
+               el ingrediente, pero al final no añada otro ingrediente de ese nuevo
+               grupo. Entonces habría que permitir que tras escoger grupo de alimentos
+               se guarde el plato sin añadirle nada. 
+               
+               Usamos 'grupoEscogido' porque no se ha modificado. */
+               
+            /*  ----- INGREDIENTE ==> PLATO ----- */
+            Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
+            platoActual.addIngPlato(ing);
+            /*  ----- INGREDIENTE ==> COMIDA  ------ */
+            comidaActual.addIngComida(ing);
+            /*  ----- PLATO ==> COMIDA  ------ */
+            comidaActual.addPlato(platoActual);
+            /*  ----- COMIDA ==> DIARIO ------ */
+            diaActual.addComida(comidaActual);
+    
+            if(!pesoCambiado) {
+                if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
+                else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
+                //pesoPlatoTotal += pesoBascula; //Guardamos el peso para saber si se ha retirado
+                pesoCopiado = true;
+            }
+            platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
+            comidaActual.restoreComida();
         }
-        platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
-        comidaActual.restoreComida();
-        
         tarado = false;
-        
         printStateSaved();
         doneState = true;
     }

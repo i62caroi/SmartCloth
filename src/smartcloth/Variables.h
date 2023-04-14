@@ -23,6 +23,7 @@ bool flagEvent;                   /* Para evitar que marque evento para cada int
 volatile float weight = 0.0;
 volatile bool pesado = false;
 float pesoBascula = 0.0;
+float diffWeight = 0.0;
 
 HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
@@ -46,7 +47,7 @@ String procesamiento; // "CRUDO" o "COCINADO"
 
 /* ----- PLATO/COMIDA/DIARIO ----- */
 Plato platoActual;
-float pesoPlato = 0.0; //Para saber si se ha retirado el plato
+float pesoPlatoTotal; //Para saber si se ha retirado el plato (+ recipiente)
 bool tararPlato; //Para indicar que se ha colocado un recipiente y se debe tarar
 Comida comidaActual;
 Diario diaActual;
