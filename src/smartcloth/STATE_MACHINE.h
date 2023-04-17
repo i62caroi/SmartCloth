@@ -459,10 +459,10 @@ void actEventError(){
     switch (state_actual){
       case 1:   printEventError("Coloque un recipiente sobre la b\xE1scula");                                 break; //INIT
       case 2:   printEventError("Escoja un grupo de alimentos");                                              break;
-      case 3:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \ngrupo");         break;  //grupoA ==> ¿Y si quieren guardar la comida o poner otro plato? No lo permite
-      case 4:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \ngrupo");         break;  //grupoB
-      case 5:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \ngrupo");         break;  //Crudo
-      case 6:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \ngrupo");         break;  //Cocinado
+      case 3:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //grupoA ==> ¿Y si quieren guardar la comida o poner otro plato? No lo permite
+      case 4:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //grupoB
+      case 5:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //Crudo
+      case 6:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //Cocinado
       case 7:   printEventError("Escoja grupo para otro alimento, a\xF1ada otro plato o \nguarde la comida"); break;  //Pesado
       case 8:   printEventError("Retire el plato para comenzar uno nuevo");                                   break;  //Add
       case 9:   printEventError("Retire el plato que acaba de eliminar");                                     break;  //Delete

@@ -118,6 +118,7 @@ void printCentral(){
     // ------------ ALIMENTO  -------------------------
     tft.setCursor(MARGEN_IZQ, 210); //tft.getCursorY()
     tft.selectInternalFont(RA8876_FONT_SIZE_24);  
+    tft.setTextScale(2);
     tft.setTextColor(VERDE);
     tft.print("Alimento: "); 
     tft.setCursor(tft.getCursorX(), 217); 
@@ -153,6 +154,7 @@ void printCentral(){
 void printValoresComida(){
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextScale(2);
     tft.setTextColor(BLANCO);
     tft.println("Comida Actual\n");
 
@@ -210,6 +212,7 @@ void printValoresTemporales(){
 void printValoresDiario(){
     tft.setCursor(MARGEN_IZQ_ACC, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextScale(2);
     tft.setTextColor(BLANCO);
     tft.println("Acumulado Hoy\n");
 
@@ -437,13 +440,12 @@ void printEventError(String msg){
     tft.setTextScale(2);        
     tft.println(cad);                                  // Imprimir texto
 
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(1);        
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
-    tft.setTextScale(2);        
     tft.println(msg);           
 
-    //tft.setTextScale(2);
     printCentral();                                    // 2 - Estructura central
     printValoresComida();                              // 3 - Valores comida actual
     printValoresDiario();                              // 4 - Valores acumulado hoy
