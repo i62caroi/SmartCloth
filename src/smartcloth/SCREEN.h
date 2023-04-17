@@ -437,7 +437,7 @@ void printEventError(String msg){
     tft.setTextScale(2);        
     tft.println(cad);                                  // Imprimir texto
 
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        

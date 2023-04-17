@@ -9,7 +9,9 @@
 
 
 bool doneState;
-bool pesoCopiado;
+bool tararPlato; //Para indicar que se ha colocado un recipiente y se debe tarar
+bool tararRetirar; //Tarar báscula para ir retirando el plato y comparar -X = +X
+
 
 /*----------------------------------------------------------------------------------------------*/
 /*-------------------------------------- ESTADOS -----------------------------------------------*/
@@ -68,64 +70,66 @@ typedef struct{
     event_t condition;    // condición cambio estado
 }transition_rule;
 
-static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},                  // INI --decremento(limpiar balanza)--> INI
+static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},                    // tara inicial
                                         {STATE_INI,STATE_Plato,INCREMENTO},
                                         
-                                        {STATE_Plato,STATE_Plato,INCREMENTO},        // plato --incremento--> plato   ==> cambios por recolocar plato
-                                        {STATE_Plato,STATE_Plato,DECREMENTO},        // plato --decremento--> plato   ==> cambios por recolocar plato
-                                        {STATE_Plato,STATE_INI,LIBERAR},           // plato --LIBERAR_bascula--> INI    ==> se ha retirado el plato
-                                        {STATE_Plato,STATE_groupA,TIPO_A},                   // INI --tipoA--> grupoA
-                                        {STATE_Plato,STATE_groupB,TIPO_B},                   // INI --tipoB--> grupoB
+                                        {STATE_Plato,STATE_Plato,INCREMENTO},           // cambios por recolocar plato
+                                        {STATE_Plato,STATE_Plato,DECREMENTO},           // cambios por recolocar plato
+                                        {STATE_Plato,STATE_INI,QUITAR},                // se ha retirado el recipiente
+                                        /* No se llegaría a LIBERAR porque no se tara, por lo que no se cumple que -X = +X
+                                           Por eso basta con QUITAR para volver al INI */
+                                        {STATE_Plato,STATE_groupA,TIPO_A},                   
+                                        {STATE_Plato,STATE_groupB,TIPO_B},                   
                                         
-                                        {STATE_groupA,STATE_INI,LIBERAR},               // grupoA --LIBERAR_bascula--> INI  ==> se ha retirado el plato completo (+ recipiente)
-                                        {STATE_groupA,STATE_groupA,TIPO_A},                // grupoA --tipoA--> grupoA
-                                        {STATE_groupA,STATE_groupA,QUITAR},               // grupoA --LIBERAR_bascula--> grupoA
-                                        {STATE_groupA,STATE_groupA,TARAR},                 // grupoA --TARAR_bascula--> grupoA 
-                                        {STATE_groupA,STATE_groupB,TIPO_B},                // grupoA --tipoB--> grupoB  
-                                        {STATE_groupA,STATE_raw,CRUDO},                    // grupoA --crudo--> raw      
-                                        {STATE_groupA,STATE_cooked,COCINADO},              // grupoA --cocinado--> cooked 
-                                        {STATE_groupA,STATE_weighted,INCREMENTO},          // grupoA --incremento--> pesado   ==>  aprovechar 'crudo' predeterminado para pesar directamente
+                                        {STATE_groupA,STATE_INI,LIBERAR},               // se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
+                                        {STATE_groupA,STATE_groupA,TIPO_A},                
+                                        {STATE_groupA,STATE_groupA,QUITAR},             // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_groupA,STATE_groupA,TARAR},              // tarar tras colocar recipiente o alimento   
+                                        {STATE_groupA,STATE_groupB,TIPO_B},                
+                                        {STATE_groupA,STATE_raw,CRUDO},                         
+                                        {STATE_groupA,STATE_cooked,COCINADO},              
+                                        {STATE_groupA,STATE_weighted,INCREMENTO},       // aprovechar 'crudo' predeterminado para pesar directamente
                                         
-                                        {STATE_groupB,STATE_INI,LIBERAR},               // grupoB --LIBERAR_bascula--> INI  ==> se ha retirado el plato completo (+ recipiente)
-                                        {STATE_groupB,STATE_groupB,TIPO_B},                // grupoB --tipoB--> grupoB
-                                        {STATE_groupB,STATE_groupB,QUITAR},               // grupoB --LIBERAR_bascula--> grupoB 
-                                        {STATE_groupB,STATE_groupB,TARAR},                 // grupoB --TARAR_bascula--> grupoB 
-                                        {STATE_groupB,STATE_groupA,TIPO_A},                // grupoB --tipoA--> grupoA
-                                        {STATE_groupB,STATE_raw,CRUDO},                    // grupoB --crudo--> raw      
-                                        {STATE_groupB,STATE_cooked,COCINADO},              // grupoB --cocinado--> cooked 
-                                        {STATE_groupB,STATE_weighted,INCREMENTO},          // grupoB --incremento--> pesado  
+                                        {STATE_groupB,STATE_INI,LIBERAR},               // se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
+                                        {STATE_groupB,STATE_groupB,TIPO_B},                
+                                        {STATE_groupB,STATE_groupB,QUITAR},             // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_groupB,STATE_groupB,TARAR},              // tarar tras colocar recipiente o alimento   
+                                        {STATE_groupB,STATE_groupA,TIPO_A},                
+                                        {STATE_groupB,STATE_raw,CRUDO},                         
+                                        {STATE_groupB,STATE_cooked,COCINADO},              
+                                        {STATE_groupB,STATE_weighted,INCREMENTO},       // aprovechar 'crudo' predeterminado para pesar directamente    
                                         
-                                        {STATE_raw,STATE_cooked,COCINADO},                 // raw --cocinado--> cooked
-                                        {STATE_raw,STATE_groupA,TIPO_A},                   // raw --tipoA--> grupoA
-                                        {STATE_raw,STATE_groupB,TIPO_B},                   // raw --tipoB--> grupoB
-                                        {STATE_raw,STATE_weighted,INCREMENTO},             // raw --incremento--> pesado
+                                        {STATE_raw,STATE_cooked,COCINADO},                 
+                                        {STATE_raw,STATE_groupA,TIPO_A},                   
+                                        {STATE_raw,STATE_groupB,TIPO_B},                   
+                                        {STATE_raw,STATE_weighted,INCREMENTO},             
                                         
-                                        {STATE_cooked,STATE_raw,CRUDO},                    // cooked --raw--> crudo
-                                        {STATE_cooked,STATE_groupA,TIPO_A},                // cooked --tipoA--> grupoA
-                                        {STATE_cooked,STATE_groupB,TIPO_B},                // cooked --tipoB--> grupoB
-                                        {STATE_cooked,STATE_weighted,INCREMENTO},          // cooked --incremento--> pesado
+                                        {STATE_cooked,STATE_raw,CRUDO},                    
+                                        {STATE_cooked,STATE_groupA,TIPO_A},                
+                                        {STATE_cooked,STATE_groupB,TIPO_B},                
+                                        {STATE_cooked,STATE_weighted,INCREMENTO},          
                                         
-                                        {STATE_weighted,STATE_INI,LIBERAR},           // pesado --LIBERAR_bascula--> INI  ==> se ha retirado el plato completo (+ recipiente)
-                                        {STATE_weighted,STATE_weighted,INCREMENTO},        // pesado --incremento--> pesado
-                                        {STATE_weighted,STATE_weighted,DECREMENTO},        // pesado --decremento--> pesado
-                                        {STATE_weighted,STATE_weighted,QUITAR},        // pesado --quitar--> pesado
-                                        {STATE_weighted,STATE_groupA,TIPO_A},              // pesado --tipoA--> grupoA
-                                        {STATE_weighted,STATE_groupB,TIPO_B},              // pesado --tipoA--> grupoA 
-                                        {STATE_weighted,STATE_added,ADD_PLATO},            // pesado --add--> plato añadido
-                                        {STATE_weighted,STATE_deleted,DELETE_PLATO},       // pesado --delete--> plato eliminado
-                                        {STATE_weighted,STATE_saved,GUARDAR},              // pesado --save--> comida guardada
+                                        {STATE_weighted,STATE_INI,LIBERAR},             // se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
+                                        {STATE_weighted,STATE_weighted,INCREMENTO},     // se coloca más alimento  
+                                        {STATE_weighted,STATE_weighted,DECREMENTO},     // se retira alimento   
+                                        {STATE_weighted,STATE_weighted,QUITAR},         // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_weighted,STATE_groupA,TIPO_A},              
+                                        {STATE_weighted,STATE_groupB,TIPO_B},              
+                                        {STATE_weighted,STATE_added,ADD_PLATO},            
+                                        {STATE_weighted,STATE_deleted,DELETE_PLATO},       
+                                        {STATE_weighted,STATE_saved,GUARDAR},              
                                         
-                                        {STATE_added,STATE_added,DECREMENTO},                    
-                                        {STATE_added,STATE_added,QUITAR},                    // quitar algo pero no todo el plato. Esperando liberación
-                                        {STATE_added,STATE_INI,LIBERAR},                     // añadido --TARAR_bascula--> ini
+                                        {STATE_added,STATE_added,TARAR},                 // taramos para saber (en negativo) cuánto se va quitando
+                                        {STATE_added,STATE_added,QUITAR},                // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_added,STATE_INI,LIBERAR},                 // se ha retirado el plato completo (+ recipiente)    
                                         
-                                        {STATE_deleted,STATE_deleted,DECREMENTO},                    
-                                        {STATE_deleted,STATE_deleted,QUITAR},                // quitar algo pero no todo el plato. Esperando liberación
-                                        {STATE_deleted,STATE_INI,LIBERAR},                   // eliminado --TARAR_bascula--> ini
+                                        {STATE_deleted,STATE_deleted,TARAR},             // taramos para saber (en negativo) cuánto se va quitando   
+                                        {STATE_deleted,STATE_deleted,QUITAR},            // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_deleted,STATE_INI,LIBERAR},               // se ha retirado el plato completo (+ recipiente)    
                                         
-                                        {STATE_saved,STATE_saved,DECREMENTO},                    
-                                        {STATE_saved,STATE_saved,QUITAR},                    // quitar algo pero no todo el plato. Esperando liberación
-                                        {STATE_saved,STATE_INI,LIBERAR}                      // guardar --TARAR_bascula--> ini
+                                        {STATE_saved,STATE_saved,TARAR},                 // taramos para saber (en negativo) cuánto se va quitando
+                                        {STATE_saved,STATE_saved,QUITAR},                // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_saved,STATE_INI,LIBERAR}                  // se ha retirado el plato completo (+ recipiente)   
                                       };
 
 
@@ -188,7 +192,8 @@ void actStateInit(){
         Serial.println(F("\nSTATE_INI...")); 
         
         tareScale(); 
-        pesoPlatoTotal = 0.0; //Para saber si se ha retirado el plato
+        pesoRecipiente = 0.0; //Para saber si se ha retirado el plato
+        pesoPlato = 0.0;
         
         printStateInit(); 
         doneState = true;
@@ -203,7 +208,6 @@ void actStatePlato(){
     if(!doneState){
         Serial.println(F("\nPlato colocado")); 
 
-        pesoPlatoTotal = pesoBascula; // Añadir peso del recipiente para saber cuándo se ha quitado todo
         tararPlato = true;
         tarado = false;
         
@@ -221,7 +225,9 @@ void actGruposAlimentos(){
         //Serial.print(F("Grupo ")); Serial.println(buttonGrande);
         procesamiento = "CRUDO";
         
-        if(tararPlato){
+        if(tararPlato){ //Se tara si se acaba de colocar el recipiente
+            pesoRecipiente = pesoBascula; // Guardar peso del recipiente para saber cuándo se ha quitado todo
+            //El peso se guarda ahora para evitar guardarlo varias veces en el STATE_Plato al recolocar el recipiente
             tareScale(); 
             tararPlato = false;
         }
@@ -246,11 +252,13 @@ void actGruposAlimentos(){
                 /*  ----- INGREDIENTE ==> COMIDA  ------ */
                 comidaActual.addIngComida(ing);     // Para ir actualizando la comida actual 
 
-                pesoPlatoTotal += pesoBascula; //Añadimos peso del ingrediente al peso total (+ recipiente) para saber si se ha retirado
+                pesoPlato = platoActual.getPesoPlato();
+
             }
+
+            tareScale();
         }
         
-        tareScale();
         printStateABandProcessed();
         doneState = true;
     }
@@ -294,9 +302,7 @@ void actStateWeighted(){
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
         tarado = false;
-        if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
-        else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
-        pesoCambiado = true;
+        tararRetirar = true;
         printStateWeighted();
         doneState = true;
     }
@@ -308,7 +314,7 @@ void actStateWeighted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateAdded(){ 
     if(!doneState){
-        if(eventoBascula != DECREMENTO){ //Si no se está retirando el plato, se guarda
+        if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){ //Si lo último ha sido un incremento, se guarda
             Serial.println(F("Añadiendo plato a la comida..."));
             /* Antes de guardar el plato se debe añadir el último ingrediente colocado
                que no se ha guardado aún porque eso se hace al escoger otro grupo de
@@ -328,16 +334,19 @@ void actStateAdded(){
             comidaActual.addIngComida(ing);
             /*  ----- PLATO ==> COMIDA  ------ */
             comidaActual.addPlato(platoActual);
+
+            pesoPlato = platoActual.getPesoPlato();
     
-            if(!pesoCambiado) {
-                if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
-                else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
-                //pesoPlatoTotal += pesoBascula; //Guardamos el peso para saber si se ha retirado
-                pesoCambiado = true;
-            }
             platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo    
+
+            /* Taramos y conforme vaya disminuyendo el peso veremos si -X = +X */
+            if(tararRetirar){
+                tareScale();
+                tararRetirar = false;
+            }
         }
-        tarado = false;
+        else tarado = false;
+        
         printStateAdded();         
         doneState = true;
     }
@@ -349,7 +358,8 @@ void actStateAdded(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateDeleted(){
     if(!doneState){
-        if(eventoBascula != DECREMENTO){ //Si no se está retirando el plato, se guarda
+        if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){ //Si lo último ha sido un incremento, se guarda
+            //Para eliminar el plato, antes debemos guardarlo
             Serial.println(F("\nPlato eliminado..."));
             /*  ----- INGREDIENTE ==> PLATO ----- */
             Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
@@ -358,16 +368,19 @@ void actStateDeleted(){
             comidaActual.addIngComida(ing);
             /*  ----- PLATO !=> COMIDA  ------ */
             comidaActual.deletePlato(platoActual);
+
+            pesoPlato = platoActual.getPesoPlato();
             
-            if(!pesoCambiado){
-              if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
-              else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
-              //pesoPlatoTotal += pesoBascula; //Guardamos el peso para saber si se ha retirado
-              pesoCambiado = true;
-            }
             platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
+
+            /* Taramos y conforme vaya disminuyendo el peso veremos si -X = +X */
+            if(tararRetirar){
+                tareScale();
+                tararRetirar = false;
+            }
         }
-        tarado = false;
+        else tarado = false;
+        
         printStateDeleted();        
         doneState = true;
     }
@@ -379,7 +392,7 @@ void actStateDeleted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateSaved(){
     if(!doneState){
-        if(eventoBascula != DECREMENTO){ //Si no se está retirando el plato, se guarda
+        if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){ //Si lo último ha sido un incremento, se guarda
             Serial.println(F("\nComida guardada..."));  
             /* Antes de guardar la comida se debe añadir el último ingrediente colocado
                que no se ha guardado aún porque eso se hace al escoger otro grupo de
@@ -401,17 +414,20 @@ void actStateSaved(){
             comidaActual.addPlato(platoActual);
             /*  ----- COMIDA ==> DIARIO ------ */
             diaActual.addComida(comidaActual);
+
+            pesoPlato = platoActual.getPesoPlato();
     
-            if(!pesoCambiado) {
-                if(eventoBascula == INCREMENTO) pesoPlatoTotal += pesoBascula; //Actualizamos el peso total (+ recipiente) para saber si se ha retirado
-                else pesoPlatoTotal -= diffWeight; //DECREMENTO o QUITAR => Restamos lo añadido anteriormente
-                //pesoPlatoTotal += pesoBascula; //Guardamos el peso para saber si se ha retirado
-                pesoCopiado = true;
-            }
             platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
             comidaActual.restoreComida();
+
+            /* Taramos y conforme vaya disminuyendo el peso veremos si -X = +X */
+            if(tararRetirar){
+                tareScale();
+                tararRetirar = false;
+            }
         }
-        tarado = false;
+        else tarado = false;
+        
         printStateSaved();
         doneState = true;
     }

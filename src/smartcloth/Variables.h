@@ -31,7 +31,7 @@ void fixPesoBascula(){
   if(pesoBascula < 1.0) pesoBascula = 0.0;
 }
 
-bool tarado = false;
+bool tarado;
 void tareScale(){ 
   scale.tare(1);  //5 tomas de valor
   pesoBascula = weight;
@@ -47,8 +47,8 @@ String procesamiento; // "CRUDO" o "COCINADO"
 
 /* ----- PLATO/COMIDA/DIARIO ----- */
 Plato platoActual;
-float pesoPlatoTotal; //Para saber si se ha retirado el plato (+ recipiente)
-bool tararPlato; //Para indicar que se ha colocado un recipiente y se debe tarar
+float pesoRecipiente; 
+float pesoPlato;
 Comida comidaActual;
 Diario diaActual;
 
