@@ -2,15 +2,16 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 50 
+#define RULES 65 
 
-#include "Screen.h" // Incluye Variables.h
-#include "Comida.h"  // Plato.h (Ingrediente.h (Valores_Nutricionales.h))
+#include "Screen.h"   // Incluye Variables.h
+#include "Comida.h"   // Plato.h (Ingrediente.h (Valores_Nutricionales.h))
 
 
-bool doneState;
-bool tararPlato; //Para indicar que se ha colocado un recipiente y se debe tarar
-bool tararRetirar; //Tarar báscula para ir retirando el plato y comparar -X = +X
+bool doneState;       // Flag para que solo se realicen una vez las actividades del estado cada vez que se entre.
+bool tararPlato;      // Flag para indicar que se ha colocado un recipiente y se debe tarar.
+bool tararRetirar;    // Flag para tarar báscula una vez tras add/delete/save y comprobar que se ha retirado todo el peso (-X = +X).
+bool savePlato;       // Flag para guardar la info del plato solo una vez, no cada vez que se entre a add/delete/save
 
 
 /*----------------------------------------------------------------------------------------------*/
@@ -27,7 +28,7 @@ typedef enum {
               STATE_weighted      =   (7),    // plato pesado
               STATE_added         =   (8),    // plato añadido
               STATE_deleted       =   (9),    // plato eliminado
-              STATE_saved         =   (10)     // comida guardada
+              STATE_saved         =   (10)    // comida guardada
 } states_t;
 
 
@@ -52,12 +53,14 @@ typedef enum {
               LIBERAR             =   (12)    // Báscula vacía real
 } event_t;
 
-/* Buffer de eventos al que se irán añadiendo conforme ocurran */
-static event_t event_buffer[MAX_EVENTS];
-/* Este buffer no se llega a usar para nada, sino que se comprueba con
-   'lastEvent' si se cumple alguna regla de transición.
-   Si al final no se usara, se podría/debería eliminar para evitar ocupar
-   memoria innecesariamente */
+
+static event_t event_buffer[MAX_EVENTS];       // Buffer de eventos al que se irán añadiendo conforme ocurran
+/* Este buffer solo se utiliza para debuggear, para ver qué eventos han ido ocurriendo.
+   Para comprobar si se cumple alguna regla de transición se utiliza 'lastEvent', que 
+   sería el último evento añadido al buffer.
+   
+   Al final habría que eliminar el buffer para evitar ocupar memoria innecesariamente 
+*/
 
 
 
@@ -72,12 +75,12 @@ typedef struct{
 
 static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},                    // tara inicial
                                         {STATE_INI,STATE_Plato,INCREMENTO},
+                                        {STATE_INI,STATE_saved,GUARDAR},                // Guardar comida directamente (comidaActual no está vacía)
                                         
                                         {STATE_Plato,STATE_Plato,INCREMENTO},           // cambios por recolocar plato
                                         {STATE_Plato,STATE_Plato,DECREMENTO},           // cambios por recolocar plato
-                                        {STATE_Plato,STATE_INI,QUITAR},                // se ha retirado el recipiente
-                                        /* No se llegaría a LIBERAR porque no se tara, por lo que no se cumple que -X = +X
-                                           Por eso basta con QUITAR para volver al INI */
+                                        //{STATE_Plato,STATE_INI,QUITAR},                // se ha retirado el recipiente
+                                        {STATE_Plato,STATE_INI,LIBERAR},                // se ha retirado el recipiente
                                         {STATE_Plato,STATE_groupA,TIPO_A},                   
                                         {STATE_Plato,STATE_groupB,TIPO_B},                   
                                         
@@ -89,6 +92,9 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},            
                                         {STATE_groupA,STATE_raw,CRUDO},                         
                                         {STATE_groupA,STATE_cooked,COCINADO},              
                                         {STATE_groupA,STATE_weighted,INCREMENTO},       // aprovechar 'crudo' predeterminado para pesar directamente
+                                        {STATE_groupA,STATE_added,ADD_PLATO},           // Guardar plato aunque no se haya añadido otro alimento
+                                        {STATE_groupA,STATE_deleted,DELETE_PLATO},      // Borrar plato actual
+                                        {STATE_groupA,STATE_saved,GUARDAR},             // Guardar comida aunque no se haya añadido otro alimento
                                         
                                         {STATE_groupB,STATE_INI,LIBERAR},               // se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
                                         {STATE_groupB,STATE_groupB,TIPO_B},                
@@ -97,17 +103,27 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},            
                                         {STATE_groupB,STATE_groupA,TIPO_A},                
                                         {STATE_groupB,STATE_raw,CRUDO},                         
                                         {STATE_groupB,STATE_cooked,COCINADO},              
-                                        {STATE_groupB,STATE_weighted,INCREMENTO},       // aprovechar 'crudo' predeterminado para pesar directamente    
+                                        {STATE_groupB,STATE_weighted,INCREMENTO},       // aprovechar 'crudo' predeterminado para pesar directamente  
+                                        {STATE_groupB,STATE_added,ADD_PLATO},           // Guardar plato aunque no se haya añadido otro alimento
+                                        {STATE_groupB,STATE_deleted,DELETE_PLATO},      // Borrar plato actual
+                                        {STATE_groupB,STATE_saved,GUARDAR},             // Guardar comida aunque no se haya añadido otro alimento  
                                         
                                         {STATE_raw,STATE_cooked,COCINADO},                 
                                         {STATE_raw,STATE_groupA,TIPO_A},                   
                                         {STATE_raw,STATE_groupB,TIPO_B},                   
-                                        {STATE_raw,STATE_weighted,INCREMENTO},             
+                                        {STATE_raw,STATE_weighted,INCREMENTO},     
+                                        {STATE_raw,STATE_added,ADD_PLATO},           // Guardar plato aunque no se haya añadido otro alimento
+                                        {STATE_raw,STATE_deleted,DELETE_PLATO},      // Borrar plato actual
+                                        {STATE_raw,STATE_saved,GUARDAR},             // Guardar comida aunque no se haya añadido otro alimento          
                                         
                                         {STATE_cooked,STATE_raw,CRUDO},                    
                                         {STATE_cooked,STATE_groupA,TIPO_A},                
                                         {STATE_cooked,STATE_groupB,TIPO_B},                
-                                        {STATE_cooked,STATE_weighted,INCREMENTO},          
+                                        {STATE_cooked,STATE_weighted,INCREMENTO},   
+                                        {STATE_cooked,STATE_added,ADD_PLATO},           // Guardar plato aunque no se haya añadido otro alimento
+                                        {STATE_cooked,STATE_deleted,DELETE_PLATO},      // Borrar plato actual
+                                        {STATE_cooked,STATE_saved,GUARDAR},             // Guardar comida aunque no se haya añadido otro alimento         
+                                         
                                         
                                         {STATE_weighted,STATE_INI,LIBERAR},             // se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
                                         {STATE_weighted,STATE_weighted,INCREMENTO},     // se coloca más alimento  
@@ -121,11 +137,13 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},            
                                         
                                         {STATE_added,STATE_added,TARAR},                 // taramos para saber (en negativo) cuánto se va quitando
                                         {STATE_added,STATE_added,QUITAR},                // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
-                                        {STATE_added,STATE_INI,LIBERAR},                 // se ha retirado el plato completo (+ recipiente)    
+                                        {STATE_added,STATE_INI,LIBERAR},                 // se ha retirado el plato completo (+ recipiente)  
+                                        {STATE_added,STATE_saved,GUARDAR},               // guardar la comida tras decir que se quiere añadir plato, aunque no se haga
                                         
                                         {STATE_deleted,STATE_deleted,TARAR},             // taramos para saber (en negativo) cuánto se va quitando   
                                         {STATE_deleted,STATE_deleted,QUITAR},            // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
-                                        {STATE_deleted,STATE_INI,LIBERAR},               // se ha retirado el plato completo (+ recipiente)    
+                                        {STATE_deleted,STATE_INI,LIBERAR},               // se ha retirado el plato completo (+ recipiente) 
+                                        {STATE_deleted,STATE_saved,GUARDAR},             // guardar la comida tras borrar el plato actual  
                                         
                                         {STATE_saved,STATE_saved,TARAR},                 // taramos para saber (en negativo) cuánto se va quitando
                                         {STATE_saved,STATE_saved,QUITAR},                // para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
@@ -138,14 +156,14 @@ static transition_rule rules[RULES] = { {STATE_INI,STATE_INI,TARAR},            
 /*------------------------------ VARIABLES ESTADOS/EVENTOS -------------------------------------*/
 /*----------------------------------------------------------------------------------------------*/
 
-states_t state_actual; 
-states_t state_new;
+states_t state_actual;      // Estado actual
+states_t state_new;         // Nuevo estado al que se va a pasar
 
-event_t lastEvent;
+event_t lastEvent;          // Último evento ocurrido
 
-event_t eventoMain;         //Evento ocurrido en botonera Main
-event_t eventoGrande;       //Evento ocurrido en botonera grande
-event_t eventoBascula;      //Timer
+event_t eventoMain;         // Evento ocurrido en botonera Main
+event_t eventoGrande;       // Evento ocurrido en botonera grande
+event_t eventoBascula;      // Evento ocurrido en báscula
 
 
 /*----------------------------------------------------------------------------------------------------------------------*/
@@ -163,14 +181,15 @@ event_t eventoBascula;      //Timer
 bool checkStateConditions(){
     for (int i = 0; i < RULES; i++){
         if(rules[i].state_i == state_actual){
-            if(rules[i].condition == lastEvent){
-                state_new = rules[i].state_j;
-                doneState = false;
-                return true;
+            if(rules[i].condition == lastEvent){    
+                state_new = rules[i].state_j;     // Nuevo estado
+                doneState = false;                // Desactivar flag de haber hecho las actividades del estado
+                return true;                        
             }
         }
     }
-    return false; //Si no se ha cumplido ninguna regla de transición
+    return false;      // Si no se ha cumplido ninguna regla de transición.
+                       //   ==> ERROR DE EVENTO  
 }
 
 
@@ -191,12 +210,21 @@ void actStateInit(){
     if(!doneState){
         Serial.println(F("\nSTATE_INI...")); 
         
-        tareScale(); 
-        pesoRecipiente = 0.0; //Para saber si se ha retirado el plato
-        pesoPlato = 0.0;
+        tareScale();                   // Tara inicial
         
-        printStateInit(); 
-        doneState = true;
+        pesoRecipiente = 0.0;          // Se inicializa 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
+        pesoPlato = 0.0;               // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
+
+        savePlato = true;              // Guardar una sola vez la info del plato en STATE_saved. Solo se guarda si la 'comidaActual'
+                                       // no está vacía. En este caso, esta flag solo sirve para deshabilitar la flag de haber 'tarado'
+                                       // la segunda vez que se entre a STATE_saved, de forma que los siguientes decrementos no los 
+                                       // considere debidos a taras y se pueda comprobar si se ha quitado todo el 'pesoARetirar'.
+        
+        printStateInit();              // Print info estado.
+        
+        doneState = true;              // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                       // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                       // las acciones.
     }
 } 
 
@@ -208,11 +236,26 @@ void actStatePlato(){
     if(!doneState){
         Serial.println(F("\nPlato colocado")); 
 
-        tararPlato = true;
-        tarado = false;
+        pesoRecipiente = pesoBascula;  // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
         
-        printStatePlato(); 
-        doneState = true;
+        tararPlato = true;             // Tarar báscula tras colocar recipiente
+        tarado = false;                // Desactivar flag de haber tarado.
+
+                                       // El peso definitivo del recipiente no se guarda hasta que se escoja grupo de alimentos.
+                                       // Por eso, 'pesoRecipiente' y 'pesoARetirar' son iguales a 0.0 en este estado. Esto no impide que se
+                                       // realice LIBERAR, ya que ese evento ocurre cuando el peso de la báscula es igual a 'pesoARetirar'. 
+                                       // Así, se puede detectar que se ha quitado el recipiente (bascula = 0.0) y se vuelve al estado INI.
+
+        savePlato = true;              // Guardar una sola vez la info del plato en STATE_saved. Solo se guarda si la 'comidaActual'
+                                       // no está vacía. En este caso, esta flag solo sirve para deshabilitar la flag de haber 'tarado'
+                                       // la segunda vez que se entre a STATE_saved, de forma que los siguientes decrementos no los 
+                                       // considere debidos a taras y se pueda comprobar si se ha quitado todo el 'pesoARetirar'.
+        
+        printStatePlato();             // Print info del estado.
+        
+        doneState = true;              // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                       // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                       // las acciones.
     }
 }
 
@@ -223,44 +266,49 @@ void actStatePlato(){
 void actGruposAlimentos(){ 
     if(!doneState){
         //Serial.print(F("Grupo ")); Serial.println(buttonGrande);
-        procesamiento = "CRUDO";
         
-        if(tararPlato){ //Se tara si se acaba de colocar el recipiente
-            pesoRecipiente = pesoBascula; // Guardar peso del recipiente para saber cuándo se ha quitado todo
-            //El peso se guarda ahora para evitar guardarlo varias veces en el STATE_Plato al recolocar el recipiente
-            tareScale(); 
-            tararPlato = false;
+        procesamiento = "CRUDO";                             // El procesamiento es 'CRUDO' de forma predeterminada. 
+        
+        if(tararPlato){                                      // Se tara si se acaba de colocar el recipiente.
+            tareScale();                                     // Tarar para tomar peso real del alimento que se va a colocar.
+            tararPlato = false;                              // Desactivar flag para tarar solo una vez tras colocar el recipiente.
         }
         else{
-            /* Comprobamos que haya cambiado el peso antes de añadir el ingrediente para
-               evitar que se incluya el mismo varias veces 
-               
-               Solo se añade el ingrediente del grupo anterior al escoger otro grupo para
-               un nuevo ingrediente. 
-           */
             static float pesoAnterior;
             static float pesoNuevo;
             pesoAnterior = pesoNuevo;
             pesoNuevo = pesoBascula;
             
-            if((pesoNuevo - pesoAnterior) > 1.0){ 
-                /* Usamos 'grupoAnterior' porque al entrar a este estado ya se ha actualizado 'grupoEscogido' por el nuevo botón */
+            if((pesoNuevo - pesoAnterior) > 1.0){            // Comprobamos que haya cambiado el peso antes de añadir el ingrediente 
+                                                             // para evitar que se incluya el mismo varias veces al volver a entrar a 
+                                                             // este mismo estado escogiendo diferentes grupos de alimentos.
+              
                 Serial.println(F("Añadiendo ingrediente al plato..."));
-                /*  ----- INGREDIENTE ==> PLATO ----- */
-                Ingrediente ing(grupoAnterior, pesoBascula); /* Cálculo automático de valores nutricionales */
-                platoActual.addIngPlato(ing);
-                /*  ----- INGREDIENTE ==> COMIDA  ------ */
-                comidaActual.addIngComida(ing);     // Para ir actualizando la comida actual 
+                
+                Ingrediente ing(grupoAnterior, pesoBascula); // Cálculo automático de valores nutricionales.
+                                                             // Al escoger un nuevo grupo se guarda el ingrediente del grupo anterior
+                                                             // colocado en la iteración anterior. Por eso se utiliza 'grupoAnterior' para
+                                                             // crear el ingrediente, porque 'grupoEscogido' ya ha tomado el valor del
+                                                             // nuevo grupo.
+                                                             
+                platoActual.addIngPlato(ing);                // Ingrediente ==> Plato
+                comidaActual.addIngComida(ing);              // Ingrediente ==> Comida
 
-                pesoPlato = platoActual.getPesoPlato();
+                pesoPlato = platoActual.getPesoPlato();      // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
 
             }
 
-            tareScale();
+            tareScale();                                     // Tarar cada vez que se seleccione un grupo de alimentos nuevo.
         }
+
+        savePlato = true;                                    // Guardar una sola vez la nueva info del plato en add/delete/save. Solo si se pasa
+                                                             // a alguno de esos estados sin colocar nada nuevo en la báscula.
         
-        printStateABandProcessed();
-        doneState = true;
+        printStateABandProcessed();                          // Print info del estado.
+        
+        doneState = true;                                    // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                             // las acciones.
     }
 }
 
@@ -273,10 +321,17 @@ void actGruposAlimentos(){
 void actStateRaw(){ 
     if(!doneState){
         Serial.println(F("\nAlimento crudo...")); 
-        procesamiento = "CRUDO";
-        tarado = false;
-        printStateABandProcessed();
-        doneState = true;
+        
+        procesamiento = "CRUDO";                     // Procesamiento del alimento a 'CRUDO'. 
+        tarado = false;                              // Desactivar flag de haber tarado.
+        savePlato = true;                            // Guardar una sola vez la nueva info del plato en add/delete/save. Solo si se pasa
+                                                     // a alguno de esos estados sin colocar nada nuevo en la báscula.
+        
+        printStateABandProcessed();                  // Print info del estado.
+        
+        doneState = true;                            // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                     // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                     // las acciones.
     }
 }
 
@@ -287,10 +342,17 @@ void actStateRaw(){
 void actStateCooked(){ 
     if(!doneState){
         Serial.println(F("\nAlimento cocinado...")); 
-        procesamiento = "COCINADO";
-        tarado = false;
-        printStateABandProcessed();
-        doneState = true;
+        
+        procesamiento = "COCINADO";                  // Procesamiento del alimento a 'COCINADO'.  
+        tarado = false;                              // Desactivar flag de haber tarado.
+        savePlato = true;                            // Guardar una sola vez la nueva info del plato en add/delete/save. Solo si se pasa
+                                                     // a alguno de esos estados sin colocar nada nuevo en la báscula.
+        
+        printStateABandProcessed();                  // Print info del estado.
+        
+        doneState = true;                            // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                     // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                     // las acciones.
     }
 }
 
@@ -301,10 +363,16 @@ void actStateCooked(){
 void actStateWeighted(){ 
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
-        tarado = false;
-        tararRetirar = true;
-        printStateWeighted();
-        doneState = true;
+
+        savePlato = true;                            // Guardar una sola vez la nueva info del plato en add/delete/save.
+        tarado = false;                              // Desactivar flag de haber tarado.
+        tararRetirar = true;                         // Tarar tras guardar la nueva info del plato en add/delete/save.
+        
+        printStateWeighted();                        // Print info del estado.
+        
+        doneState = true;                            // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                     // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                     // las acciones.
     }
 }
 
@@ -314,41 +382,55 @@ void actStateWeighted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateAdded(){ 
     if(!doneState){
-        if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){ //Si lo último ha sido un incremento, se guarda
+        if(savePlato){                                   // Si es la primera vez que se entra a este estado, se guarda.
+          
             Serial.println(F("Añadiendo plato a la comida..."));
-            /* Antes de guardar el plato se debe añadir el último ingrediente colocado
-               que no se ha guardado aún porque eso se hace al escoger otro grupo de
-               alimentos, lo cual no se ha hecho en este caso.
+                                                         // Antes de guardar el plato se debe añadir el último ingrediente colocado
+                                                         // que no se ha guardado aún porque eso se hace al escoger otro grupo de
+                                                         // alimentos, lo cual no se ha hecho en este caso.
                
-               Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
-               el ingrediente, pero al final no añada otro ingrediente de ese nuevo
-               grupo. Entonces habría que permitir que tras escoger grupo de alimentos
-               se guarde el plato sin añadirle nada. 
+                                                         // Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
+                                                         // el ingrediente, pero al final no añada otro ingrediente de ese nuevo
+                                                         // grupo. Entonces habría que permitir que tras escoger grupo de alimentos
+                                                         // se guarde el plato sin añadirle nada. 
                
-               Usamos 'grupoEscogido' porque no se ha modificado. */
-               
-            /*  ----- INGREDIENTE ==> PLATO ----- */
-            Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
-            platoActual.addIngPlato(ing);
-            /*  ----- INGREDIENTE ==> COMIDA  ------ */
-            comidaActual.addIngComida(ing);
-            /*  ----- PLATO ==> COMIDA  ------ */
-            comidaActual.addPlato(platoActual);
+                                                         // Usamos 'grupoEscogido' porque no se ha modificado. 
+            // Si hay algo por incluir en el plato
+            //if(pesoBascula != 0.0){                      // Solo se guarda alimento si se ha pasado por STATE_weighted porque se haya
+                                                         // colocado algo en la báscula tras escoger grupo en STATE_groupA o STATE_groupB.
+                                                         // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
+                                                         // añadir un nuevo plato sin haber colocado un nuevo alimento, entonces no haría 
+                                                         // falta actualizar la comida, pues no se habría modificado.
+                                                         
+                Ingrediente ing(grupoEscogido, pesoBascula); // Cálculo automático de valores nutricionales. 
+                
+                platoActual.addIngPlato(ing);                // Ingrediente ==> Plato
+                comidaActual.addIngComida(ing);              // Ingrediente ==> Comida
+                
+            //}
 
-            pesoPlato = platoActual.getPesoPlato();
-    
-            platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo    
+            // Si el plato no está vacío, se guarda en la comida actual
+            //if(!platoActual.isPlatoEmpty()){
+                pesoPlato = platoActual.getPesoPlato();      // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
+                comidaActual.addPlato(platoActual);          // Plato ==> Comida (no se vuelve a incluir el ingrediente. Solo modifica peso y nPlatos)
+                platoActual.restorePlato();                  // "Reiniciar" platoActual para usarlo de nuevo.
+            //}
 
-            /* Taramos y conforme vaya disminuyendo el peso veremos si -X = +X */
-            if(tararRetirar){
+            if(tararRetirar){                            // Taramos y conforme vaya disminuyendo el peso veremos si -X = +X .
                 tareScale();
                 tararRetirar = false;
             }
+
+            savePlato = false;                           // Para evitar guardar el plato varias veces al reentrar al estado sin pasar por otro.
         }
-        else tarado = false;
+        else tarado = false;                             // Para que no siga marcando 'TARAR' al detectar un nuevo decremento en el 
+                                                         // proceso de liberar la báscula.
         
-        printStateAdded();         
-        doneState = true;
+        printStateAdded();                               // Print info del estado.
+        
+        doneState = true;                                // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                         // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                         // las acciones.
     }
 }
 
@@ -358,33 +440,49 @@ void actStateAdded(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateDeleted(){
     if(!doneState){
-        if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){ //Si lo último ha sido un incremento, se guarda
-            //Para eliminar el plato, antes debemos guardarlo
+        if(savePlato){                                   // Si es la primera vez que se entra a este estado, se guarda.
+          
             Serial.println(F("\nPlato eliminado..."));
-            /*  ----- INGREDIENTE ==> PLATO ----- */
-            Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
-            platoActual.addIngPlato(ing);
-            /*  ----- INGREDIENTE ==> COMIDA  ------ */
-            comidaActual.addIngComida(ing);
-            /*  ----- PLATO !=> COMIDA  ------ */
-            comidaActual.deletePlato(platoActual);
 
-            pesoPlato = platoActual.getPesoPlato();
-            
-            platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
+            // Si hay algo por incluir en el plato
+            //if(pesoBascula != 0.0){                      // Solo se guarda alimento si se ha pasado por STATE_weighted porque se haya
+                                                         // colocado algo en la báscula tras escoger grupo en STATE_groupA o STATE_groupB.
+                                                         // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
+                                                         // eliminar el plato actual sin haber colocado un nuevo alimento, entonces no haría 
+                                                         // falta actualizar la comida, pues no se habría modificado.
+                                                         
+                Ingrediente ing(grupoEscogido, pesoBascula); // Cálculo automático de valores nutricionales.
+                
+                platoActual.addIngPlato(ing);                // Ingrediente ==> Plato
+                comidaActual.addIngComida(ing);              // Ingrediente ==> Comida (se guarda para poder borrar el plato completo)
+            //}
 
-            /* Taramos y conforme vaya disminuyendo el peso veremos si -X = +X */
-            if(tararRetirar){
+            // Si el plato no está vacío, se incluye en la comida actual para poderlo borrar
+            //if(!platoActual.isPlatoEmpty()){
+                pesoPlato = platoActual.getPesoPlato();      // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
+                comidaActual.deletePlato(platoActual);       // Borrar plato de la comida.
+                platoActual.restorePlato();                  // "Reiniciar" platoActual para usarlo de nuevo.
+            //}
+
+            if(tararRetirar){                            // Taramos y conforme vaya disminuyendo el peso veremos si -X = +X .
                 tareScale();
                 tararRetirar = false;
             }
+
+            savePlato = false;                           // Para evitar guardar y borrar el plato varias veces al reentrar al estado 
+                                                         // sin pasar por otro.
         }
-        else tarado = false;
+        else tarado = false;                             // Para que no siga marcando 'TARAR' al detectar un nuevo decremento en el
+                                                         // proceso de liberar la báscula.
         
-        printStateDeleted();        
-        doneState = true;
+        printStateDeleted();                             // Print info del estado.
+        
+        doneState = true;                                // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                         // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                         // las acciones.
     }
 }
+
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -392,46 +490,63 @@ void actStateDeleted(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateSaved(){
     if(!doneState){
-        if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){ //Si lo último ha sido un incremento, se guarda
+        if(savePlato){                                   // Si es la primera vez que se entra a este estado, se guarda.
+          
             Serial.println(F("\nComida guardada..."));  
-            /* Antes de guardar la comida se debe añadir el último ingrediente colocado
-               que no se ha guardado aún porque eso se hace al escoger otro grupo de
-               alimentos, lo cual no se ha hecho en este caso.
+                                                         // Antes de guardar la comida se debe añadir el último ingrediente colocado
+                                                         // que no se ha guardado aún porque eso se hace al escoger otro grupo de
+                                                         // alimentos, lo cual no se ha hecho en este caso. 
                
-               TODO => Es posible que alguien escoja un nuevo grupo de alimentos, se guarde
-               el ingrediente, pero al final no añada otro ingrediente de ese nuevo
-               grupo. Entonces habría que permitir que tras escoger grupo de alimentos
-               se guarde el plato sin añadirle nada. 
-               
-               Usamos 'grupoEscogido' porque no se ha modificado. */
-               
-            /*  ----- INGREDIENTE ==> PLATO ----- */
-            Ingrediente ing(grupoEscogido, pesoBascula); /* Cálculo automático de valores nutricionales */
-            platoActual.addIngPlato(ing);
-            /*  ----- INGREDIENTE ==> COMIDA  ------ */
-            comidaActual.addIngComida(ing);
-            /*  ----- PLATO ==> COMIDA  ------ */
-            comidaActual.addPlato(platoActual);
-            /*  ----- COMIDA ==> DIARIO ------ */
-            diaActual.addComida(comidaActual);
+                                                         // Usamos 'grupoEscogido' porque no se ha modificado. 
 
-            pesoPlato = platoActual.getPesoPlato();
-    
-            platoActual.restorePlato();         // "Reiniciar" plato para usarlo de nuevo
-            comidaActual.restoreComida();
+            // Si hay algo por incluir en el plato
+            //if(pesoBascula != 0.0){                      // Solo se guarda alimento si se ha pasado por STATE_weighted porque se haya
+                                                         // colocado algo en la báscula tras escoger grupo en STATE_groupA o STATE_groupB.
+                                                         // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
+                                                         // guardar la comida actual sin haber colocado un nuevo alimento, entonces no haría 
+                                                         // falta actualizarla, pues no se habría modificado.
+            
+                Ingrediente ing(grupoEscogido, pesoBascula); // Cálculo automático de valores nutricionales.
+                
+                platoActual.addIngPlato(ing);                // Ingrediente ==> Plato
+                comidaActual.addIngComida(ing);              // Ingrediente ==> Comida
+            //}
 
-            /* Taramos y conforme vaya disminuyendo el peso veremos si -X = +X */
-            if(tararRetirar){
-                tareScale();
-                tararRetirar = false;
-            }
+            // Si el plato no está vacío, se incluye en la comida actual
+            //if(!platoActual.isPlatoEmpty()){
+                comidaActual.addPlato(platoActual);          // Plato ==> Comida (no se vuelve a incluir el ingrediente. Solo modifica peso y nPlatos)
+                pesoPlato = platoActual.getPesoPlato();      // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
+                platoActual.restorePlato();                  // "Reiniciar" platoActual para usarlo de nuevo.
+            //}
+
+            // Si la comida actual no está vacía, se incluye en el diario
+            //if(!comidaActual.isComidaEmpty()){
+                diaActual.addComida(comidaActual);           // Comida ==> Diario
+                comidaActual.restoreComida();                // "Reiniciar" comidaActual para usarla de nuevo.
+            //}
+
+            //if(pesoRecipiente != 0.0){                   // Si hay un recipiente colocado, además de alimentos. Es decir, no se viene del STATE_INI.
+                if(tararRetirar){                            // Taramos y conforme vaya disminuyendo el peso veremos si -X = +X .
+                    tareScale();
+                    tararRetirar = false;
+                }
+            //}
+
+            savePlato = false;                           // Para evitar guardar y borrar el plato varias veces al reentrar al estado 
+                                                         // sin pasar por otro.
         }
-        else tarado = false;
+        else tarado = false;                             // Para que no siga marcando 'TARAR' al detectar un nuevo decremento en el 
+                                                         // proceso de liberar la báscula.
         
-        printStateSaved();
-        doneState = true;
+        printStateSaved();                               // Print info del estado.
+        
+        doneState = true;                                // Solo realizar una vez las actividades del estado por cada vez que se active.
+                                                         // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                         // las acciones.
     }
 }
+
+
 
 /*---------------------------------------------------------------------------------------------------------
    doStateActions(): Acciones a realizar según el estado actual
@@ -457,16 +572,16 @@ void doStateActions(){
 ----------------------------------------------------------------------------------------------------------*/
 void actEventError(){
     switch (state_actual){
-      case 1:   printEventError("Coloque un recipiente sobre la b\xE1scula");                                 break; //INIT
-      case 2:   printEventError("Escoja un grupo de alimentos");                                              break;
-      case 3:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //grupoA ==> ¿Y si quieren guardar la comida o poner otro plato? No lo permite
-      case 4:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //grupoB
-      case 5:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //Crudo
-      case 6:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro grupo");         break;  //Cocinado
-      case 7:   printEventError("Escoja grupo para otro alimento, a\xF1ada otro plato o \nguarde la comida"); break;  //Pesado
-      case 8:   printEventError("Retire el plato para comenzar uno nuevo");                                   break;  //Add
-      case 9:   printEventError("Retire el plato que acaba de eliminar");                                     break;  //Delete
-      case 10:  printEventError("Retire el plato");                                                           break;  //Save
+      case 1:   printEventError("Coloque un recipiente sobre la b\xE1scula");                                   break;  // INIT
+      case 2:   printEventError("Escoja un grupo de alimentos");                                                break;  // Plato
+      case 3:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \n\tgrupo");         break;  // grupoA 
+      case 4:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \n\tgrupo");         break;  // grupoB
+      case 5:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \n\tgrupo");         break;  // Crudo
+      case 6:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \n\tgrupo");         break;  // Cocinado
+      case 7:   printEventError("Escoja grupo para otro alimento, a\xF1ada otro plato o \n\tguarde la comida"); break;  // Pesado
+      case 8:   printEventError("Retire el plato para comenzar uno nuevo");                                     break;  // Add
+      case 9:   printEventError("Retire el plato que acaba de eliminar");                                       break;  // Delete
+      case 10:  printEventError("Retire el plato");                                                             break;  // Save
     }
 }
 
@@ -491,7 +606,7 @@ bool isBufferEmpty(){
 ----------------------------------------------------------------------------------------------------------*/
 bool isBufferFull(){
     for (int i = 0; i < MAX_EVENTS; i++){
-        if (event_buffer[i] == NONE){ //Hay algún hueco
+        if (event_buffer[i] == NONE){     // Hay algún hueco
             return false;
         }
     }
@@ -504,7 +619,7 @@ bool isBufferFull(){
 ----------------------------------------------------------------------------------------------------------*/
 int firstGapBuffer(){
     for (int i = 0; i < MAX_EVENTS; i++){
-        if (event_buffer[i] == NONE){ //Primer hueco
+        if (event_buffer[i] == NONE){     // Primer hueco
             return i;
         }
     }
@@ -541,14 +656,14 @@ void addEventToBuffer(event_t evento){
     }
     else{
         if(isBufferFull()){
-            rotateEventBuffer(); //Se rota array a izq y se libera el último hueco
-            pos = MAX_EVENTS-1; //Último hueco
+            rotateEventBuffer();    // Se rota array a izq y se libera el último hueco
+            pos = MAX_EVENTS-1;     // Último hueco
         }
         else{
             pos = firstGapBuffer();
         }
     }
-    event_buffer[pos] = evento; //Añadir a buffer
+    event_buffer[pos] = evento;     // Añadir a buffer
     lastEvent = evento;
     Serial.print("Buffer: "); 
     for (int i = 0; i < MAX_EVENTS; i++){

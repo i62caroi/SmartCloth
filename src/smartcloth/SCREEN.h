@@ -16,7 +16,7 @@
 
 #define   NEGRO         0x0000
 #define   BLANCO        0xFFFF
-#define   ROJO          0xFA02 //0xF920
+#define   ROJO          0xFA02 //0xF920 | 0x8000 | 0xfc10 | 0xf800
 #define   NARANJA       0xFC80
 #define   AMARILLO      0xFFC0
 #define   VERDE         0x07C0
@@ -258,7 +258,8 @@ void printStateInit(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
-    cad = "Coloque un recipiente sobre la b\xE1scula";
+    if(comidaActual.isComidaEmpty()) cad = "Coloque un recipiente sobre la b\xE1scula";
+    else cad = "Coloque un recipiente sobre la b\xE1scula o guarde la comida";
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
@@ -284,7 +285,8 @@ void printStatePlato(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
-    cad = "Escoja grupo de alimentos";
+    if(comidaActual.isComidaEmpty()) cad = "Escoja grupo de alimentos";
+    else cad = "Escoja grupo de alimentos o guarde la comida";
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
@@ -340,7 +342,7 @@ void printStateAdded(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
-    cad = "Retire el plato";
+    cad = "Retire el plato para comenzar otro o guarde la comida";
     tft.println(cad);  
         
     printCentral();                                   // 2 - Estructura central
@@ -370,7 +372,7 @@ void printStateDeleted(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
-    cad = "Retire el plato";
+    cad = "Retire el plato eliminado para empezarlo de nuevo o guarde \n\tla comida";
     tft.println(cad); 
     
     printCentral();                                    // 2 - Estructura central

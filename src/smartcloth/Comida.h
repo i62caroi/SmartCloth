@@ -3,7 +3,7 @@
 
 #include "Plato.h"
 
-#define NUM_PLATOS 5
+#define NUM_PLATOS 10
 
 class Comida{
   private:
@@ -19,6 +19,8 @@ class Comida{
 
   public:
     Comida();
+
+    inline bool isComidaEmpty(){ if(getNumPlatos() == 0) return true; else return false;};
 
     inline void setPesoComida(float peso){ _peso = peso; };
     inline float getPesoComida(){ return _peso; };
@@ -60,6 +62,8 @@ void Comida::deletePlato(Plato &plato){
        guardados. La funcionalidad de SmartCloth es borrar el plato
        actual para empezarlo de nuevo, pero los anteriores ya no se
        pueden cambiar. */
+       // No hace falta decrementar nPlatos porque no se ha llegado a guardar 
+       // el plato ni, por tanto, incrementar el numero platos
     this->setPesoComida(this->getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
     this->updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
 }

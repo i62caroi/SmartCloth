@@ -21,6 +21,8 @@ class Plato{
 
   public:
     Plato();
+
+    inline bool isPlatoEmpty(){ if(getNumIng() == 0) return true; else return false; };
     
     inline void setPesoPlato(float peso){ _peso = peso; };
     inline float getPesoPlato(){ return _peso; };
