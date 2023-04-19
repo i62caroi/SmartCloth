@@ -152,6 +152,8 @@ void printCentral(){
    printValoresComida(): Muestra los valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
 void printValoresComida(){
+    int raciones;
+    
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextScale(2);
@@ -161,13 +163,16 @@ void printValoresComida(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
     tft.setCursor(MARGEN_IZQ, 375);
-    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.println(" g (X raciones)");
+    raciones = round(comidaActual.getValoresComida().getCarbValores()/10);
+    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Lip: "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.println(" g (X raciones)");
+    raciones = round(comidaActual.getValoresComida().getLipValores()/10);
+    tft.print("Lip:  "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.println(" g (X raciones)");
+    raciones = round(comidaActual.getValoresComida().getProtValores()/10);
+    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(comidaActual.getValoresComida().getKcalValores()); tft.println(" Kcal");
@@ -184,6 +189,8 @@ void printValoresTemporales(){
     float lip = ingAux.getValoresIng().getLipValores() + comidaActual.getValoresComida().getLipValores();
     float prot = ingAux.getValoresIng().getProtValores() + comidaActual.getValoresComida().getProtValores();
     float kcal = ingAux.getValoresIng().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
+
+    int raciones;
     
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
@@ -193,13 +200,16 @@ void printValoresTemporales(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
     tft.setCursor(MARGEN_IZQ, 375);
-    tft.print("Carb: "); tft.print(carb); tft.println(" g (X raciones)");
+    raciones = round(carb/10);
+    tft.print("Carb: "); tft.print(carb); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Lip: "); tft.print(lip); tft.println(" g (X raciones)");
+    raciones = round(lip/10);
+    tft.print("Lip:  "); tft.print(lip); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    tft.print("Prot: "); tft.print(prot); tft.println(" g (X raciones)");
+    raciones = round(prot/10);
+    tft.print("Prot: "); tft.print(prot); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(kcal); tft.println(" Kcal");
@@ -210,6 +220,8 @@ void printValoresTemporales(){
    printValoresDiario(): Muestra los valores nutricionales del acumulado del día
 ----------------------------------------------------------------------------------------------------------*/
 void printValoresDiario(){
+    int raciones;
+    
     tft.setCursor(MARGEN_IZQ_ACC, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextScale(2);
@@ -219,13 +231,16 @@ void printValoresDiario(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
     tft.setCursor(MARGEN_IZQ_ACC, 375);
-    tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.println(" g (X raciones)");
+    raciones = round(diaActual.getValoresDiario().getCarbValores()/10);
+    tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    tft.print("Lip: "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.println(" g (X raciones)");
+    raciones = round(diaActual.getValoresDiario().getLipValores()/10);
+    tft.print("Lip:  "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.println(" g (X raciones)");
+    raciones = round(diaActual.getValoresDiario().getProtValores()/10);
+    tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(diaActual.getValoresDiario().getKcalValores()); tft.println(" Kcal");
@@ -254,15 +269,13 @@ void printStateInit(){
     tft.setTextScale(2);        
     cad = "\xA1""BIENVENIDO/A\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
-    
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
     if(comidaActual.isComidaEmpty()) cad = "Coloque un recipiente sobre la b\xE1""scula";
-    else{
-        tft.selectInternalFont(RA8876_FONT_SIZE_16);      
-        cad = "Coloque un recipiente sobre la b\xE1""scula o guarde la comida";
-    }
+    else cad = "Coloque un recipiente sobre la b\xE1""scula o guarde la comida";
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
@@ -285,6 +298,7 @@ void printStatePlato(){
     cad = "\xA1""RECIPIENTE COLOCADO\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
     
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
@@ -298,7 +312,7 @@ void printStatePlato(){
         tft.selectInternalFont(RA8876_FONT_SIZE_16);      
         cad = "Escoja grupo de alimentos o guarde la comida";
     }*/
-    cad = "Escoja grupo de alimentos";
+    cad = "Escoja un grupo de alimentos";
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
@@ -414,7 +428,7 @@ void printStateSaved(){
     
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
-    tft.setTextScale(2);  
+    //tft.setTextScale(2);  
     tft.selectInternalFont(RA8876_FONT_SIZE_16);       
     cad = "Retire el plato";
     tft.println(cad); 
@@ -457,8 +471,9 @@ void printEventError(String msg){
     tft.setTextScale(2);        
     tft.println(cad);                                  // Imprimir texto
 
-    tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(1);        
+    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    //tft.setTextScale(1);        
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.println(msg);           
@@ -486,8 +501,9 @@ void printEmptyError(String msg){
     tft.setTextScale(2);        
     tft.println(cad);                                  // Imprimir texto
 
-    tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(1);        
+    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    //tft.setTextScale(1);        
     tft.setCursor(MARGEN_IZQ, 120);                             
     //tft.setTextColor(CIAN);                                
     tft.println(msg);           
