@@ -258,8 +258,11 @@ void printStateInit(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
-    if(comidaActual.isComidaEmpty()) cad = "Coloque un recipiente sobre la b\xE1scula";
-    else cad = "Coloque un recipiente sobre la b\xE1scula o guarde la comida";
+    if(comidaActual.isComidaEmpty()) cad = "Coloque un recipiente sobre la b\xE1""scula";
+    else{
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);      
+        cad = "Coloque un recipiente sobre la b\xE1""scula o guarde la comida";
+    }
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
@@ -285,8 +288,17 @@ void printStatePlato(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
+    /*
+    // Esto solo sirve si se permite guardar comida desde STATE_Plato,
+    // pero no tendría mucho sentido que alguien pusiera un recipiente
+    // y luego guardara la comida. Tendría que quitar el recipiente y luego,
+    // estando de nuevo en INI, guardar la comida.
     if(comidaActual.isComidaEmpty()) cad = "Escoja grupo de alimentos";
-    else cad = "Escoja grupo de alimentos o guarde la comida";
+    else{
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);      
+        cad = "Escoja grupo de alimentos o guarde la comida";
+    }*/
+    cad = "Escoja grupo de alimentos";
     tft.println(cad);           
     
     printCentral();                                    // 2 - Estructura central
@@ -342,6 +354,7 @@ void printStateAdded(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);       
     cad = "Retire el plato para comenzar otro o guarde la comida";
     tft.println(cad);  
         
@@ -372,7 +385,8 @@ void printStateDeleted(){
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
     tft.setTextScale(2);        
-    cad = "Retire el plato eliminado para empezarlo de nuevo o guarde \n\tla comida";
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);       
+    cad = "Retire el plato eliminado para empezarlo de nuevo o guarde la comida";
     tft.println(cad); 
     
     printCentral();                                    // 2 - Estructura central
@@ -400,7 +414,8 @@ void printStateSaved(){
     
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
-    tft.setTextScale(2);        
+    tft.setTextScale(2);  
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);       
     cad = "Retire el plato";
     tft.println(cad); 
     
@@ -452,6 +467,36 @@ void printEventError(String msg){
     printValoresComida();                              // 3 - Valores comida actual
     printValoresDiario();                              // 4 - Valores acumulado hoy
 }
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printEmptyError(): Información de aviso por intentar guardar/borrar plato o comida estando vacíos
+          Parámetros:
+                msg - String => mensaje mostrado según el estado
+----------------------------------------------------------------------------------------------------------*/
+void printEmptyError(String msg){    
+    cad = "\xA1""\xA1""AVISO\x21""\x21""";
+    
+    tft.clearScreen(0);                                // Limpiar
+    
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+    tft.setCursor(350, 50);                            // Posicion inicio texto
+    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextScale(2);        
+    tft.println(cad);                                  // Imprimir texto
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(1);        
+    tft.setCursor(MARGEN_IZQ, 120);                             
+    //tft.setTextColor(CIAN);                                
+    tft.println(msg);           
+
+    printCentral();                                    // 2 - Estructura central
+    printValoresComida();                              // 3 - Valores comida actual
+    printValoresDiario();                              // 4 - Valores acumulado hoy
+}
+
 
 
 
