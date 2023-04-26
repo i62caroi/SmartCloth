@@ -41,8 +41,8 @@ void checkBascula(){
     
     if (pesado){
         pesoARetirar = pesoRecipiente + pesoPlato;
-        //if((state_prev == STATE_saved) and (pesoARetirar == 0.0)){ //Solo si se ha querido guardar desde el STATE_INI
-        if((state_actual == STATE_saved) and (pesoARetirar == 0.0)){ //Solo si se ha querido guardar desde el STATE_INI 
+        //if((state_prev == STATE_saved) and (pesoARetirar == 0.0)){ //Solo si se ha querido guardar desde el STATE_Empty
+        if((state_actual == STATE_saved) and (pesoARetirar == 0.0)){ //Solo si se ha querido guardar desde el STATE_Empty 
             Serial.print(F("\nLIBERADA sola"));
             eventoBascula = LIBERAR;
             addEventToBuffer(eventoBascula);

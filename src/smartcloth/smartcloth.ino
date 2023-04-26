@@ -31,8 +31,8 @@ void setup() {
     setupScreen();  //screen.h
 
     /*------- ESTADO INICIAL --------- */
-    //initStateMachine();
-    state_actual = STATE_INI;
+    Welcome();
+    state_actual = STATE_Empty;
 
   
     /* --------- INTERRUPTIONS ----------------- */
@@ -76,7 +76,7 @@ void loop() {
     if (millis() - prevMillis > period){
         prevMillis = millis();
         
-        doStateActions();   // Actividades del estado actual. Comienza en STATE_INI 
+        doStateActions();   // Actividades del estado actual. Comienza en STATE_Empty 
 
         /*--------------------------------------------------------------*/
         /* ---------------    CHECK INTERRUPCIONES   ------------------ */

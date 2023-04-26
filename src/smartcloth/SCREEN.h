@@ -1,7 +1,8 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#include "RA8876.h"
+//#include "RA8876.h"
+#include "RA8876_v2.h"
 #include "State_Machine.h"
 #include "Variables.h"
 
@@ -12,11 +13,13 @@
 #define RA8876_BACKLIGHT 10
 
 
-// Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
+// 8bpp (1 byte/pixel ) => RGB332
+// 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
+// 24bpp (3 bytes/pixel o 4 bytes/pixel) ==> RGB888
 
 #define   NEGRO         0x0000
 #define   BLANCO        0xFFFF
-#define   ROJO          0xFA02 //0xF920 | 0x8000 | 0xfc10 | 0xf800
+#define   ROJO          0xF800 //0xF920 | 0x8000 | 0xfc10 | 0xfa02
 #define   NARANJA       0xFC80
 #define   AMARILLO      0xFFC0
 #define   VERDE         0x07C0
@@ -256,20 +259,21 @@ void printValoresDiario(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStateInit(): Información del STATE_INI
+   printStateEmpty(): Información del STATE_Empty
 ----------------------------------------------------------------------------------------------------------*/
-void printStateInit(){
-    //simplePrint("BIENVENIDO\n\n           Escoja grupo de alimentos");
+void printStateEmpty(){
+    //simplePrint("Escoja grupo de alimentos");
     
     tft.clearScreen(0);                                // Limpiar
-    
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+
+    // Ya no se necesita el 'BIENVENIDO' porque no es la primera pantalla
+    /*tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
     tft.setTextColor(AMARILLO);                        // Color texto
     tft.setTextScale(2);        
     cad = "\xA1""BIENVENIDO/A\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
-
+    */
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
@@ -306,7 +310,7 @@ void printStatePlato(){
     // Esto solo sirve si se permite guardar comida desde STATE_Plato,
     // pero no tendría mucho sentido que alguien pusiera un recipiente
     // y luego guardara la comida. Tendría que quitar el recipiente y luego,
-    // estando de nuevo en INI, guardar la comida.
+    // estando de nuevo en STATE_Empty, guardar la comida.
     if(comidaActual.isComidaEmpty()) cad = "Escoja grupo de alimentos";
     else{
         tft.selectInternalFont(RA8876_FONT_SIZE_16);      

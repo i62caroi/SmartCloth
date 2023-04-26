@@ -20,10 +20,10 @@ bool flagEvent;                   /* Para evitar que marque evento para cada int
 
 
 /*  -----   BÁSCULA  ----- */
-volatile float weight = 0.0;
-volatile bool pesado = false;
-float pesoBascula = 0.0;
-float diffWeight = 0.0;
+volatile float weight = 0.0;        // Peso real tomado por ISR
+volatile bool pesado = false;       // Flag de haber pesado por ISR
+float pesoBascula = 0.0;            // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
+float diffWeight = 0.0;             // Diferencia entre peso actual (weight) y peso anterior para ver cambios
 
 HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
@@ -33,7 +33,7 @@ void fixPesoBascula(){
 
 bool tarado;
 void tareScale(){ 
-  scale.tare(1);  //5 tomas de valor
+  scale.tare(1);  //1 toma de valor
   pesoBascula = weight;
   fixPesoBascula();
   tarado = true;

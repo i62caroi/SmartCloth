@@ -73,13 +73,13 @@ void Comida::deletePlato(Plato &plato){
 
 void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
     float carb, lip, prot, kcal;
-    if(suma){
+    if(suma){        // Añadir plato
         carb = _valoresComida.getCarbValores() + val.getCarbValores();
         lip = _valoresComida.getLipValores() + val.getLipValores();
         prot = _valoresComida.getProtValores() + val.getProtValores();
         kcal = _valoresComida.getKcalValores() + val.getKcalValores();
     }
-    else{
+    else{            // Eliminar plato 
         carb = _valoresComida.getCarbValores() - val.getCarbValores();
         lip = _valoresComida.getLipValores() - val.getLipValores();
         prot = _valoresComida.getProtValores() - val.getProtValores();
