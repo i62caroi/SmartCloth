@@ -1,19 +1,29 @@
-#include "Buttons.h"       /* Buttons.h => ISR.h y State_Machine.h
-                                -  ISR.h => Scale.h
-                                -  State_Machine.h => Screen.h y Diario.h
-                                     - Screen.h => Variables.h
-                                           - Variables.h => Grupos.h
-                                     - Diario.h => Comida.h
-                                          - Comida.h => Plato.h
-                                                - Plato.h => Ingrediente.h
-                                                    - Ingrediente.h => Valores_Nutricionales.h
+#include "Buttons.h"       /* Buttons.h 
+                                => ISR.h 
+                                      => Scale.h
+                                          => HX711.h
+                                          => State_Machine.h
+                                => State_Machine.h
+                                      => SD_functions.h
+                                      => Screen.h 
+                                          => RA8876_v2.h
+                                          => icons.h
+                                          => State_Machine.h
+                                          => Variables.h 
+                                                => Scale.h
+                                                => Diario.h 
+                                                      => Comida.h 
+                                                            => Plato.h 
+                                                                  => Ingrediente.h
+                                                                        => Valores_Nutricionales.h
+                                                                        => Grupos.h
+                                                                      
                             */
 
 /* Time */
 const unsigned long period = 50;
 unsigned long prevMillis = 0;
 unsigned long tiempoPrevio = 0;
-
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -29,6 +39,9 @@ void setup() {
     
     /* ------ SCREEN --------- */
     setupScreen();  //screen.h
+
+    /* ------ SD card -------- */
+    //setupSDcard();
 
     /*------- ESTADO INICIAL --------- */
     Welcome();

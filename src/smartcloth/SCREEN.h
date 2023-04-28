@@ -1,10 +1,51 @@
+
+/* --------- CONEXIÓN TFT/LCD CON ARDUINO -----------
+ 
+  Pantalla modelo: ER-TFTM070-6 de BuyDisplay
+      - SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
+      https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel
+  
+  TFT conectada al bus SPI de la siguiente forma:
+    (pines de conexión en el JP1 de la TFT)
+      ---------------------------------------------
+      |  SPI  |   TFT   |       Arduino Due       |
+      ---------------------------------------------
+      |  MOSI |  pin 7  |      pin 4 (SPI)        |    
+      |  MISO |  pin 6  |      pin 1 (SPI)        |
+      |  CLK  |  pin 8  |      pin 3 (SPI)        |
+      |  CS   |  pin 5  |   pin 12 (digital PWM)  | 
+      ---------------------------------------------
+
+  Otras conexiones de la TFT al Arduino:
+    (pines de conexión en el JP1 de la TFT)
+      -------------------------------------------------
+      |        TFT           |      Arduino Due       |
+      -------------------------------------------------
+      |  pin 11 (Reset)      |  pin 11 (digital PWM)  |
+      |  pin 14 (Backlight)  |  pin 10 (digital PWM)  |
+      -------------------------------------------------
+
+  Alimentación y referencia a tierra de la TFT: 
+    (pines de conexión en el JP1 de la TFT)
+                      ---------------------------------
+                      |           TFT                 |
+      -------------------------------------------------
+      |  VDD (3.3 V)  |  pines 3, 4, 37 y 38          |   
+      |  GND          |  pines 1, 2, 13, 31, 39 y 40  |
+      -------------------------------------------------
+  
+*/
+
+
 #ifndef SCREEN_H
 #define SCREEN_H
+
 
 //#include "RA8876.h"
 #include "RA8876_v2.h"
 #include "State_Machine.h"
 #include "Variables.h"
+#include "icons.h"  // iconos de 'crudo' y 'cocinado' como bitmap
 
 
 /* Screen circuit wiring */
@@ -42,6 +83,34 @@ int ALTO; // Y (600)
 
 String cad;
 
+
+
+
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
+void setupScreen();
+//void simplePrint(String cad);
+void Welcome();
+void printEjemplosyGrupo();
+void printCentral();
+void printValoresComida();
+void printValoresTemporales();
+void printValoresDiario();
+void printStateEmpty();
+void printStatePlato();
+void printStateABandProcessed();
+void printStateWeighted();
+void printStateAdded();
+void printStateDeleted();
+void printStateSaved();
+void printEventError(String msg);
+void printEmptyObjectError(String msg);
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+
+
+
 /*---------------------------------------------------------------------------------------------------------
    setupScreen(): Inicializar pantalla
 ----------------------------------------------------------------------------------------------------------*/
@@ -50,13 +119,11 @@ void setupScreen(){
     digitalWrite(RA8876_BACKLIGHT, HIGH);  // Turn on backlight
     if (!tft.init()){
       Serial.println(F("Could not initialize RA8876"));
+      while(1);
     }
-    tft.clearScreen(0); //0x0000 --> Negro
-    tft.setTextScale(2);
-    tft.selectInternalFont(RA8876_FONT_SIZE_32, RA8876_FONT_ENCODING_8859_1);
     ANCHO = tft.getWidth(); // X
     ALTO = tft.getHeight(); // Y
-    Serial.println(F("\nStartup complete..."));
+    Serial.println(F("\nScreen startup complete..."));
     delay(200);
 }
 
@@ -75,6 +142,17 @@ void setupScreen(){
     tft.print(cad);
 }*/
 
+/***************************************************************************************************/
+/*---------------------------- BIENVENIDA A SMARTCLOTH   ------------------------------------------*/
+/***************************************************************************************************/
+void Welcome(){
+    tft.clearScreen(0); //0x0000 --> Negro
+    //tft.sdCardShowPicture16bpp(50,10,768,558,"SmartCloth.bin");  
+    //tft.sdCardShowPicture16bpp(50,10,768,558,"SmartC~1.bin");
+    tft.sdCardShowPicture16bpp(450,300,189,181,"crudo.bin");
+    //tft.sdCardShowPicture16bpp(50,50,128,128,"home.bin");
+    delay(3000);
+}
 
 
 
@@ -88,14 +166,15 @@ void printEjemplosyGrupo(){
     tft.clearScreen(0);           // Limpiar
     
     /* ----- EJEMPLOS ----- */
+    tft.setTextScale(2);
     tft.selectInternalFont(RA8876_FONT_SIZE_16);       // Tamaño texto
-    tft.setCursor(MARGEN_IZQ, 40);                             // Posicion inicio texto
+    tft.setCursor(MARGEN_IZQ, 40);                     // Posicion inicio texto
     tft.setTextColor(AMARILLO);                        // Color texto                  
     tft.println(grupoEscogido.Ejemplos_grupo);         // Imprimir texto
 
     /* ----- GRUPO ----- */
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(MARGEN_IZQ, 120);                            // Posicion inicio texto => tft.getCursorY()
+    tft.setCursor(MARGEN_IZQ, 120);                    // Posicion inicio texto => tft.getCursorY()
     tft.setTextColor(BLANCO);                          // Color texto      
     tft.setTextScale(2);        
     tft.println(grupoEscogido.Nombre_grupo);           // Imprimir texto
@@ -267,13 +346,13 @@ void printStateEmpty(){
     tft.clearScreen(0);                                // Limpiar
 
     // Ya no se necesita el 'BIENVENIDO' porque no es la primera pantalla
-    /*tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
     tft.setTextColor(AMARILLO);                        // Color texto
     tft.setTextScale(2);        
-    cad = "\xA1""BIENVENIDO/A\x21"""; // ¡BIENVENIDO/A!
+    cad = "B\xE1""SCULA LIBRE";                        // BÁSCULA LIBRE
     tft.println(cad);                                  // Imprimir texto
-    */
+    
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(MARGEN_IZQ, 120);                             
     tft.setTextColor(CIAN);                                
@@ -490,11 +569,11 @@ void printEventError(String msg){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printEmptyError(): Información de aviso por intentar guardar/borrar plato o comida estando vacíos
+   printEmptyObjectError(): Información de aviso por intentar guardar/borrar plato o comida estando vacíos
           Parámetros:
                 msg - String => mensaje mostrado según el estado
 ----------------------------------------------------------------------------------------------------------*/
-void printEmptyError(String msg){    
+void printEmptyObjectError(String msg){    
     cad = "\xA1""\xA1""AVISO\x21""\x21""";
     
     tft.clearScreen(0);                                // Limpiar

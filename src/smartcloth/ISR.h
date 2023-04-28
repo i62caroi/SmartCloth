@@ -13,7 +13,6 @@
 #include "SAMDUETimerInterrupt.h"
 #include "SAMDUE_ISR_Timer.h"
 
-
 #include "Scale.h"
 
 
@@ -36,6 +35,21 @@ const byte intPinGuardar = 26;            // Negro
 const byte interruptPinGrande = 29;       // Pin de interrupcion RISING para Grande
 volatile bool pulsandoGrande = false;     // Flag de estar pulsando algo en Grande
 
+
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
+void ISR_crudo();                         // ISR de botón de 'crudo'
+void ISR_cocinado();                      // ISR de botón de 'cocinado'
+void ISR_addPlato();                      // ISR de botón de 'añadir plato'
+void ISR_deletePlato();                   // ISR de botón de 'eliminar plato'
+void ISR_guardar();                       // ISR de botón de 'guardar comida'
+void ISR_pulsandoButtonsGrande();         // ISR de botonera de grupos de alimentos
+void TimerHandler();                      // Activar timer de interrupción de la báscula
+void ISR_pesarBascula();                  // Activar báscula para pesar cuando salte timer de interrupción
+uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName);     // Adjuntar interrupción al timer
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 
 
 

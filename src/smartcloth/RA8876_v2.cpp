@@ -1350,6 +1350,8 @@ void RA8876::drawPixel(int x, int y, uint16_t color)
 
 
 /* *************************************************************
+    Mostrar imagen que está guardada en la flash de arduino como
+    Word (16bpp) en un fichero.h (véase prueba_Word_en_H)
    ************************************************************* */
 void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data)
 {
@@ -1369,10 +1371,10 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
  checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
  setCanvasWindow(0,0,m_width,m_height);
 }
-//-------------------------
 
-//**************************************************************//
-//**************************************************************//
+
+/* *************************************************************
+   ************************************************************* */
 void RA8876::sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
 {
   // open the file. note that only one file can be open at a time,

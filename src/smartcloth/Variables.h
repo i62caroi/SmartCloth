@@ -1,9 +1,11 @@
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
-#include "Grupos.h"
-#include "Diario.h" // Comida.h (Plato.h)
+
 #include "Scale.h"
+#include "Diario.h" // Comida.h => Plato.h => Ingrediente.h => ValoresNutricionales.h
+                    //                                      => Grupos.h
+
 
 
 /*  -----   BOTONERAS  ----- */
@@ -51,6 +53,7 @@ float pesoRecipiente;
 float pesoPlato;
 Comida comidaActual;
 Diario diaActual;
+
 
 
 #endif

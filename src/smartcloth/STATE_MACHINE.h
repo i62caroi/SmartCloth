@@ -5,7 +5,8 @@
 #define RULES 67 
 
 #include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Ingrediente.h -> Valores_Nutricionales.h)
-//#include "Diario.h"   
+#include "SD_functions.h"
+
 
 
 bool doneState;       // Flag para que solo se realicen una vez las actividades del estado cada vez que se entre.
@@ -170,6 +171,29 @@ event_t eventoBascula;      // Evento ocurrido en báscula
 /*----------------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------------------------------------------*/
 
+/*-----------------------------------------------------------------------------
+                            DEFINICIONES
+-----------------------------------------------------------------------------*/
+bool checkStateConditions();                        // Comprobar reglas de transición de estados
+void actStateEmpty();                               // Actividades STATE_Empty
+void actStatePlato();                               // Actividades STATE_Plato
+void actGruposAlimentos();                          // Actividades STATE_groupA y STATE_groupB
+void actStateRaw();                                 // Actividades STATE_raw
+void actStateCooked();                              // Actividades STATE_cooked
+void actStateWeighted();                            // Actividades STATE_weighted
+void actStateAdded();                               // Actividades STATE_added
+void actStateDeleted();                             // Actividades STATE_deleted
+void actStateSaved();                               // Actividades STATE_saved
+void doStateActions();                              // Actividades según estado actual
+void actEventError();                               // Mensaje de error de evento según el estado actual
+bool isBufferEmpty();                               // Comprobar buffer de eventos vacío
+bool isBufferFull();                                // Comprobar buffer de eventos lleno
+int firstGapBuffer();                               // Obtener primer hueco en el buffer
+void shiftLeftEventBuffer();                        // Desplazar buffer a izquierda para incluir nuevo evento
+void addEventToBuffer(event_t evento);              // Añadir evento al buffer
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
@@ -215,7 +239,7 @@ void actStateEmpty(){
         pesoRecipiente = 0.0;                     // Se inicializa 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
         pesoPlato = 0.0;                          // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
         
-        printStateEmpty();                         // Print info estado.
+        printStateEmpty();                        // Print info estado.
         
         doneState = true;                         // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                   // cada vez que se entre a esta función debido al loop de Arduino.
@@ -404,7 +428,7 @@ void actStateAdded(){
             /* ----- GUARDAR PLATO EN COMIDA  ----- */
             if(platoActual.isPlatoEmpty()){                         // ==> Si el plato está vacío -> no se crea otro    
                 errorPlatoWasEmpty = true;
-                printEmptyError("No se ha creado otro plato porque el actual est\xE1"" vac\xED""o");
+                printEmptyObjectError("No se ha creado otro plato porque el actual est\xE1"" vac\xED""o");
             }
             else{                                                   // ==> Si el plato no está vacío -> se crea otro.
                 errorPlatoWasEmpty = false;
@@ -474,9 +498,13 @@ void actStateDeleted(){
 
 
             /* ----- BORRAR PLATO DE COMIDA  ----- */
+                 // Se debe avisar de que no se puede seguir borrando:
+                 // - Si el plato no está vacío, se borra.
+                 // - Si el plato está vacío pero la comida no, se borra el último guardado.
+                 // - Si el plato está vacío y la comida también, entonces se avisa de que no hay nada que borrar.
             if(platoActual.isPlatoEmpty()){                         // ==> Si el plato está vacío -> no se borra    
                 errorPlatoWasEmpty = true;
-                printEmptyError("No se ha borrado el plato porque est\xE1"" vac\xED""o");
+                printEmptyObjectError("No se ha borrado el plato porque est\xE1"" vac\xED""o");
             }
             else{                                                   // ==> Si el plato no está vacío -> se borra de la comida actual.
                 errorPlatoWasEmpty = false;
@@ -563,13 +591,13 @@ void actStateSaved(){
             if(comidaActual.isComidaEmpty()){                       // ==> Si la comida está vacía -> no se guarda
                 errorComidaWasEmpty = true;
                 if(state_prev == STATE_Empty){
-                    printEmptyError("No se puede guardar la comida porque est\xE1"" vac\xED""a");
+                    printEmptyObjectError("No se puede guardar la comida porque est\xE1"" vac\xED""a");
                     delay(3000);                                    // Tiempo para mostrar mensaje de aviso ya que, en este caso,
                                                                     // el regreso a STATE_Empty es automático porque la báscula está libre (LIBERAR).
                 }
                 else{                                               // En los otros estados (groupA, groupB, raw, cooked, weighted) habrá recipiente,
                                                                     // por lo que el regreso a STATE_Empty no es automático, sino que se debe liberar la báscula.
-                    printEmptyError("No se puede guardar la comida porque est\xE1"" vac\xED""a. \n Si ha puesto un plato, ret\xED""relo para empezar de nuevo.");
+                    printEmptyObjectError("No se puede guardar la comida porque est\xE1"" vac\xED""a. \n Si ha puesto un plato, ret\xED""relo para empezar de nuevo.");
                 }
             }
             else{                                                   // ==> Si la comida no está vacía -> se guarda en el diario.
@@ -678,10 +706,10 @@ int firstGapBuffer(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   rotateEventBuffer(): Mover elementos del buffer a la izq para liberar un hueco sin perder 
-                        los eventos previos.
+   shiftLeftEventBuffer(): Mover elementos del buffer a la izq para liberar un hueco sin perder 
+                           los eventos previos.
 ----------------------------------------------------------------------------------------------------------*/
-void rotateEventBuffer(){ 
+void shiftLeftEventBuffer(){ 
     Serial.println(F("\nRotando buffer de eventos..."));
     for (int i = 0; i < MAX_EVENTS; i++){
         if(i < (MAX_EVENTS-1)){
@@ -707,7 +735,7 @@ void addEventToBuffer(event_t evento){
     }
     else{
         if(isBufferFull()){
-            rotateEventBuffer();                 // Se rota array a izq y se libera el último hueco
+            shiftLeftEventBuffer();                 // Se rota array a izq y se libera el último hueco
             pos = MAX_EVENTS-1;                  // Último hueco
         }
         else{

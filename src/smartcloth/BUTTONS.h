@@ -4,11 +4,11 @@
 #include "ISR.h" 
 #include "State_Machine.h"
 
+
 /* Keyboards variables */
 byte iRow = 0, iCol = 0;//, keyMain = 0;
 const byte countRows = 4;
 const byte countColumns = 5;
-//const byte countButtons = 5; /* Main keyboard */
 
 /* Buttons */
 const byte rowsPins[countRows] = {32,33,30,31};
@@ -24,6 +24,13 @@ int buttons[countRows][countColumns] = {{1,2,3,4,5},
 //int buttonsMainKeyboard[countButtons] = {1,2,3,4,5};
 
 
+/*-----------------------------------------------------------------------------
+                          DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
+void readButtonsGrande();     // Polling de botonera grande tras saltar interrupción de pulsación
+void checkAllButtons();       // Asignación de eventos según botón pulsado en Grande o Main
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -82,7 +89,7 @@ void checkAllButtons(){
         if (pulsandoGrande){ // Se está pulsando una tecla
             readButtonsGrande(); // Qué tecla se está pulsando 
             buttonGrande = buttons[iRow][iCol];
-            
+            Serial.print(F("Grupo: ")); Serial.println(buttonGrande);
             /* ----- EVENTO ------- */ 
             if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
                 (buttons[iRow][iCol] <= 18))){
@@ -90,7 +97,7 @@ void checkAllButtons(){
             }
             else if(((buttons[iRow][iCol] >= 1) and (buttons[iRow][iCol] <= 6)) or ((buttons[iRow][iCol] >= 10) and 
                    (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] >=19)){
-                       eventoGrande = TIPO_B;  // Grupo B 
+                       eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
             }
             addEventToBuffer(eventoGrande);
 

@@ -1,3 +1,19 @@
+
+/* --------- CONEXIÓN CÉLULA DE CARGA CON ARDUINO -----------
+  
+  Célula conectada de la siguiente forma:
+      ------------
+      |  Célula  |
+      ------------------------------------------------
+      |   SCK    |   pin 2 (digital PWM Arduino Due) |   
+      |   DOUT   |   pin 3 (digital PWM Arduino Due) |
+      |   VCC    |   3.3 V                           |
+      |   GND    |   GND                             |
+      ------------------------------------------------
+  
+*/
+
+
 #ifndef SCALE_H
 #define SCALE_H
 
@@ -5,11 +21,22 @@
 #include "State_Machine.h"
 
 
+
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 3;
 const int LOADCELL_SCK_PIN = 2;
 
 float pesoARetirar;
+
+
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
+float weighScale();
+void setupScale();
+void checkBascula();
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -80,7 +107,7 @@ void checkBascula(){
                     Serial.print(F("\nDECREMENTO"));
                     eventoBascula = DECREMENTO;
                 }
-                else if(newWeight < 1.0){ //peso negativo
+                else if(newWeight < 1.0){ //peso negativo o 0.0
                     if(tarado){ //Decremento debido a tara
                         Serial.print(F("\nTARADO"));
                         eventoBascula = TARAR;
@@ -111,10 +138,7 @@ void checkBascula(){
         pesado = false;
     }
 
-    /*if(tarado){
-        if(abs(pesoBascula) < 1.0) pesoBascula = 0.0;
-        tarado = false;
-    }*/
+
 }
 
 #endif
