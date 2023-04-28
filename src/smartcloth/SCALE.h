@@ -1,5 +1,5 @@
 
-/* --------- CONEXIÓN CÉLULA DE CARGA CON ARDUINO -----------
+/* --------- CONEXIÓN CÉLULA DE CARGA CON ARDUINO DUE -----------
   
   Célula conectada de la siguiente forma:
       ------------
@@ -10,7 +10,8 @@
       |   VCC    |   3.3 V                           |
       |   GND    |   GND                             |
       ------------------------------------------------
-  
+
+------------------------------------------------------------------
 */
 
 

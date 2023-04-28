@@ -1,5 +1,5 @@
 
-/* --------- CONEXIÓN TFT/LCD CON ARDUINO -----------
+/* --------- CONEXIÓN TFT/LCD CON ARDUINO DUE -----------
  
   Pantalla modelo: ER-TFTM070-6 de BuyDisplay
       - SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
@@ -33,7 +33,8 @@
       |  VDD (3.3 V)  |  pines 3, 4, 37 y 38          |   
       |  GND          |  pines 1, 2, 13, 31, 39 y 40  |
       -------------------------------------------------
-  
+
+----------------------------------------------------------------
 */
 
 
@@ -147,10 +148,8 @@ void setupScreen(){
 /***************************************************************************************************/
 void Welcome(){
     tft.clearScreen(0); //0x0000 --> Negro
-    //tft.sdCardShowPicture16bpp(50,10,768,558,"SmartCloth.bin");  
-    //tft.sdCardShowPicture16bpp(50,10,768,558,"SmartC~1.bin");
-    tft.sdCardShowPicture16bpp(450,300,189,181,"crudo.bin");
-    //tft.sdCardShowPicture16bpp(50,50,128,128,"home.bin");
+    //tft.sdCardShowPicture16bpp(50,10,256,186,"smart3.bin");  
+    tft.sdCardDrawBMP("smart24.bmp", 200, 200);
     delay(3000);
 }
 

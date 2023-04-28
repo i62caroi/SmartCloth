@@ -263,6 +263,12 @@ typedef uint8_t FontFlags;
 #define RA8876_REG_SDRCR         0xE4  // SDRAM control register
 
 
+#define BUFFPIXEL 40
+//Increasing the buffer 
+// size takes more of the Arduino's precious RAM but 
+// makes loading a little faster.  20 pixels seems a 
+// good balance. 
+
 
 class RA8876 : public Print
 {
@@ -347,6 +353,13 @@ private:
   void drawEllipseShape(int x, int y, int xrad, int yrad, uint16_t color, uint8_t cmd);                                 // drawCircle, fillCircle
   /* ------------------------------------------------------------ */
 
+
+  // These read 16- and 32-bit types from the SD card file.
+  // BMP data is stored little-endian, Arduino is little-endian too.
+  // May need to reverse subscript order if porting elsewhere.
+  
+  uint16_t read16(File f);
+  uint32_t read32(File f);
   
 public:
 
@@ -434,7 +447,8 @@ public:
   void putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data);
 
   // ------ SD -------------
-  void sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);
+  void sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //BIN
+  void sdCardDrawBMP(char *filename, int x, int y); //BMP
   /* ------------------------------------------------------------ */
 
 

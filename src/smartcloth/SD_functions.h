@@ -1,5 +1,5 @@
 
-/* --------- CONEXIÓN SD CON ARDUINO -----------
+/* --------- CONEXIÓN SD CON ARDUINO DUE -----------
    
   Tarjeta SD conectada al bus SPI de la siguiente forma:
   
@@ -21,7 +21,7 @@
       |  GND  |  pin 5 |
       ------------------
 
-  
+-----------------------------------------------------
 */
 
 #ifndef SD_FUNCTIONS_H

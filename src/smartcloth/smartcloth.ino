@@ -41,7 +41,7 @@ void setup() {
     setupScreen();  //screen.h
 
     /* ------ SD card -------- */
-    //setupSDcard();
+    setupSDcard();
 
     /*------- ESTADO INICIAL --------- */
     Welcome();
