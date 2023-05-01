@@ -44,7 +44,7 @@ void setup() {
     setupSDcard();
 
     /*------- ESTADO INICIAL --------- */
-    Welcome();
+    Welcome();  // Mostrar logo de SmartCloth como bienvenida
     state_actual = STATE_Empty;
 
   

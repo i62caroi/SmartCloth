@@ -67,7 +67,7 @@ Grupo grupoAnterior;
    getGrupoAlimentos(): Obtener grupo de alimentos seleccionado (checkAllButtons() en BUTTONS.h)
 ----------------------------------------------------------------------------------------------------------*/
 void setGrupoAlimentos(int id){       // 'id' pasado es buttonGrande 
-    int posGrupo;
+    int posGrupo = 0;
     for(int i = 0; i < NUM_GRUPOS; i++){
         if(gruposAlimentos[i].ID_grupo == id){ 
             posGrupo = i;

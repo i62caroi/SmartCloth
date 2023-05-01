@@ -8,10 +8,12 @@ Version   : v2.0
     Version v1.0 obtenida de https://github.com/xlatb/ra8876/tree/master/src
 */
 /* ************************************************************ */
+
 #pragma GCC diagnostic warning "-Wall"
 #include "RA8876_v2.h"
 
 /* ************************************************************ */
+
 SdramInfo defaultSdramInfo =
 {
   120, // 120 MHz
@@ -21,7 +23,9 @@ SdramInfo defaultSdramInfo =
   9,   // 9-bit column addresses
   64   // 64 millisecond refresh time
 };
+
 /* ************************************************************ */
+
 DisplayInfo defaultDisplayInfo =
 {
   1024,   // Display width
@@ -36,6 +40,14 @@ DisplayInfo defaultDisplayInfo =
   23,     // Vertical back porch
   10      // VSYNC pulse width
 };
+
+
+//***********************+*******************************************************************************
+//-------------------------------------------------------------------------------------------------------
+//----------------------------------- PRIVATE FUNCTIONS -------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+//***********************+*******************************************************************************
+
 
 /* *************************************************************
     Trigger a hardware reset.
@@ -104,12 +116,13 @@ void RA8876::writeData(uint8_t x)
 
 /* *************************************************************
     Support SPI interface to write 16bpp data after ramAccessPrepare().
+
+    Parecido a writeData(), pero para 16bbp.
     
     lcdDataWrite16bbp() en RA8876_Lite
    ************************************************************* */
 void RA8876::writeData16bbp(uint16_t data) 
 {
-  // Parecido a writeData() de RA8876_v2, pero para 16bbp
   digitalWrite(m_csPin, LOW);
   SPI.transfer(RA8876_DATA_WRITE);
   SPI.transfer(data);
@@ -225,7 +238,7 @@ void RA8876::checkWriteFifoEmpty(void)
     Given a target frequency in kHz, finds PLL parameters k and n to reach as
     close as possible to the target frequency without exceeding it.
     The k parameter will be constrained to the range 1..kMax.
-    Returns true iff PLL params were found, even if not an exact match.
+    Returns true if PLL params were found, even if not an exact match.
    ************************************************************* */
 bool RA8876::calcPllParams(uint32_t targetFreq, int kMax, PllParams *pll)
 {
@@ -538,13 +551,13 @@ bool RA8876::initDisplay()
   writeReg(RA8876_REG_HPWR, ((m_displayInfo->hPulseWidth + 4) / 8) - 1);
   /* ----------------------------------------------------------------------- */
 
-  /* --- Esta parte es lcdVerticalNonDisplay() en RA8876_Lite ----------------- */ 
+  /* --- Esta parte es lcdVerticalNonDisplay() en RA8876_Lite -------------- */ 
   // Set vertical non-display (back porch)
   writeReg(RA8876_REG_VNDR0, (m_displayInfo->vBackPorch - 1) & 0xFF);
   writeReg(RA8876_REG_VNDR1, (m_displayInfo->vBackPorch - 1) >> 8);
   /* ----------------------------------------------------------------------- */
 
-  /* --- Esta parte es lcdVsyncStartPosition() en RA8876_Lite ----------------- */ 
+  /* --- Esta parte es lcdVsyncStartPosition() en RA8876_Lite -------------- */ 
   // Set vertical start position (front porch)
   writeReg(RA8876_REG_VSTR, m_displayInfo->vFrontPorch - 1);
   /* ----------------------------------------------------------------------- */
@@ -813,6 +826,41 @@ void RA8876::drawEllipseShape(int x, int y, int xrad, int yrad, uint16_t color, 
 
   SPI.endTransaction();
 }
+
+
+/* *************************************************************
+    Leer tipos de 16bits de un fichero de la SD. BMP se guarda
+    little-endian, igual que Arduino.
+   ************************************************************* */
+
+uint16_t RA8876::read16(File f) {
+  uint16_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read(); // MSB
+  return result;
+}
+
+/* *************************************************************
+    Leer tipos de 32bits de un fichero de la SD. BMP se guarda
+    little-endian, igual que Arduino.
+   ************************************************************* */
+uint32_t RA8876::read32(File f) {
+  uint32_t result;
+  ((uint8_t *)&result)[0] = f.read(); // LSB
+  ((uint8_t *)&result)[1] = f.read();
+  ((uint8_t *)&result)[2] = f.read();
+  ((uint8_t *)&result)[3] = f.read(); // MSB
+  return result;
+}
+
+
+//***********************+*******************************************************************************
+//-------------------------------------------------------------------------------------------------------
+//----------------------------------- PUBLIC FUNCTIONS --------------------------------------------------
+//-------------------------------------------------------------------------------------------------------
+//***********************+*******************************************************************************
+
+
 
 /* *************************************************************
    ************************************************************* */
@@ -1344,14 +1392,14 @@ void RA8876::drawPixel(int x, int y, uint16_t color)
 
 
 /* *************************************************************
-   ************************************************************* */
-/* *************************************************************
+   -------------------- IMÁGENES -------------------------------
    ************************************************************* */
 
-
 /* *************************************************************
-    Mostrar imagen que está guardada en la flash de arduino como
-    Word (16bpp) en un fichero.h (véase prueba_Word_en_H)
+    Mostrar imagen de 16bpp (RGB 5:6:5) en formato Word guardada en 
+    un fichero.h en la flash de arduino (véase prueba_Word_en_H).
+
+    Conversor online de PNG/JPGE -> Word 16bpp: https://javl.github.io/image2cpp/ 
    ************************************************************* */
 void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data)
 {
@@ -1374,15 +1422,18 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
 
 
 /* *************************************************************
+    Mostrar imagen de 16bpp (RGB 5:6:5) en formato BIN guardada en el
+    fichero 'filename' de la SD.
+
+    Conversor online de PNG/JPG -> BIN: https://javl.github.io/image2cpp/
    ************************************************************* */
-void RA8876::sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
 {
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
   File dataFile = SD.open(filename);
   // if the file is available, read it and write to ra8876:
   if (dataFile) {  
-       //tft.putPicture_16bpp(x,y,width,height);    
        setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
        setPixelCursor(x,y);
        ramAccessPrepare();
@@ -1401,20 +1452,36 @@ void RA8876::sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16
 
 
 /* *************************************************************
+    Mostrar imagen de 24bpp (RGB 8:8:8) en formato BMP guardada en el 
+    fichero 'filename' de la SD. 
+    Esta función se ha adaptado a partir de un ejemplo de la librería UTFT.
+
+    Conversor online PNG/JPEG -> BMP con 24 bits de profundidad: https://online-converting.com/image/convert2bmp/
+
+    Al usar el conversor se debe escoger '24 True color' como formato para que
+    tenga 24 bits de profundidad, que es lo único que permite esta función.
    ************************************************************* */
-void RA8876::sdCardDrawBMP(char *filename, int x, int y) 
+
+// This function opens a Windows Bitmap (BMP) file and
+// displays it at the given coordinates.  It's sped up
+// by reading many pixels worth of data at a time
+// (rather than pixel by pixel).  Increasing the buffer
+// size makes loading a little faster but the law of
+// rapidly diminishing speed improvements applies.
+void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y) 
 {
+  //BUFFPIXEL = 40
   File     bmpFile;
-  int      bmpWidth, bmpHeight;   // W+H in pixels
-  uint8_t  bmpDepth;              // Bit depth (currently must be 24)
-  uint32_t bmpImageoffset;        // Start of image data in file
-  uint32_t rowSize;               // Not always = bmpWidth; may have padding
-  uint8_t  sdbuffer[3*BUFFPIXEL]; // pixel in buffer (R+G+B per pixel)
-  uint16_t lcdbuffer[BUFFPIXEL];  // pixel out buffer (16-bit per pixel)
-  uint8_t  buffidx = sizeof(sdbuffer); // Current position in sdbuffer
-  boolean  goodBmp = false;       // Set to true on valid header parse
-  boolean  flip    = true;        // BMP is stored bottom-to-top
-  int      w, h, row, col;//, w_x, h_y;
+  int      bmpWidth, bmpHeight;         // W+H in pixels
+  uint8_t  bmpDepth;                    // Bit depth (currently must be 24)
+  uint32_t bmpImageoffset;              // Start of image data in file
+  uint32_t rowSize;                     // Not always = bmpWidth; may have padding
+  uint8_t  sdbuffer[3*BUFFPIXEL];       // pixel in buffer (R+G+B per pixel)
+  uint16_t lcdbuffer[BUFFPIXEL];        // pixel out buffer (16-bit per pixel)
+  uint8_t  buffidx = sizeof(sdbuffer);  // Current position in sdbuffer
+  boolean  goodBmp = false;             // Set to true on valid header parse
+  boolean  flip    = true;              // BMP is stored bottom-to-top
+  int      w, h, row, col;
   uint8_t  r, g, b;
   uint32_t pos = 0, startTime = millis();
   uint8_t  lcdidx = 0;
@@ -1436,24 +1503,19 @@ void RA8876::sdCardDrawBMP(char *filename, int x, int y)
 
   // Parse BMP header
   if(read16(bmpFile) == 0x4D42) { // BMP signature
-    Serial.println(F("File size: ")); 
-    Serial.println(read32(bmpFile));
-    //read32(bmpFile);
+    Serial.println(F("File size: ")); Serial.println(read32(bmpFile));
     (void)read32(bmpFile); // Read & ignore creator bytes
     bmpImageoffset = read32(bmpFile); // Start of image data
-    Serial.print(F("Image Offset: ")); 
-    Serial.println(bmpImageoffset, DEC);
+    Serial.print(F("Image Offset: ")); Serial.println(bmpImageoffset, DEC);
 
     // Read DIB header
-    Serial.print(F("Header size: ")); 
-    Serial.println(read32(bmpFile));
+    Serial.print(F("Header size: ")); Serial.println(read32(bmpFile));
     bmpWidth  = read32(bmpFile);
     bmpHeight = read32(bmpFile);
 
     if(read16(bmpFile) == 1) { // # planes -- must be '1'
       bmpDepth = read16(bmpFile); // bits per pixel
-      Serial.print(F("Bit Depth: ")); 
-      Serial.println(bmpDepth);
+      Serial.print(F("Bit Depth: ")); Serial.println(bmpDepth);
       if((bmpDepth == 24) && (read32(bmpFile) == 0)) { // 0 = uncompressed
         goodBmp = true; // Supported BMP format -- proceed!
         Serial.print(F("Image size: "));
@@ -1476,13 +1538,15 @@ void RA8876::sdCardDrawBMP(char *filename, int x, int y)
         h = bmpHeight;
         //w_x = w + x;
         //h_y = h + y; 
-        if((x+w-1) >= this->getWidth())  w = this->getWidth()  - x;
-        if((y+h-1) >= this->getHeight()) h = this->getHeight() - y;
+        if((x+w-1) >= getWidth())  w = getWidth()  - x;
+        if((y+h-1) >= getHeight()) h = getHeight() - y;
 
         // Set TFT address window to clipped image bounds
          //setCanvasWindow(x,y,w_x,h_y); // activeWindowXY() y activeWindowWH() de RA8876_Lite
          //setPixelCursor(x,y);
          //ramAccessPrepare();
+
+         //tft.setAddrWindow(x, y, x+w-1, y+h-1);
 
         for (row=0; row<h; row++) { // For each scanline...
           // Seek to start of scan line.  It might seem labor-
@@ -1504,12 +1568,14 @@ void RA8876::sdCardDrawBMP(char *filename, int x, int y)
             // Time to read more pixel data?
             if (buffidx >= sizeof(sdbuffer)) { // Indeed
               // Push LCD buffer to the display first
+              //--------En otros ejemplos no hacen esta parte -------
               if(lcdidx > 0) {
                 //tft.foreGroundColor16bpp(lcdbuffer[lcdidx]);
                 drawPixel(col, row, lcdbuffer[lcdidx]);
                 lcdidx = 0;
                 first  = false;
               }
+              //------------------------------------------------------
 
               bmpFile.read(sdbuffer, sizeof(sdbuffer));
               buffidx = 0; // Set index to beginning
@@ -1527,7 +1593,7 @@ void RA8876::sdCardDrawBMP(char *filename, int x, int y)
         } // end scanline
 
         // Write any remaining data to LCD
-        if(lcdidx > 0) {
+        if(lcdidx > 0) { 
            //myGLCD.setColor(lcdbuffer[lcdidx]);
           //myGLCD.drawPixel(col, row);
           drawPixel(col, row, lcdbuffer[lcdidx]);
@@ -1547,27 +1613,3 @@ void RA8876::sdCardDrawBMP(char *filename, int x, int y)
 }
 
 
-/* *************************************************************
-    Leer tipos de 16bits de un fichero de la SD. BMP se guarda
-    little-endian, igual que Arduino.
-   ************************************************************* */
-
-uint16_t RA8876::read16(File f) {
-  uint16_t result;
-  ((uint8_t *)&result)[0] = f.read(); // LSB
-  ((uint8_t *)&result)[1] = f.read(); // MSB
-  return result;
-}
-
-/* *************************************************************
-    Leer tipos de 32bits de un fichero de la SD. BMP se guarda
-    little-endian, igual que Arduino.
-   ************************************************************* */
-uint32_t RA8876::read32(File f) {
-  uint32_t result;
-  ((uint8_t *)&result)[0] = f.read(); // LSB
-  ((uint8_t *)&result)[1] = f.read();
-  ((uint8_t *)&result)[2] = f.read();
-  ((uint8_t *)&result)[3] = f.read(); // MSB
-  return result;
-}

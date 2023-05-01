@@ -698,10 +698,13 @@ bool isBufferFull(){
 ----------------------------------------------------------------------------------------------------------*/
 int firstGapBuffer(){
     for (int i = 0; i < MAX_EVENTS; i++){
-        if (event_buffer[i] == NONE){            // Primer hueco
-            return i;
-        }
+        if (event_buffer[i] == NONE) return i;     // Primer hueco
     }
+    return 0; // No debería alcanzar este 'return' porque esta función
+              // solo se llama si el buffer no está vacío, con lo que
+              // siempre encontrará el hueco. Aun así, se ha incluido
+              // esta línea para evitar la posibilidad de terminar la
+              // función sin haber devuelto nada.
 }
 
 
@@ -729,7 +732,6 @@ void addEventToBuffer(event_t evento){
     Serial.println(F("\n\n***********************************"));
     Serial.println(F("Añadiendo evento al buffer..."));
     int pos;
-    bool found = false;
     if(isBufferEmpty()){
         pos = 0;
     }

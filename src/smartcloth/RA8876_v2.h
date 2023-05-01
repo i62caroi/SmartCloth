@@ -447,8 +447,8 @@ public:
   void putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data);
 
   // ------ SD -------------
-  void sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //BIN
-  void sdCardDrawBMP(char *filename, int x, int y); //BMP
+  void sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //BIN
+  void sdCardDraw24bppBMP(char *filename, int x, int y); //BMP
   /* ------------------------------------------------------------ */
 
 

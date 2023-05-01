@@ -65,7 +65,7 @@ void setupSDcard(){
 -------------------------------------------------------------------------------*/
 void writeHeaderFileSD(){
     Serial.println(F("\n Creando fichero data.csv ...\n"));
-    String header = "carb,carb_r,lip,lip_R,prot,prot_R,kcal";
+    String header = "carb;carb_r;lip;lip_R;prot;prot_R;kcal";
     File myFile = SD.open("data.csv", FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero
     if (myFile){
         myFile.println(header);

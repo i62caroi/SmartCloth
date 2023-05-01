@@ -149,7 +149,8 @@ void setupScreen(){
 void Welcome(){
     tft.clearScreen(0); //0x0000 --> Negro
     //tft.sdCardShowPicture16bpp(50,10,256,186,"smart3.bin");  
-    tft.sdCardDrawBMP("smart24.bmp", 200, 200);
+    char file[20] = "smart24.bmp";
+    tft.sdCardDrawBMP(file, 200, 200);
     delay(3000);
 }
 
