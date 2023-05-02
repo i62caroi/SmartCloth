@@ -404,12 +404,13 @@ void actStateAdded(){
             Serial.println(F("Añadiendo plato a la comida..."));
                                                                         
             /* ----- ACTUALIZAR PLATO  ----- */
-            if(state_prev == STATE_weighted){                       // ==> Si se viene del STATE_weighted porque hay algo nuevo en la báscula que 
-                                                                    //     no se ha incluido aún en el plato.
-                                                                    // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
-                                                                    // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
-                                                                    // actualizar la comida, pues no se habría modificado.
-                                                         
+            if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+                                                                           //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
+                                                                           //     debe incluirse en el plato. 
+                                                                           // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
+                                                                           // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
+                                                                           // actualizar la comida, pues no se habría modificado.
+                
                 Ingrediente ing(grupoEscogido, pesoBascula);        // Cálculo automático de valores nutricionales. 
                                                                     // Usamos 'grupoEscogido' porque no se ha modificado. 
                 
@@ -421,7 +422,7 @@ void actStateAdded(){
                                                                     // se ha quitado todo el 'pesoARetirar'.
                                                                     // Solo se hace si se viene del STATE_weighted porque en los estados 
                                                                     // previos a ese ya se tara y es en STATE_weighted donde se modifica el peso.
-
+                
             }
 
 
@@ -429,6 +430,7 @@ void actStateAdded(){
             if(platoActual.isPlatoEmpty()){                         // ==> Si el plato está vacío -> no se crea otro    
                 errorPlatoWasEmpty = true;
                 printEmptyObjectError("No se ha creado otro plato porque el actual est\xE1"" vac\xED""o");
+                //printEmptyObjectError("No se ha guardado el plato porque est\xE1"" vac\xED""o");
             }
             else{                                                   // ==> Si el plato no está vacío -> se crea otro.
                 errorPlatoWasEmpty = false;
@@ -444,7 +446,7 @@ void actStateAdded(){
                                                  
 
         /* -----  INFORMACIÓN MOSTRADA  ----- */
-        if(!errorPlatoWasEmpty){                                    // ==> Si el plato no estaba vacío y se ha creado otro 
+        if(!errorPlatoWasEmpty){                                    // ==> Si el plato no estaba vacío y se ha guardado/creado otro 
                printStateAdded();                                   // Print info del estado.
         }
 
@@ -477,15 +479,17 @@ void actStateDeleted(){
             
             Serial.println(F("\nPlato eliminado..."));
 
+            
             /* ----- PESO ÚLTIMO ALIMENTO  ----- */
-            if(state_prev == STATE_weighted){                       // ==> Si se viene del STATE_weighted porque hay algo nuevo en la báscula 
-                                                                    //     que no se ha incluido aún en el plato.
-                                                                    // En este caso no se va a guardar el alimento porque se va a borrar el plato.
-                                                                    // Solamente se añadirá su peso al 'pesoPlato' para, tras sumarlo a 'pesoRecipiente', 
-                                                                    // saber el 'pesoARetirar'.
-                                                                    // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
-                                                                    // eliminar el plato actual sin haber colocado un nuevo alimento, no haría falta
-                                                                    // actualizar el peso del plato, pues no se habría modificado.
+            if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+                                                                           //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
+                                                                           //     debe incluirse en el plato. 
+                                                                           // En este caso no se va a guardar el alimento porque se va a borrar el plato.
+                                                                           // Solamente se añadirá su peso al 'pesoPlato' para, tras sumarlo a 'pesoRecipiente', 
+                                                                           // saber el 'pesoARetirar'.
+                                                                           // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
+                                                                           // eliminar el plato actual sin haber colocado un nuevo alimento, no haría falta
+                                                                           // actualizar el peso del plato, pues no se habría modificado.
                                                          
                 pesoPlato = pesoBascula;                            // Guardar peso del último alimento colocado
 
@@ -557,11 +561,12 @@ void actStateSaved(){
             Serial.println(F("\nComida guardada..."));  
 
             /* ----- ACTUALIZAR PLATO  ----- */
-            if(state_prev == STATE_weighted){                       // ==> Si se viene del STATE_weighted porque hay algo nuevo en la báscula que 
-                                                                    //     no se ha incluido aún en el plato.
-                                                                    // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
-                                                                    // guardar la comida actual sin haber colocado un nuevo alimento, no haría falta
-                                                                    // actualizar la comida, pues no se habría modificado.
+            if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+                                                                           //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
+                                                                           //     debe incluirse en el plato. 
+                                                                           // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
+                                                                           // guardar la comida actual sin haber colocado un nuevo alimento, no haría falta
+                                                                           // actualizar la comida, pues no se habría modificado.
             
                 Ingrediente ing(grupoEscogido, pesoBascula);        // Cálculo automático de valores nutricionales.
                                                                     // Usamos 'grupoEscogido' porque no se ha modificado. 

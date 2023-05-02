@@ -150,7 +150,7 @@ void Welcome(){
     tft.clearScreen(0); //0x0000 --> Negro
     //tft.sdCardShowPicture16bpp(50,10,256,186,"smart3.bin");  
     char file[20] = "smart24.bmp";
-    tft.sdCardDrawBMP(file, 200, 200);
+    tft.sdCardDraw24bppBMP(file, 200, 200); 
     delay(3000);
 }
 
@@ -350,7 +350,7 @@ void printStateEmpty(){
     tft.setCursor(300, 50);                            // Posicion inicio texto
     tft.setTextColor(AMARILLO);                        // Color texto
     tft.setTextScale(2);        
-    cad = "B\xE1""SCULA LIBRE";                        // BÁSCULA LIBRE
+    cad = "B\xC1""SCULA LIBRE";                        // BÁSCULA LIBRE
     tft.println(cad);                                  // Imprimir texto
     
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
