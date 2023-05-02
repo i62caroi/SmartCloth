@@ -1426,6 +1426,8 @@ void RA8876::drawPixels(int x, int y, uint16_t *p, uint32_t num)
    ************************************************************* */
 void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data)
 {
+    //setGraphicsMode();
+
     m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
 
     // --- Estas 3 líneas es lo que hace putPicture_16bpp() sin puntero a imagen ---
@@ -1456,6 +1458,8 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
    ************************************************************* */
 void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
 {
+  //setGraphicsMode();
+
   m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
 
   // open the file. note that only one file can be open at a time,
@@ -1501,6 +1505,8 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
 // rapidly diminishing speed improvements applies.
 void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y) 
 {
+  //setGraphicsMode();
+
   m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
   //BUFFPIXEL = 40
   File     bmpFile;
