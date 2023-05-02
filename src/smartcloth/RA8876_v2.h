@@ -126,7 +126,8 @@ typedef uint8_t FontFlags;
 
 // 1MHz. TODO: Figure out actual speed to use
 // Data sheet section 5.2 says maximum SPI clock is 50MHz.
-#define RA8876_SPI_SPEED 5000000 //5MHz es lo máximo que permite imprimir sin problema
+#define RA8876_SPI_SPEED      5000000 //5MHz es lo máximo que permite imprimir sin problema
+#define RA8876_SPI_SPEED_IMG  30000000 //30MHz para mostrar imagen
 
 // With SPI, the RA8876 expects an initial byte where the top two bits are meaningful. Bit 7
 // is A0, bit 6 is WR#. See data sheet section 7.3.2 and section 19.
@@ -424,6 +425,8 @@ public:
   //    ==> RA8876_Lite también tiene CircleSquare y Ellipse
   void drawPixel(int x, int y, uint16_t color);
         // putPixel_16bpp() en RA8876_Lite
+  void drawPixels(int x, int y, uint16_t *p, uint32_t num);
+        // drawPixels() en Adafruit_RA8875
   void drawLine(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, 0x80); };
         // drawLine() en RA8876_Lite
   void drawRect(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, 0xA0); };

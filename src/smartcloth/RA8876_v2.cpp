@@ -1,3 +1,4 @@
+//#include <cstdint>
 /* ************************************************************ */
 /*
 File Name : RA8876_v2.cpp                                   
@@ -1389,6 +1390,28 @@ void RA8876::drawPixel(int x, int y, uint16_t color)
   SPI.endTransaction();
 }
 
+/* *************************************************************
+    drawPixels() en Adafruit_RA8875
+   ************************************************************* */
+void RA8876::drawPixels(int x, int y, uint16_t *p, uint32_t num)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  setPixelCursor(x, y);
+
+  // writeReg() => writeCmd() y writeData()
+  writeCmd(RA8876_REG_MRWDP);
+    //writeData()
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  while (num--) {
+    SPI.transfer16(*p++);
+  }
+  digitalWrite(m_csPin, HIGH);
+  
+  SPI.endTransaction();
+}
+
 
 
 /* *************************************************************
@@ -1403,21 +1426,25 @@ void RA8876::drawPixel(int x, int y, uint16_t color)
    ************************************************************* */
 void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data)
 {
- // --- Estas 3 líneas es lo que hace putPicture_16bpp() sin puntero a imagen ---
- setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
- setPixelCursor(x,y);
- ramAccessPrepare();
- // -----------------------------------------------------------------------------
- for(uint16_t j=0;j<height;j++)
- {
-  for(uint16_t i=0;i<width;i++)
-  {
-   writeData16bbp(*data);
-   data++;
-  }
- } 
- checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
- setCanvasWindow(0,0,m_width,m_height);
+    m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
+
+    // --- Estas 3 líneas es lo que hace putPicture_16bpp() sin puntero a imagen ---
+    setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+    setPixelCursor(x,y);
+    ramAccessPrepare();
+    // -----------------------------------------------------------------------------
+    for(uint16_t j=0;j<height;j++)
+    {
+      for(uint16_t i=0;i<width;i++)
+      {
+      writeData16bbp(*data);
+      data++;
+      }
+    } 
+    checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+    setCanvasWindow(0,0,m_width,m_height);
+
+    m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto
 }
 
 
@@ -1429,6 +1456,8 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
    ************************************************************* */
 void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
 {
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
+
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
   File dataFile = SD.open(filename);
@@ -1447,6 +1476,8 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
     dataFile.close();
   }   
   else Serial.println(F("Fichero no encontrado"));
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto
 }
 
 
@@ -1470,6 +1501,7 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
 // rapidly diminishing speed improvements applies.
 void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y) 
 {
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
   //BUFFPIXEL = 40
   File     bmpFile;
   int      bmpWidth, bmpHeight;         // W+H in pixels
@@ -1481,7 +1513,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
   uint8_t  buffidx = sizeof(sdbuffer);  // Current position in sdbuffer
   boolean  goodBmp = false;             // Set to true on valid header parse
   boolean  flip    = true;              // BMP is stored bottom-to-top
-  int      w, h, row, col;
+  int      w, h, row, col;//, xpos, ypos; //** <=> **
   uint8_t  r, g, b;
   uint32_t pos = 0, startTime = millis();
   uint8_t  lcdidx = 0;
@@ -1536,18 +1568,12 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
         // Crop area to be loaded
         w = bmpWidth;
         h = bmpHeight;
-        //w_x = w + x;
-        //h_y = h + y; 
         if((x+w-1) >= getWidth())  w = getWidth()  - x;
         if((y+h-1) >= getHeight()) h = getHeight() - y;
 
         // Set TFT address window to clipped image bounds
-         //setCanvasWindow(x,y,w_x,h_y); // activeWindowXY() y activeWindowWH() de RA8876_Lite
-         //setPixelCursor(x,y);
-         //ramAccessPrepare();
 
-         //tft.setAddrWindow(x, y, x+w-1, y+h-1);
-
+        //ypos = y;  //** <=> **
         for (row=0; row<h; row++) { // For each scanline...
           // Seek to start of scan line.  It might seem labor-
           // intensive to be doing this on every line, but this
@@ -1558,22 +1584,27 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
           if(flip) // Bitmap is stored bottom-to-top order (normal BMP)
             pos = bmpImageoffset + (bmpHeight - 1 - row) * rowSize;
           else     // Bitmap is stored top-to-bottom
-          pos = bmpImageoffset + row * rowSize;
+            pos = bmpImageoffset + row * rowSize;
           if(bmpFile.position() != pos) { // Need seek?
             bmpFile.seek(pos);
             buffidx = sizeof(sdbuffer); // Force buffer reload
           }
 
+          //xpos = x;  //** <=> **
           for (col=0; col<w; col++) { // For each column...
             // Time to read more pixel data?
             if (buffidx >= sizeof(sdbuffer)) { // Indeed
               // Push LCD buffer to the display first
               //--------En otros ejemplos no hacen esta parte -------
               if(lcdidx > 0) {
-                //tft.foreGroundColor16bpp(lcdbuffer[lcdidx]);
-                drawPixel(col, row, lcdbuffer[lcdidx]);
+                drawPixel(col+x, row+y, lcdbuffer[lcdidx]);
                 lcdidx = 0;
                 first  = false;
+                /* //** <=> **
+                drawPixels(xpos, ypos, lcdbuffer, lcdidx);  
+                xpos += lcdidx;                             
+                lcdidx = 0;
+                */
               }
               //------------------------------------------------------
 
@@ -1585,18 +1616,33 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
             b = sdbuffer[buffidx++];
             g = sdbuffer[buffidx++];
             r = sdbuffer[buffidx++];
-            /*myGLCD.setColor(r,g,b);
-            myGLCD.drawPixel(col, row);*/
-            drawPixel(col, row, RGB565(r,g,b));
+            drawPixel(col+x, row+y, RGB565(r,g,b));
+            /* //Otra forma de color565() de Adafruit
+            uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+            drawPixel(col+x, row+y, color);
+            */
+
+            /* //** <=> **
+            lcdbuffer[lcdidx++] = RGB565(r,g,b);
+            if (lcdidx >= sizeof(lcdbuffer) || (xpos - x + lcdidx) >= w) {
+              drawPixels(xpos, ypos, lcdbuffer, lcdidx);
+              xpos += lcdidx;
+              lcdidx = 0;
+            }
+            */
           } // end pixel
+
+          //ypos++; //** <=> **
 
         } // end scanline
 
         // Write any remaining data to LCD
         if(lcdidx > 0) { 
-           //myGLCD.setColor(lcdbuffer[lcdidx]);
-          //myGLCD.drawPixel(col, row);
-          drawPixel(col, row, lcdbuffer[lcdidx]);
+          drawPixel(col+x, row+y, lcdbuffer[lcdidx]);
+          /* //** <=> **
+          drawPixels(xpos, ypos, lcdbuffer, lcdidx);
+          xpos += lcdidx;
+          */
         } 
 
         Serial.print(F("Loaded in "));
@@ -1610,6 +1656,8 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
   bmpFile.close();
   if(!goodBmp) Serial.println(F("BMP format not recognized."));
   setCanvasWindow(0,0,m_width,m_height);
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto
 }
 
 

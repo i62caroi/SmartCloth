@@ -46,13 +46,13 @@
 #include "RA8876_v2.h"
 #include "State_Machine.h"
 #include "Variables.h"
-#include "icons.h"  // iconos de 'crudo' y 'cocinado' como bitmap
+#include "icons.h"  // iconos de 'crudo', 'cocinado' y 'smartcloth_icono' como bitmap
 
 
 /* Screen circuit wiring */
-#define RA8876_CS        12
+#define RA8876_CS        12 
 #define RA8876_RESET     11
-#define RA8876_BACKLIGHT 10
+#define RA8876_BACKLIGHT 10 
 
 
 // 8bpp (1 byte/pixel ) => RGB332
@@ -116,6 +116,10 @@ void printEmptyObjectError(String msg);
    setupScreen(): Inicializar pantalla
 ----------------------------------------------------------------------------------------------------------*/
 void setupScreen(){
+    // initialize the bus for a device on pin 10 ==> Extended SPI Library Usage with the Arduino Due
+                                                //   (https://docs.arduino.cc/tutorials/due/due-extended-spi)
+    //SPI.begin(RA8876_CS);
+
     pinMode(RA8876_BACKLIGHT, OUTPUT);  // Set backlight pin to OUTPUT mode
     digitalWrite(RA8876_BACKLIGHT, HIGH);  // Turn on backlight
     if (!tft.init()){
@@ -148,9 +152,14 @@ void setupScreen(){
 /***************************************************************************************************/
 void Welcome(){
     tft.clearScreen(0); //0x0000 --> Negro
-    //tft.sdCardShowPicture16bpp(50,10,256,186,"smart3.bin");  
-    char file[20] = "smart24.bmp";
-    tft.sdCardDraw24bppBMP(file, 200, 200); 
+    
+    // ---- Fihcero BMP desde SD -----
+    //char file[20] = "smart24.bmp";
+    //tft.sdCardDraw24bppBMP(file, 250, 150); 
+    
+    // ---- Word en icons.h desde flash Arduino ------
+    tft.putPicture_16bpp(250,150,500,350,smartcloth_icono);
+    
     delay(3000);
 }
 

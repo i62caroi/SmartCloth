@@ -48,6 +48,10 @@ void saveDataSD();
    setupSDcard(): Inicializar tarjeta SD
 -------------------------------------------------------------------------------*/
 void setupSDcard(){
+    // initialize the bus for a device on pin 4 ==> Extended SPI Library Usage with the Arduino Due
+                                                //   (https://docs.arduino.cc/tutorials/due/due-extended-spi)
+    //SPI.begin(SD_CARD_SCS);
+
     if(!SD.begin(SD_CARD_SCS)){
         Serial.println(F("SD card failure!"));
         while(1);
