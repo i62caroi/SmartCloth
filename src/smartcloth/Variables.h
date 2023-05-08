@@ -44,7 +44,9 @@ void tareScale(){
 
 
 /* ----- CRUDO/COCINADO ----- */
-String procesamiento; // "CRUDO" o "COCINADO"
+//String procesamiento; // "CRUDO" o "COCINADO"
+//char fileRaw[30] = "bmp/images/crudo.bmp"; 
+//char fileCooked[30] = "bmp/images/cocinado.bmp";
 
 
 /* ----- PLATO/COMIDA/DIARIO ----- */

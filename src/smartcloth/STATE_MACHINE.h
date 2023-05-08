@@ -2,7 +2,7 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 67 
+#define RULES 71 
 
 #include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Ingrediente.h -> Valores_Nutricionales.h)
 #include "SD_functions.h"
@@ -105,17 +105,21 @@ static transition_rule rules[RULES] = { {STATE_Empty,STATE_Empty,TARAR},        
                                         {STATE_groupB,STATE_deleted,DELETE_PLATO},      // Borrar plato actual
                                         {STATE_groupB,STATE_saved,GUARDAR},             // Guardar comida aunque no se haya añadido otro alimento  
                                         
-                                        {STATE_raw,STATE_cooked,COCINADO},                 
+                                        {STATE_raw,STATE_raw,CRUDO},
+                                        {STATE_raw,STATE_cooked,COCINADO},
                                         {STATE_raw,STATE_groupA,TIPO_A},                   
-                                        {STATE_raw,STATE_groupB,TIPO_B},                   
+                                        {STATE_raw,STATE_groupB,TIPO_B},                
+                                        {STATE_raw,STATE_Empty,LIBERAR},              // se ha retirado todo   
                                         {STATE_raw,STATE_weighted,INCREMENTO},     
                                         {STATE_raw,STATE_added,ADD_PLATO},              // Guardar plato aunque no se haya añadido otro alimento
                                         {STATE_raw,STATE_deleted,DELETE_PLATO},         // Borrar plato actual
                                         {STATE_raw,STATE_saved,GUARDAR},                // Guardar comida aunque no se haya añadido otro alimento          
                                         
+                                        {STATE_cooked,STATE_cooked,COCINADO},
                                         {STATE_cooked,STATE_raw,CRUDO},                    
                                         {STATE_cooked,STATE_groupA,TIPO_A},                
-                                        {STATE_cooked,STATE_groupB,TIPO_B},                
+                                        {STATE_cooked,STATE_groupB,TIPO_B},  
+                                        {STATE_cooked,STATE_Empty,LIBERAR},              // se ha retirado todo               
                                         {STATE_cooked,STATE_weighted,INCREMENTO},   
                                         {STATE_cooked,STATE_added,ADD_PLATO},           // Guardar plato aunque no se haya añadido otro alimento
                                         {STATE_cooked,STATE_deleted,DELETE_PLATO},      // Borrar plato actual
@@ -279,7 +283,7 @@ void actStatePlato(){
 void actGruposAlimentos(){ 
     if(!doneState){
         
-        procesamiento = "CRUDO";                                            // El procesamiento es 'CRUDO' de forma predeterminada. 
+        //procesamiento = "CRUDO";                                            // El procesamiento es 'CRUDO' de forma predeterminada. 
         
         if(state_prev == STATE_Plato){                                      // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
             pesoRecipiente = pesoBascula;                                   // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
@@ -304,7 +308,7 @@ void actGruposAlimentos(){
                 
         }
         
-        printStateABandProcessed();                                         // Print info del estado.
+        printStateGroups();                                         // Print info del estado.
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -323,13 +327,14 @@ void actStateRaw(){
     if(!doneState){
         Serial.println(F("\nAlimento crudo...")); 
         
-        procesamiento = "CRUDO";                                            // Procesamiento del alimento a 'CRUDO'. 
+        //procesamiento = "CRUDO";                                            // Procesamiento del alimento a 'CRUDO'. 
         
         if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        printStateABandProcessed();                                         // Print info del estado.
+        printStateRaw();                                                   // Print info del estado.
+        
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -346,13 +351,13 @@ void actStateCooked(){
     if(!doneState){
         Serial.println(F("\nAlimento cocinado...")); 
         
-        procesamiento = "COCINADO";                                         // Procesamiento del alimento a 'COCINADO'.  
+        //procesamiento = "COCINADO";                                         // Procesamiento del alimento a 'COCINADO'.  
         
         if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        printStateABandProcessed();                                         // Print info del estado.
+        printStateCooked();                                                 // Print info del estado.
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.

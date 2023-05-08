@@ -126,8 +126,8 @@ typedef uint8_t FontFlags;
 
 // 1MHz. TODO: Figure out actual speed to use
 // Data sheet section 5.2 says maximum SPI clock is 50MHz.
-#define RA8876_SPI_SPEED      5000000 //5MHz es lo máximo que permite imprimir sin problema
-#define RA8876_SPI_SPEED_IMG  30000000 //30MHz para mostrar imagen
+#define RA8876_SPI_SPEED      3000000 //3MHz es lo máximo que permite imprimir sin problema
+#define RA8876_SPI_SPEED_IMG  50000000 //45MHz para mostrar imagen
 
 // With SPI, the RA8876 expects an initial byte where the top two bits are meaningful. Bit 7
 // is A0, bit 6 is WR#. See data sheet section 7.3.2 and section 19.
@@ -444,10 +444,12 @@ public:
 
   // Limpiar pantalla ==> dibujar rectángulo negro que ocupe todo
   void clearScreen(uint16_t color) { setCursor(0, 0); fillRect(0, 0, m_width, m_height, color); };
+  void clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest, uint16_t color) { setCursor(xOrig, yOrig); fillRect(xOrig, yOrig, xDest, yDest, color); };
 
   
   // ------ IMAGENES -------
   void putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data);
+  //void drawArray16bpp(int x,int y, uint16_t width, uint32_t size, const unsigned short * image);
 
   // ------ SD -------------
   void sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //BIN

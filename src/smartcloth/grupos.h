@@ -56,7 +56,7 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,"L\xE1""cteos Enteros","Leche, cuajada,
                                       {29,"Legumbres (Cocidas)","Alubias, garbanzos, lentejas",1.119421488,0.081446281,0.011157025,0.172933884},
                                       {36,"Prote\xED""nas muy magras","Pavo, pollo, entrecot de ternera, at\xFA""n conserva, jam\xF3""n cocido,  bacalao",0.836939597,0.167436242,0.015221477,0.005798658},
                                       {37,"Prote\xED""nas magras","Cerdo lomo, conejo, costilla ternera, bistec, jam\xF3""n curado",1.321273973,0.205972603,0.054369863,0.001726027},
-                                      {38,"Prote\xED""nas semigrasas","Cerdo chuletas con grasa, conservas en aceite, jam\xF3""n curado con grasa, huevo",1.897038168,0.170259542,0.125801527,0.009282443}
+                                      {38,"Prote\xED""nas semigrasas","Cerdo chuletas con grasa, conservas en aceite, jam\xF3""n curado \n  con grasa, huevo",1.897038168,0.170259542,0.125801527,0.009282443}
                                     };
 
 Grupo grupoEscogido;

@@ -1428,7 +1428,7 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
 {
     //setGraphicsMode();
 
-    m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
+    m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
 
     // --- Estas 3 líneas es lo que hace putPicture_16bpp() sin puntero a imagen ---
     setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
@@ -1446,8 +1446,32 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
     checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
     setCanvasWindow(0,0,m_width,m_height);
 
-    m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto
+    m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
 }
+
+
+/* *************************************************************
+    Mostrar imagen de 16bpp (RGB 5:6:5) en formato Word guardada en 
+    un fichero.h en la flash de arduino (véase prueba_Word_en_H).
+
+    Conversor online de PNG/JPGE -> Word 16bpp: https://javl.github.io/image2cpp/ 
+   ************************************************************* */
+/*void RA8876::drawArray16bpp(int x,int y, uint16_t width, uint32_t size, const unsigned short * image)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
+
+  uint16_t pixels[width];//container
+  uint16_t i,idx;
+  for (idx = 0; idx < size/width; idx++){
+    for (i = (width * idx); i < width * (idx+1); i++){
+      pixels[i - (width*idx)] = image[i];
+    }
+    drawPixels(x,idx+y,pixels,width);
+  }
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}*/
+
 
 
 /* *************************************************************
@@ -1460,7 +1484,7 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
 {
   //setGraphicsMode();
 
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
@@ -1481,7 +1505,7 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
   }   
   else Serial.println(F("Fichero no encontrado"));
 
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
 }
 
 
@@ -1507,7 +1531,8 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
 {
   //setGraphicsMode();
 
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
+
   //BUFFPIXEL = 40
   File     bmpFile;
   int      bmpWidth, bmpHeight;         // W+H in pixels
@@ -1663,7 +1688,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
   if(!goodBmp) Serial.println(F("BMP format not recognized."));
   setCanvasWindow(0,0,m_width,m_height);
 
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
 }
 
 

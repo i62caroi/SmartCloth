@@ -100,7 +100,9 @@ void printValoresTemporales();
 void printValoresDiario();
 void printStateEmpty();
 void printStatePlato();
-void printStateABandProcessed();
+void printStateGroups();
+void printStateRaw();
+void printStateCooked();
 void printStateWeighted();
 void printStateAdded();
 void printStateDeleted();
@@ -153,14 +155,19 @@ void setupScreen(){
 void Welcome(){
     tft.clearScreen(0); //0x0000 --> Negro
     
-    // ---- Fihcero BMP desde SD -----
-    //char file[20] = "smart24.bmp";
-    //tft.sdCardDraw24bppBMP(file, 250, 150); 
+    // ---- Fichero BMP desde SD -----
+    // TERRIBLEMENTE LENTOOOO
+    //char file[30] = "bmp/images/logo3.bmp";
+    //tft.sdCardDraw24bppBMP(file, 250, 150);
     
     // ---- Word en icons.h desde flash Arduino ------
+    // MUCHISIMO MÁS RÁPIDO QUE BMP DESDE SD
     tft.putPicture_16bpp(250,150,500,350,smartcloth_icono);
+
+    // ---- Word en icons.h desde flash Arduino ------
+    //tft.drawArray16bpp(250,150,500,175000,smartcloth_icono); //SE ATASCA. TODO
     
-    delay(3000);
+    delay(2000);
 }
 
 
@@ -172,7 +179,7 @@ void Welcome(){
    printEjemplosyGrupo(): Muestra ejemplos del grupo de alimentos seleccionado
 ----------------------------------------------------------------------------------------------------------*/
 void printEjemplosyGrupo(){    
-    tft.clearScreen(0);           // Limpiar
+    //tft.clearScreen(0);           // Limpiar
     
     /* ----- EJEMPLOS ----- */
     tft.setTextScale(2);
@@ -189,10 +196,13 @@ void printEjemplosyGrupo(){
     tft.println(grupoEscogido.Nombre_grupo);           // Imprimir texto
 
     /* ----- CRUDO/COCINADO ----- */
-    tft.setCursor(850, 130); 
+    /*tft.setCursor(850, 130); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);                           
     tft.setTextColor(CIAN);      
     tft.print(procesamiento);                          // Predeterminadamente "CRUDO"
+    */
+    
+    
 }
 
 
@@ -381,7 +391,8 @@ void printStateEmpty(){
 ----------------------------------------------------------------------------------------------------------*/
 void printStatePlato(){
     
-    tft.clearScreen(0);                                // Limpiar
+   // tft.clearScreen(0);                                // Limpiar
+    tft.clearArea(0,0,tft.getWidth(),180,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
@@ -407,23 +418,50 @@ void printStatePlato(){
     cad = "Escoja un grupo de alimentos";
     tft.println(cad);           
     
-    printCentral();                                    // 2 - Estructura central
-    printValoresComida();                              // 3 - Valores comida actual
-    printValoresDiario();                              // 4 - Valores acumulado hoy
+    // Esto no hace falta si no se borra toda la pantalla, solo la zona superior
+    //printCentral();                                    // 2 - Estructura central
+    //printValoresComida();                              // 3 - Valores comida actual
+    //printValoresDiario();                              // 4 - Valores acumulado hoy
 }
 
 
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStateABandProcessed(): Incluye grupo de alimentos, ejemplos, procesamiento (crudo/cocinado)
-                                y valores nutricionales de la comida actual
+   printStateGroups(): Incluye grupo de alimentos, ejemplos y valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
-void printStateABandProcessed(){
+void printStateGroups(){
+    tft.clearScreen(0);           // Limpiar ==> TODO => Ver qué ha cambiado (grupo y valores) y solo borrar esa zona
     printEjemplosyGrupo();        // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
     printCentral();               // 2 - Estructura central (peso 0.0)
     printValoresComida();         // 3 - Valores comida actual
     printValoresDiario();         // 4 - Valores acumulado hoy
+}
+
+/*---------------------------------------------------------------------------------------------------------
+   printStateRaw():
+----------------------------------------------------------------------------------------------------------*/
+void printStateRaw()
+{
+    //tft.clearArea(800,100,895,891,0); //(xOrig, yOrig, xDest, yDest, color)
+    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    printEjemplosyGrupo();        // Grupo (crudo) => Esto solo es para cambiar el nombre del grupo, pues hay algunos que tienen "(crudo)"
+
+    //tft.sdCardDraw24bppBMP(fileRaw, 800, 100);
+    tft.putPicture_16bpp(800,95,95,91,crudo);
+}
+
+/*---------------------------------------------------------------------------------------------------------
+   printStateCooked():
+----------------------------------------------------------------------------------------------------------*/
+void printStateCooked()
+{
+    //tft.clearArea(800,100,895,891,0); //(xOrig, yOrig, xDest, yDest, color)
+    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    printEjemplosyGrupo();        // Grupo (cocinado) => Esto solo es para cambiar el nombre del grupo, pues hay algunos que tienen "(cocinado)"
+
+    //tft.sdCardDraw24bppBMP(fileCooked, 800, 100);
+    tft.putPicture_16bpp(800,95,95,91,cocinado); 
 }
 
 
@@ -434,6 +472,7 @@ void printStateABandProcessed(){
                           y valores nutricionales de la comida actual junto con lo pesado temporalmente
 ----------------------------------------------------------------------------------------------------------*/
 void printStateWeighted(){
+    tft.clearScreen(0);           // Limpiar
     printEjemplosyGrupo();         // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
     printCentral();                // 2 - Estructura central
     printValoresTemporales();      // 3 - Valores temporales de comida actual 
@@ -555,7 +594,8 @@ void printStateSaved(){
 void printEventError(String msg){    
     cad = "\xA1""ACCI\xD3N INCORRECTA\x21""";
     
-    tft.clearScreen(0);                                // Limpiar
+    //tft.clearScreen(0);                                // Limpiar
+    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
@@ -570,9 +610,9 @@ void printEventError(String msg){
     tft.setTextColor(CIAN);                                
     tft.println(msg);           
 
-    printCentral();                                    // 2 - Estructura central
-    printValoresComida();                              // 3 - Valores comida actual
-    printValoresDiario();                              // 4 - Valores acumulado hoy
+    //printCentral();                                    // 2 - Estructura central
+    //printValoresComida();                              // 3 - Valores comida actual
+    //printValoresDiario();                              // 4 - Valores acumulado hoy
 }
 
 
@@ -585,7 +625,8 @@ void printEventError(String msg){
 void printEmptyObjectError(String msg){    
     cad = "\xA1""\xA1""AVISO\x21""\x21""";
     
-    tft.clearScreen(0);                                // Limpiar
+    //tft.clearScreen(0);                                // Limpiar
+    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(350, 50);                            // Posicion inicio texto
@@ -600,9 +641,9 @@ void printEmptyObjectError(String msg){
     //tft.setTextColor(CIAN);                                
     tft.println(msg);           
 
-    printCentral();                                    // 2 - Estructura central
-    printValoresComida();                              // 3 - Valores comida actual
-    printValoresDiario();                              // 4 - Valores acumulado hoy
+    //printCentral();                                    // 2 - Estructura central
+    //printValoresComida();                              // 3 - Valores comida actual
+    //printValoresDiario();                              // 4 - Valores acumulado hoy
 }
 
 
