@@ -89,7 +89,7 @@ void checkBascula(){
                respecto a lo que se mostraba por sucesivas medidas de la báscula. */
                
             pesoBascula = newWeight;
-            fixPesoBascula(); //si pesoBascula cerca de 0 => 0.0
+            if(pesoBascula < 1.0) pesoBascula = 0.0; //fixPesoBascula
 
             if(lastWeight < newWeight){ //INCREMENTO
                 Serial.println(F("\nIncremento..."));

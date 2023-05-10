@@ -5,33 +5,35 @@
       - SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
       https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel
   
-  TFT conectada al bus SPI de la siguiente forma:
-    (pines de conexión en el JP1 de la TFT)
-      ---------------------------------------------
-      |  SPI  |   TFT   |       Arduino Due       |
-      ---------------------------------------------
-      |  MOSI |  pin 7  |      pin 4 (SPI)        |    
-      |  MISO |  pin 6  |      pin 1 (SPI)        |
-      |  CLK  |  pin 8  |      pin 3 (SPI)        |
-      |  CS   |  pin 5  |   pin 12 (digital PWM)  | 
-      ---------------------------------------------
-
-  Otras conexiones de la TFT al Arduino:
-    (pines de conexión en el JP1 de la TFT)
-      -------------------------------------------------
-      |        TFT           |      Arduino Due       |
-      -------------------------------------------------
-      |  pin 11 (Reset)      |  pin 11 (digital PWM)  |
-      |  pin 14 (Backlight)  |  pin 10 (digital PWM)  |
-      -------------------------------------------------
 
   Alimentación y referencia a tierra de la TFT: 
     (pines de conexión en el JP1 de la TFT)
                       ---------------------------------
-                      |           TFT                 |
+                      |           TFT (JP1)           |
       -------------------------------------------------
       |  VDD (3.3 V)  |  pines 3, 4, 37 y 38          |   
       |  GND          |  pines 1, 2, 13, 31, 39 y 40  |
+      -------------------------------------------------
+  
+
+  TFT conectada al bus SPI del Arduino de la siguiente forma:
+    (pines de conexión en el JP1 de la TFT)
+      -------------------------------------------------
+      |  SPI  |  TFT (JP1)  |       Arduino Due       |
+      -------------------------------------------------
+      |  MOSI |    pin 7    |      pin 4 (SPI)        |    
+      |  MISO |    pin 6    |      pin 1 (SPI)        |
+      |  CLK  |    pin 8    |      pin 3 (SPI)        |
+      |  CS   |    pin 5    |   pin 12 (digital PWM)  | 
+      -------------------------------------------------
+
+  Otras conexiones de la TFT al Arduino:
+    (pines de conexión en el JP1 de la TFT)
+      -------------------------------------------------
+      |       TFT (JP1)      |      Arduino Due       |
+      -------------------------------------------------
+      |  pin 11 (Reset)      |  pin 11 (digital PWM)  |
+      |  pin 14 (Backlight)  |  pin 10 (digital PWM)  |
       -------------------------------------------------
 
 ----------------------------------------------------------------
@@ -157,7 +159,7 @@ void Welcome(){
     
     // ---- Fichero BMP desde SD -----
     // TERRIBLEMENTE LENTOOOO
-    //char file[30] = "bmp/images/logo3.bmp";
+    //char file[30] = "bmp/logo3.bmp";
     //tft.sdCardDraw24bppBMP(file, 250, 150);
     
     // ---- Word en icons.h desde flash Arduino ------
@@ -264,15 +266,21 @@ void printValoresComida(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
     tft.setCursor(MARGEN_IZQ, 375);
-    raciones = round(comidaActual.getValoresComida().getCarbValores()/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(comidaActual.getValoresComida().getCarbValores()/10));
+    raciones = raciones/2;
     tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    raciones = round(comidaActual.getValoresComida().getLipValores()/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(comidaActual.getValoresComida().getLipValores()/10));
+    raciones = raciones/2;
     tft.print("Lip:  "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    raciones = round(comidaActual.getValoresComida().getProtValores()/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(comidaActual.getValoresComida().getProtValores()/10));
+    raciones = raciones/2;
     tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
@@ -301,15 +309,21 @@ void printValoresTemporales(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
     tft.setCursor(MARGEN_IZQ, 375);
-    raciones = round(carb/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(carb/10));
+    raciones = raciones/2;
     tft.print("Carb: "); tft.print(carb); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    raciones = round(lip/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(lip/10));
+    raciones = raciones/2;
     tft.print("Lip:  "); tft.print(lip); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    raciones = round(prot/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(prot/10)); 
+    raciones = raciones/2;
     tft.print("Prot: "); tft.print(prot); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
@@ -332,15 +346,21 @@ void printValoresDiario(){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
     tft.setCursor(MARGEN_IZQ_ACC, 375);
-    raciones = round(diaActual.getValoresDiario().getCarbValores()/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(diaActual.getValoresDiario().getCarbValores()/10));
+    raciones = raciones/2;
     tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    raciones = round(diaActual.getValoresDiario().getLipValores()/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(diaActual.getValoresDiario().getLipValores()/10));
+    raciones = raciones/2;
     tft.print("Lip:  "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    raciones = round(diaActual.getValoresDiario().getProtValores()/10);
+    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    raciones = round(2.0*(diaActual.getValoresDiario().getProtValores()/10));
+    raciones = raciones/2;
     tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)");
     
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);

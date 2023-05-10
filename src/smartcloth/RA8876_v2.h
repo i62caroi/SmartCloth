@@ -1,3 +1,12 @@
+/*
+File Name : RA8876_v2.h                              
+Author    : Irene Casares Rodríguez                          
+Edit Date : 25/04/2023
+Version   : v2.0
+
+    Version v1.0 obtenida de https://github.com/xlatb/ra8876/tree/master/src
+*/
+
 #pragma GCC diagnostic warning "-Wall"
 
 #ifndef RA8876_V2_H
@@ -127,7 +136,7 @@ typedef uint8_t FontFlags;
 // 1MHz. TODO: Figure out actual speed to use
 // Data sheet section 5.2 says maximum SPI clock is 50MHz.
 #define RA8876_SPI_SPEED      3000000 //3MHz es lo máximo que permite imprimir sin problema
-#define RA8876_SPI_SPEED_IMG  50000000 //45MHz para mostrar imagen
+#define RA8876_SPI_SPEED_IMG  50000000 //50MHz para mostrar imagen
 
 // With SPI, the RA8876 expects an initial byte where the top two bits are meaningful. Bit 7
 // is A0, bit 6 is WR#. See data sheet section 7.3.2 and section 19.

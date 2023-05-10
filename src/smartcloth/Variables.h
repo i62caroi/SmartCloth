@@ -29,15 +29,12 @@ float diffWeight = 0.0;             // Diferencia entre peso actual (weight) y p
 
 HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
-void fixPesoBascula(){
-  if(pesoBascula < 1.0) pesoBascula = 0.0;
-}
 
 bool tarado;
 void tareScale(){ 
   scale.tare(1);  //1 toma de valor
   pesoBascula = weight;
-  fixPesoBascula();
+  if(pesoBascula < 1.0) pesoBascula = 0.0; //fixPesoBascula
   tarado = true;
 };
 
@@ -45,8 +42,8 @@ void tareScale(){
 
 /* ----- CRUDO/COCINADO ----- */
 //String procesamiento; // "CRUDO" o "COCINADO"
-//char fileRaw[30] = "bmp/images/crudo.bmp"; 
-//char fileCooked[30] = "bmp/images/cocinado.bmp";
+//char fileRaw[30] = "bmp/crudo.bmp"; 
+//char fileCooked[30] = "bmp/cocinado.bmp";
 
 
 /* ----- PLATO/COMIDA/DIARIO ----- */
@@ -55,6 +52,10 @@ float pesoRecipiente;
 float pesoPlato;
 Comida comidaActual;
 Diario diaActual;
+
+
+/*  ------ SD ------ */
+char fileCSV[30] = "data/data-SmartCloth.csv";
 
 
 

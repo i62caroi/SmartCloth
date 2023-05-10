@@ -1428,7 +1428,7 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
 {
     //setGraphicsMode();
 
-    m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
+    m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
     // --- Estas 3 líneas es lo que hace putPicture_16bpp() sin puntero a imagen ---
     setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
@@ -1458,7 +1458,7 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
    ************************************************************* */
 /*void RA8876::drawArray16bpp(int x,int y, uint16_t width, uint32_t size, const unsigned short * image)
 {
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
   uint16_t pixels[width];//container
   uint16_t i,idx;
@@ -1484,7 +1484,7 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
 {
   //setGraphicsMode();
 
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
   // open the file. note that only one file can be open at a time,
   // so you have to close this one before opening another.
@@ -1531,7 +1531,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
 {
   //setGraphicsMode();
 
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 45MHz
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
   //BUFFPIXEL = 40
   File     bmpFile;
