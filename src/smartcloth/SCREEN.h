@@ -164,7 +164,8 @@ void Welcome(){
     
     // ---- Word en icons.h desde flash Arduino ------
     // MUCHISIMO MÁS RÁPIDO QUE BMP DESDE SD
-    tft.putPicture_16bpp(250,150,500,350,smartcloth_icono);
+    
+    //tft.putPicture_16bpp(250,150,500,350,smartcloth_icono); //COMENTADO PARA AHORRAR TIEMPO DE CARGA ==> DESCOMENTAR!!!!
 
     // ---- Word en icons.h desde flash Arduino ------
     //tft.drawArray16bpp(250,150,500,175000,smartcloth_icono); //SE ATASCA. TODO

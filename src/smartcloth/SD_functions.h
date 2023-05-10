@@ -105,15 +105,16 @@ void setupSDcard(){
 
 
 /*-----------------------------------------------------------------------------
-   writeHeaderFileSD(): Escribir header en fichero en SD
+   writeHeaderFileSD(): Crear fichero en SD y escribir header
 -------------------------------------------------------------------------------*/
 void writeHeaderFileSD(){
-    Serial.println(F("\n Creando fichero data.csv ...\n"));
+    Serial.print(F("\n Creando fichero "); Serial.print(fileCSV); Serial.println(" ...\n"));
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
     // columnas directamente. Si se separa por comas, no divide las columnas porque
     // en la región de España las comas se usan para los decimales, aunque se haya
     // indicado en las preferencias que se use el punto para separar la parte decimal.
+    
     String header = "carb;carb_r;lip;lip_R;prot;prot_R;kcal";
 
     File myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h

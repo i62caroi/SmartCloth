@@ -55,7 +55,9 @@ Diario diaActual;
 
 
 /*  ------ SD ------ */
-char fileCSV[30] = "data/data-SmartCloth.csv";
+// LIBRERÍA SD LIMITA LA LONGITUD DEL NOMBRE DEL FICHERO A 8 CARACTERES Y 3 PARA EXTENSION
+// Los 8 caracteres no incluyen el path hasta el fichero
+char fileCSV[30] = "data/data-SC.csv"; //dd-mm-yy podría servir
 
 
 
