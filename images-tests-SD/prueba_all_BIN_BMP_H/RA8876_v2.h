@@ -7,6 +7,7 @@
 #include <SPI.h>
 #include <SD.h>
 
+
 //#define RA8876_DEBUG // Uncomment to enable debug messaging
 
 //----------- COPIADO RA8876_Lite ----------------
@@ -380,14 +381,18 @@ private:
   /* ------------------------------------------------------------ */
 
   /* -------- ACCESS -------------------------------------------- */
-  void writeCmd(uint8_t x);                     // lcdRegWrite() en RA8876_Lite
-  void writeData(uint8_t x);                    // lcdDataWrite() en RA8876_Lite
+  void writeCmd(uint8_t reg);                     // lcdRegWrite() en RA8876_Lite
+  void writeData(uint8_t data);                    // lcdDataWrite() en RA8876_Lite
   void writeData16bbp(uint16_t data);           // ICR => lcdDataWrite16bbp() en RA8876_Lite
+  void writeData64bits(uint64_t data);     // ICR 
+  void writeData256bits(uint64_t *data);   // ICR 
+  void writeData1024bits(uint64_t *data);  // ICR 
+  void writeData4096bits(uint64_t *data);  // ICR 
   uint8_t readData(void);                       // lcdDataRead()  en RA8876_Lite
   uint8_t readStatus(void);                     // lcdStatusRead() en RA8876_Lite
-  void writeReg(uint8_t reg, uint8_t x);        // lcdRegDataWrite() en RA8876_Lite
-  void writeReg16(uint8_t reg, uint16_t x);
-  void writeReg32(uint8_t reg, uint32_t x);
+  void writeReg(uint8_t reg, uint8_t data);        // lcdRegDataWrite() en RA8876_Lite
+  void writeReg16(uint8_t reg, uint16_t data);
+  void writeReg32(uint8_t reg, uint32_t data);
   uint8_t readReg(uint8_t reg);                 // lcdRegDataRead() en RA8876_Lite
   uint16_t readReg16(uint8_t reg);
   /* ------------------------------------------------------------ */
@@ -521,7 +526,11 @@ public:
   void putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data);
 
   // ------ SD -------------
-  void sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);
+  void sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);
+  void sdCardDraw64bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);  //ICR
+  void sdCardDraw256bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //ICR 64 * 4
+  void sdCardDraw1024bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //ICR 64 * 4 * 4
+  void sdCardDraw4096bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //ICR 64 * 4 * 4 * 4 
   void sdCardDraw24bppBMP(char *filename, int x, int y);
  /* ------------------------------------------------------------ */
 

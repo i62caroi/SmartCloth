@@ -27,8 +27,6 @@
 const int LOADCELL_DOUT_PIN = 3;
 const int LOADCELL_SCK_PIN = 2;
 
-float pesoARetirar;
-
 
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
@@ -69,13 +67,20 @@ void checkBascula(){
     
     if (pesado){
         pesoARetirar = pesoRecipiente + pesoPlato;
-        //if((state_prev == STATE_saved) and (pesoARetirar == 0.0)){ //Solo si se ha querido guardar desde el STATE_Empty
-        if((state_actual == STATE_saved) and (pesoARetirar == 0.0)){ //Solo si se ha querido guardar desde el STATE_Empty 
+
+        // ------- FORZAR REGRESO A INI EN CASOS ESPECIALES ------------------
+        // Esto es necesario porque al volver a INI se tara, marcando eventoBascula = TARAR, por lo que se
+        // debe forzar la liberación (eventoBascula = LIBERAR) para, tras guardar o no la comida (STATE_saved), 
+        // o borrar o no plato (STATE_deleted), se pueda regresar a INI. 
+        // Si no se hace esto, se queda atascado esperando una liberación que no va a llegar porque no hay 
+        // cambios en el peso (diffWeight > 2.0). 
+        /*if(((state_actual == STATE_saved) or (state_actual == STATE_deleted)) and (state_actual == STATE_Empty)){ //Solo si se ha querido guardar desde el STATE_Empty 
             Serial.print(F("\nLIBERADA sola"));
             eventoBascula = LIBERAR;
             addEventToBuffer(eventoBascula);
             flagEvent = true;
-        }
+        }*/ // ------------------------------------------------------------------
+
             
         lastWeight = newWeight;
         newWeight = weight;
@@ -133,6 +138,7 @@ void checkBascula(){
             Serial.print(F("Peso Bascula: ")); Serial.println(pesoBascula);
             Serial.print(F("Peso a retirar: ")); Serial.println(pesoARetirar);
             Serial.println(F("\n--------------------------------------"));
+
             addEventToBuffer(eventoBascula);
             flagEvent = true;
         }

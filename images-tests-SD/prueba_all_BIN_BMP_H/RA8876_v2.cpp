@@ -1,3 +1,4 @@
+#include <cstdint>
 /* ************************************************************ */
 /*
 File Name : RA8876_v2.cpp                                   
@@ -83,22 +84,22 @@ void RA8876::softReset(void)
 /* *************************************************************
     lcdRegWrite() en RA8876_Lite
    ************************************************************* */
-void RA8876::writeCmd(uint8_t x)
+void RA8876::writeCmd(uint8_t reg)
 {
   digitalWrite(m_csPin, LOW);
   SPI.transfer(RA8876_CMD_WRITE);
-  SPI.transfer(x);
+  SPI.transfer(reg);
   digitalWrite(m_csPin, HIGH);
 }
 
 /* *************************************************************
     lcdDataWrite() en RA8876_Lite
    ************************************************************* */
-void RA8876::writeData(uint8_t x)
+void RA8876::writeData(uint8_t data)
 {
   digitalWrite(m_csPin, LOW);
   SPI.transfer(RA8876_DATA_WRITE);
-  SPI.transfer(x);
+  SPI.transfer(data);
   digitalWrite(m_csPin, HIGH);
 }
 
@@ -114,6 +115,132 @@ void RA8876::writeData16bbp(uint16_t data)
   SPI.transfer(RA8876_DATA_WRITE);
   SPI.transfer(data);
   SPI.transfer(data>>8);
+  digitalWrite(m_csPin, HIGH);
+}
+
+/* *************************************************************
+    Support SPI interface to write 64bits data after ramAccessPrepare().
+   ************************************************************* */
+void RA8876::writeData64bits(uint64_t data) 
+{
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  SPI.transfer(&data, 8);
+  digitalWrite(m_csPin, HIGH);
+}
+
+
+/* *************************************************************
+    Support SPI interface to write 256bits data after ramAccessPrepare().
+   ************************************************************* */
+void RA8876::writeData256bits(uint64_t *data) 
+{
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  SPI.transfer(&data[0], 8);
+  SPI.transfer(&data[1], 8);
+  SPI.transfer(&data[2], 8);
+  SPI.transfer(&data[3], 8);
+  digitalWrite(m_csPin, HIGH);
+}
+
+/* *************************************************************
+    Support SPI interface to write 1024bits data after ramAccessPrepare().
+   ************************************************************* */
+void RA8876::writeData1024bits(uint64_t * data) 
+{
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  SPI.transfer(&data[0], 8);
+  SPI.transfer(&data[1], 8);
+  SPI.transfer(&data[2], 8);
+  SPI.transfer(&data[3], 8);
+  SPI.transfer(&data[4], 8);
+  SPI.transfer(&data[5], 8);
+  SPI.transfer(&data[6], 8);
+  SPI.transfer(&data[7], 8);
+  SPI.transfer(&data[8], 8);
+  SPI.transfer(&data[9], 8);
+  SPI.transfer(&data[10], 8);
+  SPI.transfer(&data[11], 8);
+  SPI.transfer(&data[12], 8);
+  SPI.transfer(&data[13], 8);
+  SPI.transfer(&data[14], 8);
+  SPI.transfer(&data[15], 8);
+  digitalWrite(m_csPin, HIGH);
+}
+
+/* *************************************************************
+    Support SPI interface to write 4096bits data after ramAccessPrepare().
+   ************************************************************* */
+void RA8876::writeData4096bits(uint64_t * data) 
+{
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  SPI.transfer(&data[0], 8);
+  SPI.transfer(&data[1], 8);
+  SPI.transfer(&data[2], 8);
+  SPI.transfer(&data[3], 8);
+  SPI.transfer(&data[4], 8);
+  SPI.transfer(&data[5], 8);
+  SPI.transfer(&data[6], 8);
+  SPI.transfer(&data[7], 8);
+  SPI.transfer(&data[8], 8);
+  SPI.transfer(&data[9], 8);
+  SPI.transfer(&data[10], 8);
+  SPI.transfer(&data[11], 8);
+  SPI.transfer(&data[12], 8);
+  SPI.transfer(&data[13], 8);
+  SPI.transfer(&data[14], 8);
+  SPI.transfer(&data[15], 8);
+  SPI.transfer(&data[16], 8);
+  SPI.transfer(&data[17], 8);
+  SPI.transfer(&data[18], 8);
+  SPI.transfer(&data[19], 8);
+  SPI.transfer(&data[20], 8);
+  SPI.transfer(&data[21], 8);
+  SPI.transfer(&data[22], 8);
+  SPI.transfer(&data[23], 8);
+  SPI.transfer(&data[24], 8);
+  SPI.transfer(&data[25], 8);
+  SPI.transfer(&data[26], 8);
+  SPI.transfer(&data[27], 8);
+  SPI.transfer(&data[28], 8);
+  SPI.transfer(&data[29], 8);
+  SPI.transfer(&data[30], 8);
+  SPI.transfer(&data[31], 8);
+  SPI.transfer(&data[32], 8);
+  SPI.transfer(&data[33], 8);
+  SPI.transfer(&data[34], 8);
+  SPI.transfer(&data[35], 8);
+  SPI.transfer(&data[36], 8);
+  SPI.transfer(&data[37], 8);
+  SPI.transfer(&data[38], 8);
+  SPI.transfer(&data[39], 8);
+  SPI.transfer(&data[40], 8);
+  SPI.transfer(&data[41], 8);
+  SPI.transfer(&data[42], 8);
+  SPI.transfer(&data[43], 8);
+  SPI.transfer(&data[44], 8);
+  SPI.transfer(&data[45], 8);
+  SPI.transfer(&data[46], 8);
+  SPI.transfer(&data[47], 8);
+  SPI.transfer(&data[48], 8);
+  SPI.transfer(&data[49], 8);
+  SPI.transfer(&data[50], 8);
+  SPI.transfer(&data[51], 8);
+  SPI.transfer(&data[52], 8);
+  SPI.transfer(&data[53], 8);
+  SPI.transfer(&data[54], 8);
+  SPI.transfer(&data[55], 8);
+  SPI.transfer(&data[56], 8);
+  SPI.transfer(&data[57], 8);
+  SPI.transfer(&data[58], 8);
+  SPI.transfer(&data[59], 8);
+  SPI.transfer(&data[60], 8);
+  SPI.transfer(&data[61], 8);
+  SPI.transfer(&data[62], 8);
+  SPI.transfer(&data[63], 8);
   digitalWrite(m_csPin, HIGH);
 }
 
@@ -149,38 +276,38 @@ uint8_t RA8876::readStatus(void)
 /* *************************************************************
     lcdRegDataWrite() en RA8876_Lite
    ************************************************************* */
-void RA8876::writeReg(uint8_t reg, uint8_t v)
+void RA8876::writeReg(uint8_t reg, uint8_t data)
 {
   writeCmd(reg);
-  writeData(v);
+  writeData(data);
 }
 
 /* *************************************************************
     Like writeReg(), but does two successive register writes 
     of a 16-bit value, low byte first.
    ************************************************************* */
-void RA8876::writeReg16(uint8_t reg, uint16_t v)
+void RA8876::writeReg16(uint8_t reg, uint16_t data)
 {
   writeCmd(reg);
-  writeData(v & 0xFF);
+  writeData(data & 0xFF);
   writeCmd(reg + 1);
-  writeData(v >> 8);
+  writeData(data >> 8);
 }
 
 /* *************************************************************
     Like writeReg(), but does four successive register writes 
     of a 32-bit value, low byte first.
    ************************************************************* */
-void RA8876::writeReg32(uint8_t reg, uint32_t v)
+void RA8876::writeReg32(uint8_t reg, uint32_t data)
 {
   writeCmd(reg);
-  writeData(v & 0xFF);
+  writeData(data & 0xFF);
   writeCmd(reg + 1);
-  writeData((v >> 8) & 0xFF);
+  writeData((data >> 8) & 0xFF);
   writeCmd(reg + 2);
-  writeData((v >> 16) & 0xFF);
+  writeData((data >> 16) & 0xFF);
   writeCmd(reg + 3);
-  writeData(v >> 24);
+  writeData(data >> 24);
 }
 
 /* *************************************************************
@@ -1413,7 +1540,7 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
 
 //**************************************************************//
 //**************************************************************//
-void RA8876::sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
 {
   m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
@@ -1432,6 +1559,214 @@ void RA8876::sdCardShowPicture16bpp(uint16_t x,uint16_t y,uint16_t width, uint16
         //checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
         writeData(dataFile.read());
         writeData(dataFile.read());
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+
+//**************************************************************//
+void RA8876::sdCardDraw64bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint64_t data;
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       //tft.putPicture_16bpp(x,y,width,height);    
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => Disminuye el tiempo de sdCardDraw16bppBIN() por 2.65
+        //----
+        dataFile.read(&data, sizeof(data));
+        writeData64bits(data); //64
+        //----
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+
+
+//**************************************************************//
+void RA8876::sdCardDraw256bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint64_t data[4];
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       //tft.putPicture_16bpp(x,y,width,height);    
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => Disminuye el tiempo a la mitad respecto a sdCardDraw16bppBIN()         
+        //----
+        dataFile.read(&data[0], sizeof(data[0]));
+        dataFile.read(&data[1], sizeof(data[1]));
+        dataFile.read(&data[2], sizeof(data[2]));
+        dataFile.read(&data[3], sizeof(data[3]));
+        writeData256bits(data); // 64 | 128 | 192 | 256
+        //----
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+//**************************************************************//
+void RA8876::sdCardDraw1024bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint64_t data[16];
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       //tft.putPicture_16bpp(x,y,width,height);    
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => Disminuye el tiempo a la mitad respecto a sdCardDraw16bppBIN()         
+        //----
+        dataFile.read(&data[0], sizeof(data[0]));
+        dataFile.read(&data[1], sizeof(data[1]));
+        dataFile.read(&data[2], sizeof(data[2]));
+        dataFile.read(&data[3], sizeof(data[3]));
+        dataFile.read(&data[4], sizeof(data[4]));
+        dataFile.read(&data[5], sizeof(data[5]));
+        dataFile.read(&data[6], sizeof(data[6]));
+        dataFile.read(&data[7], sizeof(data[7]));
+        dataFile.read(&data[8], sizeof(data[8]));
+        dataFile.read(&data[9], sizeof(data[9]));
+        dataFile.read(&data[10], sizeof(data[10]));
+        dataFile.read(&data[11], sizeof(data[11]));
+        dataFile.read(&data[12], sizeof(data[12]));
+        dataFile.read(&data[13], sizeof(data[13]));
+        dataFile.read(&data[14], sizeof(data[14]));
+        dataFile.read(&data[15], sizeof(data[15]));
+        writeData1024bits(data); // 64 | 128 | 192 | 256 | 320 | 384 | 448 | 512
+        //----
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+//**************************************************************//
+void RA8876::sdCardDraw4096bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint64_t data[64];
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       //tft.putPicture_16bpp(x,y,width,height);    
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => Disminuye el tiempo a la mitad respecto a sdCardDraw16bppBIN()         
+        //----
+        dataFile.read(&data[0], sizeof(data[0]));
+        dataFile.read(&data[1], sizeof(data[1]));
+        dataFile.read(&data[2], sizeof(data[2]));
+        dataFile.read(&data[3], sizeof(data[3]));
+        dataFile.read(&data[4], sizeof(data[4]));
+        dataFile.read(&data[5], sizeof(data[5]));
+        dataFile.read(&data[6], sizeof(data[6]));
+        dataFile.read(&data[7], sizeof(data[7]));
+        dataFile.read(&data[8], sizeof(data[8]));
+        dataFile.read(&data[9], sizeof(data[9]));
+        dataFile.read(&data[10], sizeof(data[10]));
+        dataFile.read(&data[11], sizeof(data[11]));
+        dataFile.read(&data[12], sizeof(data[12]));
+        dataFile.read(&data[13], sizeof(data[13]));
+        dataFile.read(&data[14], sizeof(data[14]));
+        dataFile.read(&data[15], sizeof(data[15]));
+        dataFile.read(&data[16], sizeof(data[16]));
+        dataFile.read(&data[17], sizeof(data[17]));
+        dataFile.read(&data[18], sizeof(data[18]));
+        dataFile.read(&data[19], sizeof(data[19]));
+        dataFile.read(&data[20], sizeof(data[20]));
+        dataFile.read(&data[21], sizeof(data[21]));
+        dataFile.read(&data[22], sizeof(data[22]));
+        dataFile.read(&data[23], sizeof(data[23]));
+        dataFile.read(&data[24], sizeof(data[24]));
+        dataFile.read(&data[25], sizeof(data[25]));
+        dataFile.read(&data[26], sizeof(data[26]));
+        dataFile.read(&data[27], sizeof(data[27]));
+        dataFile.read(&data[28], sizeof(data[28]));
+        dataFile.read(&data[29], sizeof(data[29]));
+        dataFile.read(&data[30], sizeof(data[30]));
+        dataFile.read(&data[31], sizeof(data[31]));
+        dataFile.read(&data[32], sizeof(data[32]));
+        dataFile.read(&data[33], sizeof(data[33]));
+        dataFile.read(&data[34], sizeof(data[34]));
+        dataFile.read(&data[35], sizeof(data[35]));
+        dataFile.read(&data[36], sizeof(data[36]));
+        dataFile.read(&data[37], sizeof(data[37]));
+        dataFile.read(&data[38], sizeof(data[38]));
+        dataFile.read(&data[39], sizeof(data[39]));
+        dataFile.read(&data[40], sizeof(data[40]));
+        dataFile.read(&data[41], sizeof(data[41]));
+        dataFile.read(&data[42], sizeof(data[42]));
+        dataFile.read(&data[43], sizeof(data[43]));
+        dataFile.read(&data[44], sizeof(data[44]));
+        dataFile.read(&data[45], sizeof(data[45]));
+        dataFile.read(&data[46], sizeof(data[46]));
+        dataFile.read(&data[47], sizeof(data[47]));
+        dataFile.read(&data[48], sizeof(data[48]));
+        dataFile.read(&data[49], sizeof(data[49]));
+        dataFile.read(&data[50], sizeof(data[50]));
+        dataFile.read(&data[51], sizeof(data[51]));
+        dataFile.read(&data[52], sizeof(data[52]));
+        dataFile.read(&data[53], sizeof(data[53]));
+        dataFile.read(&data[54], sizeof(data[54]));
+        dataFile.read(&data[55], sizeof(data[55]));
+        dataFile.read(&data[56], sizeof(data[56]));
+        dataFile.read(&data[57], sizeof(data[57]));
+        dataFile.read(&data[58], sizeof(data[58]));
+        dataFile.read(&data[59], sizeof(data[59]));
+        dataFile.read(&data[60], sizeof(data[60]));
+        dataFile.read(&data[61], sizeof(data[61]));
+        dataFile.read(&data[62], sizeof(data[62]));
+        dataFile.read(&data[63], sizeof(data[63]));
+        writeData4096bits(data); // 64 * 4 * 4 * 4  => 4096
+        //----
     }
     dataFile.close();
   }   
@@ -1461,7 +1796,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
   uint8_t  buffidx = sizeof(sdbuffer);  // Current position in sdbuffer
   boolean  goodBmp = false;             // Set to true on valid header parse
   boolean  flip    = true;              // BMP is stored bottom-to-top
-  int      w, h, row, col;//, xpos, ypos; //** <=> **
+  int      w, h, row, col;//, xpos, ypos; 
   uint8_t  r, g, b;
   uint32_t pos = 0, startTime = millis();
   uint8_t  lcdidx = 0;
@@ -1521,7 +1856,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
 
         // Set TFT address window to clipped image bounds
 
-        //ypos = y;  //** <=> **
+        //ypos = y; 
         for (row=0; row<h; row++) { // For each scanline...
           // Seek to start of scan line.  It might seem labor-
           // intensive to be doing this on every line, but this
@@ -1538,7 +1873,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
             buffidx = sizeof(sdbuffer); // Force buffer reload
           }
 
-          //xpos = x;  //** <=> **
+          //xpos = x; 
           for (col=0; col<w; col++) { // For each column...
             // Time to read more pixel data?
             if (buffidx >= sizeof(sdbuffer)) { // Indeed
@@ -1548,7 +1883,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
                 drawPixel(col+x, row+y, lcdbuffer[lcdidx]);
                 lcdidx = 0;
                 first  = false;
-                /* //** <=> **
+                /* 
                 drawPixels(xpos, ypos, lcdbuffer, lcdidx);  
                 xpos += lcdidx;                             
                 lcdidx = 0;
@@ -1570,7 +1905,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
             drawPixel(col+x, row+y, color);
             */
 
-            /* //** <=> **
+            /* 
             lcdbuffer[lcdidx++] = RGB565(r,g,b);
             if (lcdidx >= sizeof(lcdbuffer) || (xpos - x + lcdidx) >= w) {
               drawPixels(xpos, ypos, lcdbuffer, lcdidx);
@@ -1580,14 +1915,14 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
             */
           } // end pixel
 
-          //ypos++; //** <=> **
+          //ypos++; 
 
         } // end scanline
 
         // Write any remaining data to LCD
         if(lcdidx > 0) { 
           drawPixel(col+x, row+y, lcdbuffer[lcdidx]);
-          /* //** <=> **
+          /* 
           drawPixels(xpos, ypos, lcdbuffer, lcdidx);
           xpos += lcdidx;
           */

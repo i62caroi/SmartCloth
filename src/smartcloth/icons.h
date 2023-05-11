@@ -4,7 +4,7 @@ cocinado => 95 x 91
 smartcloth_icono => 500 x 350
 */
 
-
+// PROGMEM indica que se almacenen los datos en la memoria Flash (memoria de programa)
 
 const unsigned short int crudo [] PROGMEM =  {
 	// 'crudoSmall, 95x91px

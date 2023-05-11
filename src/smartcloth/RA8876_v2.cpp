@@ -122,12 +122,38 @@ void RA8876::writeData(uint8_t x)
     
     lcdDataWrite16bbp() en RA8876_Lite
    ************************************************************* */
-void RA8876::writeData16bbp(uint16_t data) 
+void RA8876::writeData16bits(uint16_t data) 
 {
   digitalWrite(m_csPin, LOW);
   SPI.transfer(RA8876_DATA_WRITE);
   SPI.transfer(data);
   SPI.transfer(data>>8);
+  digitalWrite(m_csPin, HIGH);
+}
+
+/* *************************************************************
+    Support SPI interface to write 64bits data after ramAccessPrepare().
+   ************************************************************* */
+void RA8876::writeData64bits(uint64_t data) 
+{
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  SPI.transfer(&data, 8);
+  digitalWrite(m_csPin, HIGH);
+}
+
+
+/* *************************************************************
+    Support SPI interface to write 256bits data after ramAccessPrepare().
+   ************************************************************* */
+void RA8876::writeData256bits(uint64_t *data) 
+{
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  SPI.transfer(&data[0], 8);
+  SPI.transfer(&data[1], 8);
+  SPI.transfer(&data[2], 8);
+  SPI.transfer(&data[3], 8);
   digitalWrite(m_csPin, HIGH);
 }
 
@@ -1439,7 +1465,7 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
     {
       for(uint16_t i=0;i<width;i++)
       {
-      writeData16bbp(*data);
+      writeData16bits(*data);
       data++;
       }
     } 
@@ -1448,29 +1474,6 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
 
     m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
 }
-
-
-/* *************************************************************
-    Mostrar imagen de 16bpp (RGB 5:6:5) en formato Word guardada en 
-    un fichero.h en la flash de arduino (véase prueba_Word_en_H).
-
-    Conversor online de PNG/JPGE -> Word 16bpp: https://javl.github.io/image2cpp/ 
-   ************************************************************* */
-/*void RA8876::drawArray16bpp(int x,int y, uint16_t width, uint32_t size, const unsigned short * image)
-{
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
-
-  uint16_t pixels[width];//container
-  uint16_t i,idx;
-  for (idx = 0; idx < size/width; idx++){
-    for (i = (width * idx); i < width * (idx+1); i++){
-      pixels[i - (width*idx)] = image[i];
-    }
-    drawPixels(x,idx+y,pixels,width);
-  }
-
-  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
-}*/
 
 
 
@@ -1482,8 +1485,6 @@ void RA8876::putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t hei
    ************************************************************* */
 void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
 {
-  //setGraphicsMode();
-
   m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
   // open the file. note that only one file can be open at a time,
@@ -1496,14 +1497,144 @@ void RA8876::sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t h
        ramAccessPrepare();
     while (dataFile.available()) 
     {
-        //Serial.write(dataFile.read());
-        //checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
         writeData(dataFile.read());
         writeData(dataFile.read());
     }
     dataFile.close();
   }   
   else Serial.println(F("Fichero no encontrado"));
+
+  checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  setCanvasWindow(0,0,m_width,m_height);
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+/* *************************************************************
+    Mostrar imagen de 16bpp (RGB 5:6:5) en formato BIN guardada en el
+    fichero 'filename' de la SD. 
+    Se leen 16 bits y se envían por SPI a la pantalla.
+
+    Es 1.6 veces más rápido que sdCardDraw16bppBIN().
+
+    Conversor online de PNG/JPG -> BIN: https://javl.github.io/image2cpp/
+   ************************************************************* */
+void RA8876::sdCardDraw16bppBIN16bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint16_t data;
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       //tft.putPicture_16bpp(x,y,width,height);    
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => 1.6 veces más rápido que sdCardDraw16bppBIN()
+        //----
+        dataFile.read(&data, sizeof(data));
+        writeData16bits(data); 
+        //----
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  setCanvasWindow(0,0,m_width,m_height);
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+
+/* *************************************************************
+    Mostrar imagen de 16bpp (RGB 5:6:5) en formato BIN guardada en el
+    fichero 'filename' de la SD. 
+    Se leen 64 bits y se envían por SPI a la pantalla.
+
+    Es 2.65 veces más rápido que sdCardDraw16bppBIN().
+
+    Conversor online de PNG/JPG -> BIN: https://javl.github.io/image2cpp/
+   ************************************************************* */
+void RA8876::sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint64_t data;
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => 2.65 veces más rápido que sdCardDraw16bppBIN()
+        //----
+        dataFile.read(&data, sizeof(data));
+        writeData64bits(data); //64
+        //----
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  setCanvasWindow(0,0,m_width,m_height);
+
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
+}
+
+
+/* *************************************************************
+    Mostrar imagen de 16bpp (RGB 5:6:5) en formato BIN guardada en el
+    fichero 'filename' de la SD. 
+    Se leen 256 bits en 4 paquetes de 64 bits y se envían por SPI a la pantalla.
+
+    Es 2.96 veces más rápido que sdCardDraw16bppBIN().
+
+    Conversor online de PNG/JPG -> BIN: https://javl.github.io/image2cpp/
+   ************************************************************* */
+void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename)
+{
+  m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
+
+  uint64_t data[4];
+
+  // open the file. note that only one file can be open at a time,
+  // so you have to close this one before opening another.
+  File dataFile = SD.open(filename);
+  // if the file is available, read it and write to ra8876:
+  if (dataFile) {  
+       setCanvasWindow(x,y,width,height); // activeWindowXY() y activeWindowWH() de RA8876_Lite
+       setPixelCursor(x,y);
+       ramAccessPrepare();
+    while (dataFile.available()) 
+    {
+        // PERFECTO => 2.96 veces más rápido que sdCardDraw16bppBIN()      
+        //----
+        dataFile.read(&data[0], sizeof(data[0]));
+        dataFile.read(&data[1], sizeof(data[1]));
+        dataFile.read(&data[2], sizeof(data[2]));
+        dataFile.read(&data[3], sizeof(data[3]));
+        writeData256bits(data); // 64 | 128 | 192 | 256
+        //----
+    }
+    dataFile.close();
+  }   
+  else Serial.println(F("Fichero no encontrado"));
+
+  checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  setCanvasWindow(0,0,m_width,m_height);
 
   m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
 }
@@ -1686,6 +1817,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
 
   bmpFile.close();
   if(!goodBmp) Serial.println(F("BMP format not recognized."));
+  
   setCanvasWindow(0,0,m_width,m_height);
 
   m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz

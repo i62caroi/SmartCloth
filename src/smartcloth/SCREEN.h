@@ -159,16 +159,17 @@ void Welcome(){
     
     // ---- Fichero BMP desde SD -----
     // TERRIBLEMENTE LENTOOOO
-    //char file[30] = "bmp/logo3.bmp";
-    //tft.sdCardDraw24bppBMP(file, 250, 150);
+    //tft.sdCardDraw24bppBMP(fileBMP, 250, 150);
     
     // ---- Word en icons.h desde flash Arduino ------
-    // MUCHISIMO MÁS RÁPIDO QUE BMP DESDE SD
-    
-    //tft.putPicture_16bpp(250,150,500,350,smartcloth_icono); //COMENTADO PARA AHORRAR TIEMPO DE CARGA ==> DESCOMENTAR!!!!
+    // MUCHISIMO MÁS RÁPIDO QUE BMP DESDE SD, PERO OCUPA MUCHA MEMORIA
+    //tft.putPicture_16bpp(250,150,500,350,smartcloth_icono); 
 
-    // ---- Word en icons.h desde flash Arduino ------
-    //tft.drawArray16bpp(250,150,500,175000,smartcloth_icono); //SE ATASCA. TODO
+    // ---- Fichero BIN desde SD -----
+    //tft.sdCardDraw16bppBIN(250,150,482,350,fileBIN); //Lo más rápido desde SD. Se ha mejorado aún más:
+    //tft.sdCardDraw16bppBIN16bits(250,150,482,350,fileBIN); //1.6 veces más rápido que sdCardDraw16bppBIN()
+    //tft.sdCardDraw16bppBIN64bits(250,150,482,350,fileBIN); //2.65 veces más rápido que sdCardDraw16bppBIN()
+    tft.sdCardDraw16bppBIN256bits(250,150,482,350,fileBIN); //2.96 veces más rápido que sdCardDraw16bppBIN()
     
     delay(2000);
 }
@@ -413,7 +414,7 @@ void printStateEmpty(){
 void printStatePlato(){
     
    // tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),180,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    tft.clearArea(0,0,tft.getWidth(),180); //(xOrig, yOrig, xDest, yDest) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
@@ -464,8 +465,8 @@ void printStateGroups(){
 ----------------------------------------------------------------------------------------------------------*/
 void printStateRaw()
 {
-    //tft.clearArea(800,100,895,891,0); //(xOrig, yOrig, xDest, yDest, color)
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    //tft.clearArea(800,100,895,891); //(xOrig, yOrig, xDest, yDest)
+    tft.clearArea(0,0,tft.getWidth(),195); //(xOrig, yOrig, xDest, yDest) ==> Limpiar zona superior de Ejemplos y Grupo
     printEjemplosyGrupo();        // Grupo (crudo) => Esto solo es para cambiar el nombre del grupo, pues hay algunos que tienen "(crudo)"
 
     //tft.sdCardDraw24bppBMP(fileRaw, 800, 100);
@@ -477,8 +478,8 @@ void printStateRaw()
 ----------------------------------------------------------------------------------------------------------*/
 void printStateCooked()
 {
-    //tft.clearArea(800,100,895,891,0); //(xOrig, yOrig, xDest, yDest, color)
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    //tft.clearArea(800,100,895,891); //(xOrig, yOrig, xDest, yDest)
+    tft.clearArea(0,0,tft.getWidth(),195); //(xOrig, yOrig, xDest, yDest) ==> Limpiar zona superior de Ejemplos y Grupo
     printEjemplosyGrupo();        // Grupo (cocinado) => Esto solo es para cambiar el nombre del grupo, pues hay algunos que tienen "(cocinado)"
 
     //tft.sdCardDraw24bppBMP(fileCooked, 800, 100);
@@ -548,13 +549,16 @@ void printStateDeleted(){
     cad = "\xA1""PLATO ELIMINADO\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
     
-    tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CIAN);                                
-    tft.setTextScale(2);        
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);       
-    cad = "Retire el plato eliminado para empezarlo de nuevo o guarde la comida";
-    tft.println(cad); 
-    
+    if(pesoARetirar != 0.0){            // Solo se pone a 0.0 al volver a INI. Mientras no se quite el plato
+                                        // y no se marque LIBERAR, no se resetea
+        tft.setCursor(MARGEN_IZQ, 120);                             
+        tft.setTextColor(CIAN);                                
+        tft.setTextScale(2);        
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);       
+        cad = "Retire el plato eliminado para empezarlo de nuevo o guarde la comida";
+        tft.println(cad); 
+    }
+
     printCentral();                                    // 2 - Estructura central
     printValoresComida();                              // 3 - Valores comida actual
     printValoresDiario();                              // 4 - Valores acumulado hoy
@@ -578,12 +582,15 @@ void printStateSaved(){
     cad = "\xA1""COMIDA GUARDADA\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
     
-    tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CIAN);                                
-    //tft.setTextScale(2);  
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);       
-    cad = "Retire el plato";
-    tft.println(cad); 
+    if(pesoARetirar != 0.0){            // Solo se pone a 0.0 al volver a INI. Mientras no se quite el plato
+                                        // y no se marque LIBERAR, no se resetea
+        tft.setCursor(MARGEN_IZQ, 120);                             
+        tft.setTextColor(CIAN);                                
+        //tft.setTextScale(2);  
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);       
+        cad = "Retire el plato";
+        tft.println(cad); 
+    }
     
     printCentral();                                    // 2 - Estructura central
     printValoresComida();                              // 3 - Valores comida actual
@@ -616,7 +623,7 @@ void printEventError(String msg){
     cad = "\xA1""ACCI\xD3N INCORRECTA\x21""";
     
     //tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    tft.clearArea(0,0,tft.getWidth(),195); //(xOrig, yOrig, xDest, yDest) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
@@ -647,7 +654,7 @@ void printEmptyObjectError(String msg){
     cad = "\xA1""\xA1""AVISO\x21""\x21""";
     
     //tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
+    tft.clearArea(0,0,tft.getWidth(),195); //(xOrig, yOrig, xDest, yDest) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(350, 50);                            // Posicion inicio texto

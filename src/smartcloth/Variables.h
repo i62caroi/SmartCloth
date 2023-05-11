@@ -27,6 +27,8 @@ volatile bool pesado = false;       // Flag de haber pesado por ISR
 float pesoBascula = 0.0;            // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
 float diffWeight = 0.0;             // Diferencia entre peso actual (weight) y peso anterior para ver cambios
 
+float pesoARetirar;
+
 HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
 
@@ -58,6 +60,8 @@ Diario diaActual;
 // LIBRERÍA SD LIMITA LA LONGITUD DEL NOMBRE DEL FICHERO A 8 CARACTERES Y 3 PARA EXTENSION
 // Los 8 caracteres no incluyen el path hasta el fichero
 char fileCSV[30] = "data/data-SC.csv"; //dd-mm-yy podría servir
+//char fielBMP[30] = "bmp/logo3.bmp";
+char fileBIN[30] = "bin/logo.bin";
 
 
 

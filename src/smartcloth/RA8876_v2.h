@@ -322,7 +322,9 @@ private:
   /* -------- ACCESS -------------------------------------------- */
   void writeCmd(uint8_t x);                     // lcdRegWrite() en RA8876_Lite
   void writeData(uint8_t x);                    // lcdDataWrite() en RA8876_Lite
-  void writeData16bbp(uint16_t data);           // ICR => lcdDataWrite16bbp() en RA8876_Lite
+  void writeData16bits(uint16_t data);           // ICR => lcdDataWrite16bbp() en RA8876_Lite
+  void writeData64bits(uint64_t data);     // ICR 
+  void writeData256bits(uint64_t *data);   // ICR 
   uint8_t readData(void);                       // lcdDataRead()  en RA8876_Lite
   uint8_t readStatus(void);                     // lcdStatusRead() en RA8876_Lite
   void writeReg(uint8_t reg, uint8_t x);        // lcdRegDataWrite() en RA8876_Lite
@@ -453,15 +455,18 @@ public:
 
   // Limpiar pantalla ==> dibujar rectángulo negro que ocupe todo
   void clearScreen(uint16_t color) { setCursor(0, 0); fillRect(0, 0, m_width, m_height, color); };
-  void clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest, uint16_t color) { setCursor(xOrig, yOrig); fillRect(xOrig, yOrig, xDest, yDest, color); };
+  void clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest) { setCursor(xOrig, yOrig); fillRect(xOrig, yOrig, xDest, yDest, 0); }; //ICR
 
   
   // ------ IMAGENES -------
   void putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data);
-  //void drawArray16bpp(int x,int y, uint16_t width, uint32_t size, const unsigned short * image);
 
   // ------ SD -------------
-  void sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); //BIN
+  void sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);         //16
+  void sdCardDraw16bppBIN16bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);   //ICR => 16 ==> 1.6 veces más rápido que sdCardDraw16bppBIN()
+  void sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);   //ICR => 16 * 4 ==> 2.65 veces más rápido que sdCardDraw16bppBIN()
+  void sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);  //ICR => 16 * 4 * 4 ==> 2.96 veces más rápido que sdCardDraw16bppBIN()
+
   void sdCardDraw24bppBMP(char *filename, int x, int y); //BMP
   /* ------------------------------------------------------------ */
 
