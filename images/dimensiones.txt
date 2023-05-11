@@ -1,0 +1,22 @@
+PNG:
+	- SmartCloth => 768 x 558
+	- crudo => 378 x 362
+	- crudoSmall => 95 x 91
+	- cocinado => 378 x 362
+	- cocinadoSmall => 95 x 91
+
+BIN:
+	- SmartCloth => 384 x 279 | 256 x 186
+	- logo => 482 x 350
+	- crudo => 95 x 91
+	- cocinado => 95 x 91
+
+BMP:
+	- crudo => 95 x 91
+	- cocinado => 95 x 91
+
+
+Word:
+	- SmartCloth:
+		- 768 x 558 (original size PNG) => ROM overflow
+		- 384 x 279
