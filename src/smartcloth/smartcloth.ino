@@ -47,6 +47,24 @@ void setup() {
     Welcome();  // Mostrar logo de SmartCloth como bienvenida
     state_actual = STATE_Empty;
 
+
+    /* ---------- BUTTONS PINS --------------- */
+    //  -----   Grande    -----
+    for (byte c = 0; c < countColumns; c++){
+        pinMode(columnsPins[c], OUTPUT);
+        digitalWrite(columnsPins[c], HIGH);
+    }
+    for (byte r = 0; r < countRows; r++){
+        pinMode(rowsPins[r], INPUT);
+    }
+
+    //  -----   MAIN    -----
+    pinMode(intPinCrudo, INPUT);
+    pinMode(intPinCocinado, INPUT);
+    pinMode(intPinAddPlato, INPUT);
+    pinMode(intPinDeletePlato, INPUT);
+    pinMode(intPinGuardar, INPUT);
+
   
     /* --------- INTERRUPTIONS ----------------- */
     //  -----   MAIN    -----
@@ -63,19 +81,7 @@ void setup() {
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");
     ISR_Timer.setInterval(TIMER_INTERVAL_5MS,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 100 ms
 
-    
 
-    /* ---------- BUTTONS PINS --------------- */
-    //  -----   Grande    -----
-    for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], OUTPUT);
-        digitalWrite(columnsPins[c], HIGH);
-    }
-    for (byte r = 0; r < countRows; r++){
-        pinMode(rowsPins[r], INPUT);
-    }
-    
-    
 }
 
 

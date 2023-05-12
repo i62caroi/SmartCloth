@@ -30,7 +30,7 @@ class Comida{
 
     void addPlato(Plato plato);
     
-    //void deletePlato(Plato &plato);
+    void deletePlato(Plato &plato);
     void deletePlato(); //actual o previo
 
     void updateValoresComida(bool suma, ValoresNutricionales val);
@@ -70,18 +70,12 @@ void Comida::addPlato(Plato plato){
 
 
 // --------------------- DELETE SOLO ACTUAL -----------------------------------
-//void Comida::deletePlato(Plato &plato){
-    /*Plato plato = _platos[this->getLastPositionPlato()];
-      this->setNumPlatos(this->getNumPlatos() - 1);           */                    // Decrementar num platos
-    /* Lo anterior se haría si se quisieran borrar platos previamente
-       guardados. La funcionalidad de SmartCloth es borrar el plato
-       actual para empezarlo de nuevo, pero los anteriores ya no se
-       pueden cambiar. <===> JUSTO AL CONTRARIOOOO !!!!!!! */
+void Comida::deletePlato(Plato &plato){
        // No hace falta decrementar nPlatos porque no se ha llegado a guardar 
        // el plato ni, por tanto, incrementar el numero platos
-//    this->setPesoComida(this->getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
-//    this->updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
-//}
+    this->setPesoComida(this->getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
+    this->updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
+}
 // ----------------------------------------------------------------------------
 
 

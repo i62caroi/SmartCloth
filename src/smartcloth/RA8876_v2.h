@@ -455,7 +455,7 @@ public:
 
   // Limpiar pantalla ==> dibujar rectángulo negro que ocupe todo
   void clearScreen(uint16_t color) { setCursor(0, 0); fillRect(0, 0, m_width, m_height, color); };
-  void clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest) { setCursor(xOrig, yOrig); fillRect(xOrig, yOrig, xDest, yDest, 0); }; //ICR
+  void clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest, uint16_t color) { setCursor(xOrig, yOrig); fillRect(xOrig, yOrig, xDest, yDest, color); }; //ICR
 
   
   // ------ IMAGENES -------

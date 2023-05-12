@@ -480,7 +480,9 @@ void actStateAdded(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateDeleted(){
     if(!doneState){
-        static bool errorComidaWasEmpty;                             // Flag utilizada para saber si se debe mostrar la información "normal"
+
+        // -------------------- DELETE ACTUAL ------------------------
+        static bool errorPlatoWasEmpty;                             // Flag utilizada para saber si se debe mostrar la información "normal"
                                                                     // o un mensaje de aviso indicando no se ha borrado el plato porque el 
                                                                     // actual ya está vacío.
         
@@ -501,7 +503,6 @@ void actStateDeleted(){
                                                                            //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
                                                                            //     debe incluirse en el plato. 
 
-                // ------------------ DELETE SOLO DE ACTUAL ------------------------
                                               // En este caso no se va a guardar el alimento porque se va a borrar el plato.
                                               // Solamente se añadirá su peso al 'pesoPlato' para, tras sumarlo a 'pesoRecipiente', 
                                               // saber el 'pesoARetirar'.
@@ -509,11 +510,67 @@ void actStateDeleted(){
                                               // eliminar el plato actual sin haber colocado un nuevo alimento, no haría falta
                                               // actualizar el peso del plato, pues no se habría modificado.
                                                          
-                //pesoPlato = pesoBascula;                            // Guardar peso del último alimento colocado
+                pesoPlato = pesoBascula;                            // Guardar peso del último alimento colocado
+               
+                /* ----- TARAR  ----- */
+                tareScale();                                        // Se debe tarar para que conforme vaya disminuyendo el peso veamos si 
+                                                                    // se ha quitado todo el 'pesoARetirar'.
+                                                                    // Solo se hace si se viene del STATE_weighted porque en los estados 
+                                                                    // previos a ese ya se tara y es en STATE_weighted donde se modifica el peso.
+            }
 
-                // ----------------------------------------------------------------
 
-                // -------------------- DELETE RETROACTIVO ------------------------
+            /* ----- BORRAR PLATO DE COMIDA  ----- */
+            if(platoActual.isPlatoEmpty()){                         // ==> Si el plato está vacío -> no se borra    
+                errorPlatoWasEmpty = true;
+                if(state_prev == STATE_Empty){
+                    printEmptyObjectError("No se ha borrado el plato porque est\xE1"" vac\xED""o");
+
+                    // Si se pulsa 'borrar' estando en INI, el plato seguramente estará vacío y se avisa. Tras unos segundos
+                    // para mostrar mensaje, se debe forzar el regreso a INI para que no se quede aquí (delete) esperando
+                    // una liberación que no llega, porque el último eventoBascula es TARAR, realizado en INI.
+                    Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
+                    delay(3000);                                    
+                    eventoBascula = LIBERAR;
+                    addEventToBuffer(eventoBascula);
+                    flagEvent = true;
+                }
+                else{                                               // En los otros estados (groupA, groupB, raw, cooked, weighted) habrá recipiente,
+                                                                    // por lo que el regreso a STATE_Empty no es automático, sino que se debe liberar la báscula.
+                    printEmptyObjectError("No se puede borrar el plato porque est\xE1"" vac\xED""o"". \n Si ha puesto un recipiente, ret\xED""relo para empezar de nuevo.");
+                }
+                
+            }
+            else{                                                   // ==> Si el plato no está vacío -> se borra de la comida actual.
+                errorPlatoWasEmpty = false;
+                pesoPlato += platoActual.getPesoPlato();            // Se actualiza el 'pesoPlato', que podría ya incluir el peso del último alimento
+                                                                    // que no se llegó a guardar en el plato, para sumarlo a 'pesoRecipiente' y
+                                                                    // saber el 'pesoARetirar'.
+                                                             
+                comidaActual.deletePlato(platoActual);              // Borrar plato de la comida.
+                platoActual.restorePlato();                         // "Reiniciar" platoActual para usarlo de nuevo.
+            }
+            
+
+        }
+        else{                                                       // ==> Si se viene del propio STATE_deleted, donde se puede haber tarado.
+            tarado = false;                                         // Desactivar flag de haber 'tarado'.          
+        }
+
+        // -----  INFORMACIÓN MOSTRADA  ----- 
+        if(!errorPlatoWasEmpty){                                    // ==> Si la comida no estaba vacía y se ha borrado algún plato
+            printStateDeleted();                                 // Print info del estado.
+        } // ---------------------------------- 
+        // ----------- FIN DELETE ACTUAL --------------------------------------------
+
+
+
+        // -------------------- DELETE RETROACTIVO ------------------------
+        /*
+        static bool errorComidaWasEmpty;
+        if(state_prev != STATE_deleted){
+            Serial.println(F("\nEliminando plato..."));
+            if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){
                 // Para poder borrar platos retroactivamente, comenzando por el actual, se debe guardar en la comida antes de borrarlo. 
                 // Esto es necesario porque se pueden haber ido metiendo ingredientes del plato directamente en la comida al escoger
                 // diferentes grupos de alimentos, por eso hay que terminar de incluir el plato para eliminarlo por completo.
@@ -524,21 +581,11 @@ void actStateDeleted(){
                                                                     // Usamos 'grupoEscogido' porque no se ha modificado. 
                 platoActual.addIngPlato(ing);                       // Ingrediente ==> Plato
                 comidaActual.addIngComida(ing);                     // Ingrediente ==> Comida
-                // -----------------------------------------------------------------
-
-                /* ----- TARAR  ----- */
-                tareScale();                                        // Se debe tarar para que conforme vaya disminuyendo el peso veamos si 
-                                                                    // se ha quitado todo el 'pesoARetirar'.
-                                                                    // Solo se hace si se viene del STATE_weighted porque en los estados 
-                                                                    // previos a ese ya se tara y es en STATE_weighted donde se modifica el peso.
             }
-
-            // ---- DELETE RETROACTIVO ---------
             if(!platoActual.isPlatoEmpty()){    // Si tiene algo, añadir plato actual a la comida. 
                                                 // Se pone aquí por si no ha habido que actualizarlo con last ingrediente
                   comidaActual.addPlato(platoActual);      // Plato ==> Comida (no se vuelve a incluir el ingrediente. Solo modifica nPlatos)
-            } // ---------------------------------
-
+            } 
             // ----------------- BORRAR PLATO CON DELETE RETROACTIVO -------------------------
             // Caso 1 - Si la comida está vacía (ni siquiera el actual tiene algo), se avisa de que no hay nada que borrar.   
             // Caso 2 - Si la comida no está vacía, porque haya platos previos o solamente el actual, temporalmente guardado,
@@ -551,11 +598,11 @@ void actStateDeleted(){
                     printEmptyObjectError("No hay nada que borrar");
                     
 
-                    // Si se libera la báscula tras addPlato o deletePlato, se vuelve a INI y se quiere guardar la comida,
-                    // se quedaría atascado aquí (save) esperando una liberación que no llega, ya que el último eventoBascula 
+                    // Si se libera la báscula tras addPlato o deletePlato, se vuelve a INI y se quiere seguir borrando,
+                    // se quedaría atascado aquí (delete) esperando una liberación que no llega, ya que el último eventoBascula 
                     // es TARAR, realizado en INI. 
                     // Por eso, se debe forzar la liberación (eventoBascula = LIBERAR) tras un delay, para poder
-                    // leer los mensajes de haber guardado o no y luego regresar a INI.
+                    // leer los mensajes de haber borrado o no y luego regresar a INI.
                     Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
                     delay(3000);                                    
                     eventoBascula = LIBERAR;
@@ -578,7 +625,7 @@ void actStateDeleted(){
                     platoActual.restorePlato();    // "Reiniciar" platoActual para usarlo de nuevo.
                 }
 
-                /* -----  REGRESO A INI, SE HAYA PODIDO BORRAR O NO  ----- */
+                // -----  REGRESO A INI, SE HAYA PODIDO BORRAR O NO  -----
                 // Si se ha borrado el platoActual, se debe LIBERAR la báscula para salir del estado deletePlato y
                 // volver a INI. NO SE PERMITE SEGUIR BORRANDO PLATOS SI NO SE LIBERA ANTES LA BÁSCULA.
 
@@ -586,48 +633,30 @@ void actStateDeleted(){
                 // esperando una liberación que no llega, ya que el último eventoBascula es TARAR, realizado en INI.
                 // Por eso, se debe forzar la liberación (eventoBascula = LIBERAR) tras un delay, para poder leer los
                 // mensajes de haber borrado o no y luego regresar a INI.
-                /*if(state_prev == STATE_Empty){
+                if(state_prev == STATE_Empty){
                     Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
                     delay(2000);  
                     eventoBascula = LIBERAR;
                     addEventToBuffer(eventoBascula);
                     flagEvent = true;
-                } *//* ------------------------------------------------------- */
+                } // ------------------------------------------------------- 
 
             } // --------------------------------------------------------------
 
-            
-
-
-            /* ----- BORRAR PLATO DE COMIDA  ----- */
-            /* // --------- DELETE SOLO DE ACTUAL ------------------
-            if(platoActual.isPlatoEmpty()){                         // ==> Si el plato está vacío -> no se borra    
-                errorPlatoWasEmpty = true;
-                printEmptyObjectError("No se ha borrado el plato porque est\xE1"" vac\xED""o");
-            }
-            else{                                                   // ==> Si el plato no está vacío -> se borra de la comida actual.
-                errorPlatoWasEmpty = false;
-                pesoPlato += platoActual.getPesoPlato();            // Se actualiza el 'pesoPlato', que podría ya incluir el peso del último alimento
-                                                                    // que no se llegó a guardar en el plato, para sumarlo a 'pesoRecipiente' y
-                                                                    // saber el 'pesoARetirar'.
-                                                             
-                comidaActual.deletePlato(platoActual);              // Borrar plato de la comida.
-                platoActual.restorePlato();                         // "Reiniciar" platoActual para usarlo de nuevo.
-            }
-            */
-            /* -------------------------------------- */
-
-
-        }
+        }  
         else{                                                       // ==> Si se viene del propio STATE_deleted, donde se puede haber tarado.
             tarado = false;                                         // Desactivar flag de haber 'tarado'.          
         }
-
-
-        /* -----  INFORMACIÓN MOSTRADA  ----- */
+        
+        // -----  INFORMACIÓN MOSTRADA  ----- 
         if(!errorComidaWasEmpty){                                    // ==> Si la comida no estaba vacía y se ha borrado algún plato
             printStateDeleted();                                 // Print info del estado.
-        } /* ---------------------------------- */
+        } // ---------------------------------- 
+        
+        */
+        // --------------------------------------------------------------
+        // -------------- FIN DELETE RETROACTIVO ----------------------------------------------
+        
 
         
         doneState = true;                                           // Solo realizar una vez las actividades del estado por cada vez que se active y no

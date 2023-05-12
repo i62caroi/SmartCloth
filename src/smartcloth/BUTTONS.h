@@ -14,14 +14,13 @@ const byte countColumns = 5;
 const byte rowsPins[countRows] = {32,33,30,31};
 const byte columnsPins[countColumns] = {49,50,51,52,53};
 
-/* Buttons info */
+/* Buttons info => IDs de grupo crudo */
 int buttons[countRows][countColumns] = {{1,2,3,4,5},
                                         {6,7,8,9,10},
                                         {11,12,13,14,15},
                                         {16,17,18,19,20}};
 
 //String buttonsMainKeyboard[countButtons] = {"AMARILLO", "BLANCO","VERDE","ROJO","NEGRO"};
-//int buttonsMainKeyboard[countButtons] = {1,2,3,4,5};
 
 
 /*-----------------------------------------------------------------------------
