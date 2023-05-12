@@ -1660,7 +1660,6 @@ void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uin
 // rapidly diminishing speed improvements applies.
 void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y) 
 {
-  //setGraphicsMode();
 
   m_spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
 
@@ -1675,7 +1674,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
   uint8_t  buffidx = sizeof(sdbuffer);  // Current position in sdbuffer
   boolean  goodBmp = false;             // Set to true on valid header parse
   boolean  flip    = true;              // BMP is stored bottom-to-top
-  int      w, h, row, col;//, xpos, ypos; //** <=> **
+  int      w, h, row, col;
   uint8_t  r, g, b;
   uint32_t pos = 0, startTime = millis();
   uint8_t  lcdidx = 0;
@@ -1735,7 +1734,6 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
 
         // Set TFT address window to clipped image bounds
 
-        //ypos = y;  //** <=> **
         for (row=0; row<h; row++) { // For each scanline...
           // Seek to start of scan line.  It might seem labor-
           // intensive to be doing this on every line, but this
@@ -1752,7 +1750,6 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
             buffidx = sizeof(sdbuffer); // Force buffer reload
           }
 
-          //xpos = x;  //** <=> **
           for (col=0; col<w; col++) { // For each column...
             // Time to read more pixel data?
             if (buffidx >= sizeof(sdbuffer)) { // Indeed
@@ -1762,11 +1759,6 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
                 drawPixel(col+x, row+y, lcdbuffer[lcdidx]);
                 lcdidx = 0;
                 first  = false;
-                /* //** <=> **
-                drawPixels(xpos, ypos, lcdbuffer, lcdidx);  
-                xpos += lcdidx;                             
-                lcdidx = 0;
-                */
               }
               //------------------------------------------------------
 
@@ -1779,32 +1771,14 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
             g = sdbuffer[buffidx++];
             r = sdbuffer[buffidx++];
             drawPixel(col+x, row+y, RGB565(r,g,b));
-            /* //Otra forma de color565() de Adafruit
-            uint16_t color = ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-            drawPixel(col+x, row+y, color);
-            */
-
-            /* //** <=> **
-            lcdbuffer[lcdidx++] = RGB565(r,g,b);
-            if (lcdidx >= sizeof(lcdbuffer) || (xpos - x + lcdidx) >= w) {
-              drawPixels(xpos, ypos, lcdbuffer, lcdidx);
-              xpos += lcdidx;
-              lcdidx = 0;
-            }
-            */
           } // end pixel
 
-          //ypos++; //** <=> **
 
         } // end scanline
 
         // Write any remaining data to LCD
         if(lcdidx > 0) { 
           drawPixel(col+x, row+y, lcdbuffer[lcdidx]);
-          /* //** <=> **
-          drawPixels(xpos, ypos, lcdbuffer, lcdidx);
-          xpos += lcdidx;
-          */
         } 
 
         Serial.print(F("Loaded in "));
@@ -1817,7 +1791,7 @@ void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y)
 
   bmpFile.close();
   if(!goodBmp) Serial.println(F("BMP format not recognized."));
-  
+
   setCanvasWindow(0,0,m_width,m_height);
 
   m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz

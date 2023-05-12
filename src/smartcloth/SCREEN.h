@@ -57,23 +57,6 @@
 #define RA8876_BACKLIGHT 10 
 
 
-// 8bpp (1 byte/pixel ) => RGB332
-// 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
-// 24bpp (3 bytes/pixel o 4 bytes/pixel) ==> RGB888
-
-#define   NEGRO         0x0000
-#define   BLANCO        0xFFFF
-#define   ROJO          0xF800 //0xF920 | 0x8000 | 0xfc10 | 0xfa02
-#define   NARANJA       0xFC80
-#define   AMARILLO      0xFFC0
-#define   VERDE         0x07C0
-#define   CIAN          0x07FF
-#define   AZUL          0x019F
-#define   ROSA          0xFA1F
-#define   MORADO        0x9112
-#define   MARRON        0xABC8
-
-
 #define   MARGEN_IZQ       25
 #define   MARGEN_IZQ_ACC   550 //Margen izquierdo del bloque de valores del acumulado de hoy
 
