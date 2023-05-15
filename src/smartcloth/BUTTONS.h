@@ -12,8 +12,8 @@
   BOTONERA MAIN conectada de la siguiente forma (conexiones hacia arriba
   y de iquierda a derecha):
       ----------------------------------------------------------------------------
-      | VCC |    B1   |     B2     |    B3    |    B4    |     B5    |  -  | GND |
-      |     | (crudo) | (cocinado) | (añadir) | (borrar) | (guardar) |     |     |
+      | VCC |     B1     |    B2   |    B3    |    B4    |     B5    |  -  | GND |
+      |     | (cocinado) | (crudo) | (añadir) | (borrar) | (guardar) |     |     |
       ----------------------------------------------------------------------------
       | 3.3 |   22    |     23     |    24    |    25    |     26    |  -  | GND |       
       ----------------------------------------------------------------------------

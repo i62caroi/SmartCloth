@@ -35,7 +35,25 @@ void setup() {
     
     Serial.println("Startup complete...");
 
-    Arranque();  // Mostrar logo de SmartCloth como bienvenida
+    Serial.println("\nARRANQUE");
+    Arranque();  // Wi
+    delay(1000);
+    
+    tft.clearScreen(0); 
+    delay(500);
+
+    Serial.println("\nPANTALLA INICIAL");
+    screen_INI();
+    delay(1000);
+
+    tft.clearScreen(0);
+    delay(500);
+
+    Serial.println("\nESCOGER GRUPO");
+    select_Grupo();
+    delay(1000);
+
+
 
 }
 

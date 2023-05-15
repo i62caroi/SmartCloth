@@ -70,29 +70,181 @@
 int ANCHO; // X (1024)
 int ALTO; // Y (600)
 
+
+
+
 void Arranque(){
     ANCHO = tft.getWidth(); // X
     ALTO = tft.getHeight(); // Y
 
-    //pag 1
+    //PAG 1 ==> fondo blanco
     tft.clearScreen(BLANCO);
-    delay(500);
-    //pag 2
-    tft.drawCircleFill(100,300,50,COLOR65K_GRAYSCALE13);
-    delay(500);
-    //pag 3
-    tft.clearScreen(BLANCO);
-    tft.fillRoundRect(30,300,100,300,10,COLOR65K_GRAYSCALE26);
-    delay(200);
-    //pag 4
-    tft.clearScreen(BLANCO);
-    tft.drawRect(30,300,100,300,COLOR65K_GRAYSCALE26);
-    delay(200);
-    //pag 5
-    tft.clearScreen(BLANCO);
-    tft.drawRect(50,250,100,350,COLOR65K_GRAYSCALE26);
-    delay(200);
+    delay(300);
 
+    //PAG 2 ==> círculo gris
+    tft.fillCircle(100,300,50,COLOR65K_GRAYSCALE13);
+    delay(300);
+
+    //PAG 3 ==> cuadrado esquinas redondeadas girado
+    tft.clearArea(30, 200, 200, 400, BLANCO);
+    //tft.clearScreen(BLANCO);
+    tft.fillRoundRect(30,300,100,300,10,COLOR65K_GRAYSCALE26);
+    delay(300);
+
+    //PAG 4 ==> cuadrado girado
+    tft.clearArea(30, 200, 200, 400, BLANCO);
+    //tft.clearScreen(BLANCO);
+    tft.fillRect(30,300,100,300,COLOR65K_GRAYSCALE26);
+    delay(300);
+
+    //PAG 5 ==> cuadrado normal
+    tft.clearArea(30, 200, 200, 400, BLANCO);
+    //tft.clearScreen(BLANCO);
+    tft.fillRect(50,250,100,350,COLOR65K_GRAYSCALE26);
+    delay(300);
+
+    //PAG 6 => symbol muy tenue ==> DIFICIL
+
+    //PAG 7 => symbol (142x150)
+    //tft.clearArea(20, 200, 300, 500, BLANCO);
+    tft.clearScreen(BLANCO);
+    tft.sdCardDraw256bitsBIN(30,250,142,150,"bin/arranque/symbol.bin");
+    //delay(200);
+
+    //PAG 8 => letra S (88x154) => x = 30 + symbol(142) = 172
+    tft.sdCardDraw256bitsBIN(172,250,88,154,"bin/arranque/S.bin");
+    //delay(200);
+
+    //PAG 9 => letra T1 (95x154) => x = <S(172) + S(88) + M(96) + A(95) + R(77) = 528
+    tft.sdCardDraw256bitsBIN(528,250,95,154,"bin/arranque/T.bin");
+    //delay(200);
+
+    //PAG 10 => letra O (77x154) => x = <T1(528) + T1(95) + C(77) + L(77) = 777
+    tft.sdCardDraw256bitsBIN(777,250,77,154,"bin/arranque/O.bin");
+    //delay(200);
+
+    //PAG 11 => letra T2 (95x154) => x = <O(777) + O(77) = 854
+    tft.sdCardDraw256bitsBIN(854,250,95,154,"bin/arranque/T.bin");
+    //delay(200);
+
+    //PAG 12 => letra M (96x154) => x = <S(172) + S(88) = 260
+    tft.sdCardDraw256bitsBIN(260,250,96,154,"bin/arranque/M.bin");
+    //delay(200);
+
+    //PAG 13 => letra L (77x154) => x = <T1(528) + T1(95) + C(77) = 700
+    tft.sdCardDraw256bitsBIN(700,250,77,154,"bin/arranque/L.bin");
+    //delay(200);
+
+    //PAG 14 => letra R (77x154) => x = <M(260) + M(96) + A(95) = 451
+    tft.sdCardDraw256bitsBIN(451,250,77,154,"bin/arranque/R.bin");
+    //delay(200);
+
+    //PAG 15 => letra A (95x154) => x = <M(260) + M(96) = 356
+    tft.sdCardDraw256bitsBIN(356,250,95,154,"bin/arranque/A.bin");
+    //delay(200);
+
+    //PAG 16 => letra C (77x154) => x = <T1(528) + T1(95) = 623
+    tft.sdCardDraw256bitsBIN(623,250,77,154,"bin/arranque/C.bin");
+    //delay(200);
+
+    //PAG 17 => letra H (77x154) => x = <T2(854) + T2(95) = 949
+    tft.sdCardDraw256bitsBIN(949,250,77,154,"bin/arranque/H.bin");
+    //delay(200);
+}
+
+
+
+void screen_INI(){
+    String cad = "COLOQUE UN RECIPIENTE \n        EN LA ZONA DE PESADA";
+
+    //PAG 1 ==> fondo rojo y texto
+    tft.clearScreen(ROJO);                       // Fondo rojo
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); // Tamaño letra
+    tft.setTextScale(1);                         // Escala texto
+    tft.setTextColor(BLANCO);                    // Color texto
+    tft.setCursor(100, 150);                     // Posición cursor
+    tft.print(cad);
+    delay(300);
+
+    //PAG 2 ==> Círculo
+    tft.fillCircle(512,400,50,BLANCO);
+    delay(300);
+
+    //PAG 3 ==> cuadrado esquinas redondeadas girado
+    tft.clearArea(400, 300, 650, 500, ROJO);
+    tft.fillRoundRect(477,400,547,400,10,BLANCO);
+    delay(300);
+
+    //PAG 4 ==> cuadrado esquinas redondeadas normal
+    tft.clearArea(400, 300, 650, 500, ROJO);
+    tft.fillRoundRect(487,300,537,400,5,BLANCO);
+    delay(300);
+
+    //PAG 5 ==> palitos alrededor cuadrado (fillRect o drawLine??)
+    // Palitos izquierda 
+    tft.fillRect(484, 346, 487, 348, BLANCO); // Arriba (3x2)
+    tft.fillRect(482, 349, 487, 351, BLANCO); // Central (5x2)
+    tft.fillRect(484, 352, 487, 353, BLANCO); // Abajo (3x2)
+    // Palitos derecha 
+    tft.fillRect(537, 346, 540, 348, BLANCO); // Arriba (3x2)
+    tft.fillRect(537, 349, 542, 351, BLANCO); // Central (5x2)
+    tft.fillRect(537, 352, 540, 353, BLANCO); // Abajo (3x2)
+    // Palitos arriba 
+    tft.fillRect(508, 297, 510, 300, BLANCO); // Izquierda (2x3)
+    tft.fillRect(511, 295, 513, 300, BLANCO); // Central (2x5)
+    tft.fillRect(515, 297, 517, 300, BLANCO); // Derecha (2x3)
+    // Palitos abajo 
+    tft.fillRect(508, 400, 510, 403, BLANCO); // Izquierda (2x3)
+    tft.fillRect(511, 400, 513, 405, BLANCO); // Central (2x5)
+    tft.fillRect(515, 400, 517, 403, BLANCO); // Derecha (2x3)
+    delay(300);
+
+    //PAG 6 => cerebro --> centrar en el cuadrado blanco
+    tft.sdCardDraw256bitsBIN(475,320,74,61,"bin/inicial/brain.bin");
+    //delay(200);
+}
+
+
+
+
+void select_Grupo(){
+    String cad = "SELECCIONE UN GRUPO \n            DE ALIMENTOS";
+
+    //PAG 1 ==> fondo rojo y texto
+    tft.clearScreen(ROJO);                       // Fondo rojo
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); // Tamaño letra
+    tft.setTextScale(1);                         // Escala texto
+    tft.setTextColor(BLANCO);                    // Color texto
+    tft.setCursor(100, 80);                     // Posición cursor
+    tft.print(cad);
+    delay(300);
+
+    //PAG 2 ==> líneas
+    tft.drawLine(0,250,240,250,BLANCO); //draLine o fillRect??
+    tft.drawLine(0,150,512,150,BLANCO); //drawLine o fillRect??
+    delay(300);
+
+    //PAG 3 ==> cuadro 1
+    tft.sdCardDraw256bitsBIN(230,307,167,160,"bin/grupo/cuadro1.bin");
+    dealy(300);
+
+    //PAG 4 ==> cuadro 2
+    tft.sdCardDraw256bitsBIN(402,307,167,160,"bin/grupo/cuadro2.bin");
+    dealy(300);
+
+    //PAG 5 ==> cuadro 3
+    tft.sdCardDraw256bitsBIN(574,307,167,160,"bin/grupo/cuadro3.bin");
+    dealy(300);
+
+    //PAG 6 ==> cuadro 4
+    tft.sdCardDraw256bitsBIN(746,307,167,160,"bin/grupo/cuadro4.bin");
+    dealy(300);
+
+    //PAG 7 ==> mano
+    tft.sdCardDraw256bitsBIN(746,227,142,137,"bin/grupo/mano.bin"); 
+
+    //PAG 8 ==> lineas alrededor cuadro3 simulando pulsacion
+    //TODO
 }
 
 #endif

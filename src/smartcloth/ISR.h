@@ -24,8 +24,8 @@ SAMDUE_ISR_Timer ISR_Timer;
 
 
 /*  -----   MAIN  ----- */
-const byte intPinCrudo = 22;              // Amarillo 
-const byte intPinCocinado = 23;           // Azul 
+const byte intPinCocinado = 22;           // Azul 
+const byte intPinCrudo = 23;              // Amarillo 
 const byte intPinAddPlato = 24;           // Verde 
 const byte intPinDeletePlato = 25;        // Rojo 
 const byte intPinGuardar = 26;            // Negro 
