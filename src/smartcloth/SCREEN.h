@@ -198,9 +198,7 @@ void printEjemplosyGrupo(){
 /*------------------------------- ESTRUCTURA CENTRAL   --------------------------------------------*/
 /***************************************************************************************************/
 /*---------------------------------------------------------------------------------------------------------
-   printCentral(): Muestra el peso del alimento y el plato
-          Parámetros:
-              ing - Ingrediente auxiliar temporal
+   printCentral(): Muestra el peso del alimento, del plato y del total de la comida
 ----------------------------------------------------------------------------------------------------------*/
 void printCentral(){
     // ------------ ALIMENTO  -------------------------
@@ -277,12 +275,12 @@ void printValoresComida(){
    printValoresTemporales(): Muestra los valores nutricionales temporales causados por el cambio de peso
 ----------------------------------------------------------------------------------------------------------*/
 void printValoresTemporales(){
-    Ingrediente ingAux(grupoEscogido, pesoBascula);         // Ingrediente auxiliar usado para mostrar información variable de lo pesado
+    Alimento AlimentoAux(grupoEscogido, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
     
-    float carb = ingAux.getValoresIng().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
-    float lip = ingAux.getValoresIng().getLipValores() + comidaActual.getValoresComida().getLipValores();
-    float prot = ingAux.getValoresIng().getProtValores() + comidaActual.getValoresComida().getProtValores();
-    float kcal = ingAux.getValoresIng().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
+    float carb = AlimentoAux.getValoresAlimento().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
+    float lip = AlimentoAux.getValoresAlimento().getLipValores() + comidaActual.getValoresComida().getLipValores();
+    float prot = AlimentoAux.getValoresAlimento().getProtValores() + comidaActual.getValoresComida().getProtValores();
+    float kcal = AlimentoAux.getValoresAlimento().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
 
     int raciones;
     

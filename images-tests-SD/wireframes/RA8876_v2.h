@@ -272,23 +272,49 @@ typedef uint8_t FontFlags;
 
 
 
-// --- COLORES ----
-// 8bpp (1 byte/pixel ) => RGB332
-// 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
-// 24bpp (3 bytes/pixel o 4 bytes/pixel) ==> RGB888
+//---------------------------------------------
+//---------------------------------------------
+#define RA8876_BTE_CTRL0   0x90
+#define RA8876_BTE_ENABLE   1
 
-#define   NEGRO         0x0000
-#define   BLANCO        0xFFFF
-#define   ROJO          0xF800 //0xF920 | 0x8000 | 0xfc10 | 0xfa02
-#define   NARANJA       0xFC80
-#define   AMARILLO      0xFFC0
-#define   VERDE         0x07C0
-#define   CIAN          0x07FF
-#define   AZUL          0x019F
-#define   ROSA          0xFA1F
-#define   MORADO        0x9112
-#define   MARRON        0xABC8
-//-----------------------------
+#define RA8876_BTE_CTRL1  0x91
+#define RA8876_BTE_ROP_CODE_3     3   //~S0 ==> imagen invertida en colores
+#define RA8876_BTE_ROP_CODE_12    12  //S0  ==> imagen tal y como es
+
+#define RA8876_BTE_MPU_WRITE_WITH_ROP    0 
+
+#define RA8876_BTE_COLR  0x92
+#define RA8876_S0_COLOR_DEPTH_16BPP  1
+#define RA8876_S1_COLOR_DEPTH_16BPP  1
+#define RA8876_DESTINATION_COLOR_DEPTH_16BPP  1
+
+#define RA8876_S1_STR0   0x9D
+#define RA8876_S1_STR1   0x9E
+#define RA8876_S1_STR2   0x9F
+#define RA8876_S1_STR3   0xA0
+#define RA8876_S1_WTH0   0xA1
+#define RA8876_S1_WTH1   0xA2
+
+#define RA8876_S1_X0   0xA3
+#define RA8876_S1_X1   0xA4
+#define RA8876_S1_Y0   0xA5
+#define RA8876_S1_Y1   0xA6
+#define RA8876_DT_STR0  0xA7
+#define RA8876_DT_STR1   0xA8
+#define RA8876_DT_STR2   0xA9
+#define RA8876_DT_STR3   0xAA
+#define RA8876_DT_WTH0   0xAB
+#define RA8876_DT_WTH1   0xAC
+#define RA8876_DT_X0     0xAD
+#define RA8876_DT_X1     0xAE
+#define RA8876_DT_Y0     0xAF
+#define RA8876_DT_Y1     0xB0
+#define RA8876_BTE_WTH0  0xB1
+#define RA8876_BTE_WTH1  0xB2
+#define RA8876_BTE_HIG0  0xB3
+#define RA8876_BTE_HIG1  0xB4
+//---------------------------------------------
+//---------------------------------------------
 
 
 #define BUFFPIXEL 40
@@ -296,6 +322,39 @@ typedef uint8_t FontFlags;
 // size takes more of the Arduino's precious RAM but 
 // makes loading a little faster.  20 pixels seems a 
 // good balance. 
+
+/* ---------------- Estos valores no son registros ? ------------------------- */
+//LINE
+#define RA8876_DRAW_LINE             0x80
+//TRIANGLE
+#define RA8876_DRAW_TRIANGLE         0x82 // A2 ??
+#define RA8876_DRAW_TRIANGLE_FILL    0xA2 // E2 ??
+//CIRCLE
+#define RA8876_DRAW_CIRCLE           0x80
+#define RA8876_DRAW_CIRCLE_FILL      0xC0
+//ELLIPSE
+#define RA8876_DRAW_ELLIPSE          0x80
+#define RA8876_DRAW_ELLIPSE_FILL     0xC0
+
+#define RA8876_DRAW_BOTTOM_LEFT_CURVE         0x90
+#define RA8876_DRAW_BOTTOM_LEFT_CURVE_FILL    0xD0
+#define RA8876_DRAW_UPPER_LEFT_CURVE          0x91
+#define RA8876_DRAW_UPPER_LEFT_CURVE_FILL     0xD1
+#define RA8876_DRAW_UPPER_RIGHT_CURVE         0x92
+#define RA8876_DRAW_UPPER_RIGHT_CURVE_FILL    0xD2
+#define RA8876_DRAW_BOTTOM_RIGHT_CURVE        0x93
+#define RA8876_DRAW_BOTTOM_RIGHT_CURVE_FILL   0xD3
+//RECT
+#define RA8876_DRAW_RECT             0xA0
+#define RA8876_DRAW_RECT_FILL        0xE0
+
+//ROUND RECT
+#define RA8876_DRAW_ROUND_RECT       0xB0
+#define RA8876_DRAW_ROUND_RECT_FILL  0xF0
+/* --------------------------------------------------------------------------- */
+
+
+
 
 
 
@@ -459,19 +518,23 @@ public:
   //    ==> RA8876_Lite también tiene CircleSquare y Ellipse
   void drawPixel(int x, int y, uint16_t color);
         // putPixel_16bpp() en RA8876_Lite
-  void drawLine(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, 0x80); };
+  void drawLine(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, RA8876_DRAW_LINE); };
         // drawLine() en RA8876_Lite
-  void drawRect(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, 0xA0); };
+  void drawRect(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_RECT); };
         // drawSquare() en RA8876_Lite
-  void fillRect(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, 0xE0); };
+  void fillRect(int x1, int y1, int x2, int y2, uint16_t color) { drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_RECT_FILL); };
         // drawSquareFill() en RA8876_Lite
-  void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color) { drawThreePointShape(x1, y1, x2, y2, x3, y3, color, RA8876_REG_DCR0, 0xA2); };
+  void drawRoundRect(int x1, int y1, int x2, int y2, int radius, uint16_t color);
+        // drawCircleSquare() en RA8876_Lite
+  void fillRoundRect(int x1, int y1, int x2, int y2, int radius, uint16_t color);
+        // drawCircleSquareFill() en RA8876_Lite
+  void drawTriangle(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color) { drawThreePointShape(x1, y1, x2, y2, x3, y3, color, RA8876_REG_DCR0, RA8876_DRAW_TRIANGLE); };
         // drawTriangle() en RA8876_Lite
-  void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color) { drawThreePointShape(x1, y1, x2, y2, x3, y3, color, RA8876_REG_DCR0, 0xE2); };
+  void fillTriangle(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color) { drawThreePointShape(x1, y1, x2, y2, x3, y3, color, RA8876_REG_DCR0, RA8876_DRAW_TRIANGLE_FILL); };
         // drawTriangleFill() en RA8876_Lite
-  void drawCircle(int x, int y, int radius, uint16_t color) { drawEllipseShape(x, y, radius, radius, color, 0x80); };
+  void drawCircle(int x, int y, int radius, uint16_t color) { drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_CIRCLE); };
         // drawCircle() en RA8876_Lite  
-  void fillCircle(int x, int y, int radius, uint16_t color) { drawEllipseShape(x, y, radius, radius, color, 0xC0); };
+  void fillCircle(int x, int y, int radius, uint16_t color) { drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_CIRCLE_FILL); };
         // drawCircleFill() en RA8876_Lite
 
   // Limpiar pantalla ==> dibujar rectángulo negro que ocupe todo

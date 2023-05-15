@@ -14,7 +14,7 @@
                                                 => Diario.h 
                                                       => Comida.h 
                                                             => Plato.h 
-                                                                  => Ingrediente.h
+                                                                  => Alimento.h
                                                                         => Valores_Nutricionales.h
                                                                         => Grupos.h
                                                                       

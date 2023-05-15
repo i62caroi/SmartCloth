@@ -1,33 +1,33 @@
 #ifndef PLATO_H
 #define PLATO_H
 
-#include "Ingrediente.h"
+#include "Alimento.h"
 
-#define NUM_ING 10
+#define NUM_ALIMENTOS 10
 
 
 
 class Plato{
   private:
-    int _nIng;
+    int _nAlimentos;
     float _peso;
-    Ingrediente _ingredientes[NUM_ING];
+    Alimento _alimentos[NUM_ALIMENTOS];
     ValoresNutricionales _valoresPlato;
 
-    inline void setNumIng(int num){ _nIng = num; };
-    inline int getNumIng(){ return _nIng; };
-    inline int positionLastIng(){ return (this->getNumIng()-1); };
-    inline int firstGapPlato(){ return this->getNumIng(); };           
+    inline void setNumAlimentos(int num){ _nAlimentos = num; };
+    inline int getNumAlimentos(){ return _nAlimentos; };
+    inline int positionLastAlimento(){ return (this->getNumAlimentos()-1); };
+    inline int firstGapPlato(){ return this->getNumAlimentos(); };           
 
   public:
     Plato();
 
-    inline bool isPlatoEmpty(){ if(getNumIng() == 0) return true; else return false; };
+    inline bool isPlatoEmpty(){ if(getNumAlimentos() == 0) return true; else return false; };
     
     inline void setPesoPlato(float peso){ _peso = peso; };
     inline float getPesoPlato(){ return _peso; };
     
-    void addIngPlato(Ingrediente ing);         
+    void addAlimentoPlato(Alimento alimento);         
     
     inline ValoresNutricionales getValoresPlato(){ return _valoresPlato; };
     void updateValoresPlato(ValoresNutricionales val); 
@@ -40,16 +40,16 @@ class Plato{
 
 
 Plato::Plato(){
-    this->setNumIng(0);
+    this->setNumAlimentos(0);
     this->setPesoPlato(0.0);
 }
 
 
-void Plato::addIngPlato(Ingrediente ing){
-    _ingredientes[this->firstGapPlato()] = ing;                                   // Añadir ingrediente
-    this->setNumIng(this->getNumIng() + 1);                                 // Incrementar num ingredientes
-    this->setPesoPlato(this->getPesoPlato() + ing.getPesoIng());            // Incrementar peso del plato
-    this->updateValoresPlato(ing.getValoresIng());                          // Actualizar Valores Nutricionales
+void Plato::addAlimentoPlato(Alimento alimento){
+    _alimentos[this->firstGapPlato()] = alimento;                                // Añadir alimento
+    this->setNumAlimentos(this->getNumAlimentos() + 1);                          // Incrementar num alimentos
+    this->setPesoPlato(this->getPesoPlato() + alimento.getPesoAlimento());       // Incrementar peso del plato
+    this->updateValoresPlato(alimento.getValoresAlimento());                     // Actualizar Valores Nutricionales
 }
 
 
@@ -65,7 +65,7 @@ void Plato::updateValoresPlato(ValoresNutricionales val){
 
 // "Reiniciar" plato
 void Plato::restorePlato(){
-    this->setNumIng(0);                                   // Nº ing = 0
+    this->setNumAlimentos(0);                             // Nº alimentos = 0
     this->setPesoPlato(0.0);                              // Peso = 0.0
     ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);
     _valoresPlato.setValores(valAux);                     // Valores = 0

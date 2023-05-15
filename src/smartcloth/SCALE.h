@@ -88,8 +88,8 @@ void checkBascula(){
         if (diffWeight > 2.0){ // Cambio no causado por "interferencias" de la báscula
             
             /* 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
-               Este valor es el que se usará como peso de los ingredientes.
-               Hasta ahora se usaba 'weight' directamente, pero al añadir un nuevo ingrediente
+               Este valor es el que se usará como peso de los alimentos.
+               Hasta ahora se usaba 'weight' directamente, pero al añadir un nuevo alimento
                al plato se tomaba el último valor de 'weight', que podría haber variado algo 
                respecto a lo que se mostraba por sucesivas medidas de la báscula. */
                
@@ -98,7 +98,7 @@ void checkBascula(){
 
             if(lastWeight < newWeight){ //INCREMENTO
                 Serial.println(F("\nIncremento..."));
-                if(lastWeight > -1.0){ //Incremento pero sin venir de negativo (salvando valores cercanos a 0)
+                if(lastWeight > -1.0){ //Incremento en positivo (salvando valores cercanos a 0)
                     Serial.print(F("\nINCREMENTO"));
                     eventoBascula = INCREMENTO;
                 }
@@ -113,7 +113,7 @@ void checkBascula(){
                     Serial.print(F("\nDECREMENTO"));
                     eventoBascula = DECREMENTO;
                 }
-                else if(newWeight < 1.0){ //peso negativo o 0.0
+                else if(newWeight < 1.0){ //peso negativo o cercano a 0.0
                     if(tarado){ //Decremento debido a tara
                         Serial.print(F("\nTARADO"));
                         eventoBascula = TARAR;
@@ -124,7 +124,7 @@ void checkBascula(){
                             Serial.print(F("\nLIBERADA"));
                             eventoBascula = LIBERAR;
                         }
-                        else{ //Se están quitando elementos de la báscula
+                        else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
                             Serial.print(F("\nQUITANDO"));
                             eventoBascula = QUITAR;
                         }

@@ -3,7 +3,7 @@
 
 
 #include "Scale.h"
-#include "Diario.h" // Comida.h => Plato.h => Ingrediente.h => ValoresNutricionales.h
+#include "Diario.h" // Comida.h => Plato.h => Alimento.h => ValoresNutricionales.h
                     //                                      => Grupos.h
 
 
@@ -52,6 +52,7 @@ void tareScale(){
 Plato platoActual;
 float pesoRecipiente; 
 float pesoPlato;
+float pesoLastAlimento;
 Comida comidaActual;
 Diario diaActual;
 

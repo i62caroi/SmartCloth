@@ -26,7 +26,7 @@ class Comida{
     inline void setPesoComida(float peso){ _peso = peso; };
     inline float getPesoComida(){ return _peso; };
 
-    void addIngComida(Ingrediente &ing);
+    void addAlimentoComida(Alimento &alimento);
 
     void addPlato(Plato plato);
     
@@ -50,9 +50,9 @@ Comida::Comida(){
 
 // --------------------------------------------------------------------
 
-void Comida::addIngComida(Ingrediente &ing){   
-    this->setPesoComida(this->getPesoComida() + ing.getPesoIng());       // Incrementar peso de la comida
-    this->updateValoresComida(true, ing.getValoresIng());                // Sumar (suma = true) Valores Nutricionales de la comida
+void Comida::addAlimentoComida(Alimento &alimento){   
+    this->setPesoComida(this->getPesoComida() + alimento.getPesoAlimento());       // Incrementar peso de la comida
+    this->updateValoresComida(true, alimento.getValoresAlimento());                // Sumar (suma = true) Valores Nutricionales de la comida
 }
 
 // --------------------------------------------------------------------

@@ -40,12 +40,7 @@ void loop() {
    unsigned int i;
    double float_data;
    //char char_buffer[20];
-  //clear page1
-  ra8876lite.canvasImageStartAddress(PAGE1_START_ADDR);
-  ra8876lite.canvasImageWidth(SCREEN_WIDTH);
-  ra8876lite.activeWindowXY(0,0);
-  ra8876lite.activeWindowWH(SCREEN_WIDTH,SCREEN_HEIGHT); 
-  ra8876lite.drawSquareFill(0, 0, 1023, 599, COLOR65K_BLUE);
+  tft.fillRect(0,0,1023, 599, AZUL);
 
   ra8876lite.setTextParameter1(RA8876_SELECT_INTERNAL_CGROM,RA8876_CHAR_HEIGHT_16,RA8876_SELECT_8859_1);//cch
   ra8876lite.setTextParameter2(RA8876_TEXT_FULL_ALIGN_DISABLE, RA8876_TEXT_CHROMA_KEY_DISABLE,RA8876_TEXT_WIDTH_ENLARGEMENT_X1,RA8876_TEXT_HEIGHT_ENLARGEMENT_X1);
