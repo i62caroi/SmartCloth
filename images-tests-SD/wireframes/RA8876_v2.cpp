@@ -1725,6 +1725,7 @@ void RA8876::sdCardDraw256bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t
     dataFile.close();
   }   
   else Serial.println(F("Fichero no encontrado"));
+  checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
   setCanvasWindow(0,0,m_width,m_height);
 
   m_spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz

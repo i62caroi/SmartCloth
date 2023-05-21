@@ -1,25 +1,45 @@
-#include <cstdint>
-/* ************************************************************ */
 /*
 File Name : RA8876_v2.cpp                                   
 Author    : Irene Casares Rodríguez                          
-Edit Date : 25/04/2023
+Edit Date : 19/05/2023
 Version   : v2.0
 
-    Version v1.0 obtenida de https://github.com/xlatb/ra8876/tree/master/src
+    Version v1.0 obtenida de la librería RA8876 de https://github.com/xlatb/ra8876/tree/master/src
+
+    Se ha completado con funciones de RA8876_Lite de Raio, adaptándolas con las
+    funciones de la librería base RA8876.
+
+    Guía de RA8876_Lite: https://www.raio.com.tw/data_raio/RA887677/Arduino/RA8876_Lite_UserGuide_v1.0_Eng.pdf
+
+    Raio RA8876 Technical documents: https://www.raio.com.tw/en/download_center.html 
 */
+
+#include <cstdint>
+/* ************************************************************ */
+
 /* ************************************************************ */
 #pragma GCC diagnostic warning "-Wall"
 #include "RA8876_v2.h"
 
 /* ************************************************************ */
+/* Datasheet 8.1.2 SDRAM Connection: 
+   Nuestra pantalla tiene integrada una SDRAM tipo W9812G6KH-6:
+	  		- 2 M words x 4 banks x 16 bits (128Mbits)
+	  		- 166 MHz de frecuencia de reloj
+	  		- modo auto-refresh
+	  		- 64 ms de tiempo de refresh
+	  		- CAS Latency: 2 y 3
+	  		- Velocidad de acceso CL3 (3 ciclos de reloj)
+	  		- Row address: A0-A11
+	  		- Column address: A0-A8
+*/
 SdramInfo defaultSdramInfo =
 {
-  120, // 120 MHz
+  166, // MHz (Prev => 120 MHz)
   3,   // CAS latency 3
   4,   // 4 banks
-  12,  // 12-bit row addresses
-  9,   // 9-bit column addresses
+  12,  // 12-bit row addresses (A0-A11)
+  9,   // 9-bit column addresses (A0-A8)
   64   // 64 millisecond refresh time
 };
 /* ************************************************************ */
@@ -336,8 +356,29 @@ uint16_t RA8876::readReg16(uint8_t reg)
 }
 
 
-/* *************************************************************
-   ************************************************************* */
+//**************************************************************//
+/*[Status Register] bit7  Host Memory Write FIFO full
+0: Memory Write FIFO is not full.
+1: Memory Write FIFO is full.
+Only when Memory Write FIFO is not full, MPU may write another one pixel.*/ 
+//**************************************************************//
+void RA8876::checkWriteFifoNotFull(void)
+{  
+   SPI.beginTransaction(m_spiSettings);  
+   for(uint16_t i=0;i<10000;i++) //Please according to your usage to modify i value.
+   {
+    if( (readStatus()&0x80)==0 ){break;} //lcdStatusRead() en RA8876_Lite
+   }
+   SPI.endTransaction();
+}
+
+//**************************************************************//
+/*[Status Register] bit6  Host Memory Write FIFO empty
+0: Memory Write FIFO is not empty.
+1: Memory Write FIFO is empty.
+When Memory Write FIFO is empty, MPU may write 8bpp data 64
+pixels, or 16bpp data 32 pixels, 24bpp data 16 pixels directly.*/
+//**************************************************************//
 void RA8876::checkWriteFifoEmpty(void)
 {
    SPI.beginTransaction(m_spiSettings);
@@ -348,6 +389,93 @@ void RA8876::checkWriteFifoEmpty(void)
    SPI.endTransaction();
 }
 
+//**************************************************************//
+/*[Status Register] bit5  Host Memory Read FIFO full
+0: Memory Read FIFO is not full.
+1: Memory Read FIFO is full.
+When Memory Read FIFO is full, MPU may read 8bpp data 32
+pixels, or 16bpp data 16 pixels, 24bpp data 8 pixels directly.*/
+//**************************************************************//
+void RA8876::checkReadFifoNotFull(void)
+{ 
+  SPI.beginTransaction(m_spiSettings);
+  for(uint16_t i=0;i<10000;i++)  //Please according to your usage to modify i value.
+  {
+    if( (readStatus()&0x20)==0x00 ){break;}
+  }
+  SPI.endTransaction();
+}
+
+//**************************************************************//
+/*[Status Register] bit4   Host Memory Read FIFO empty
+0: Memory Read FIFO is not empty.
+1: Memory Read FIFO is empty.*/
+//**************************************************************//
+void RA8876::checkReadFifoNotEmpty(void)
+{ 
+  SPI.beginTransaction(m_spiSettings);
+  for(uint16_t i=0;i<10000;i++)// //Please according to your usage to modify i value. 
+  {
+    if( (readStatus()&0x10)==0x00 ){break;}
+  }
+  SPI.endTransaction();
+}
+
+//**************************************************************//
+/*[Status Register] bit3   Core task is busy
+Following task is running:
+BTE, Geometry engine, Serial flash DMA, Text write or Graphic write
+0: task is done or idle.   1: task is busy*/
+//**************************************************************//
+/*void RA8876::check2dBusy(void)
+{  
+   SPI.beginTransaction(m_spiSettings);
+   for(uint32_t i=0;i<1000000;i++)   //Please according to your usage to modify i value.
+   {
+    delayMicroseconds(1);
+    if( (readStatus()&0x08)==0x00 )
+    {break;}
+   }
+   SPI.endTransaction();
+}  */
+
+//**************************************************************//
+/*[Status Register] bit2   SDRAM ready for access
+0: SDRAM is not ready for access   1: SDRAM is ready for access*/	
+//**************************************************************//
+bool RA8876::checkSdramReady(void)
+{
+  SPI.beginTransaction(m_spiSettings);
+ for(uint32_t i=0;i<1000000;i++) //Please according to your usage to modify i value.
+ { 
+   delayMicroseconds(1);
+   if( (readStatus()&0x04)==0x04 )
+    {return true;}
+ }
+ SPI.endTransaction();
+ return false;
+}
+
+//**************************************************************//
+/*[Status Register] bit1  Operation mode status
+0: Normal operation state  1: Inhibit operation state
+Inhibit operation state means internal reset event keep running or
+initial display still running or chip enter power saving state.	*/
+//**************************************************************//
+bool RA8876::checkIcReady(void)
+{
+  SPI.beginTransaction(m_spiSettings);
+  for(uint32_t i=0;i<1000000;i++)  //Please according to your usage to modify i value.
+   {
+     delayMicroseconds(1);
+     if( (readStatus()&0x02)==0x00 )
+     {return true;}     
+   }
+   SPI.endTransaction();
+   return false;
+}
+
+
 /* *************************************************************
     Given a target frequency in kHz, finds PLL parameters k and n to reach as
     close as possible to the target frequency without exceeding it.
@@ -357,9 +485,9 @@ void RA8876::checkWriteFifoEmpty(void)
 bool RA8876::calcPllParams(uint32_t targetFreq, int kMax, PllParams *pll)
 {
   bool found = false;
-  int foundk, foundn;
-  uint32_t foundFreq;
-  uint32_t foundError;  // Amount lower than requested frequency
+  int foundk = 0, foundn = 0;
+  uint32_t foundFreq = 0;
+  uint32_t foundError = 0;  // Amount lower than requested frequency
   
   // k of 0 (i.e. 2 ** 0 = 1) is possible, but not sure if it's a good idea.
   for (int testk = 1; testk <= kMax; testk++)
@@ -688,6 +816,7 @@ bool RA8876::initDisplay()
 
   /* --- Esta parte es displayImageStartAddress() en RA8876_Lite ---------- */ 
   // Set main window start address to 0
+  //displayImageStartAddress(PAGE1_START_ADDR);
   writeReg(RA8876_REG_MISA0, 0);
   writeReg(RA8876_REG_MISA1, 0);
   writeReg(RA8876_REG_MISA2, 0);
@@ -696,12 +825,14 @@ bool RA8876::initDisplay()
 
   /* --- Esta parte es displayImageWidth() en RA8876_Lite ----------------- */ 
   // Set main window image width
+  //displayImageWidth(m_width);
   writeReg(RA8876_REG_MIW0, m_width & 0xFF);
   writeReg(RA8876_REG_MIW1, m_width >> 8);
   /* ----------------------------------------------------------------------- */
 
   /* --- Esta parte es displayWindowStartXY() en RA8876_Lite --------------- */ 
   // Set main window start coordinates
+  //displayWindowStartXY(0,0);
   writeReg(RA8876_REG_MWULX0, 0);
   writeReg(RA8876_REG_MWULX1, 0);
   writeReg(RA8876_REG_MWULY0, 0);
@@ -710,6 +841,7 @@ bool RA8876::initDisplay()
 
   /* --- Esta parte es canvasImageStartAddress() en RA8876_Lite ------------ */ 
   // Set canvas start address
+  //canvasImageStartAddress(PAGE1_START_ADDR);
   writeReg(RA8876_REG_CVSSA0, 0);
   writeReg(RA8876_REG_CVSSA1, 0);
   writeReg(RA8876_REG_CVSSA2, 0);
@@ -718,25 +850,29 @@ bool RA8876::initDisplay()
 
   /* --- Esta parte es canvasImageWidth() en RA8876_Lite ------------------- */ 
   // Set canvas width
+  //canvasImageWidth(m_width);
   writeReg(RA8876_REG_CVS_IMWTH0, m_width & 0xFF);
   writeReg(RA8876_REG_CVS_IMWTH1, m_width >> 8);
   /* ----------------------------------------------------------------------- */
 
+  setCanvasWindow(0,0,m_width,m_height); //Esto ahorra lo siguiente:
+
   /* --- Esta parte es activeWindowXY() en RA8876_Lite --------------------- */ 
   // Set active window start coordinates
-  writeReg(RA8876_REG_AWUL_X0, 0);
+  /*writeReg(RA8876_REG_AWUL_X0, 0);
   writeReg(RA8876_REG_AWUL_X1, 0);
   writeReg(RA8876_REG_AWUL_Y0, 0);
-  writeReg(RA8876_REG_AWUL_Y1, 0);
+  writeReg(RA8876_REG_AWUL_Y1, 0);*/
   /* ----------------------------------------------------------------------- */
 
   /* --- Esta parte es activeWindowWH() en RA8876_Lite --------------------- */ 
   // Set active window dimensions
-  writeReg(RA8876_REG_AW_WTH0, m_width & 0xFF);
+  /*writeReg(RA8876_REG_AW_WTH0, m_width & 0xFF);
   writeReg(RA8876_REG_AW_WTH1, m_width >> 8);
   writeReg(RA8876_REG_AW_HT0, m_height & 0xFF);
-  writeReg(RA8876_REG_AW_HT1, m_height >> 8);
+  writeReg(RA8876_REG_AW_HT1, m_height >> 8);*/
   /* ----------------------------------------------------------------------- */
+
 
   // Set canvas addressing mode/colour depth
   uint8_t aw_color = 0x00;  // 2d addressing mode
@@ -791,9 +927,11 @@ void RA8876::setTextMode(void)
 {
 
   // Restore text colour
-  writeReg(RA8876_REG_FGCR, m_textColor >> 11 << 3);
-  writeReg(RA8876_REG_FGCG, ((m_textColor >> 5) & 0x3F) << 2);
-  writeReg(RA8876_REG_FGCB, (m_textColor & 0x1F) << 3);
+  //setTextForegroundColor(m_textForegroundColor);
+  //setTextBackgroundColor(m_textBackgroundColor);
+  /*writeReg(RA8876_REG_FGCR, m_textForegroundColor >> 11 << 3);
+  writeReg(RA8876_REG_FGCG, ((m_textForegroundColor >> 5) & 0x3F) << 2);
+  writeReg(RA8876_REG_FGCB, (m_textForegroundColor & 0x1F) << 3);*/
 
   waitTaskBusy();
 
@@ -817,28 +955,35 @@ void RA8876::setGraphicsMode(void)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::drawTwoPointShape(int x1, int y1, int x2, int y2, uint16_t color, uint8_t reg, uint8_t cmd)
+void RA8876::drawTwoPointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t reg, uint8_t cmd)
 {
   //Serial.println("drawTwoPointShape");
 
   SPI.beginTransaction(m_spiSettings);
 
   // First point
-  writeReg(RA8876_REG_DLHSR0, x1 & 0xFF);
+  writeReg16(RA8876_REG_DLHSR0, x1);
+  writeReg16(RA8876_REG_DLVSR0, y1);
+  /*writeReg(RA8876_REG_DLHSR0, x1 & 0xFF);
   writeReg(RA8876_REG_DLHSR1, x1 >> 8);
   writeReg(RA8876_REG_DLVSR0, y1 & 0xFF);
-  writeReg(RA8876_REG_DLVSR1, y1 >> 8);
+  writeReg(RA8876_REG_DLVSR1, y1 >> 8);*/
+  
 
   // Second point
-  writeReg(RA8876_REG_DLHER0, x2 & 0xFF);
+  writeReg16(RA8876_REG_DLHER0, x2);
+  writeReg16(RA8876_REG_DLVER0, y2);
+  /*writeReg(RA8876_REG_DLHER0, x2 & 0xFF);
   writeReg(RA8876_REG_DLHER1, x2 >> 8);
   writeReg(RA8876_REG_DLVER0, y2 & 0xFF);
-  writeReg(RA8876_REG_DLVER1, y2 >> 8);
+  writeReg(RA8876_REG_DLVER1, y2 >> 8);*/
 
   // Colour
-  writeReg(RA8876_REG_FGCR, color >> 11 << 3);
+  setTextForegroundColor(color);
+  /*writeReg(RA8876_REG_FGCR, color >> 11 << 3);
   writeReg(RA8876_REG_FGCG, ((color >> 5) & 0x3F) << 2);
-  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);
+  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);*/
+
 
   // Draw
   writeReg(reg, cmd);  // Start drawing
@@ -859,37 +1004,44 @@ void RA8876::drawTwoPointShape(int x1, int y1, int x2, int y2, uint16_t color, u
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::drawThreePointShape(int x1, int y1, int x2, int y2, int x3, int y3, uint16_t color, uint8_t reg, uint8_t cmd)
+void RA8876::drawThreePointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, uint8_t cmd)
 {
   //Serial.println("drawThreePointShape");
 
   SPI.beginTransaction(m_spiSettings);
 
   // First point
-  writeReg(RA8876_REG_DLHSR0, x1 & 0xFF);
+  writeReg16(RA8876_REG_DLHSR0, x1);
+  writeReg16(RA8876_REG_DLVSR0, y1);
+  /*writeReg(RA8876_REG_DLHSR0, x1 & 0xFF);
   writeReg(RA8876_REG_DLHSR1, x1 >> 8);
   writeReg(RA8876_REG_DLVSR0, y1 & 0xFF);
-  writeReg(RA8876_REG_DLVSR1, y1 >> 8);
+  writeReg(RA8876_REG_DLVSR1, y1 >> 8);*/
 
   // Second point
-  writeReg(RA8876_REG_DLHER0, x2 & 0xFF);
+  writeReg16(RA8876_REG_DLHER0, x2);
+  writeReg16(RA8876_REG_DLVER0, y2);
+  /*writeReg(RA8876_REG_DLHER0, x2 & 0xFF);
   writeReg(RA8876_REG_DLHER1, x2 >> 8);
   writeReg(RA8876_REG_DLVER0, y2 & 0xFF);
-  writeReg(RA8876_REG_DLVER1, y2 >> 8);
+  writeReg(RA8876_REG_DLVER1, y2 >> 8);*/
 
   // Third point
-  writeReg(RA8876_REG_DTPH0, x3 & 0xFF);
+  writeReg16(RA8876_REG_DTPH0, x3);
+  writeReg16(RA8876_REG_DTPV0, y3);
+  /*writeReg(RA8876_REG_DTPH0, x3 & 0xFF);
   writeReg(RA8876_REG_DTPH1, x3 >> 8);
   writeReg(RA8876_REG_DTPV0, y3 & 0xFF);
-  writeReg(RA8876_REG_DTPV1, y3 >> 8);
+  writeReg(RA8876_REG_DTPV1, y3 >> 8);*/
 
   // Colour
-  writeReg(RA8876_REG_FGCR, color >> 11 << 3);
+  setTextForegroundColor(color);
+  /*writeReg(RA8876_REG_FGCR, color >> 11 << 3);
   writeReg(RA8876_REG_FGCG, ((color >> 5) & 0x3F) << 2);
-  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);
+  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);*/
 
   // Draw
-  writeReg(reg, cmd);  // Start drawing
+  writeReg(RA8876_REG_DCR0, cmd);  // Start drawing
 
   // Wait for completion
   uint8_t status = readStatus();
@@ -907,7 +1059,7 @@ void RA8876::drawThreePointShape(int x1, int y1, int x2, int y2, int x3, int y3,
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::drawEllipseShape(int x, int y, int xrad, int yrad, uint16_t color, uint8_t cmd)
+void RA8876::drawEllipseShape(uint16_t x, uint16_t y, uint16_t xrad, uint16_t yrad, uint16_t color, uint8_t cmd)
 {
   //Serial.println("drawEllipseShape");
 
@@ -922,9 +1074,11 @@ void RA8876::drawEllipseShape(int x, int y, int xrad, int yrad, uint16_t color, 
   writeReg16(RA8876_REG_ELL_B0, yrad);
 
   // Colour
-  writeReg(RA8876_REG_FGCR, color >> 11 << 3);
+  setTextForegroundColor(color);
+  /*writeReg(RA8876_REG_FGCR, color >> 11 << 3);
   writeReg(RA8876_REG_FGCG, ((color >> 5) & 0x3F) << 2);
-  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);
+  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);*/
+  
 
   // Draw
   writeReg(RA8876_REG_DCR1, cmd);  // Start drawing
@@ -942,6 +1096,58 @@ void RA8876::drawEllipseShape(int x, int y, int xrad, int yrad, uint16_t color, 
 
   SPI.endTransaction();
 }
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::drawRoundRectShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color, uint8_t cmd)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  // First point
+  writeReg16(RA8876_REG_DLHSR0, x1);
+  writeReg16(RA8876_REG_DLVSR0, y1);
+  /*writeReg(RA8876_REG_DLHSR0, x1 & 0xFF);
+  writeReg(RA8876_REG_DLHSR1, x1 >> 8);
+  writeReg(RA8876_REG_DLVSR0, y1 & 0xFF);
+  writeReg(RA8876_REG_DLVSR1, y1 >> 8);*/
+
+  // Second point
+  writeReg16(RA8876_REG_DLHER0, x2);
+  writeReg16(RA8876_REG_DLVER0, y2);
+  /*writeReg(RA8876_REG_DLHER0, x2 & 0xFF);
+  writeReg(RA8876_REG_DLHER1, x2 >> 8);
+  writeReg(RA8876_REG_DLVER0, y2 & 0xFF);
+  writeReg(RA8876_REG_DLVER1, y2 >> 8);*/
+
+  // Radius
+  writeReg16(RA8876_REG_ELL_A0, radius);
+  writeReg16(RA8876_REG_ELL_B0, radius);
+  /*writeReg(RA8876_REG_DLHER0, radius & 0xFF);
+  writeReg(RA8876_REG_DLHER1, radius >> 8);
+  writeReg(RA8876_REG_DLVER0, radius & 0xFF);
+  writeReg(RA8876_REG_DLVER1, radius >> 8);*/
+
+  // Colour
+  setTextForegroundColor(color);
+  /*writeReg(RA8876_REG_FGCR, color >> 11 << 3);
+  writeReg(RA8876_REG_FGCG, ((color >> 5) & 0x3F) << 2);
+  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);*/
+
+  // Draw
+  writeReg(RA8876_REG_DCR1, cmd);  // Start drawing
+
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+
 
 /* *************************************************************
     Leer tipos de 16bits de un fichero de la SD. BMP se guarda
@@ -985,7 +1191,8 @@ RA8876::RA8876(int csPin, int resetPin)
 
   m_displayInfo = &defaultDisplayInfo;
 
-  m_textColor = 0xFFFF; // White
+  //m_textForegroundColor = 0xFFFF; // White
+  //setTextForegroundColor(WHITE);
 
   m_fontRomInfo.present = false;  // No external font ROM chip
 }
@@ -1045,7 +1252,7 @@ bool RA8876::init(void)
 
   // Set default font
   selectInternalFont(RA8876_FONT_SIZE_16);
-  setTextScale(1);
+  setTextScale(RA8876_TEXT_W_SCALE_X1,RA8876_TEXT_H_SCALE_X1);
 
   return true;
 }
@@ -1179,6 +1386,52 @@ bool RA8876::setCanvasWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t he
 
 /* *************************************************************
    ************************************************************* */
+void RA8876::displayImageStartAddress(uint32_t addr)	
+{
+  writeReg(RA8876_REG_MISA0,addr);//20h
+  writeReg(RA8876_REG_MISA1,addr>>8);//21h 
+  writeReg(RA8876_REG_MISA2,addr>>16);//22h  
+  writeReg(RA8876_REG_MISA3,addr>>24);//23h 
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::displayImageWidth(uint16_t width)	
+{
+  writeReg(RA8876_REG_MIW0,width); //24h
+  writeReg(RA8876_REG_MIW1,width>>8); //25h 
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::displayWindowStartXY(uint16_t x0,uint16_t y0)	
+{
+  writeReg(RA8876_REG_MWULX0,x0);//26h
+  writeReg(RA8876_REG_MWULX1,x0>>8);//27h
+  writeReg(RA8876_REG_MWULY0,y0);//28h
+  writeReg(RA8876_REG_MWULY1,y0>>8);//29h
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::canvasImageStartAddress(uint32_t addr)	
+{
+  writeReg(RA8876_REG_CVSSA0,addr);//50h
+  writeReg(RA8876_REG_CVSSA1,addr>>8);//51h
+  writeReg(RA8876_REG_CVSSA2,addr>>16);//52h
+  writeReg(RA8876_REG_CVSSA3,addr>>24);//53h  
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::canvasImageWidth(uint16_t width)	
+{
+  writeReg(RA8876_REG_CVS_IMWTH0,width);//54h
+  writeReg(RA8876_REG_CVS_IMWTH1,width>>8); //55h
+}
+
+/* *************************************************************
+   ************************************************************* */
 bool RA8876::setDisplayRegion(uint32_t address, uint16_t width)
 {
   if (address & 0x3)
@@ -1253,12 +1506,42 @@ void RA8876::ramAccessPrepare(void)
 
 /* *************************************************************
    ************************************************************* */
-/*void RA8876::foreGroundColor16bpp(uint16_t color)
+void RA8876::setTextForegroundColor(uint16_t color)
 {
-  writeReg(RA8876_REG_FGCR,color>>8);//d2h
+  /*writeReg(RA8876_REG_FGCR,color>>8);//d2h
   writeReg(RA8876_REG_FGCG,color>>3);//d3h
-  writeReg(RA8876_REG_FGCB,color<<3);//d4h
-}*/
+  writeReg(RA8876_REG_FGCB,color<<3);//d4h*/
+  //m_textForegroundColor = color;
+
+  writeReg(RA8876_REG_FGCR, color >> 11 << 3);
+  writeReg(RA8876_REG_FGCG, ((color >> 5) & 0x3F) << 2);
+  writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::setTextBackgroundColor(uint16_t color)
+{
+  /*writeReg(RA8876_REG_BGCR,color>>8);//d5h
+  writeReg(RA8876_REG_BGCG,color>>3);//d6h
+  writeReg(RA8876_REG_BGCB,color<<3);//d7h*/
+
+  //m_textBackgroundColor = color;
+
+  writeReg(RA8876_REG_BGCR, color >> 11 << 3);
+  writeReg(RA8876_REG_BGCG, ((color >> 5) & 0x3F) << 2);
+  writeReg(RA8876_REG_BGCB, (color & 0x1F) << 3);
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::ignoreTextBackground()
+{
+  SPI.beginTransaction(m_spiSettings);
+  writeReg(RA8876_REG_CCR1,RA8876_TEXT_ORIGINAL_BACKGROUND<<6);//cdh
+  SPI.endTransaction();
+}
+
 
 /* *************************************************************
    ************************************************************* */
@@ -1332,18 +1615,22 @@ void RA8876::selectExternalFont(enum ExternalFontFamily family, enum FontSize si
   #if defined(RA8876_DEBUG)
   Serial.print("CCR0: "); Serial.println(0x40 | ((size & 0x03) << 4), HEX);
   #endif // RA8876_DEBUG
+
   writeReg(RA8876_REG_CCR0, 0x40 | ((size & 0x03) << 4));  // Select external font ROM and size
 
   uint8_t ccr1 = readReg(RA8876_REG_CCR1);
   ccr1 |= 0x40;  // Transparent background
+
   #if defined(RA8876_DEBUG)
   Serial.print("CCR1: "); Serial.println(ccr1, HEX);
   #endif // RA8876_DEBUG
+
   writeReg(RA8876_REG_CCR1, ccr1);
 
   #if defined(RA8876_DEBUG)
   Serial.print("GTFNT_CR: "); Serial.println((enc << 3) | (family & 0x03), HEX);
   #endif // RA8876_DEBUG
+  
   writeReg(RA8876_REG_GTFNT_CR, (enc << 3) | (family & 0x03));  // Character encoding and family
 
   SPI.endTransaction();
@@ -1351,29 +1638,88 @@ void RA8876::selectExternalFont(enum ExternalFontFamily family, enum FontSize si
 
 /* *************************************************************
    ************************************************************* */
-int RA8876::getTextSizeY(void)
+ /* source_select = 0 (==> selectInternalFont) : internal CGROM,  source_select = 1 (==> selectExternalFont): external CGROM, source_select = 2: user-define*/
+ /* size = RA8876_FONT_SIZE_16 | RA8876_FONT_SIZE_24 | RA8876_FONT_SIZE_32 */
+ /* iso_set = RA8876_SELECT_8859_1 | RA8876_SELECT_8859_2 | RA8876_SELECT_8859_4 | RA8876_SELECT_8859_5
+ */
+ void RA8876::setTextParameter1(uint8_t source_select,FontSize size,CharacterSelection iso_set)//cch
+ {
+   SPI.beginTransaction(m_spiSettings);
+   writeReg(RA8876_REG_CCR0,source_select<<6|size<<4|iso_set);//cch
+   SPI.endTransaction();
+ }
+
+ /* *************************************************************
+   ************************************************************* */
+ /* Parametros:
+        align : enable (1) o disable (0) alineamiento
+              When Full alignment enable, displayed character width is equal to (Character Height)/2 if 
+              character width equal or small than (Character Height)/2, otherwise displayed font width is 
+              equal to Character Height.
+        chroma_key : color background especificado (0) o background original (1)
+              Deshabilitar el chroma (1) permite resaltar el texto con el color de background indicado.
+              Si se habilita el chroma (0), se utilizará el color original del canvas como background para 
+              el texto. 
+        width_enlarge : X1 o X2 o X3 o X4 
+        height_enlarge : X1 o X2 o X3 o X4 
+ */
+ //**************************************************************//
+void RA8876::setTextParameter2(uint8_t align, uint8_t chroma_key, TextWidthScale width_scale, TextHeightScale height_scale)
 {
-  return ((m_fontSize + 2) * 8) * m_textScaleY;
+  SPI.beginTransaction(m_spiSettings);
+  writeReg(RA8876_REG_CCR1,align<<7|chroma_key<<6|width_scale<<2|height_scale);//cdh
+  SPI.endTransaction();
 }
+
+ /* *************************************************************
+   ************************************************************* */
+void RA8876::genitopCharacterRomParameter(uint8_t scs_select, uint8_t clk_div, ExternalFontRom rom, FontEncoding enc, ExternalFontFamily font)
+{ 
+  SPI.beginTransaction(m_spiSettings);
+
+  if(scs_select==0)
+    writeReg(RA8876_REG_SFL_CTRL,RA8876_SERIAL_FLASH_SELECT0<<7|RA8876_SERIAL_FLASH_FONT_MODE<<6|RA8876_SERIAL_FLASH_ADDR_24BIT<<5|RA8876_FOLLOW_RA8876_MODE<<4|RA8876_SPI_FAST_READ_8DUMMY);//b7h
+  if(scs_select==1)
+    writeReg(RA8876_REG_SFL_CTRL,RA8876_SERIAL_FLASH_SELECT1<<7|RA8876_SERIAL_FLASH_FONT_MODE<<6|RA8876_SERIAL_FLASH_ADDR_24BIT<<5|RA8876_FOLLOW_RA8876_MODE<<4|RA8876_SPI_FAST_READ_8DUMMY);//b7h
+  
+  writeReg(RA8876_REG_SPI_DIVSOR,clk_div);//bbh 
+  
+  writeReg(RA8876_REG_GTFNT_SEL,rom<<5);//ceh
+  writeReg(RA8876_REG_GTFNT_CR,enc<<3|font);//cfh
+
+  SPI.endTransaction();
+}
+
+
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::setTextScale(int xScale, int yScale)
-{
-  xScale = constrain(xScale, 1, 4);
-  yScale = constrain(yScale, 1, 4);
+/*void RA8876::setTextColor(uint16_t foreground_color,uint16_t background_color)
+ {
+   setTextForegroundColor(foreground_color);
+   setTextBackgroundColor(background_color);
+ }*/
 
-  m_textScaleX = xScale;
-  m_textScaleY = yScale;
+/* *************************************************************
+   ************************************************************* */
+void RA8876::setTextScale(TextWidthScale width_scale, TextHeightScale height_scale)
+{
+ /* xScale = constrain(xScale, 1, 4);
+  yScale = constrain(yScale, 1, 4);
+*/
+  m_textScaleX = width_scale;
+  m_textScaleY = height_scale;
 
   SPI.beginTransaction(m_spiSettings);
-
+/*
   uint8_t ccr1 = readReg(RA8876_REG_CCR1);
   ccr1 = (ccr1 & 0xF0) | ((xScale - 1) << 2) | (yScale - 1);
   #if defined(RA8876_DEBUG)
   Serial.println(ccr1, HEX);
   #endif // RA8876_DEBUG
-  writeReg(RA8876_REG_CCR1, ccr1);
+  writeReg(RA8876_REG_CCR1, ccr1);*/
+
+  writeReg(RA8876_REG_CCR1,width_scale<<2|height_scale);//cdh
 
   SPI.endTransaction();
 }
@@ -1424,50 +1770,804 @@ void RA8876::putChars16(const uint16_t *buffer, unsigned int count)
   SPI.endTransaction();
 }
 
-/* *************************************************************
-   ************************************************************* */
-size_t RA8876::write(const uint8_t *buffer, size_t size)
+//**************************************************************//
+//support ra8876 internal font and external string font code write from data pointer
+//**************************************************************//
+void RA8876:: putString(uint16_t x0,uint16_t y0, char *str)
 {
   SPI.beginTransaction(m_spiSettings);
 
   setTextMode();
-
-  writeCmd(RA8876_REG_MRWDP);  // Set current register for writing to memory
-  for (unsigned int i = 0; i < size; i++)
+  setCursor(x0,y0);
+  ramAccessPrepare();
+  while(*str != '\0')
   {
-    char c = buffer[i];
-
-    if (c == '\r')
-      ;  // Ignored
-    else if (c == '\n')
-    {
-      setCursor(0, getCursorY() + getTextSizeY());
-      writeCmd(RA8876_REG_MRWDP);  // Reset current register for writing to memory
-    }
-    else if ((m_fontFlags & RA8876_FONT_FLAG_XLAT_FULLWIDTH) && ((c >= 0x21) || (c <= 0x7F)))
-    {
-      // Translate ASCII to Unicode fullwidth form (for Chinese fonts that lack ASCII)
-      uint16_t fwc = c - 0x21 + 0xFF01;
-
-      waitWriteFifo();
-      writeData(fwc >> 8);
-
-      waitWriteFifo();
-      writeData(fwc & 0xFF);
-    }
-    else
-    {
-      waitWriteFifo();
-      writeData(c);
-    }
+  checkWriteFifoNotFull();  
+  writeData(*str);
+  ++str; 
+  } 
+  //check2dBusy();
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
   }
 
   setGraphicsMode();
 
   SPI.endTransaction();
-
-  return size;
 }
+
+
+//**************************************************************//
+//vaule: -2147483648(-2^31) ~ 2147483647(2^31-1)
+//len: 1~11 minimum output length
+//**************************************************************//
+void RA8876:: putDec(uint16_t x0,uint16_t y0,signed long vaule,uint8_t len,const char *flag)
+{
+  char char_buffer[12];
+  switch(len)
+  {
+    case 1:
+           if(flag=="n")
+           {sprintf(char_buffer ,"%1d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-1d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+1d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%01d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 2:
+           if(flag=="n")
+           {sprintf(char_buffer ,"%2d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="-")
+           { sprintf(char_buffer ,"%-2d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           { sprintf(char_buffer ,"%+2d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           { sprintf(char_buffer ,"%02d", vaule); putString(x0,y0,char_buffer);}
+           break; 
+    case 3: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%3d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-3d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+3d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%03d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 4: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%4d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="-")
+           { sprintf(char_buffer ,"%-4d", vaule);  putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           { sprintf(char_buffer ,"%+4d", vaule);  putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           { sprintf(char_buffer ,"%04d", vaule);  putString(x0,y0,char_buffer);}
+           break;
+    case 5: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%5d", vaule); putString(x0,y0,char_buffer);}    
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-5d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+5d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%05d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 6: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%6d", vaule); putString(x0,y0,char_buffer);}    
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-6d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+6d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%06d", vaule); putString(x0,y0,char_buffer);}
+           break; 
+    case 7: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%7d", vaule); putString(x0,y0,char_buffer);} 
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-7d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+7d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%07d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 8: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%8d", vaule); putString(x0,y0,char_buffer);}     
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-8d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+8d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%08d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 9:
+           if(flag=="n")
+           {sprintf(char_buffer ,"%9d", vaule); putString(x0,y0,char_buffer);}  
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-9d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+9d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%09d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 10:
+           if(flag=="n")
+           {sprintf(char_buffer ,"%10d", vaule); putString(x0,y0,char_buffer);}  
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-10d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+10d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%010d", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 11: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%11d", vaule); putString(x0,y0,char_buffer);} 
+           else if(flag=="-")
+           {sprintf(char_buffer ,"%-11d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="+")
+           {sprintf(char_buffer ,"%+11d", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%011d", vaule); putString(x0,y0,char_buffer);}
+           break;       
+    default:   
+           break;    
+  }
+}
+
+//**************************************************************//
+/*vaule: (3.4E-38) ~ (3.4E38)
+//len: 1~11 minimum output length
+//precision: right side of point numbers 1~4 
+ Arduino Floats have only 6-7 decimal digits of precision. 
+ That means the total number of digits, not the number to the right 
+ of the decimal point. 
+ Unlike other platforms, where you can get more precision by using 
+ a double (e.g. up to 15 digits), on the Arduino, double is the same size 
+ as float.
+*/
+//**************************************************************//
+void RA8876:: putFloat(uint16_t x0,uint16_t y0,double vaule,uint8_t len,uint8_t precision, const char *flag)
+{
+  char char_buffer[20];
+  switch(len)
+  {
+    case 1:
+           if(flag=="n")
+           {
+             if(precision==1)
+             sprintf(char_buffer ,"%1.1f", vaule); putString(x0,y0,char_buffer);
+             if(precision==2)
+             sprintf(char_buffer ,"%1.2f", vaule); putString(x0,y0,char_buffer);
+             if(precision==3)
+             sprintf(char_buffer ,"%1.3f", vaule); putString(x0,y0,char_buffer);
+             if(precision==4)
+             sprintf(char_buffer ,"%1.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-1.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-1.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-1.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-1.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+1.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+1.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+1.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+1.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%01.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%01.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%01.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%01.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 2:
+           if(flag=="n")
+           {
+           if(precision==1)  
+           sprintf(char_buffer ,"%2.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2)  
+           sprintf(char_buffer ,"%2.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3)  
+           sprintf(char_buffer ,"%2.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4)  
+           sprintf(char_buffer ,"%2.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="-")
+           { 
+           if(precision==1) 
+           sprintf(char_buffer ,"%-2.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2) 
+           sprintf(char_buffer ,"%-2.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3) 
+           sprintf(char_buffer ,"%-2.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4) 
+           sprintf(char_buffer ,"%-2.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           { 
+           if(precision==1)
+           sprintf(char_buffer ,"%+2.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2)
+           sprintf(char_buffer ,"%+2.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3)
+           sprintf(char_buffer ,"%+2.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4)
+           sprintf(char_buffer ,"%+2.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           { 
+           if(precision==1)
+           sprintf(char_buffer ,"%02.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2)
+           sprintf(char_buffer ,"%02.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3)
+           sprintf(char_buffer ,"%02.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4)
+           sprintf(char_buffer ,"%02.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break; 
+    case 3: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%3.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%3.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%3.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%3.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="-")
+           {
+           if(precision==1)
+           sprintf(char_buffer ,"%-3.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2)
+           sprintf(char_buffer ,"%-3.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3)
+           sprintf(char_buffer ,"%-3.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4)
+           sprintf(char_buffer ,"%-3.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+           if(precision==1)
+           sprintf(char_buffer ,"%+3.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2)
+           sprintf(char_buffer ,"%+3.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3)
+           sprintf(char_buffer ,"%+3.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4)
+           sprintf(char_buffer ,"%+3.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+           if(precision==1)
+           sprintf(char_buffer ,"%03.1f", vaule); putString(x0,y0,char_buffer);
+           if(precision==2)
+           sprintf(char_buffer ,"%03.2f", vaule); putString(x0,y0,char_buffer);
+           if(precision==3)
+           sprintf(char_buffer ,"%03.3f", vaule); putString(x0,y0,char_buffer);
+           if(precision==4)
+           sprintf(char_buffer ,"%03.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 4: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%4.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%4.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%4.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%4.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="-")
+           { 
+            if(precision==1)
+            sprintf(char_buffer ,"%-4.1f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-4.2f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-4.3f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-4.4f", vaule);  putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {   
+            if(precision==1)
+            sprintf(char_buffer ,"%+4.1f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+4.2f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+4.3f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+4.4f", vaule);  putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           { 
+            if(precision==1)
+            sprintf(char_buffer ,"%04.1f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%04.2f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%04.3f", vaule);  putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%04.4f", vaule);  putString(x0,y0,char_buffer);
+           }
+           break;
+    case 5: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%5.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%5.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%5.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%5.4f", vaule); putString(x0,y0,char_buffer);
+           }    
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-5.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-5.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-5.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-5.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+5.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+5.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+5.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+5.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%05.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%05.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%05.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%05.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 6: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%6.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%6.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%6.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%6.4f", vaule); putString(x0,y0,char_buffer);
+           }    
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-6.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-6.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-6.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-6.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+6.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+6.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+6.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+6.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%06.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%06.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%06.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%06.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break; 
+    case 7: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%7.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%7.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%7.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%7.4f", vaule); putString(x0,y0,char_buffer);
+           } 
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-7.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-7.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-7.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-7.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+7.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+7.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+7.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+7.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%07.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%07.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%07.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%07.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 8: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%8.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%8.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%8.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%8.4f", vaule); putString(x0,y0,char_buffer);
+           }     
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-8.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-8.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-8.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-8.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+8.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+8.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+8.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+8.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%08.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%08.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%08.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%08.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 9:
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%9.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%9.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%9.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%9.4f", vaule); putString(x0,y0,char_buffer);
+           }  
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-9.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-9.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-9.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-9.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+9.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+9.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+9.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+9.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%09.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%09.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%09.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%09.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 10:
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%10.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%10.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%10.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%10.4f", vaule); putString(x0,y0,char_buffer);
+           }  
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-10.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-10.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-10.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-10.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+10.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+10.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+10.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+10.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%010.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%010.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%010.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%010.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;
+    case 11: 
+           if(flag=="n")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%11.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%11.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%11.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%11.4f", vaule); putString(x0,y0,char_buffer);
+           } 
+           else if(flag=="-")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%-11.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%-11.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%-11.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%-11.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="+")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%+11.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%+11.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%+11.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%+11.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           else if(flag=="0")
+           {
+            if(precision==1)
+            sprintf(char_buffer ,"%011.1f", vaule); putString(x0,y0,char_buffer);
+            if(precision==2)
+            sprintf(char_buffer ,"%011.2f", vaule); putString(x0,y0,char_buffer);
+            if(precision==3)
+            sprintf(char_buffer ,"%011.3f", vaule); putString(x0,y0,char_buffer);
+            if(precision==4)
+            sprintf(char_buffer ,"%011.4f", vaule); putString(x0,y0,char_buffer);
+           }
+           break;       
+    default:   
+           break;    
+  }
+}
+//**************************************************************//
+//vaule: 0x00000000 ~ 0xffffffff
+//len: 1~11 minimum output length
+//**************************************************************//
+void RA8876:: putHex(uint16_t x0,uint16_t y0,uint32_t vaule,uint8_t len,const char *flag)
+{
+  char char_buffer[12];
+  switch(len)
+  {
+    case 1:
+           if(flag=="n")
+           {sprintf(char_buffer ,"%1x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%01x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#1x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#01x", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 2:
+           if(flag=="n")
+           {sprintf(char_buffer ,"%2x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           { sprintf(char_buffer ,"%02x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           { sprintf(char_buffer ,"%#2x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           { sprintf(char_buffer ,"%#02x", vaule); putString(x0,y0,char_buffer);}
+           break; 
+    case 3: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%3x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%03x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#3x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#03x", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 4: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%4x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="0")
+           { sprintf(char_buffer ,"%04x", vaule);  putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           { sprintf(char_buffer ,"%#4x", vaule);  putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           { sprintf(char_buffer ,"%#04x", vaule);  putString(x0,y0,char_buffer);}
+           break;
+    case 5: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%5x", vaule); putString(x0,y0,char_buffer);}    
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%05x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#5x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#05x", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 6: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%6x", vaule); putString(x0,y0,char_buffer);}    
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%06x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#6x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#06x", vaule); putString(x0,y0,char_buffer);}
+           break; 
+    case 7: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%7x", vaule); putString(x0,y0,char_buffer);} 
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%07x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#7x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#07x", vaule); putString(x0,y0,char_buffer);}
+           break;
+    case 8: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%8x", vaule); putString(x0,y0,char_buffer);}     
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%08x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#8x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#08x", vaule); putString(x0,y0,char_buffer);}
+           break;
+case 9: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%9x", vaule); putString(x0,y0,char_buffer);} 
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%09x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#9x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#09x", vaule); putString(x0,y0,char_buffer);}
+           break;
+case 10: 
+           if(flag=="n")
+           {sprintf(char_buffer ,"%10x", vaule); putString(x0,y0,char_buffer);}     
+           else if(flag=="0")
+           {sprintf(char_buffer ,"%010x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="#")
+           {sprintf(char_buffer ,"%#10x", vaule); putString(x0,y0,char_buffer);}
+           else if(flag=="x")
+           {sprintf(char_buffer ,"%#010x", vaule); putString(x0,y0,char_buffer);}
+           break;
+      
+    default:   
+           break;    
+  }
+}
+
 
 /* *************************************************************
    ************************************************************* */
@@ -1483,7 +2583,7 @@ void RA8876::setPixelCursor(uint16_t x,uint16_t y)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::drawPixel(int x, int y, uint16_t color)
+void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 {
   //Serial.println("drawPixel");
   //Serial.println(readStatus());
@@ -1503,6 +2603,515 @@ void RA8876::drawPixel(int x, int y, uint16_t color)
   
   SPI.endTransaction();
 }
+
+
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bte_Source0_MemoryStartAddr(uint32_t addr)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_S0_STR0,addr);//93h
+  writeReg(RA8876_S0_STR1,addr>>8);//94h
+  writeReg(RA8876_S0_STR2,addr>>16);//95h
+  writeReg(RA8876_S0_STR3,addr>>24);////96h*/
+  writeReg32(RA8876_S0_STR0,addr);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bte_Source0_ImageWidth(uint16_t width)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_S0_WTH0,width);//97h
+  writeReg(RA8876_S0_WTH1,width>>8);//98h*/
+  writeReg16(RA8876_S0_WTH0,width);
+  SPI.endTransaction();
+
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_S0_X0,x0);//99h
+  writeReg(RA8876_S0_X1,x0>>8);//9ah
+  writeReg(RA8876_S0_Y0,y0);//9bh
+  writeReg(RA8876_S0_Y1,y0>>8);//9ch*/
+  writeReg16(RA8876_S0_X0,x0);
+  writeReg16(RA8876_S0_Y0,y0);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bte_Source1_MemoryStartAddr(uint32_t addr)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_S1_STR0,addr);//9dh
+  writeReg(RA8876_S1_STR1,addr>>8);//9eh
+  writeReg(RA8876_S1_STR2,addr>>16);//9fh
+  writeReg(RA8876_S1_STR3,addr>>24);//a0h*/
+  writeReg32(RA8876_S1_STR0,addr);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bte_Source1_ImageWidth(uint16_t width)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_S1_WTH0,width);//a1h
+  writeReg(RA8876_S1_WTH1,width>>8);//a2h*/
+  writeReg16(RA8876_S1_WTH0,width);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bte_Source1_WindowStartXY(uint16_t x0,uint16_t y0)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_S1_X0,x0);//a3h
+  writeReg(RA8876_S1_X1,x0>>8);//a4h
+  writeReg(RA8876_S1_Y0,y0);//a5h
+  writeReg(RA8876_S1_Y1,y0>>8);//a6h*/
+  writeReg16(RA8876_S1_X0,x0);
+  writeReg16(RA8876_S1_Y0,y0);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void  RA8876::bte_DestinationMemoryStartAddr(uint32_t addr)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_DT_STR0,addr);//a7h
+  writeReg(RA8876_DT_STR1,addr>>8);//a8h
+  writeReg(RA8876_DT_STR2,addr>>16);//a9h
+  writeReg(RA8876_DT_STR3,addr>>24);//aah*/
+  writeReg32(RA8876_DT_STR0,addr);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void  RA8876::bte_DestinationImageWidth(uint16_t width)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_DT_WTH0,width);//abh
+  writeReg(RA8876_DT_WTH1,width>>8);//ach*/
+  writeReg16(RA8876_DT_WTH0,width);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void  RA8876::bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0)	
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_DT_X0,x0);//adh
+  writeReg(RA8876_DT_X1,x0>>8);//aeh
+  writeReg(RA8876_DT_Y0,y0);//afh
+  writeReg(RA8876_DT_Y1,y0>>8);//b0h*/
+  writeReg16(RA8876_DT_X0,x0);
+  writeReg16(RA8876_DT_Y0,y0);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void  RA8876::bte_WindowSize(uint16_t width, uint16_t height)
+{
+  SPI.beginTransaction(m_spiSettings);
+  /*writeReg(RA8876_BTE_WTH0,width);//b1h
+  writeReg(RA8876_BTE_WTH1,width>>8);//b2h
+  writeReg(RA8876_BTE_HIG0,height);//b3h
+  writeReg(RA8876_BTE_HIG1,height>>8);//b4h*/
+  writeReg16(RA8876_BTE_WTH0,width);
+  writeReg16(RA8876_BTE_HIG0,height);
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bteMemoryCopy(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t des_addr,uint16_t des_image_width, 
+                    uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_Source0_MemoryStartAddr(s0_addr);
+  bte_Source0_ImageWidth(s0_image_width);
+  bte_Source0_WindowStartXY(s0_x,s0_y);
+
+  //bte_Source1_MemoryStartAddr(des_addr);
+  //bte_Source1_ImageWidth(des_image_width);
+  //bte_Source1_WindowStartXY(des_x,des_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+  
+  bte_WindowSize(copy_width,copy_height); 
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_ROP_CODE_12<<4|RA8876_BTE_MEMORY_COPY_WITH_ROP);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  //check2dBusy();
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+ 
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bteMemoryCopyWithROP(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,
+                            uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint8_t rop_code)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_Source0_MemoryStartAddr(s0_addr);
+  bte_Source0_ImageWidth(s0_image_width);
+  bte_Source0_WindowStartXY(s0_x,s0_y);
+
+  bte_Source1_MemoryStartAddr(s1_addr);
+  bte_Source1_ImageWidth(s1_image_width);
+  bte_Source1_WindowStartXY(s1_x,s1_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(copy_width,copy_height);
+
+  writeReg(RA8876_BTE_CTRL1,rop_code<<4|RA8876_BTE_MEMORY_COPY_WITH_ROP);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  //check2dBusy();
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMemoryCopyWithChromaKey(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
+                                uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint16_t chromakey_color)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_Source0_MemoryStartAddr(s0_addr);
+  bte_Source0_ImageWidth(s0_image_width);
+  bte_Source0_WindowStartXY(s0_x,s0_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(copy_width,copy_height);
+
+  setTextBackgroundColor(chromakey_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_MEMORY_COPY_WITH_CHROMA);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  //check2dBusy();
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
+                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned short *data)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_Source1_MemoryStartAddr(s1_addr);
+  bte_Source1_ImageWidth(s1_image_width);
+  bte_Source1_WindowStartXY(s1_x,s1_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  writeReg(RA8876_BTE_CTRL1,rop_code<<4|RA8876_BTE_MPU_WRITE_WITH_ROP);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+  
+ for(uint16_t j=0;j<height;j++)
+ {
+  for(uint16_t i=0;i<width;i++)
+  {
+   checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
+   writeData16bbp(*data);
+   data++;
+   //checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  }
+ } 
+  checkWriteFifoEmpty();
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
+                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_Source1_MemoryStartAddr(s1_addr);
+  bte_Source1_ImageWidth(s1_image_width);
+  bte_Source1_WindowStartXY(s1_x,s1_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  writeReg(RA8876_BTE_CTRL1,rop_code<<4|RA8876_BTE_MPU_WRITE_WITH_ROP);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
+                              const unsigned short *data)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  setTextBackgroundColor(chromakey_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_MPU_WRITE_WITH_CHROMA);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+  
+ for(uint16_t j=0;j<height;j++)
+ {
+  for(uint16_t i=0;i<width;i++)
+  {
+   checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
+   writeData16bbp(*data);
+   data++;
+   //checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  }
+ } 
+  checkWriteFifoEmpty();
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t chromakey_color)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  setTextBackgroundColor(chromakey_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_MPU_WRITE_WITH_CHROMA);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color,const unsigned char *data)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  setTextForegroundColor(foreground_color);
+  setTextBackgroundColor(background_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_ROP_BUS_WIDTH8<<4|RA8876_BTE_MPU_WRITE_COLOR_EXPANSION);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+  
+  for(uint16_t i=0;i< height;i++)
+  {	
+   for(uint16_t j=0;j< (width/8);j++)
+   {
+    checkWriteFifoNotFull();
+    writeData(*data);
+    data++;
+    }
+   }
+  checkWriteFifoEmpty();
+  
+  //check2dBusy();
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height); 
+
+  setTextForegroundColor(foreground_color);
+  setTextBackgroundColor(background_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_ROP_BUS_WIDTH8<<4|RA8876_BTE_MPU_WRITE_COLOR_EXPANSION);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,
+                                             uint16_t foreground_color,uint16_t background_color,const unsigned char *data)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  setTextForegroundColor(foreground_color);
+  setTextBackgroundColor(background_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_ROP_BUS_WIDTH8<<4|RA8876_BTE_MPU_WRITE_COLOR_EXPANSION_WITH_CHROMA);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+  
+  for(uint16_t i=0;i< height;i++)
+  {	
+   for(uint16_t j=0;j< (width/8);j++)
+   {
+    checkWriteFifoNotFull();
+    writeData(*data);
+    data++;
+    }
+   }
+  checkWriteFifoEmpty();
+  
+  //check2dBusy();
+  // Wait for completion
+  uint8_t status = readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,
+                                             uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  setTextForegroundColor(foreground_color);
+  setTextBackgroundColor(background_color);
+
+  writeReg(RA8876_BTE_CTRL1,RA8876_BTE_ROP_BUS_WIDTH8<<4|RA8876_BTE_MPU_WRITE_COLOR_EXPANSION_WITH_CHROMA);//91h
+  writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+
+  SPI.endTransaction();
+}
+
+
 
 
 

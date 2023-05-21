@@ -7,6 +7,13 @@ Edit Date : 25/04/2023
 Version   : v2.0
 
     Version v1.0 obtenida de https://github.com/xlatb/ra8876/tree/master/src
+
+    Se ha completado con funciones de RA8876_Lite de Raio, adaptándolas con las
+    funciones de la librería base RA8876.
+
+    Guía de RA8876_Lite: https://www.raio.com.tw/data_raio/RA887677/Arduino/RA8876_Lite_UserGuide_v1.0_Eng.pdf
+
+    Raio RA8876 Technical documents: https://www.raio.com.tw/en/download_center.html 
 */
 /* ************************************************************ */
 
@@ -14,7 +21,12 @@ Version   : v2.0
 #include "RA8876_v2.h"
 
 /* ************************************************************ */
-
+/* Datasheet 8.1.2 del chip RA8876: Si esta SDRAM info es correcta para
+   nuestra pantalla, se corresponde con:
+        Density: 128Mb (4 banks) 
+        Addressing => row: [A0-A11]
+                   => column: [A0-A8]  
+*/
 SdramInfo defaultSdramInfo =
 {
   120, // 120 MHz

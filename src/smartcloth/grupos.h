@@ -17,6 +17,8 @@ typedef struct {
 
 /* 
    Caracteres ASCII/ISO 8859-1 (Latin-1) en HEX ==> https://cs.stanford.edu/people/miles/iso8859.html
+
+   También en Table 14-1 (pag 99) del datasheet de RA8876:
  
     á --> E1    Á --> C1
     é --> E9    É --> C9

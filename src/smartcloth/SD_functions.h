@@ -46,19 +46,19 @@
     (pines de la SD en el JP2 de la TFT, conectados al módulo SD 
      integrado directamente en la pantalla)
      
-      -------------------------------------------------------
-      |  SPI  |   SD (JP2 en TFT)   |      Arduino Due      |
-      -------------------------------------------------------
-      |  MOSI |      pin 3          |      pin 4 (SPI)      |    
-      |  MISO |      pin 6          |      pin 1 (SPI)      |
-      |  CLK  |      pin 4          |      pin 3 (SPI)      |
-      |  CS   |      pin 2          |   pin 4 (digital PWM) | 
-      -------------------------------------------------------
+      ------------------------------------------------------------
+      |  SPI  |        SD (JP2 en TFT)   |      Arduino Due      |
+      ------------------------------------------------------------
+      |  MOSI |      pin 3  (amarillo)   |      pin 4 (SPI)      |    
+      |  MISO |      pin 6  (azul)       |      pin 1 (SPI)      |
+      |  CLK  |      pin 4  (verde)      |      pin 3 (SPI)      |
+      |  CS   |      pin 2  (blanco)     |   pin 4 (digital PWM) | 
+      ------------------------------------------------------------
 
               -----------------------
               |   SD (JP2 en TFT)   |
       -------------------------------
-      |  GND  |      pin 5          |
+      |  GND  |      pin 5 (negro)  |
       -------------------------------
 
 -----------------------------------------------------
@@ -94,7 +94,7 @@ void setupSDcard(){
 
     if(!SD.begin(SD_CARD_SCS)){
         Serial.println(F("SD card failure!"));
-        while(1);
+        //while(1);
     }
     Serial.println(F("SD card initialized"));
 

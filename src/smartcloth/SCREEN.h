@@ -1,40 +1,83 @@
 
-/* --------- CONEXIÓN TFT/LCD CON ARDUINO DUE -----------
+/* 
  
-  Pantalla modelo: ER-TFTM070-6 de BuyDisplay
-      - SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
-      https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel
+  Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
+
+	------ INFO BASE --------------------------
+	* 1024x600 (7") TFT LCD
+	* Pantalla táctil capacitiva
+	* Comunicación SPI
+	-------------------------------------------
+
+	------ FLASH ------------------------------
+	* No tiene memoria Flash externa!!!
+	-------------------------------------------
+
+  ------ CHIP  ----------------------------------------------------------------------------------
+  * Chip gráfico RA8876L4N. Este es una verión más reciente y mejorada del controlador RA8876 [2].  
+  -----------------------------------------------------------------------------------------------
+
+  -------- MEMORIAS  ----------------------------------------------------------------------------
+    * Memoria ROM de fuentes externas GT30L16U2W de Genitop. 
+  	
+    * Memoria SDRAM tipo W9812G6KH-6 [3]:
+	  		- 2 M words x 4 banks x 16 bits (128 Mbits)
+	  		- 166 MHz de frecuencia de reloj
+	  		- modo auto-refresh
+	  		- 64 ms de tiempo de refresh
+	  		- CAS Latency: 2 y 3
+	  		- Velocidad de acceso CL3 (3 ciclos de reloj)
+        - Row address: A0-A11
+	  		- Column address: A0-A8
+
+  	  Esto se corresponde con los siguientes valores de Datasheet 8.1.2 SDRAM Connection del RA8876:
+        Density: 128 Mb (4 banks) 
+        Addressing => row: [A0-A11]
+                   => column: [A0-A8]  
+  ------------------------------------------------------------------------------------------------
+
+  [1] Pantalla ER-TFTM070-6: https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel
+
+  [2] Chip RA8876: https://www.raio.com.tw/data_raio/Datasheet/RA887677/RA8876_Brief_DS_V11_Eng.pdf
   
+  [3] SDRAM W9812G6KH-6: https://www.mouser.es/datasheet/2/949/w9812g6kh_a05_20170222-1489666.pdf
+
+  
+
+
+
+  ------------------------------------------------------
+  --------- CONEXIÓN TFT/LCD CON ARDUINO DUE -----------
 
   Alimentación y referencia a tierra de la TFT: 
     (pines de conexión en el JP1 de la TFT)
                       ---------------------------------
                       |           TFT (JP1)           |
       -------------------------------------------------
-      |  VDD (3.3 V)  |  pines 3, 4, 37 y 38          |   
-      |  GND          |  pines 1, 2, 13, 31, 39 y 40  |
+      |  VDD (3.3 V)  |  pines 3, 4, 37 y 38          |   (rojo)
+      |  GND          |  pines 1, 2, 13, 31, 39 y 40  |   (negro)
       -------------------------------------------------
   
 
   TFT conectada al bus SPI del Arduino de la siguiente forma:
     (pines de conexión en el JP1 de la TFT)
-      -------------------------------------------------
-      |  SPI  |  TFT (JP1)  |       Arduino Due       |
-      -------------------------------------------------
-      |  MOSI |    pin 7    |      pin 4 (SPI)        |    
-      |  MISO |    pin 6    |      pin 1 (SPI)        |
-      |  CLK  |    pin 8    |      pin 3 (SPI)        |
-      |  CS   |    pin 5    |   pin 12 (digital PWM)  | 
-      -------------------------------------------------
+      ---------------------------------------------------------
+      |  SPI  |       TFT (JP1)     |       Arduino Due       |
+      ---------------------------------------------------------
+      |  MOSI |    pin 7 (marron)   |      pin 4 (SPI)        |    
+      |  MISO |    pin 6 (naranja)  |      pin 1 (SPI)        |
+      |  CLK  |    pin 8 (blanco)   |      pin 3 (SPI)        |
+      |  CS   |    pin 5 (morado)   |   pin 12 (digital PWM)  | 
+      ---------------------------------------------------------
 
   Otras conexiones de la TFT al Arduino:
     (pines de conexión en el JP1 de la TFT)
-      -------------------------------------------------
-      |       TFT (JP1)      |      Arduino Due       |
-      -------------------------------------------------
-      |  pin 11 (Reset)      |  pin 11 (digital PWM)  |
-      |  pin 14 (Backlight)  |  pin 10 (digital PWM)  |
-      -------------------------------------------------
+      ----------------------------------------------------------------------
+      |              TFT (JP1)                    |      Arduino Due       |
+      ----------------------------------------------------------------------
+      |  pin 11 (Reset) (2º naranja)              |  pin 11 (digital PWM)  |
+      |  pin 14 (Backlight) (2º blanco moraito)   |  pin 10 (digital PWM)  |
+      ----------------------------------------------------------------------
 
 ----------------------------------------------------------------
 */
