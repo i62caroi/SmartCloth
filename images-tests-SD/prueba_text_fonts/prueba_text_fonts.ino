@@ -20,25 +20,32 @@
   -------------- FUENTES INTERNAS -----------------------------------------------------------------
   * El chip RA8876 tiene una fuente interna de ancho fijo disponible 
     en tres tamaños:
-      RA8876_FONT_SIZE_16 => 8x16
-      RA8876_FONT_SIZE_24 => 12x24
-      RA8876_FONT_SIZE_32 => 16x32
+      RA8876_FONT_SIZE_16    =>  8x16
+      RA8876_FONT_SIZE_24    =>  12x24
+      RA8876_FONT_SIZE_32    =>  16x32
+    
+    Estos tamaños se pueden variar escalando hasta 4 veces la anchura (W) y la altura (H),
+    independientemente (p.ej. W x2 y H x3):
+      Escala x1 (sin escala) =>  RA8876_TEXT_W_SCALE_X1 | RA8876_TEXT_H_SCALE_X1
+      Escala x2              =>  RA8876_TEXT_W_SCALE_X2 | RA8876_TEXT_H_SCALE_X2
+      Escala x3              =>  RA8876_TEXT_W_SCALE_X3 | RA8876_TEXT_H_SCALE_X3
+      Escala x4              =>  RA8876_TEXT_W_SCALE_X4 | RA8876_TEXT_H_SCALE_X4
   ------------------------------------------------------------------------------------------------
 
   -------------- ROM DE FUENTES EXTERNAS ---------------------------------------------------------
   * Memoria ROM de fuentes externas GT30L16U2W de Genitop. El número de modelo 
-    sigue el siguiente formato: GTppLhhcba
-        ------------------------------------------------------------------
-        | Parte |             Descripción               |  Valor en ROM  |
-        ------------------------------------------------------------------
-        | GT    | Marca                                 | Genitop        |
-        | pp    | Tipo de empaquetado                   | 30 = SOP-8-B   |
-        | L     | Bajo voltaje                          | 3.3 V          |
-        | hh    | Altura de la fuente más alta incluida | 16 (height)    |
-        | c     | Set de caracteres más prominente      | U = Unicode    |
-        | b     | Número de bloques de librerías        | 2              | 
-        | a     | Character arrangement                 | W              |
-        ------------------------------------------------------------------
+    sigue el siguiente formato: GT-pp-L-hh-c-b-a
+
+    	· pp => tipo de empaquetado (20 = SOT23-6, 21 = SOP-8, 30 = SOP-8-B)
+		  · L  => bajo voltaje (3.3V)
+		  · hh => altura de la fuente más alta incluida 
+		  · c  => set de caracteres más prominente (S = GB2312, M = GB18030, U = Unicode, 
+					T = BIG5, F = Foreign Unicode and ISO-8859)
+		  · b  => número de bloques de librerías 
+		  · a  => character arrangement
+
+	  Por tanto, la GT30L16U2W trabaja a 3.3V, permite una altura máxima de 16 pixeles y 
+	  el set de caracteres más prominente es UNICODE, entre otras características.
 
       
     --- FUENTES QUE EL RA8876 PUEDE USAR DESDE ESTE CHIP -----
@@ -54,13 +61,13 @@
         |	Latin	   |  FIXED	|    8	   |    16	 |	UNICODE	  |  00A0-0217	|
         |	Greek	   |  FIXED	|    8	   |    16	 |	UNICODE	  |  0370-03CF	|
         |	Cyrillic |  FIXED	|    8	   |    16	 |	UNICODE	  |  0400-04F9	|
-        |	   -	   |  ARIAL	|  varía   |	  16	 |	ASCII	    |  20-7F	  	|
-        |	Latin	   |  ARIAL	|  varía   |    16	 |	UNICODE	  |  00A0-0217	|
-        |	Greek	   |  ARIAL	|  varía   |    16	 |	UNICODE	  |  0370-03CF	|
-        |	Cyrillic |  ARIAL	|  varía   |    16	 |	UNICODE	  |  0400-04F9	|
-        |	Arabian	 |  ARIAL	|  varía   |    16	 |	UNICODE	  |  0600-06F9	|
-        |	Arabian  |  ARIAL	|  varía   |    16	 |	  ?		    |  B000-B1F1	|
-        |    -     |  TIMES	|  varía   |    16	 |	ASCII	    |  20-7F		  |
+        |	   -	   |  ARIAL	|  varies  |	  16	 |	ASCII	    |  20-7F	  	|
+        |	Latin	   |  ARIAL	|  varies  |    16	 |	UNICODE	  |  00A0-0217	|
+        |	Greek	   |  ARIAL	|  varies  |    16	 |	UNICODE	  |  0370-03CF	|
+        |	Cyrillic |  ARIAL	|  varies  |    16	 |	UNICODE	  |  0400-04F9	|
+        |	Arabian	 |  ARIAL	|  varies  |    16	 |	UNICODE	  |  0600-06F9	|
+        |	Arabian  |  ARIAL	|  varies  |    16	 |	  ?		    |  B000-B1F1	|
+        |    -     |  TIMES	|  varies  |    16	 |	ASCII	    |  20-7F		  |
         |	Symbol   |    ?	  |    8	   |	  16	 |	GB2312	  |  ACA1-ACDF	|
         ---------------------------------------------------------------------
 
