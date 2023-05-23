@@ -1,22 +1,83 @@
 PNG:
 	- SmartCloth => 768 x 558
 	- crudo => 378 x 362
-	- crudoSmall => 95 x 91
+		- crudoSmall => 95 x 91
 	- cocinado => 378 x 362
-	- cocinadoSmall => 95 x 91
-
-BIN:
-	- SmartCloth => 384 x 279 | 256 x 186
-	- logo => 482 x 350
-	- crudo => 95 x 91
-	- cocinado => 95 x 91
-
-BMP:
-	- crudo => 95 x 91
-	- cocinado => 95 x 91
+		- cocinadoSmall => 95 x 91
+	- PANTALLA INICIAL:
+		- brain => 148x122 
 
 
-Word:
+---------------------------------------------------------------------
+
+JPG: Programa de Raio (Raio Image Tool) => DA MENOS PROBLEMAS QUE PNG
+	- ARRANQUE:
+		- symbol => 162 x 169
+		- S => 95 x 159 
+		- M => 104 x 159
+		- A => 104 x 159
+		- R => 85 x 159 
+		- T => 104 x 159
+		- C => 85 x 159
+		- L => 85 x 159 
+		- O => 85 x 159 
+		- H => 85 x 159 
+
+
+
+---------------------------------------------------------------------
+
+
+BIN: [ https://javl.github.io/image2cpp/ ] binary file
+	 Programa de Raio (Raio Image Tool): JPG => BIN
 	- SmartCloth:
+		- ===> logo => 482 x 350
+		- smartcloth => 384 x 279
+		- smart3 => 256 x 186
+	- crudo => 95 x 91
+	- cocinado => 95 x 91
+	- ARRANQUE:
+		- symbol => 162 x 169
+		- S => 95 x 159 
+		- M => 104 x 159
+		- A => 104 x 159
+		- R => 85 x 159 
+		- T => 104 x 159
+		- C => 85 x 159
+		- L => 85 x 159 
+		- O => 85 x 159 
+		- H => 85 x 159  
+	- PANTALLA INICIAL:
+		- brain => (74x61)
+	- GRUPO ALIMENTO:
+		- cuadro1 => (167x160) 
+		- cuadro2 => (167x160) 
+		- cuadro3 => (167x160) 
+		- cuadro4 => (167x160) 
+		- mano => (142x137)
+
+
+---------------------------------------------------------------------
+
+
+BMP (24 bpp): [ https://redketchup.io/image-converter ] fondo negro a PNG
+	- crudo => 95 x 91
+	- cocinado => 95 x 91
+	- SmartCloth:
+		- ===> logo3 (fondo negro) => 482 x 350
+		- logo => 500 x 350
+		- logo2 => 500 x 350
+		- smart => 256 x 186
+
+
+---------------------------------------------------------------------
+
+
+Word: [ https://javl.github.io/image2cpp/ ] código Arduino 
+		"Horizontal - 2 bytes per pixel (565)" para tenerlo con 16bpp
+	- SmartCloth:
+		- ===> 500 x 350
 		- 768 x 558 (original size PNG) => ROM overflow
-		- 384 x 279
+	- crudo => 95 x 91
+	- cocinado => 95 x 91
+		
