@@ -1,4 +1,24 @@
+/*
+-------------- MEMORIA SDRAM --------------------------------------------------------------------
+  * Memoria SDRAM tipo W9812G6KH-6 [3]:
+	  		- 2 M words x 4 banks x 16 bits (128 Mbits)
+	  		- 166 MHz de frecuencia de reloj
+	  		- modo auto-refresh
+	  		- 64 ms de tiempo de refresh
+	  		- CAS Latency: 2 y 3
+	  		- Velocidad de acceso CL3 (3 ciclos de reloj)
+        - Row address: A0-A11
+	  		- Column address: A0-A8
+
+  	  Esto se corresponde con los siguientes valores de Datasheet 8.1.2 SDRAM Connection del RA8876:
+        Density: 128 Mb (4 banks) 
+        Addressing => row: [A0-A11]
+                   => column: [A0-A8]  
+  -------------------------------------------------------------------------------------------------
+*/
+
 #include "RA8876_v2.h"
+#include "COLORS.h"
 
 // Screen circuit wiring
 #define RA8876_CS        12
@@ -8,71 +28,6 @@
 #define SD_CARD_SCS   4
 
 RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
-
-
-/* ---------------- COLORES ----------------------------------------- */
-// 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
-
-#define   NEGRO             0x0000
-#define   BLANCO            0xFFFF
-#define   ROJO              0xF800  // 0xF920 | 0xfa02
-#define   ROJO_CLARO        0xfC10
-#define   ROJO_OSCURO       0x8000
-#define   NARANJA           0xFC80
-#define   AMARILLO          0xFFC0
-#define   AMARILLO_CLARO    0xfff0
-#define   AMARILLO_OSCURO   0x8400
-#define   VERDE             0x07E0
-#define   VERDE_CLARO       0x87f0
-#define   VERDE_OSCURO      0x0400
-#define   CIAN              0x07FF
-#define   CIAN_CLARO        0x87ff
-#define   CIAN_OSCURO       0x0410
-#define   AZUL              0x001F
-#define   AZUL2             0x051f
-#define   AZUL_CLARO        0x841f
-#define   AZUL_OSCURO       0x0010
-#define   ROSA              0xFA1F
-#define   MORADO            0x9112
-#define   MAGENTA           0xf81f
-#define   MAGENTA_CLARO     0xfc1f
-#define   MAGENTA_OSCURO    0x8010
-#define   MARRON            0xABC8
-#define   MARRON2           0xA145
-
-//--------------------------------
-
-#define COLOR65K_GRAYSCALE1    2113
-#define COLOR65K_GRAYSCALE2    2113*2
-#define COLOR65K_GRAYSCALE3    2113*3
-#define COLOR65K_GRAYSCALE4    2113*4
-#define COLOR65K_GRAYSCALE5    2113*5
-#define COLOR65K_GRAYSCALE6    2113*6
-#define COLOR65K_GRAYSCALE7    2113*7
-#define COLOR65K_GRAYSCALE8    2113*8
-#define COLOR65K_GRAYSCALE9    2113*9
-#define COLOR65K_GRAYSCALE10   2113*10
-#define COLOR65K_GRAYSCALE11   2113*11
-#define COLOR65K_GRAYSCALE12   2113*12
-#define COLOR65K_GRAYSCALE13   2113*13
-#define COLOR65K_GRAYSCALE14   2113*14
-#define COLOR65K_GRAYSCALE15   2113*15
-#define COLOR65K_GRAYSCALE16   2113*16
-#define COLOR65K_GRAYSCALE17   2113*17
-#define COLOR65K_GRAYSCALE18   2113*18
-#define COLOR65K_GRAYSCALE19   2113*19
-#define COLOR65K_GRAYSCALE20   2113*20
-#define COLOR65K_GRAYSCALE21   2113*21
-#define COLOR65K_GRAYSCALE22   2113*22
-#define COLOR65K_GRAYSCALE23   2113*23
-#define COLOR65K_GRAYSCALE24   2113*24
-#define COLOR65K_GRAYSCALE25   2113*25
-#define COLOR65K_GRAYSCALE26   2113*26
-#define COLOR65K_GRAYSCALE27   2113*27
-#define COLOR65K_GRAYSCALE28   2113*28
-#define COLOR65K_GRAYSCALE29   2113*29
-#define COLOR65K_GRAYSCALE30   2113*30
-/* ------------------------------------------------------------------- */
 
 
 void arranque();
@@ -105,7 +60,7 @@ void setup() {
     Serial.println("Startup complete...");
 
     Serial.println("\nARRANQUE");
-    arranque();  // Wi
+    arranque();  // OK
     delay(1000);
     
     //tft.clearScreen(0); 
@@ -129,9 +84,7 @@ void setup() {
 
 
 
-/*---------------------------------------------------------------------------------------------------------
-   loop(): Función principal ejecutada continuamente
-----------------------------------------------------------------------------------------------------------*/
+
 void loop() {
      
 }
@@ -141,7 +94,7 @@ void loop() {
 void arranque(){
 
     //PAG 1 ==> fondo blanco
-    tft.clearScreen(BLANCO);
+    tft.clearScreen(WHITE);
     delay(300);
 /*
     // Al colocar el logo (symbolo) abajo, ya no hace falta esta parte?
@@ -175,50 +128,75 @@ void arranque(){
 
     // -------- LETRAS ------- 
 
+    /*
+      S (95x159)    =>  x  =  <S  =  40                          -->   tft.sdCardDraw256bitsBIN(40,150,95,159,"bin/arranque/S.bin");
+        
+      M (104x154)   =>  x  =  <M  =  <S(40) + S(95)     =  135   -->   tft.sdCardDraw256bitsBIN(135,150,104,159,"bin/arranque/M.bin");
+
+      A (104x159)   =>  x  =  <A  =  <M(135) + M(104)   =  239   -->   tft.sdCardDraw256bitsBIN(239,150,104,159,"bin/arranque/A.bin");
+
+      R (85x159)    =>  x  =  <R  =  <A(239) + A(104)   =  343   -->   tft.sdCardDraw256bitsBIN(343,150,85,159,"bin/arranque/R.bin");
+
+      T1 (104x159)  =>  x  =  <T1 =  <R(343) + R(85)    =  428   -->   tft.sdCardDraw256bitsBIN(428,150,104,159,"bin/arranque/T.bin");
+
+      C (85x159)    =>  x  =  <C  =  <T1(428) + T1(104) =  532   -->   tft.sdCardDraw256bitsBIN(532,150,85,159,"bin/arranque/C.bin");
+
+      L (85x159)    =>  x  =  <L  =  <C(532) + C(85)    =  617   -->   tft.sdCardDraw256bitsBIN(617,150,85,159,"bin/arranque/L.bin");
+
+      O (85x159)    =>  x  =  <O  =  <L(617) + L(85)    =  702   -->   tft.sdCardDraw256bitsBIN(702,150,85,159,"bin/arranque/O.bin");
+
+      T2 (104x159)  =>  x  =  <T2 =  <O(702) + O(85)    =  787   -->   tft.sdCardDraw256bitsBIN(787,150,104,159,"bin/arranque/T.bin");
+
+      H (85x159)    =>  x  =  <H  =  <T2(787) + T2(104) =  891   -->   tft.sdCardDraw256bitsBIN(891,150,85,159,"bin/arranque/H.bin");
+
+    */
+
     // S M A R T C L O T H ==> S T O T M L R A C H 
 
-    //PAG 8 => letra S (95x159) 
+    // S (95x159)
     tft.sdCardDraw256bitsBIN(40,150,95,159,"bin/arranque/S.bin");
     delay(300);
 
-    //PAG 9 => letra T1 (104x159) => x = <S(40) + S(95) + M(104) + A(104) + R(85) = 428
+    // T1 (104x159)
     tft.sdCardDraw256bitsBIN(428,150,104,159,"bin/arranque/T.bin");
     delay(300);
 
-    //PAG 10 => letra O (85x159) => x = <T1(428) + T1(104) + C(85) + L(85) = 702
+    // O (85x159)
     tft.sdCardDraw256bitsBIN(702,150,85,159,"bin/arranque/O.bin");
     delay(300);
 
-    //PAG 11 => letra T2 (104x159) => x = <O(702) + O(85) = 787
+    // T2 (104x159)
     tft.sdCardDraw256bitsBIN(787,150,104,159,"bin/arranque/T.bin");
     delay(300);
 
-    //PAG 12 => letra M (104x154) => x = <S(40) + S(95) = 135
+    // M (104x154)
     tft.sdCardDraw256bitsBIN(135,150,104,159,"bin/arranque/M.bin");
     delay(300);
 
-    //PAG 13 => letra L (77x154) => x = <T1(428) + T1(104) + C(85) = 617
+    // L (85x159)
     tft.sdCardDraw256bitsBIN(617,150,85,159,"bin/arranque/L.bin");
     delay(300);
 
-    //PAG 14 => letra R (77x154) => x = <M(135) + M(104) + A(104) = 343
+    // R (85x159)
     tft.sdCardDraw256bitsBIN(343,150,85,159,"bin/arranque/R.bin");
     delay(300); 
 
-    //PAG 15 => letra A (95x154) => x = <M(135) + M(104) = 239
+    // A (104x159)
     tft.sdCardDraw256bitsBIN(239,150,104,159,"bin/arranque/A.bin");
     delay(300);
 
-    //PAG 16 => letra C (77x154) => x = <T1(428) + T1(104) = 532
+    // C (85x159)
     tft.sdCardDraw256bitsBIN(532,150,85,159,"bin/arranque/C.bin");
     delay(300);
 
-    //PAG 17 => letra H (77x154) => x = <T2(787) + T2(104) = 891
+    // H (85x159)
     tft.sdCardDraw256bitsBIN(891,150,85,159,"bin/arranque/H.bin");
     delay(300);    
 
+
     // ------- LOGO (SYMBOL)------
-    //PAG 7 => logo (162x169) ==> abajo
+
+    // Logo (162x169) ==> debajo
     tft.sdCardDraw256bitsBIN(450,350,162,169,"bin/arranque/Log.bin");
     delay(300);
     

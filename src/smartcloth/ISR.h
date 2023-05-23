@@ -24,16 +24,16 @@ SAMDUE_ISR_Timer ISR_Timer;
 
 
 /*  -----   MAIN  ----- */
-const byte intPinCocinado = 22;           // Azul 
-const byte intPinCrudo = 23;              // Amarillo 
-const byte intPinAddPlato = 24;           // Verde 
-const byte intPinDeletePlato = 25;        // Rojo 
-const byte intPinGuardar = 26;            // Negro 
+const byte intPinCocinado     = 33;   // Naranja 
+const byte intPinCrudo        = 31;   // Amarillo 
+const byte intPinAddPlato     = 29;   // Verde 
+const byte intPinDeletePlato  = 27;   // Azul 
+const byte intPinGuardar      = 25;   // Morado 
 
 
 /*  -----   GRANDE  ----- */
-const byte interruptPinGrande = 29;       // Pin de interrupcion RISING para Grande
-volatile bool pulsandoGrande = false;     // Flag de estar pulsando algo en Grande
+const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande
+volatile bool pulsandoGrande  = false;    // Flag de estar pulsando algo en Grande
 
 
 /*-----------------------------------------------------------------------------

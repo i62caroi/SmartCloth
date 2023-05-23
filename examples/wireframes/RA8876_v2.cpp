@@ -1,7 +1,7 @@
 /*
 File Name : RA8876_v2.cpp                                   
 Author    : Irene Casares Rodríguez                          
-Edit Date : 19/05/2023
+Edit Date : 23/05/2023
 Version   : v2.0
 
     Version v1.0 obtenida de la librería RA8876 de https://github.com/xlatb/ra8876/tree/master/src

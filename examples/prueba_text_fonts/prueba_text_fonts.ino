@@ -123,23 +123,18 @@ void setup() {
   //testInternalRA8876_Lite(); //YES
   //delay(5000);
 
-  testInternalRA8876();
-  delay(5000);
+  //testInternalRA8876();
 
-  tft.clearScreen(BLUE);
+  //tft.clearScreen(BLUE);
   
-  externalFontTestGT30L24T3Y();
-  delay(5000);
+   externalFontTestGT30L24T3Y();
 
-/*
-  testDecimal();
-  delay(5000);
+   //externalFontFixed();
 
-  testFloat();
-  delay(5000);
+   //externalFontArial();
 
-  testHex();
- */
+   //externalFontTimes();
+
 }
 
 /*
@@ -185,60 +180,82 @@ void testInternalRA8876_Lite(){
 
 void testInternalRA8876()
 {
-  // Caso 1: Tamaño 8x16 con escala 1x1. Color de texto (BLACK) manteniendo color de background original del canvas (BLUE)
+  // Caso 1 (OK): Tamaño 8x16 sin escala. Color de texto (BLACK). Se indica color background (WHITE) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
   tft.selectInternalFont(RA8876_FONT_SIZE_16); //RA8876_FONT_ENCODING_8859_1
   tft.setTextColor(BLACK,WHITE,RA8876_TEXT_TRANS_ON);
   tft.setCursor(10,0);
-  tft.print("Show internal font 8x16");
-  //tft.setTextForegroundColor(BLACK);
-  //tft.putString(10,0,"Show internal font 8x16"); //YES
+  tft.print("Show internal font 8x16"); 
+  // Otra forma indicando posición y texto directamente:
+  // tft.putString(10,0,"Show internal font 8x16"); 
 
 
-  // Caso 2: Tamaño 12x24 con escala 1x1. Color de texto (MAGENTA) manteniendo color de background original del canvas (BLUE)
+  // Caso 2 (OK): Tamaño 12x24 sin escala. Color de texto (MAGENTA). Se indica color background (GREEN) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
   tft.selectInternalFont(RA8876_FONT_SIZE_24);
-  tft.setTextColor(MAGENTA,BLUE,RA8876_TEXT_TRANS_ON);
+  tft.setTextColor(MAGENTA,GREEN,RA8876_TEXT_TRANS_ON);
   tft.setCursor(10,26);
-  tft.print("Show internal font 12x24");
-  //tft.setTextForegroundColor(MAGENTA);
-  //tft.putString(10,26,"Show internal font 12x24  www.buydisplay.com");
+  tft.print("Show internal font 12x24"); 
+  // Otra forma indicando posición y texto directamente:
+  // tft.putString(10,26,"Show internal font 12x24  www.buydisplay.com");
 
 
-  // Caso 3: Tamaño 16x32 con escala 1x1. Texto de color RED y resaltado YELLOW, mostrando el color de background especificado (YELLOW).
+  // Caso 3 (OK): Tamaño 16x32 sin escala. Color de texto (RED). Se muestra color background (YELLOW) desactivando la 
+  //              transparencia (RA8876_TEXT_TRANS_OFF) 
   tft.selectInternalFont(RA8876_FONT_SIZE_32);
   tft.setTextColor(RED,YELLOW,RA8876_TEXT_TRANS_OFF);
   tft.setCursor(10,60);
-  tft.print("Show internal font 16x32");
-  //tft.setTextColor(RED);
-  //tft.putString(10,60,"Show internal font 16x32 www.buydisplay.com");
+  tft.print("Show internal font 16x32"); 
+  // Otra forma indicando posición y texto directamente:
+  // tft.putString(10,60,"Show internal font 16x32 www.buydisplay.com");
   
 
-  // Caso 4: Tamaño 8x16 con escala 2x2. Texto de color WHITE y resaltado RED. Se ignora el color de background especificado (YELLOW) y se muestra el del canvas (BLUE).
+  // Caso 4 (OK): Tamaño 8x16 con escala 2x2 (16x32). Color de texto (WHITE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
   tft.selectInternalFont(RA8876_FONT_SIZE_16);
-  tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_ON);
   tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); // tft.setTextScale(1,1);
-  //tft.setCursor(10,102);
-  //tft.print("font enlarge x2");
-  //tft.setTextColor(WHITE);
-  tft.putString(10,102,"font enlarge x2");
+  tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_ON);
+  tft.putString(10,102,"font enlarge x2"); 
+  // Otra forma indicando posición y luego texto:
+  // tft.setCursor(10,102);
+  // tft.print("font enlarge x2");
   
 
-  // Caso 5: Tamaño 8x16 con escala 3x3. Color de texto (GRAYSCALE23) manteniendo color de background original del canvas (BLUE)
+  // Caso 5 (OK): Tamaño 8x16 con escala 3x3 (24x48). Color de texto (GRAYSCALE23). Se muestra color background (RED) desactivando la 
+  //              transparencia (RA8876_TEXT_TRANS_OFF) 
   tft.selectInternalFont(RA8876_FONT_SIZE_16);
-  tft.setTextColor(GRAYSCALE23,RED,RA8876_TEXT_TRANS_ON);
   tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); // tft.setTextScale(2,2);
-  //tft.setCursor(10, 144);
-  //tft.println("font enlarge x3");
-  //tft.setTextForegroundColor(GRAYSCALE23);
-  tft.putString(10,144,"font enlarge x3");                     
+  tft.setTextColor(GRAYSCALE23,RED,RA8876_TEXT_TRANS_OFF);
+  tft.putString(10,144,"font enlarge x3"); 
+  // Otra forma indicando posición y luego texto:   
+  // tft.setCursor(10, 144);
+  // tft.println("font enlarge x3");                
   
 
-  // Caso 6: Tamaño 8x16 con escala 4x4. Color de texto (CYAN), mostrando el color de background especificado (el último: RED)
+  // Caso 6 (OK): Tamaño 8x16 con escala 4x4 (32x64). Color de texto (CYAN). Si no se indicara nada más, mostraría el color background
+  //              especificado anteriormente en el Caso 5 (RED). Sin embargo, con ignoreTextBackground() se activa la transparencia 
+  //              y se muestra el color del canvas (BLUE). 
   tft.selectInternalFont(RA8876_FONT_SIZE_16);
-  tft.setTextForegroundColor(CYAN);
   tft.setTextScale(RA8876_TEXT_W_SCALE_X4, RA8876_TEXT_H_SCALE_X4); // tft.setTextScale(3,3);
-  //tft.setCursor(10, 202);
-  //tft.println("font enlarge x4");
-  tft.putString(10,202,"font enlarge x4");
+  tft.setTextForegroundColor(CYAN); // Si solo estuviera esta línea (no estuviera ignoreTextBackground()), se mostraría el background 
+                                    // del caso anterior (Caso 5): RED
+  tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+  tft.putString(10,202,"font enlarge x4"); 
+  // Otra forma indicando posición y luego texto: 
+  // tft.setCursor(10, 202);
+  // tft.println("font enlarge x4");
+
+
+  // Caso 7 (OK): Tamaño 12x24 restaurando la escala a 'sin escala' (restoreScale()). Se mantiene el color de texto indicado previamente 
+  //              en el Caso 6 (CYAN). Se muestra el color background especificado (BROWN) desactivando la transparencia (RA8876_TEXT_TRANS_OFF).
+  tft.selectInternalFont(RA8876_FONT_SIZE_24);
+  tft.setTextBackgroundColor(BROWN);                  // Manteniendo foreground anterior (CYAN), se indica background (BROWN) 
+  tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF);  // Desactiva transparencia => mostrar background especificado (BROWN)
+  tft.restoreScale();                                 // Restaurar escala a 'sin escala' (1x1 -> 12x24)
+  tft.putString(10,300,"font size 24 no enlargement"); 
+  // Otra forma indicando posición y luego texto: 
+  // tft.setCursor(10, 300);
+  // tft.println("font size 24 no enlargement");
 
 }
 
@@ -248,7 +265,8 @@ void externalFontTestGT30L24T3Y()
 {
   tft.initExternalFontRom(0, RA8876_FONT_ROM_GT30L16U2W);
 
-  // HEIGHT MUST BE 16. ROM GT30L16U2W SOLO PERMITE ESA ALTURA DE CARACTERES.
+  // HEIGHT DEBE SER 16 (se puede escalar). ROM GT30L16U2W SOLO PERMITE ESA ALTURA DE CARACTERES.
+
   // No admite Bold (RA8876_FONT_FAMILY_FIXED_BOLD) => Datasheet 14.2.2
 
   // Fixed (normal) ==> UNICODE, ASCII, Latin
@@ -257,107 +275,209 @@ void externalFontTestGT30L24T3Y()
   // Bold           ==> No admite
 
   // ------- FIXED --------
+  // Caso x : Tamaño 8x16 sin escala. Color de texto (BLACK). Se ignora el background (BROWN), indicando antes en el Caso 7
+  //          de testInternalRA8876(), Activando la transparencia (ignoreTextBackground()).
   tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
   tft.setTextForegroundColor(BLACK);
-  tft.println("External Fixed 8x16.");
-  showFont();
-
-  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_UNICODE, RA8876_FONT_FLAG_XLAT_FULLWIDTH);
-  tft.setTextForegroundColor(BLACK);
-  tft.println("External Fixed 15x16.");
-  showFont();
-
-  delay(3000);
-  tft.clearScreen(BLUE);
-
-      // Enlargement
-  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
-  tft.setTextColor(BLACK,WHITE,RA8876_TEXT_TRANS_OFF);
+  tft.ignoreTextBackground();     // Activa la transparencia para ignorar el color background (BROWN) 
   tft.setCursor(10,0);
-  tft.print("External Fixed 8x16 with background");
+  tft.println("External Fixed 8x16.");
 
+  
+  // -- ENLARGEMENT ---
+
+  // Caso x : Tamaño 8x16 con escala 2x2 (16x32). Color de texto (WHITE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
   tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
   tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_ON);
   tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); // tft.setTextScale(1,1);
-  // Debe dar error porque no se soporta un height mayor de 16, aunque no sé si afecta tras escalar.
-  tft.putString(10,102,"External Fixed font enlarge 2x2");
-
-  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
-  tft.setTextColor(GRAYSCALE23,RED,RA8876_TEXT_TRANS_ON);
-  tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X1); 
-  tft.putString(10,144,"External Fixed font enlarge 3x1"); 
-
-  delay(3000);
-  tft.clearScreen(BLUE);
+  tft.putString(10,50,"External Fixed 16 enlarge 2x2"); // OKKKKKK
 
 
 
 
   // ----- ARIAL -----------------------
+  // Caso x : ARIAL tamaño 8x16 sin escala. Color de texto (BLACK). Se muestra el color background (RED) indicando en el caso anterior.
   tft.selectExternalFont(RA8876_FONT_FAMILY_ARIAL, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
   tft.setTextForegroundColor(BLACK);
+  tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF);
+  tft.restoreScale();
+  tft.setCursor(10,100);
   tft.println("External Arial 16.");
-  showFont();
 
+  // -- ENLARGEMENT ---
+
+  // Caso x : ARIAL tamaño 8x16 con escala 2x2 (16x32). Color de texto (DARKPURPLE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
   tft.selectExternalFont(RA8876_FONT_FAMILY_ARIAL, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
-  tft.setTextColor(RED,YELLOW,RA8876_TEXT_TRANS_OFF);
-  tft.println("External Arial 16 with background");
-  showFont();
-
-  delay(3000);
-  tft.clearScreen(BLUE);
-
-        // Enlargement
-  tft.selectExternalFont(RA8876_FONT_FAMILY_ARIAL, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
-  tft.setTextColor(DARKPURPLE,RED,RA8876_TEXT_TRANS_ON);
+  tft.setTextColor(GREEN,RED,RA8876_TEXT_TRANS_ON);
   tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-  // Debe dar error porque no se soporta un height mayor de 16, aunque no sé si afecta tras escalar.
-  tft.putString(10,102,"External Arial 16 enlarge 2x2");
-
-  delay(3000);
-  tft.clearScreen(BLUE);
+  tft.putString(10,200,"External Arial 16 enlarge 2x2"); // OK
 
 
 
 
   // ----- TIMES -----------------------
+  // Caso x : TIMES tamaño 8x16 sin escala. Color de texto (BLACK). Se muestra el color background (RED) indicando en el caso anterior.
   tft.selectExternalFont(RA8876_FONT_FAMILY_TIMES, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
   tft.setTextForegroundColor(BLACK);
+  tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF);
+  tft.restoreScale();
+  tft.setCursor(10,280);
   tft.println("External Times 16.");
-  showFont();
 
+  // -- ENLARGEMENT ---
+
+  // Caso x : TIMES tamaño 8x16 con escala 2x2 (16x32). Color de texto (DARKPURPLE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
+  tft.selectExternalFont(RA8876_FONT_FAMILY_TIMES, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_ON);
+  tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+  tft.putString(10,400,"External Times 16 enlarge 2x2"); // OK
+
+
+}
+
+
+
+void externalFontFixed()
+{
+  tft.initExternalFontRom(0, RA8876_FONT_ROM_GT30L16U2W);
+
+  // HEIGHT DEBE SER 16 (se puede escalar). ROM GT30L16U2W SOLO PERMITE ESA ALTURA DE CARACTERES.
+
+  // No admite Bold (RA8876_FONT_FAMILY_FIXED_BOLD) => Datasheet 14.2.2
+
+  // Fixed (normal) ==> UNICODE, ASCII, Latin
+  // Arial          ==> ASCII, Latin
+  // Times          ==> ASCII        
+  // Bold           ==> No admite
+
+  // ------- FIXED --------
+  // Caso x : Tamaño 8x16 sin escala. Color de texto (BLACK). Se ignora el background (BROWN), indicando antes en el Caso 7
+  //          de testInternalRA8876(), Activando la transparencia (ignoreTextBackground()).
+  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextForegroundColor(BLACK);
+  tft.ignoreTextBackground();     // Activa la transparencia para ignorar el color background (BROWN) 
+  tft.setCursor(10,0);
+  tft.println("External Fixed 8x16."); // OK
+
+  // Caso x : Tamaño 8x16 aumentando anchura hasta 15x16. Color de texto (BLACK). El color background se ignora (transparencia) 
+  //          desde el caso anterior.
+  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_UNICODE, RA8876_FONT_FLAG_XLAT_FULLWIDTH);
+  tft.setTextForegroundColor(BLACK);
+  tft.setCursor(10,26);
+  tft.println("External Fixed 15x16."); // OK
+
+  
+  // -- ENLARGEMENT ---
+
+  // Caso x : Tamaño 8x16 sin escala. Color de texto (BLACK). Se muestra color background (WHITE) desactivando la 
+  //              transparencia (RA8876_TEXT_TRANS_OFF) 
+  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextColor(BLACK,WHITE,RA8876_TEXT_TRANS_OFF);
+  tft.setCursor(10,60);
+  tft.print("External Fixed 8x16 with background"); // OK
+
+
+  // Caso x : Tamaño 8x16 con escala 2x2 (16x32). Color de texto (WHITE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
+  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_ON);
+  tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); // tft.setTextScale(1,1);
+  tft.setCursor(10,102);
+  tft.putString(10,102,"External Fixed font enlarge 2x2"); // OKKKKKK
+
+
+  // Caso X : Tamaño 8x16 con escala 3x1 (24x16). Color de texto (GRAYSCALE23). Se muestra color background (RED) desactivando la 
+  //              transparencia (RA8876_TEXT_TRANS_OFF) 
+  tft.selectExternalFont(RA8876_FONT_FAMILY_FIXED, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextColor(GRAYSCALE23,RED,RA8876_TEXT_TRANS_OFF);
+  tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X1); 
+  tft.putString(10,300,"External Fixed font enlarge 3x1"); // OK
+
+
+}
+
+
+void externalFontArial()
+{
+  tft.initExternalFontRom(0, RA8876_FONT_ROM_GT30L16U2W);
+
+  // HEIGHT DEBE SER 16 (se puede escalar). ROM GT30L16U2W SOLO PERMITE ESA ALTURA DE CARACTERES.
+
+  // No admite Bold (RA8876_FONT_FAMILY_FIXED_BOLD) => Datasheet 14.2.2
+
+  // Fixed (normal) ==> UNICODE, ASCII, Latin
+  // Arial          ==> ASCII, Latin
+  // Times          ==> ASCII        
+  // Bold           ==> No admite
+
+  // ----- ARIAL -----------------------
+  // Caso x : ARIAL tamaño 8x16 sin escala. Color de texto (BLACK). Se muestra el color background (RED) indicando en el caso anterior.
+  tft.selectExternalFont(RA8876_FONT_FAMILY_ARIAL, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextForegroundColor(BLACK);
+  tft.setCursor(10,0);
+  tft.println("External Arial 16."); // OK
+
+  // Caso x : Tamaño 8x16 sin escala. Color de texto (RED). Se muestra color background (YELLOW) desactivando la 
+  //              transparencia (RA8876_TEXT_TRANS_OFF) 
+  tft.selectExternalFont(RA8876_FONT_FAMILY_ARIAL, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextColor(RED,YELLOW,RA8876_TEXT_TRANS_OFF);
+  tft.setCursor(10,26);
+  tft.println("External Arial 16 with background"); // OK
+
+  // -- ENLARGEMENT ---
+
+  // Caso x : ARIAL tamaño 8x16 con escala 2x2 (16x32). Color de texto (DARKPURPLE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
+  tft.selectExternalFont(RA8876_FONT_FAMILY_ARIAL, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextColor(PINK,RED,RA8876_TEXT_TRANS_ON);
+  tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+  tft.putString(10,102,"External Arial 16 enlarge 2x2"); // OK
+
+
+}
+
+
+void externalFontTimes()
+{
+  tft.initExternalFontRom(0, RA8876_FONT_ROM_GT30L16U2W);
+
+  // HEIGHT DEBE SER 16 (se puede escalar). ROM GT30L16U2W SOLO PERMITE ESA ALTURA DE CARACTERES.
+
+  // No admite Bold (RA8876_FONT_FAMILY_FIXED_BOLD) => Datasheet 14.2.2
+
+  // Fixed (normal) ==> UNICODE, ASCII, Latin
+  // Arial          ==> ASCII, Latin
+  // Times          ==> ASCII        
+  // Bold           ==> No admite
+
+  // ----- TIMES -----------------------
+  // Caso x : TIMES tamaño 8x16 sin escala. Color de texto (BLACK). Se muestra el color background (RED) indicando en el caso anterior.
+  tft.selectExternalFont(RA8876_FONT_FAMILY_TIMES, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
+  tft.setTextForegroundColor(BLACK);
+  tft.setCursor(10,0);
+  tft.println("External Times 16."); // OK
+
+  // Caso x : TIMES tamaño 8x16 sin escala. Color de texto (RED). Se muestra color background (YELLOW) desactivando la 
+  //              transparencia (RA8876_TEXT_TRANS_OFF) 
   tft.selectExternalFont(RA8876_FONT_FAMILY_TIMES, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
   tft.setTextColor(RED,YELLOW,RA8876_TEXT_TRANS_OFF);
-  tft.println("External Times 16 with background");
-  showFont();
+  tft.setCursor(10,26);
+  tft.println("External Times 16 with background"); // OK
 
-  delay(3000);
-  tft.clearScreen(BLUE);
+  // -- ENLARGEMENT ---
 
-        // Enlargement
+  // Caso x : TIMES tamaño 8x16 con escala 2x2 (16x32). Color de texto (DARKPURPLE). Se indica color background (RED) pero se ignora activando
+  //              la transparencia (RA8876_TEXT_TRANS_ON) => se muestra color de background original del canvas (BLUE)
   tft.selectExternalFont(RA8876_FONT_FAMILY_TIMES, RA8876_FONT_SIZE_16, RA8876_FONT_ENCODING_ASCII);
-  tft.setTextColor(DARKPURPLE,RED,RA8876_TEXT_TRANS_ON);
+  tft.setTextColor(PINK,RED,RA8876_TEXT_TRANS_ON);
   tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-  // Debe dar error porque no se soporta un height mayor de 16, aunque no sé si afecta tras escalar.
-  tft.putString(10,102,"External Times 16 enlarge 2x2");
-
-  delay(3000);
-  tft.clearScreen(BLUE);
+  tft.putString(10,102,"External Times 16 enlarge 2x2"); // OK
 
 
 }
-
-
-
-
-void showFont()
-{
-  tft.println("ABCDEFGHIJKLMNOPQRSTUVWXYZ !@#$%^&*()");
-  tft.println("abcdefghijklmnopqrstuvwxyz 0123456789");
-  tft.println("_+-={}[];'\\|:\",./<>?`~");
-  tft.println();
-}
-
 
 
 

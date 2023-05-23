@@ -6,7 +6,7 @@
       ----------------------------------------------------------------
       | VCC | GND | Int | C1 | C2 | C3 | C4 | C5 | F1 | F2 | F3 | F4 |
       ----------------------------------------------------------------
-      | 3.3 | GND |  29 | 49 | 50 | 51 | 52 | 53 | 32 | 33 | 30 | 31 |       
+      | 3.3 | GND |  37 | 44 | 46 | 48 | 50 | 52 | 26 | 28 | 30 | 32 |       
       ----------------------------------------------------------------
 
   BOTONERA MAIN conectada de la siguiente forma (conexiones hacia arriba
@@ -15,7 +15,7 @@
       | VCC |     B1     |    B2   |    B3    |    B4    |     B5    |  -  | GND |
       |     | (cocinado) | (crudo) | (añadir) | (borrar) | (guardar) |     |     |
       ----------------------------------------------------------------------------
-      | 3.3 |   22    |     23     |    24    |    25    |     26    |  -  | GND |       
+      | 3.3 |   33    |     31     |    29    |    27    |     25    |  -  | GND |       
       ----------------------------------------------------------------------------
 
 ------------------------------------------------------------------
@@ -36,8 +36,8 @@ const byte countRows = 4;
 const byte countColumns = 5;
 
 /* Buttons */
-const byte rowsPins[countRows] = {32,33,30,31};
-const byte columnsPins[countColumns] = {49,50,51,52,53};
+const byte rowsPins[countRows] = {26,28,30,32};
+const byte columnsPins[countColumns] = {44,46,48,50,52};
 
 /* Buttons info => IDs de grupo crudo */
 int buttons[countRows][countColumns] = {{1,2,3,4,5},
