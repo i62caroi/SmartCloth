@@ -1072,7 +1072,7 @@ void RA8876::_drawEllipseShape(uint16_t x, uint16_t y, uint16_t xrad, uint16_t y
   _writeReg16(RA8876_REG_DEHR0, x);
   _writeReg16(RA8876_REG_DEVR0, y);
 
-  // Radii
+  // Radius
   _writeReg16(RA8876_REG_ELL_A0, xrad);
   _writeReg16(RA8876_REG_ELL_B0, yrad);
 
@@ -1104,51 +1104,46 @@ void RA8876::_drawEllipseShape(uint16_t x, uint16_t y, uint16_t xrad, uint16_t y
    ************************************************************* */
 void RA8876::_drawRoundRectShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color, uint8_t cmd)
 {
-  SPI.beginTransaction(_spiSettings);
+  if(radius == 0) _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE);
+  else{
+      //uint16_t w = x2 - x1;
+      //uint16_t h = y2 - y1;
+      //if (w < h && (radius * 2) >= w) radius = (w / 2) - 1;
+      //if (w > h && (radius * 2) >= h) radius = (h / 2) - 1;
+      //if (radius == w || radius == h) drawRect(x1,y1,x2,y2,color);
+      //else{
+          SPI.beginTransaction(_spiSettings);
 
-  // First point
-  _writeReg16(RA8876_REG_DLHSR0, x1);
-  _writeReg16(RA8876_REG_DLVSR0, y1);
-  /*_writeReg(RA8876_REG_DLHSR0, x1 & 0xFF);
-  _writeReg(RA8876_REG_DLHSR1, x1 >> 8);
-  _writeReg(RA8876_REG_DLVSR0, y1 & 0xFF);
-  _writeReg(RA8876_REG_DLVSR1, y1 >> 8);*/
+          // First point
+          _writeReg16(RA8876_REG_DLHSR0, x1);
+          _writeReg16(RA8876_REG_DLVSR0, y1);
 
-  // Second point
-  _writeReg16(RA8876_REG_DLHER0, x2);
-  _writeReg16(RA8876_REG_DLVER0, y2);
-  /*_writeReg(RA8876_REG_DLHER0, x2 & 0xFF);
-  _writeReg(RA8876_REG_DLHER1, x2 >> 8);
-  _writeReg(RA8876_REG_DLVER0, y2 & 0xFF);
-  _writeReg(RA8876_REG_DLVER1, y2 >> 8);*/
+          // Second point
+          _writeReg16(RA8876_REG_DLHER0, x2);
+          _writeReg16(RA8876_REG_DLVER0, y2);
 
-  // Radius
-  _writeReg16(RA8876_REG_ELL_A0, radius);
-  _writeReg16(RA8876_REG_ELL_B0, radius);
-  /*_writeReg(RA8876_REG_DLHER0, radius & 0xFF);
-  _writeReg(RA8876_REG_DLHER1, radius >> 8);
-  _writeReg(RA8876_REG_DLVER0, radius & 0xFF);
-  _writeReg(RA8876_REG_DLVER1, radius >> 8);*/
+          // Radius
+          _writeReg16(RA8876_REG_ELL_A0, radius);
+          _writeReg16(RA8876_REG_ELL_B0, radius);
 
-  // Colour
-  setTextForegroundColor(color);
-  /*_writeReg(RA8876_REG_FGCR, color >> 11 << 3);
-  _writeReg(RA8876_REG_FGCG, ((color >> 5) & 0x3F) << 2);
-  _writeReg(RA8876_REG_FGCB, (color & 0x1F) << 3);*/
+          // Colour
+          setTextForegroundColor(color);
 
-  // Draw
-  _writeReg(RA8876_REG_DCR1, cmd);  // Start drawing
+          // Draw
+          _writeReg(RA8876_REG_DCR1, cmd);  // Start drawing
 
-  // Wait for completion
-  uint8_t status = _readStatus();
-  int iter = 0;
-  while (status & 0x08)
-  {
-    status = _readStatus();
-    iter++;
+          // Wait for completion
+          uint8_t status = _readStatus();
+          int iter = 0;
+          while (status & 0x08)
+          {
+            status = _readStatus();
+            iter++;
+          }
+
+          SPI.endTransaction();
+      //}
   }
-
-  SPI.endTransaction();
 }
 
 
@@ -1179,7 +1174,7 @@ uint32_t RA8876::_read32(File f) {
 
 /* *************************************************************
    ************************************************************* */
-int RA8876::_getTextSizeY(void)
+int RA8876::getTextSizeY(void)
 {
   return ((_fontSize + 2) * 8) * _textScaleY;
 }
@@ -2527,7 +2522,7 @@ size_t RA8876::write(const uint8_t *buffer, size_t size)
       ;  // Ignored
     else if (c == '\n')
     {
-      setCursor(0, getCursorY() + _getTextSizeY());
+      setCursor(0, getCursorY() + getTextSizeY());
       _writeCmd(RA8876_REG_MRWDP);  // Reset current register for writing to memory
     }
     else if ((_fontFlags & RA8876_FONT_FLAG_XLAT_FULLWIDTH) && ((c >= 0x21) || (c <= 0x7F)))
@@ -2594,6 +2589,101 @@ void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
   
   SPI.endTransaction();
 }
+
+/* *************************************************************
+   ************************************************************* */
+/*void RA8876::drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color)
+{
+  if(radius == 0) drawRect(x1, y1, x2, y2, color);
+  else{
+      //uint16_t w = x2 - x1;
+      //uint16_t h = y2 - y1;
+      //if (w < h && (radius * 2) >= w) radius = (w / 2) - 1;
+      //if (w > h && (radius * 2) >= h) radius = (h / 2) - 1;
+      //if (radius == w || radius == h) drawRect(x1,y1,x2,y2,color);
+      //else{
+          SPI.beginTransaction(_spiSettings);
+
+          // First point
+          _writeReg16(RA8876_REG_DLHSR0, x1);
+          _writeReg16(RA8876_REG_DLVSR0, y1);
+
+          // Second point
+          _writeReg16(RA8876_REG_DLHER0, x2);
+          _writeReg16(RA8876_REG_DLVER0, y2);
+
+          // Radius
+          _writeReg16(RA8876_REG_ELL_A0, radius);
+          _writeReg16(RA8876_REG_ELL_B0, radius);
+
+          // Colour
+          setTextForegroundColor(color);
+
+          // Draw
+          _writeReg(RA8876_REG_DCR1, RA8876_DRAW_ROUND_RECT);  // Start drawing
+
+          // Wait for completion
+          uint8_t status = _readStatus();
+          int iter = 0;
+          while (status & 0x08)
+          {
+            status = _readStatus();
+            iter++;
+          }
+
+          SPI.endTransaction();
+      //}
+  }
+}
+*/
+
+/* *************************************************************
+   ************************************************************* */
+/*void RA8876::fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color)
+{
+  if(radius == 0) drawRect(x1, y1, x2, y2, color);
+  else{
+      //uint16_t w = x2 - x1;
+      //uint16_t h = y2 - y1;
+      //if (w < h && (radius * 2) >= w) radius = (w / 2) - 1;
+      //if (w > h && (radius * 2) >= h) radius = (h / 2) - 1;
+      //if (radius == w || radius == h) drawRect(x1,y1,x2,y2,color);
+      //else{
+          SPI.beginTransaction(_spiSettings);
+
+          // First point
+          _writeReg16(RA8876_REG_DLHSR0, x1);
+          _writeReg16(RA8876_REG_DLVSR0, y1);
+
+          // Second point
+          _writeReg16(RA8876_REG_DLHER0, x2);
+          _writeReg16(RA8876_REG_DLVER0, y2);
+
+          // Radius
+          _writeReg16(RA8876_REG_ELL_A0, radius);
+          _writeReg16(RA8876_REG_ELL_B0, radius);
+
+          // Colour
+          if(color != _textForeColor) setTextForegroundColor(color);
+
+          // Draw
+          _writeReg(RA8876_REG_DCR1, RA8876_DRAW_ROUND_RECT_FILL);  // Start drawing
+
+          // Wait for completion
+          uint8_t status = _readStatus();
+          int iter = 0;
+          while (status & 0x08)
+          {
+            status = _readStatus();
+            iter++;
+          }
+
+          SPI.endTransaction();
+      //}
+  }
+}
+*/
+
 
 
 
@@ -2862,12 +2952,51 @@ void RA8876::bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_
   
   ramAccessPrepare();
   
- for(uint16_t j=0;j<height;j++)
+ for(uint16_t i = 0; i < height; i++)
  {
-  for(uint16_t i=0;i<width;i++)
+  for(uint16_t j = 0; j < width; j++)
   {
    _checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
    _writeData16bbp(*data);
+   data++;
+   //_checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  }
+ } 
+  _checkWriteFifoEmpty();
+
+  SPI.endTransaction();
+}
+
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
+                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned char *data)
+{
+  SPI.beginTransaction(_spiSettings);
+
+  bte_Source1_MemoryStartAddr(s1_addr);
+  bte_Source1_ImageWidth(s1_image_width);
+  bte_Source1_WindowStartXY(s1_x,s1_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  _writeReg(RA8876_BTE_CTRL1,rop_code<<4|RA8876_BTE_MPU_WRITE_WITH_ROP);//91h
+  _writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  _writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+  
+ for(uint16_t i = 0; i < height; i++)
+ {
+  for(uint16_t j = 0; j < (width*2); j++)
+  {
+   _checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
+   _writeData(*data);
    data++;
    //_checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
   }
@@ -2938,6 +3067,44 @@ void RA8876::bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width
 
   SPI.endTransaction();
 }
+
+
+/* *************************************************************
+************************************************************* */
+void RA8876::bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
+                              const unsigned char *data)
+{
+  SPI.beginTransaction(_spiSettings);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(width,height);
+
+  setTextBackgroundColor(chromakey_color);
+
+  _writeReg(RA8876_BTE_CTRL1,RA8876_BTE_MPU_WRITE_WITH_CHROMA);//91h
+  _writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  _writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  ramAccessPrepare();
+  
+ for(uint16_t i = 0; i < height; i++)
+ {
+  for(uint16_t j = 0; j < (width*2); j++)
+  {
+   _checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
+   _writeData(*data);
+   data++;
+   //_checkWriteFifoEmpty();//if high speed mcu and without Xnwait check
+  }
+ } 
+  _checkWriteFifoEmpty();
+
+  SPI.endTransaction();
+}
+
 
 /* *************************************************************
 ************************************************************* */

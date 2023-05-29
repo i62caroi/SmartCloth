@@ -28,6 +28,8 @@ typedef struct {
 
     ñ --> F1    Ñ --> D1
 
+    ¿ --> BF    ? --> 3F
+
 */
 
 

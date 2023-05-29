@@ -12,48 +12,117 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 #define COLORS_H
 
 
+// ---------------- COLORES DASHBOARD --------------
+#define AZUL_FONDO            0x2126
+#define GRIS_CUADROS          0x29A8
+#define GRIS_BORDE_CUADRO     0xC6DE
+#define GRIS_CUADROS_VALORES  0x426C
+#define ROJO_PESO             0xF902
+#define AZUL_CARB             0x059E
+#define NARANJA_PROT          0xF2A5
+#define AMARILLO_GRASAS       0xEEC5
+#define ROJO_KCAL             0xF801
+
+#define COLOR_G1        0xEB4C    // ROJO
+#define COLOR_G1E       0xFB0B
+
+#define COLOR_G2        0x5DAA    // VERDE
+#define COLOR_G2E       0x2DC7
+
+#define COLOR_G3_G3E    0x8E5E    // AZUL
+
+#define COLOR_G4        0xFE74    // ROSA
+#define COLOR_G4E       0xFE5A
+
+#define COLOR_G5        0xFE44    // AMARILLO
+#define COLOR_G5E       0xFE40
+
+#define COLOR_G6        0xB45B    // MORADO
+#define COLOR_G6E       0xBC3C
+
+#define COLOR_G7        0x7E25    // VERDE
+#define COLOR_G7E       0x5E40
+
+#define COLOR_G8        0xFF7B    // BEIGE
+#define COLOR_G8E       0xFF7A
+
+#define COLOR_G9        0xCCCE    // MARRON
+#define COLOR_G9E       0xD4CD
+
+#define COLOR_G10_G10E  0xFD7D    // ROSA
+
+#define COLOR_G11       0xCEC9    // VERDE
+#define COLOR_G11E      0xD6E9
+
+#define COLOR_G12_G12E  0xFE80    // AMARILLO
+
+#define COLOR_G13_G13E  0xFF4D    // AMARILLO
+
+// Falta G14
+
+#define COLOR_G15       0xE476    // ROSA
+#define COLOR_G15E      0xEC37
+
+#define COLOR_G16       0x95B7    // GRIS
+#define COLOR_G16E      0x8DB7
+
+#define COLOR_G17       0xFAD0    // ROSA
+#define COLOR_G17E      0xFA30
+
+#define COLOR_G18       0xFB2B    // NARANJA
+#define COLOR_G18E      0xFAEA
+
+#define COLOR_G19       0xFEEC    // AMARILLO
+#define COLOR_G19E      0xFEE8
+
+#define COLOR_G20_G20E  0xFF1A    // BEIGE
+// -------------------------------------------------
+
+
+
+// ------------- COLORES EJEMPLO ----------------------
 
 // NEGRO
 #define BLACK         0x0000
 
 // BLANCO
-#define WHITE         0xffff
+#define WHITE         0xFFFF // Wireframes arranque, carga
 
 // ROJO
-#define RED           0xf800
-#define LIGHTRED      0xfc10
+#define RED           0xF800 // Wireframes añadir, eliminar, guardar, recipiente, grupos, crudo-cocinado
+#define LIGHTRED      0xFC10
 #define DARKRED       0x8000
   // NARANJA
 #define ORANGE        0xFC80
 
 // VERDE
-#define GREEN         0x07e0
+#define GREEN         0x07E0
 #define GREEN2        0x07C0
-#define LIGHTGREEN    0x87f0
+#define LIGHTGREEN    0x87F0
 #define DARKGREEN     0x0400
 
 //AZUL
-#define BLUE          0x001f
-#define BLUE2         0x051f
+#define BLUE          0x001F
+#define BLUE2         0x051F
 #define BLUE3         0x019F
-#define LIGHTBLUE     0x841f
+#define LIGHTBLUE     0x841F
 #define DARKBLUE      0x0010
   // CYAN
-#define CYAN          0x07ff
-#define LIGHTCYAN     0x87ff
+#define CYAN          0x07FF
+#define LIGHTCYAN     0x87FF
 #define DARKCYAN      0x0410
 
 // AMARILLO
-#define YELLOW        0xffe0
+#define YELLOW        0xFFE0
 #define YELLOW2       0xFFC0
-#define LIGHTYELLOW   0xfff0
+#define LIGHTYELLOW   0xFFF0
 #define DARKYELLOW    0x8400
 
 // ROSA
 #define PINK          0xFA1F
   // MAGENTA
-#define MAGENTA       0xf81f
-#define LIGHTMAGENTA  0xfc1f
+#define MAGENTA       0xF81F
+#define LIGHTMAGENTA  0xFC1F
 #define DARKMAGENTA   0x8010
   // MORADO
 #define PURPLE        0x9112

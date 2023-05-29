@@ -86,9 +86,9 @@ typedef uint8_t FontFlags;
 #define PAGE9_START_ADDR  1024*600*2*8
 #define PAGE10_START_ADDR 1024*600*2*9
 
-#define PATTERN1_RAM_START_ADDR 1024*600*2*10
-#define PATTERN2_RAM_START_ADDR (1024*600*2*10)+(16*16*2)
-#define PATTERN3_RAM_START_ADDR (1024*600*2*10)+(16*16*2)+(16*16*2)
+//#define PATTERN1_RAM_START_ADDR 1024*600*2*10
+//#define PATTERN2_RAM_START_ADDR (1024*600*2*10)+(16*16*2)
+//#define PATTERN3_RAM_START_ADDR (1024*600*2*10)+(16*16*2)+(16*16*2)
 
 /*DMA picture data start address*/ 
 // DMA se puede usar si se tiene memoria Flash. No es nuestro caso.
@@ -493,8 +493,8 @@ typedef uint8_t FontFlags;
 #define RA8876_BTE_MEMORY_COPY_WITH_ROP                     2
 #define RA8876_BTE_MPU_WRITE_WITH_CHROMA                    4
 #define RA8876_BTE_MEMORY_COPY_WITH_CHROMA                  5
-#define RA8876_BTE_PATTERN_FILL_WITH_ROP                    6
-#define RA8876_BTE_PATTERN_FILL_WITH_CHROMA                 7
+//#define RA8876_BTE_PATTERN_FILL_WITH_ROP                    6
+//#define RA8876_BTE_PATTERN_FILL_WITH_CHROMA                 7
 #define RA8876_BTE_MPU_WRITE_COLOR_EXPANSION                8
 #define RA8876_BTE_MPU_WRITE_COLOR_EXPANSION_WITH_CHROMA    9
 #define RA8876_BTE_MEMORY_COPY_WITH_OPACITY                 10
@@ -1030,8 +1030,6 @@ private:
   uint16_t  _read16(File f);
   uint32_t  _read32(File f);
 
-  int       _getTextSizeY(void);
-
   
 public:
 
@@ -1081,6 +1079,7 @@ public:
   void            setTextScale(uint8_t X_scale, uint8_t Y_scale);
   inline uint8_t  getScaleX(void){ return _textScaleX; };
   inline uint8_t  getScaleY(void){ return _textScaleY; };
+  int             getTextSizeY(void);
   void            restoreScale(void){ setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); };
 
   // TEXT CURSOR
@@ -1126,8 +1125,10 @@ public:
         // drawSquareFill() en RA8876_Lite
   inline void     drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT); }; //0xB0
         // drawCircleSquare() en RA8876_Lite
+  //void            drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color);
   inline void     fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT_FILL); }; //0xF0
         // drawCircleSquareFill() en RA8876_Lite
+  //void            fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color);
   inline void     drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xA2); }; //RA8876_DRAW_TRIANGLE => 0x82
         // drawTriangle() en RA8876_Lite
   inline void     fillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xE2); }; //RA8876_DRAW_TRIANGLE_FILL => 0xA2
@@ -1144,6 +1145,8 @@ public:
   // Limpiar pantalla ==> dibujar rectángulo que ocupe todo
   //inline void     clearScreen(uint16_t color) { setCursor(0, 0); fillRect(0, 0, _width, _height, color); };
   inline void     clearScreen(uint16_t color) { fillRect(0, 0, _width, _height, color); };
+  inline void     clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest, uint16_t color) { fillRect(xOrig, yOrig, xDest, yDest, color); }; 
+
 
 
   // ------- BTE ------------
@@ -1157,33 +1160,37 @@ public:
   void    bte_DestinationImageWidth(uint16_t width);               // Lite
   void    bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0);   // Lite
   void    bte_WindowSize(uint16_t width, uint16_t height);         // Lite
+
   //--- todo Lite
   void    bteMemoryCopy(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t des_addr,uint16_t des_image_width, 
                     uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height);
+
   void    bteMemoryCopyWithROP(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,
                             uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint8_t rop_code);
+
   void    bteMemoryCopyWithChromaKey(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
                                 uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint16_t chromakey_color);
+
   void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
                          uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned short *data);
   void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
+                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned char *data);
+  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
                          uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code);                     
+
   void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
                               const unsigned short *data);
+  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
+                              const unsigned char *data);
   void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t chromakey_color);
+
   void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
   void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
+  
   void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,
                                              uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
   void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,
                                              uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
-
- /* void  btePatternFill(uint8_t p8x8or16x16, uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
-                    uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height);
-  void    btePatternFillWithChromaKey(uint8_t p8x8or16x16, uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
-                                 uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t chromakey_color);
-*/
-
 
   
   // ------ IMAGENES -------

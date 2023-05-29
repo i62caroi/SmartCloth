@@ -841,7 +841,7 @@ enum ExternalFontFamily{ // GTFNT_CR ==> Character width setting ==> Bit 1-0
 // 8bpp (1 byte/pixel ) => RGB332
 // 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
 // 24bpp (3 bytes/pixel o 4 bytes/pixel) ==> RGB888
-/*
+
 #define NEGRO         0x0000
 #define BLANCO        0xFFFF
 #define ROJO          0xF800 //0xF920 | 0x8000 | 0xfc10 | 0xfa02
@@ -852,7 +852,7 @@ enum ExternalFontFamily{ // GTFNT_CR ==> Character width setting ==> Bit 1-0
 #define AZUL          0x019F
 #define ROSA          0xFA1F
 #define MORADO        0x9112
-#define MARRON        0xABC8*/
+#define MARRON        0xABC8
 //-----------------------------
 
 
