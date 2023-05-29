@@ -15,6 +15,16 @@ Based on code by Tom Igoe
 //
 #include "SD.h"
 #include"SPI.h"
+
+#include <DS3231.h> // RTC
+
+// Init the DS3231 using the hardware interface
+DS3231  rtc(SDA, SCL);
+// Arduino Due:
+// ----------------------
+// DS3231:  SDA pin   -> Arduino Digital 20 (SDA) or the dedicated SDA1 (Digital 70) pin
+//          SCL pin   -> Arduino Digital 21 (SCL) or the dedicated SCL1 (Digital 71) pin
+//
 //
 
 const int CSpin = 4;
@@ -24,6 +34,7 @@ char charRead;
 
 String dataString ="";          // holds the data to be written to the SD card
 
+// --------------
 float carb = 15.03;    // value read from your first sensor
 int carb_R = 2;
 
@@ -34,17 +45,20 @@ float prot = 54.40;    // value read from your third sensor
 int prot_R = 1;
 
 float kcal = 546.09;
+// ----------------
 
 int veces = 3;
 bool borrado = false;
 
+char fileCSV[30] = "data/data-SC2.csv";
 File myFile;
-//
-//
+
+
+
 void setup()
 {
     // Open serial communications
-    Serial.begin(9600);
+    Serial.begin(115200);
     while (!Serial) {
         ; // wait for serial port to connect. Needed for native USB port only
       }
@@ -55,24 +69,37 @@ void setup()
         // don't do anything more:
         return;
     }
-    Serial.println("card initialized.");
+    Serial.println("\n\ncard initialized.");
 
-    Serial.println("\nPulse una tecla para comenzar");
+    // Initialize the rtc object
+    rtc.begin();
+    Serial.println("RTC initialized.");
+
+    /*Serial.println("\nPulse una tecla para comenzar");
     while(Serial.available() == 0){;}
     charRead = Serial.read();  
-    Serial.write(charRead); //write it back to Serial window
+    Serial.write(charRead); //write it back to Serial window*/
     Serial.println();
 
-    writeHeader();
-    readData();
+    if(!SD.exists(fileCSV)){ //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
+        writeHeader();
+    }
+    
+    //readData();
+    
+    getAcumuladoHoy();
   
 }
 
+
+
+
 void loop(){
   
-  if(veces != 0){
+  /*if(veces != 0){
     // build the data string
-    dataString = String(carb) + ";" + String(carb_R) + ";" + 
+    dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" +
+                 String(carb) + ";" + String(carb_R) + ";" + 
                  String(lip) + ";" + String(lip_R) + ";" + 
                  String(prot) + ";" + String(prot_R) + ";" + 
                  String(kcal); // convertir a CSV con ';' como delimitador para que Excel lo abra directamente
@@ -82,17 +109,102 @@ void loop(){
     delay(5000);
 
     veces--;
-  }
+  }*/
   //else{
       //if(!borrado) deleteData();
   //}
     
 }
 
+
+void getAcumuladoHoy(){
+
+    char *today = rtc.getDateStr();
+
+    float carb = 0.0, lip = 0.0, prot = 0.0, kcal = 0.0;    
+    int carb_R = 0, lip_R = 0, prot_R = 0;
+
+    char lineBuffer[128];  
+
+    char *token;
+    int fieldIndex;
+
+
+    Serial.print("Hoy es "); Serial.println(today);
+
+    myFile = SD.open(fileCSV, FILE_READ);
+    if (myFile){
+        Serial.print(fileCSV); Serial.println(": ");
+        while (myFile.available()) {
+
+            
+            myFile.readBytesUntil('\n', lineBuffer, sizeof(lineBuffer) - 1); // Leer línea completa hasta el tamaño máximo del búfer
+            lineBuffer[sizeof(lineBuffer) - 1] = '\0'; // Asegurar terminación nula
+
+            
+            token = strtok(lineBuffer, ";"); // Separar campos de la línea utilizando el delimitador ';'
+            fieldIndex = 0;
+
+            if(strcmp(today, token) == 0){ // fieldIndex = 0
+                while (token != NULL) {
+                    
+                    // Comprobar el índice del campo actual
+                    if (fieldIndex == 2 || fieldIndex == 4 || fieldIndex == 6 || fieldIndex == 8) {
+                        // Convertir el campo a número y sumarlo al valor correspondiente
+                        float value = atof(token);
+                        if (fieldIndex == 2) carb += value;
+                        else if (fieldIndex == 4) lip += value;
+                        else if (fieldIndex == 6) prot += value;
+                        else if (fieldIndex == 8) kcal += value;
+                    } else if (fieldIndex == 3 || fieldIndex == 5 || fieldIndex == 7) {
+                        // Convertir el campo a número y sumarlo al valor correspondiente
+                        int value = atoi(token);
+                        if (fieldIndex == 3) carb_R += value;
+                        else if (fieldIndex == 5) lip_R += value;
+                        else if (fieldIndex == 7) prot_R += value;
+                    }
+
+                    // Obtener el siguiente campo
+                    token = strtok(NULL, ";");
+                    fieldIndex++;
+                }
+            }
+
+         
+        }
+        myFile.close();
+        // Imprimir las sumas de cada columna
+        Serial.print("\nSuma carb: ");    Serial.println(carb);
+        Serial.print("Suma carb_R: ");  Serial.println(carb_R);
+        Serial.print("Suma lip: ");     Serial.println(lip); 
+        Serial.print("Suma lip_R: ");   Serial.println(lip_R); 
+        Serial.print("Suma prot: ");    Serial.println(prot);
+        Serial.print("Suma prot_R: ");  Serial.println(prot_R);
+        Serial.print("Suma kcal: ");    Serial.println(kcal);
+        
+    }
+    else{
+        Serial.println("Error opening file for reading!");
+    }
+
+}
+
+
+
+
+
+
 void writeHeader(){
-    Serial.println(F("\n Creando header del fichero...\n"));
-    String header = "carb;carb_r;lip;lip_R;prot;prot_R;kcal";
-    myFile = SD.open("data.csv", FILE_WRITE);
+    Serial.print(F("\n Creando fichero ")); Serial.print(fileCSV); Serial.println(F(" ...\n"));
+    
+    // Debe separarse por ';' para que Excel abra el fichero csv separando las
+    // columnas directamente. Si se separa por comas, no divide las columnas porque
+    // en la región de España las comas se usan para los decimales, aunque se haya
+    // indicado en las preferencias que se use el punto para separar la parte decimal.
+
+    String header = "date;time;carb;carb_r;lip;lip_R;prot;prot_R;kcal";
+
+    myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
     if (myFile){
         myFile.println(header);
         myFile.close(); // close the file
@@ -102,9 +214,11 @@ void writeHeader(){
     }
 }
 
+
+
 void saveData(){
     Serial.println(F("Guardando info...\n"));
-    myFile = SD.open("data.csv", FILE_WRITE);
+    myFile = SD.open(fileCSV, FILE_WRITE);
     if (myFile){
         myFile.println(dataString);
         myFile.close(); // close the file
@@ -114,9 +228,10 @@ void saveData(){
     }
 }
 
+
 void readData(){
     Serial.println(F("Leyendo fichero...\n"));
-    myFile = SD.open("data.csv", FILE_READ);
+    myFile = SD.open(fileCSV, FILE_READ);
     if (myFile){
         while (myFile.available()) {
             Serial.write(myFile.read());
@@ -128,10 +243,12 @@ void readData(){
     }
 }
 
+
+/*
 void deleteData(){
     Serial.println(F("Borrando fichero...\n"));
-    SD.remove("data.csv");
-    if(!SD.exists("data.csv")){
+    SD.remove(fileCSV);
+    if(!SD.exists(fileCSV)){
         Serial.println(F("Fichero borrado con éxito\n"));
         borrado = true;
     }
@@ -140,3 +257,4 @@ void deleteData(){
     }
     
 }
+*/

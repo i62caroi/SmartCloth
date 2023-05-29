@@ -1,3 +1,7 @@
+#include <Wire2.h>
+
+#include <Wire.h>
+
 #include "RA8876_v2.h"
 #include "COLORS.h"
 
