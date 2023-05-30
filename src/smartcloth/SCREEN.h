@@ -46,7 +46,7 @@
       
       En la ra8876SdramInitial() de RA8876_Lite no aparece esta SDRAM como opción, pero sí la W9812G6JH. La principal 
       diferencia entre la W9812G6JH y la W9812G6KH-6 es la velocidad de acceso y el tiempo de ciclo de reloj, siendo 
-      la W9812G6JH más rápida en términos de acceso y tiempo de ciclo de reloj.
+      la W9812G6JH más rápida en esos términos.
   ------------------------------------------------------------------------------------------------
 
   -------------- FUENTES INTERNAS -----------------------------------------------------------------
@@ -163,7 +163,6 @@
 #define SCREEN_H
 
 
-//#include "RA8876.h"
 #include "RA8876_v2.h"
 #include "State_Machine.h"
 #include "Variables.h"
@@ -264,14 +263,14 @@ void Welcome(){
     //tft.putPicture_16bpp(250,150,500,350,smartcloth_icono); 
 
     // ---- Fichero BMP desde SD -----
-    // TERRIBLEMENTE LENTOOOO
+    // TERRIBLEMENTE LENTO
     //tft.sdCardDraw24bppBMP(fileBMP, 250, 150);
 
     // ---- Fichero BIN desde SD -----
-    //tft.sdCardDraw16bppBIN(250,150,482,350,fileBIN);        // Lo más rápido desde SD. Se ha mejorado aún más:
-    //tft.sdCardDraw16bppBIN16bits(250,150,482,350,fileBIN);  // 1.6 veces más rápido que sdCardDraw16bppBIN()
+    //tft.sdCardDraw16bppBIN(250,150,482,350,fileBIN);        // Lo más rápido desde SD => Se ha mejorado aún más:
     //tft.sdCardDraw16bppBIN64bits(250,150,482,350,fileBIN);  // 2.65 veces más rápido que sdCardDraw16bppBIN()
-    tft.sdCardDraw16bppBIN256bits(250,150,482,350,fileBIN);   // 2.96 veces más rápido que sdCardDraw16bppBIN()
+    tft.sdCardDraw16bppBIN256bits(250,150,482,350,fileBIN);   // 2.96 veces más rápido que sdCardDraw16bppBIN(). 
+                                                              // A partir de 256 bits no hay mayor incremento de la velocidad
     
     delay(2000);
 }
@@ -291,13 +290,13 @@ void printEjemplosyGrupo(){
     tft.setTextScale(2);
     tft.selectInternalFont(RA8876_FONT_SIZE_16);       // Tamaño texto
     tft.setCursor(MARGEN_IZQ, 40);                     // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto                  
+    tft.setTextColor(YELLOW);                        // Color texto                  
     tft.println(grupoEscogido.Ejemplos_grupo);         // Imprimir texto
 
     /* ----- GRUPO ----- */
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(MARGEN_IZQ, 120);                    // Posicion inicio texto => tft.getCursorY()
-    tft.setTextColor(BLANCO);                          // Color texto      
+    tft.setTextColor(WHITE);                          // Color texto      
     tft.setTextScale(2);        
     tft.println(grupoEscogido.Nombre_grupo);           // Imprimir texto
 
@@ -324,7 +323,7 @@ void printCentral(){
     tft.setCursor(MARGEN_IZQ, 210); //tft.getCursorY()
     tft.selectInternalFont(RA8876_FONT_SIZE_24);  
     tft.setTextScale(2);
-    tft.setTextColor(VERDE);
+    tft.setTextColor(GREEN);
     tft.print("Alimento: "); 
     tft.setCursor(tft.getCursorX(), 217); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
@@ -362,7 +361,7 @@ void printValoresComida(){
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextScale(2);
-    tft.setTextColor(BLANCO);
+    tft.setTextColor(WHITE);
     tft.println("Comida Actual\n");
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
@@ -405,7 +404,7 @@ void printValoresTemporales(){
     
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
-    tft.setTextColor(BLANCO);
+    tft.setTextColor(WHITE);
     tft.println("Comida Actual\n");
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
@@ -442,7 +441,7 @@ void printValoresDiario(){
     tft.setCursor(MARGEN_IZQ_ACC, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextScale(2);
-    tft.setTextColor(BLANCO);
+    tft.setTextColor(WHITE);
     tft.println("Acumulado Hoy\n");
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
@@ -489,14 +488,14 @@ void printStateEmpty(){
     // Ya no se necesita el 'BIENVENIDO' porque no es la primera pantalla
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextColor(YELLOW);                        // Color texto
     tft.setTextScale(2);        
     cad = "B\xC1""SCULA LIBRE";                        // BÁSCULA LIBRE
     tft.println(cad);                                  // Imprimir texto
     
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CIAN);                                
+    tft.setTextColor(CYAN);                                
     tft.setTextScale(2);        
     if(comidaActual.isComidaEmpty()) cad = "Coloque un recipiente sobre la b\xE1""scula";
     else cad = "Coloque un recipiente sobre la b\xE1""scula o guarde la comida";
@@ -518,14 +517,14 @@ void printStatePlato(){
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextColor(YELLOW);                        // Color texto
     tft.setTextScale(2);        
     cad = "\xA1""RECIPIENTE COLOCADO\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
     
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CIAN);                                
+    tft.setTextColor(CYAN);                                
     tft.setTextScale(2);        
     /*
     // Esto solo sirve si se permite guardar comida desde STATE_Plato,
@@ -613,13 +612,13 @@ void printStateAdded(){
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextColor(YELLOW);                        // Color texto
     tft.setTextScale(2);        
     cad = "\xA1""PLATO GUARDADO\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
     
     tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CIAN);                                
+    tft.setTextColor(CYAN);                                
     tft.setTextScale(2);        
     tft.selectInternalFont(RA8876_FONT_SIZE_16);       
     cad = "Retire el plato para comenzar otro o guarde la comida";
@@ -644,7 +643,7 @@ void printStateDeleted(){
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextColor(YELLOW);                        // Color texto
     tft.setTextScale(2);        
     cad = "\xA1""PLATO ELIMINADO\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
@@ -652,7 +651,7 @@ void printStateDeleted(){
     if(pesoARetirar != 0.0){            // Solo se pone a 0.0 al volver a INI. Mientras no se quite el plato
                                         // y no se marque LIBERAR, no se resetea
         tft.setCursor(MARGEN_IZQ, 120);                             
-        tft.setTextColor(CIAN);                                
+        tft.setTextColor(CYAN);                                
         tft.setTextScale(2);        
         tft.selectInternalFont(RA8876_FONT_SIZE_16);       
         cad = "Retire el plato eliminado para empezarlo de nuevo o guarde la comida";
@@ -677,7 +676,7 @@ void printStateSaved(){
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextColor(YELLOW);                        // Color texto
     tft.setTextScale(2);        
     cad = "\xA1""COMIDA GUARDADA\x21"""; // ¡BIENVENIDO/A!
     tft.println(cad);                                  // Imprimir texto
@@ -685,7 +684,7 @@ void printStateSaved(){
     if(pesoARetirar != 0.0){            // Solo se pone a 0.0 al volver a INI. Mientras no se quite el plato
                                         // y no se marque LIBERAR, no se resetea
         tft.setCursor(MARGEN_IZQ, 120);                             
-        tft.setTextColor(CIAN);                                
+        tft.setTextColor(CYAN);                                
         //tft.setTextScale(2);  
         tft.selectInternalFont(RA8876_FONT_SIZE_16);       
         cad = "Retire el plato";
@@ -727,7 +726,7 @@ void printEventError(String msg){
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(ROJO);                        // Color texto
+    tft.setTextColor(RED);                        // Color texto
     tft.setTextScale(2);        
     tft.println(cad);                                  // Imprimir texto
 
@@ -735,7 +734,7 @@ void printEventError(String msg){
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     //tft.setTextScale(1);        
     tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CIAN);                                
+    tft.setTextColor(CYAN);                                
     tft.println(msg);           
 
     //printCentral();                                    // 2 - Estructura central
@@ -758,7 +757,7 @@ void printEmptyObjectError(String msg){
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
     tft.setCursor(350, 50);                            // Posicion inicio texto
-    tft.setTextColor(AMARILLO);                        // Color texto
+    tft.setTextColor(YELLOW);                        // Color texto
     tft.setTextScale(2);        
     tft.println(cad);                                  // Imprimir texto
 

@@ -1094,7 +1094,6 @@ public:
   void            setTextBackgroundTrans(uint8_t trans);                                          // Transparencia o no de color background de texto
   void            ignoreTextBackground(void){ setTextBackgroundTrans(RA8876_TEXT_TRANS_ON); };    // Transparencia ON => muestra fondo canvas
   void            activateTextBackground(void){ setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF); }; // Transparencia OFF => muestra background especificado en setTextBackgroundColor()
-  void            setTextColor(uint16_t f_color){ setTextColor(f_color, BLACK, RA8876_TEXT_TRANS_ON); }; 
   void            setTextColor(uint16_t f_color, uint16_t b_color, uint8_t trans);                // Texto y resaltado, según flag de transparencia
   
   // WRITE TEXT
@@ -1119,6 +1118,8 @@ public:
   // Drawing
   void            drawPixel(uint16_t x, uint16_t y, uint16_t color);
         // putPixel_16bpp() en RA8876_Lite
+  void            drawPixels(int x, int y, uint16_t *p, uint32_t num);
+        // drawPixels() en Adafruit_RA8875
   inline void     drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, RA8876_DRAW_LINE); }; //0x80
         // drawLine() en RA8876_Lite
   inline void     drawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE); }; //0xA0

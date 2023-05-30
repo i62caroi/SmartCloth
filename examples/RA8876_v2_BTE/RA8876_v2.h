@@ -841,7 +841,7 @@ enum ExternalFontFamily{ // GTFNT_CR ==> Character width setting ==> Bit 1-0
 // 8bpp (1 byte/pixel ) => RGB332
 // 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
 // 24bpp (3 bytes/pixel o 4 bytes/pixel) ==> RGB888
-
+/*
 #define NEGRO         0x0000
 #define BLANCO        0xFFFF
 #define ROJO          0xF800 //0xF920 | 0x8000 | 0xfc10 | 0xfa02
@@ -852,7 +852,7 @@ enum ExternalFontFamily{ // GTFNT_CR ==> Character width setting ==> Bit 1-0
 #define AZUL          0x019F
 #define ROSA          0xFA1F
 #define MORADO        0x9112
-#define MARRON        0xABC8
+#define MARRON        0xABC8*/
 //-----------------------------
 
 
@@ -1075,7 +1075,7 @@ public:
   void            selectExternalFont(enum ExternalFontFamily family, enum FontSize size, enum FontEncoding enc, FontFlags flags = 0);
 
   // SCALE TEXT
-  //void setTextScale(int scale) { setTextScale(scale, scale); };
+  void            setTextScale(uint8_t scale) { setTextScale(scale, scale); };
   void            setTextScale(uint8_t X_scale, uint8_t Y_scale);
   inline uint8_t  getScaleX(void){ return _textScaleX; };
   inline uint8_t  getScaleY(void){ return _textScaleY; };
@@ -1089,11 +1089,12 @@ public:
   
   
   // TEXT COLOR (FOREGROUND/BACKGROUND)
-  void            setTextForegroundColor(uint16_t color);   // Color del texto
-  void            setTextBackgroundColor(uint16_t color);   // Color del resaltado del texto
-  void            setTextBackgroundTrans(uint8_t trans);
-  void            ignoreTextBackground(void){ setTextBackgroundTrans(RA8876_TEXT_TRANS_ON); };
-  void            setTextColor(uint16_t f_color, uint16_t b_color, uint8_t trans);  // Texto y resaltado, segúm flag de transparencia
+  void            setTextForegroundColor(uint16_t color);                                         // Color del texto
+  void            setTextBackgroundColor(uint16_t color);                                         // Color del resaltado (background) del texto
+  void            setTextBackgroundTrans(uint8_t trans);                                          // Transparencia o no de color background de texto
+  void            ignoreTextBackground(void){ setTextBackgroundTrans(RA8876_TEXT_TRANS_ON); };    // Transparencia ON => muestra fondo canvas
+  void            activateTextBackground(void){ setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF); }; // Transparencia OFF => muestra background especificado en setTextBackgroundColor()
+  void            setTextColor(uint16_t f_color, uint16_t b_color, uint8_t trans);                // Texto y resaltado, según flag de transparencia
   
   // WRITE TEXT
   inline void     putChar(char c) { putChars(&c, 1); };
@@ -1149,7 +1150,7 @@ public:
 
 
 
-  // ------- BTE ------------
+  /* -------- BTE ------------------------------------------------ */
   void    bte_Source0_MemoryStartAddr(uint32_t addr);              // Lite
   void    bte_Source0_ImageWidth(uint16_t width);                  // Lite
   void    bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0);      // Lite
@@ -1161,16 +1162,17 @@ public:
   void    bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0);   // Lite
   void    bte_WindowSize(uint16_t width, uint16_t height);         // Lite
 
-  //--- todo Lite
+  // MEMORY COPY
   void    bteMemoryCopy(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t des_addr,uint16_t des_image_width, 
                     uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height);
-
+  // MEMORY COPY - ROP
   void    bteMemoryCopyWithROP(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,
                             uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint8_t rop_code);
-
+  // MEMORY COPY - CHROMA
   void    bteMemoryCopyWithChromaKey(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
                                 uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint16_t chromakey_color);
 
+  // MPU WRITE - ROP
   void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
                          uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned short *data);
   void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
@@ -1178,30 +1180,36 @@ public:
   void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
                          uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code);                     
 
+  // MPU WRITE - CHROMA
   void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
                               const unsigned short *data);
   void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
                               const unsigned char *data);
   void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t chromakey_color);
 
+  // MPU WRITE - COLOR EXPANSION
   void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
   void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
   
+  // MPU WRITE - COLOR EXPANSION - CHROMA
   void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,
                                              uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
   void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,
                                              uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
-
+  /* ------------------------------------------------------------ */
   
-  // ------ IMAGENES -------
+  /* -------- IMAGENES ------------------------------------------ */
+  // CODIGO CPP
   void    putPicture_16bpp(uint16_t x,uint16_t y,uint16_t width, uint16_t height, const unsigned short *data);
 
-  // ------ SD -------------
+  // BIN (SD)
   void    sdCardDraw16bppBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);
   void    sdCardDraw64bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
   void    sdCardDraw256bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
   //void  sdCardDraw1024bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
   //void  sdCardDraw4096bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
+
+  // BMP (SD)
   //void    sdCardDraw24bppBMP(char *filename, int x, int y);
  /* ------------------------------------------------------------ */
 

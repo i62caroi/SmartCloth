@@ -23,14 +23,14 @@ Version   : v2.0
 /* ************************************************************ */
 /* Datasheet 8.1.2 SDRAM Connection: 
    Nuestra pantalla tiene integrada una SDRAM tipo W9812G6KH-6:
-	  		- 2 M words x 4 banks x 16 bits (128Mbits)
-	  		- 166 MHz de frecuencia de reloj
-	  		- modo auto-refresh
-	  		- 64 ms de tiempo de refresh
-	  		- CAS Latency: 2 y 3
-	  		- Velocidad de acceso CL3 (3 ciclos de reloj)
-	  		- Row address: A0-A11
-	  		- Column address: A0-A8
+        - 2 M words x 4 banks x 16 bits (128Mbits)
+        - 166 MHz de frecuencia de reloj
+        - modo auto-refresh
+        - 64 ms de tiempo de refresh
+        - CAS Latency: 2 y 3
+        - Velocidad de acceso CL3 (3 ciclos de reloj)
+        - Row address: A0-A11
+        - Column address: A0-A8
 */
 SdramInfo defaultSdramInfo =
 {
@@ -451,7 +451,7 @@ BTE, Geometry engine, Serial flash DMA, Text write or Graphic write
 
 //**************************************************************//
 /*[Status Register] bit2   SDRAM ready for access
-0: SDRAM is not ready for access   1: SDRAM is ready for access*/	
+0: SDRAM is not ready for access   1: SDRAM is ready for access*/ 
 //**************************************************************//
 /*bool RA8876::_checkSdramReady(void)
 {
@@ -470,7 +470,7 @@ BTE, Geometry engine, Serial flash DMA, Text write or Graphic write
 /*[Status Register] bit1  Operation mode status
 0: Normal operation state  1: Inhibit operation state
 Inhibit operation state means internal reset event keep running or
-initial display still running or chip enter power saving state.	*/
+initial display still running or chip enter power saving state. */
 //**************************************************************//
 /*bool RA8876::_checkIcReady(void)
 {
@@ -1402,7 +1402,7 @@ bool RA8876::setCanvasWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t he
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::displayImageStartAddress(uint32_t addr)	
+void RA8876::displayImageStartAddress(uint32_t addr)  
 {
   SPI.beginTransaction(_spiSettings);
   _writeReg(RA8876_REG_MISA0,addr);//20h
@@ -1414,7 +1414,7 @@ void RA8876::displayImageStartAddress(uint32_t addr)
 
 /* *************************************************************
 ************************************************************* */
-void RA8876::displayImageWidth(uint16_t width)	
+void RA8876::displayImageWidth(uint16_t width)  
 {
   SPI.beginTransaction(_spiSettings);
   _writeReg(RA8876_REG_MIW0,width); //24h
@@ -1424,7 +1424,7 @@ void RA8876::displayImageWidth(uint16_t width)
 
 /* *************************************************************
 ************************************************************* */
-void RA8876::displayWindowStartXY(uint16_t x0,uint16_t y0)	
+void RA8876::displayWindowStartXY(uint16_t x0,uint16_t y0)  
 {
   SPI.beginTransaction(_spiSettings);
   _writeReg(RA8876_REG_MWULX0,x0);//26h
@@ -1436,7 +1436,7 @@ void RA8876::displayWindowStartXY(uint16_t x0,uint16_t y0)
 
 /* *************************************************************
 ************************************************************* */
-void RA8876::canvasImageStartAddress(uint32_t addr)	
+void RA8876::canvasImageStartAddress(uint32_t addr) 
 {
   SPI.beginTransaction(_spiSettings);
   _writeReg(RA8876_REG_CVSSA0,addr);//50h
@@ -1448,7 +1448,7 @@ void RA8876::canvasImageStartAddress(uint32_t addr)
 
 /* *************************************************************
 ************************************************************* */
-void RA8876::canvasImageWidth(uint16_t width)	
+void RA8876::canvasImageWidth(uint16_t width) 
 {
   SPI.beginTransaction(_spiSettings);
   _writeReg(RA8876_REG_CVS_IMWTH0,width);//54h
@@ -2626,6 +2626,28 @@ void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 }
 
 /* *************************************************************
+    drawPixels() en Adafruit_RA8875
+   ************************************************************* */
+void RA8876::drawPixels(int x, int y, uint16_t *p, uint32_t num)
+{
+  SPI.beginTransaction(m_spiSettings);
+
+  setPixelCursor(x, y);
+
+  // writeReg() => writeCmd() y writeData()
+  writeCmd(RA8876_REG_MRWDP);
+    //writeData()
+  digitalWrite(m_csPin, LOW);
+  SPI.transfer(RA8876_DATA_WRITE);
+  while (num--) {
+    SPI.transfer16(*p++);
+  }
+  digitalWrite(m_csPin, HIGH);
+  
+  SPI.endTransaction();
+}
+
+/* *************************************************************
    ************************************************************* */
 /*void RA8876::drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color)
 {
@@ -2724,7 +2746,7 @@ void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::bte_Source0_MemoryStartAddr(uint32_t addr)	
+void RA8876::bte_Source0_MemoryStartAddr(uint32_t addr) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_S0_STR0,addr);//93h
@@ -2737,7 +2759,7 @@ void RA8876::bte_Source0_MemoryStartAddr(uint32_t addr)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::bte_Source0_ImageWidth(uint16_t width)	
+void RA8876::bte_Source0_ImageWidth(uint16_t width) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_S0_WTH0,width);//97h
@@ -2749,7 +2771,7 @@ void RA8876::bte_Source0_ImageWidth(uint16_t width)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0)	
+void RA8876::bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_S0_X0,x0);//99h
@@ -2763,7 +2785,7 @@ void RA8876::bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::bte_Source1_MemoryStartAddr(uint32_t addr)	
+void RA8876::bte_Source1_MemoryStartAddr(uint32_t addr) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_S1_STR0,addr);//9dh
@@ -2776,7 +2798,7 @@ void RA8876::bte_Source1_MemoryStartAddr(uint32_t addr)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::bte_Source1_ImageWidth(uint16_t width)	
+void RA8876::bte_Source1_ImageWidth(uint16_t width) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_S1_WTH0,width);//a1h
@@ -2787,7 +2809,7 @@ void RA8876::bte_Source1_ImageWidth(uint16_t width)
 
 /* *************************************************************
    ************************************************************* */
-void RA8876::bte_Source1_WindowStartXY(uint16_t x0,uint16_t y0)	
+void RA8876::bte_Source1_WindowStartXY(uint16_t x0,uint16_t y0) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_S1_X0,x0);//a3h
@@ -2801,7 +2823,7 @@ void RA8876::bte_Source1_WindowStartXY(uint16_t x0,uint16_t y0)
 
 /* *************************************************************
    ************************************************************* */
-void  RA8876::bte_DestinationMemoryStartAddr(uint32_t addr)	
+void  RA8876::bte_DestinationMemoryStartAddr(uint32_t addr) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_DT_STR0,addr);//a7h
@@ -2814,7 +2836,7 @@ void  RA8876::bte_DestinationMemoryStartAddr(uint32_t addr)
 
 /* *************************************************************
    ************************************************************* */
-void  RA8876::bte_DestinationImageWidth(uint16_t width)	
+void  RA8876::bte_DestinationImageWidth(uint16_t width) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_DT_WTH0,width);//abh
@@ -2825,7 +2847,7 @@ void  RA8876::bte_DestinationImageWidth(uint16_t width)
 
 /* *************************************************************
    ************************************************************* */
-void  RA8876::bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0)	
+void  RA8876::bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0) 
 {
   SPI.beginTransaction(_spiSettings);
   /*_writeReg(RA8876_DT_X0,x0);//adh
@@ -3186,7 +3208,7 @@ void RA8876::bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_widt
   ramAccessPrepare();
   
   for(uint16_t i=0;i< height;i++)
-  {	
+  { 
    for(uint16_t j=0;j< (width/8);j++)
    {
     _checkWriteFifoNotFull();
@@ -3256,7 +3278,7 @@ void RA8876::bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t d
   ramAccessPrepare();
   
   for(uint16_t i=0;i< height;i++)
-  {	
+  { 
    for(uint16_t j=0;j< (width/8);j++)
    {
     _checkWriteFifoNotFull();
@@ -3629,7 +3651,7 @@ void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uin
      size makes loading a little faster but the law of
      rapidly diminishing speed improvements applies.
    ************************************************************* */
-/*void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y) 
+void RA8876::sdCardDraw24bppBMP(char *filename, int x, int y) 
 {
 
   _spiSettings = SPISettings(RA8876_SPI_SPEED_IMG, MSBFIRST, SPI_MODE3); //Incremento velocidad SPI para imagen => 50MHz
@@ -3765,4 +3787,3 @@ void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uin
 
   _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
 }
-*/
