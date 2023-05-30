@@ -54,7 +54,7 @@ float pesoRecipiente;
 float pesoPlato;
 float pesoLastAlimento;
 Comida comidaActual;
-Diario diaActual;
+Diario diaActual; // Acumulado Hoy
 
 
 /*  ------ SD ------ */
@@ -63,6 +63,9 @@ Diario diaActual;
 char fileCSV[30] = "data/data-SC.csv"; //dd-mm-yy podría servir
 //char fielBMP[30] = "bmp/logo3.bmp";
 char fileBIN[30] = "bin/logo.bin";
+
+/* ------- RTC ------- */
+char *today; // Fecha de hoy
 
 
 

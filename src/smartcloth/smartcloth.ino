@@ -5,6 +5,7 @@
                                           => State_Machine.h
                                 => State_Machine.h
                                       => SD_functions.h
+                                          => RTC.h
                                       => Screen.h 
                                           => RA8876_v2.h
                                           => icons.h
@@ -42,6 +43,9 @@ void setup() {
 
     /* ------ SD card -------- */
     setupSDcard();
+
+    /* ------ RTC ------------ */
+    setupRTC();
 
     /*------- ESTADO INICIAL --------- */
     Welcome();  // Mostrar logo de SmartCloth como bienvenida

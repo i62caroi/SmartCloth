@@ -1,3 +1,7 @@
+#include <DS3231.h>
+
+#include <DS3231.h>
+
 /*
 File Name : RA8876_v2.h                                   
 Author    : Irene Casares Rodríguez                          
@@ -1112,32 +1116,8 @@ public:
   // MEMORY COPY - CHROMA
   void    bteMemoryCopyWithChromaKey(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
                                 uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint16_t chromakey_color);
-
-  // MPU WRITE - ROP
-  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
-                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned short *data);
-  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
-                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned char *data);
-  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
-                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code);                     
-
-  // MPU WRITE - CHROMA
-  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
-                              const unsigned short *data);
-  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
-                              const unsigned char *data);
-  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t chromakey_color);
-
-  // MPU WRITE - COLOR EXPANSION
-  void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
-  void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
-  
-  // MPU WRITE - COLOR EXPANSION - CHROMA
-  void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,
-                                             uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
-  void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,
-                                             uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
   /* ------------------------------------------------------------ */
+  
   
   /* -------- IMAGENES ------------------------------------------ */
   // CODIGO CPP

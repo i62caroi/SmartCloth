@@ -68,6 +68,8 @@
 #define SD_FUNCTIONS_H
 
 #include <SD.h>
+#include "RTC.h"
+//#include "Variables.h"
 
 #define SD_CARD_SCS  4
 
@@ -115,7 +117,7 @@ void writeHeaderFileSD(){
     // en la región de España las comas se usan para los decimales, aunque se haya
     // indicado en las preferencias que se use el punto para separar la parte decimal.
 
-    String header = "carb;carb_r;lip;lip_R;prot;prot_R;kcal";
+    String header = "date;time;carb;carb_r;lip;lip_R;prot;prot_R;kcal";
 
     File myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
     if (myFile){
@@ -134,13 +136,8 @@ void writeHeaderFileSD(){
 -------------------------------------------------------------------------------*/
 void saveDataSD(ValoresNutricionales val){
     Serial.println(F("Guardando info...\n"));
-    // Lo suyo sería usar un RTC (Real Time Clock) para incluir
-    // la fecha en que se guarda la comida y llevar un control de varios días.
-    // Si se hiciera eso, al volver a encender el Arduino se podría acceder al fichero
-    // y coger la información que ya se tiene del día e incluirlo desde el principio
-    // en 'diaActual'. De esta forma, cada vez que se encendiera el dispositivo se tendría
-    // la información ya incluida anteriormente en el día, aunque el arduino "borre" la info
-    // al apagarse.
+
+    // Se ha utilizado un RTC para conocer la hora a la que se guarda la comida
     
     // ---------- RACIONES ------------------
     // 0.3 <= carb_R <= 0.7 ==> carb_R = 0.5
@@ -160,7 +157,8 @@ void saveDataSD(ValoresNutricionales val){
     // columnas directamente. Si se separa por comas, no divide las columnas porque
     // en la región de España las comas se usan para los decimales, aunque se haya
     // indicado en las preferencias que se use el punto para separar la parte decimal.
-    String dataString = String(val.getCarbValores()) + ";" + String(carb_R) + ";" + 
+    String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" +
+                        String(val.getCarbValores()) + ";" + String(carb_R) + ";" + 
                         String(val.getLipValores()) + ";" + String(lip_R) + ";" + 
                         String(val.getProtValores()) + ";" + String(prot_R) + ";" + 
                         String(val.getKcalValores()); 
