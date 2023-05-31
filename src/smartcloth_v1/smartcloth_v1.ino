@@ -1,3 +1,15 @@
+/*
+File Name : smartcloth_v1.ino                              
+Author    : Irene Casares Rodríguez                          
+Edit Date : 31/05/2023
+Version   : v1.0
+Coments   : Version con interfaz sencilla. No incluye comprobaciones para añadir, borrar y guardar
+       
+*/
+
+
+
+
 #include "Buttons.h"       /* Buttons.h 
                                 => ISR.h 
                                       => Scale.h
