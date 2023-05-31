@@ -244,18 +244,8 @@ void setupScreen(){
 /***************************************************************************************************/
 void Welcome(){
     tft.clearScreen(0); //0x0000 --> Negro
-    
-    // ---- Word en icons.h desde flash Arduino ------
-    // MUCHISIMO MÁS RÁPIDO QUE BMP DESDE SD, PERO OCUPA MUCHA MEMORIA
-    //tft.putPicture_16bpp(250,150,500,350,smartcloth_icono); 
-
-    // ---- Fichero BMP desde SD -----
-    // TERRIBLEMENTE LENTO
-    //tft.sdCardDraw24bppBMP(fileBMP, 250, 150);
 
     // ---- Fichero BIN desde SD -----
-    //tft.sdCardDraw16bppBIN(250,150,482,350,fileBIN);        // Lo más rápido desde SD => Se ha mejorado aún más:
-    //tft.sdCardDraw16bppBIN64bits(250,150,482,350,fileBIN);  // 2.65 veces más rápido que sdCardDraw16bppBIN()
     tft.sdCardDraw16bppBIN256bits(250,150,482,350,fileBIN);   // 2.96 veces más rápido que sdCardDraw16bppBIN(). 
                                                               // A partir de 256 bits no hay mayor incremento de la velocidad
     
@@ -343,9 +333,6 @@ void printCentral(){
    printValoresComida(): Muestra los valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
 void printValoresComida(){
-    float valor;
-    int raciones;
-    
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextScale(1);
@@ -356,30 +343,18 @@ void printValoresComida(){
 
     // ----- CARBOHIDRATOS -----
     tft.setCursor(MARGEN_IZQ, 375);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    valor = comidaActual.getValoresComida().getCarbValores();
-    raciones = comidaActual.getValoresComida().getCarbRaciones();
-    //raciones = round(2.0*(carb/10));
-    //raciones = raciones/2;
-    tft.print("Carb: "); tft.print(valor); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.print(" g ("); 
+                         tft.print(comidaActual.getValoresComida().getCarbRaciones()); tft.println(" raciones)\n");
     
     // ----- LIPIDOS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    valor = comidaActual.getValoresComida().getLipValores();
-    raciones = comidaActual.getValoresComida().getLipRaciones();
-    //raciones = round(2.0*(lip/10));
-    //raciones = raciones/2;
-    tft.print("Lip:  "); tft.print(valor); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Lip:  "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.print(" g ("); 
+                         tft.print(comidaActual.getValoresComida().getLipRaciones()); tft.println(" raciones)\n");
     
     // ----- PROTEÍNAS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    valor = comidaActual.getValoresComida().getProtValores();
-    raciones = comidaActual.getValoresComida().getProtRaciones();
-    //raciones = round(2.0*(prot/10));
-    //raciones = raciones/2;
-    tft.print("Prot: "); tft.print(valor); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.print(" g ("); 
+                         tft.print(comidaActual.getValoresComida().getProtRaciones()); tft.println(" raciones)\n");
     
     // ----- KCAL -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
@@ -398,7 +373,7 @@ void printValoresTemporales(){
     float prot = AlimentoAux.getValoresAlimento().getProtValores() + comidaActual.getValoresComida().getProtValores();
     float kcal = AlimentoAux.getValoresAlimento().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
 
-    int raciones;
+    ValoresNutricionales valAux(carb, lip, prot, kcal);       // Calcula raciones automáticamente a partir de los valores
     
     tft.setCursor(MARGEN_IZQ, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
@@ -409,24 +384,18 @@ void printValoresTemporales(){
 
     // ----- CARBOHIDRATOS -----
     tft.setCursor(MARGEN_IZQ, 375);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    raciones = round(2.0*(carb/10));
-    raciones = raciones/2;
-    tft.print("Carb: "); tft.print(carb); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Carb: "); tft.print(valAux.getCarbValores()); tft.print(" g ("); 
+                         tft.print(valAux.getCarbRaciones()); tft.println(" raciones)\n");
     
     // ----- LIPIDOS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    raciones = round(2.0*(lip/10));
-    raciones = raciones/2;
-    tft.print("Lip:  "); tft.print(lip); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Lip:  "); tft.print(valAux.getLipValores()); tft.print(" g ("); 
+                         tft.print(valAux.getLipRaciones()); tft.println(" raciones)\n");
     
     // ----- PROTEINAS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    raciones = round(2.0*(prot/10)); 
-    raciones = raciones/2;
-    tft.print("Prot: "); tft.print(prot); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Prot: "); tft.print(valAux.getProtValores()); tft.print(" g ("); 
+                         tft.print(valAux.getProtRaciones()); tft.println(" raciones)\n");
     
     // ----- KCAL -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
@@ -437,10 +406,7 @@ void printValoresTemporales(){
 /*---------------------------------------------------------------------------------------------------------
    printValoresDiario(): Muestra los valores nutricionales del acumulado del día
 ----------------------------------------------------------------------------------------------------------*/
-void printValoresDiario(){
-    float valor;
-    int raciones;
-    
+void printValoresDiario(){    
     tft.setCursor(MARGEN_IZQ_ACC, 300);
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setTextScale(1);
@@ -451,30 +417,18 @@ void printValoresDiario(){
 
     // ----- CARBOHIDRATOS -----
     tft.setCursor(MARGEN_IZQ_ACC, 375);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    valor = diaActual.getValoresDiario().getCarbValores();
-    raciones = diaActual.getValoresDiario().getCarbRaciones();
-    //raciones = round(2.0*(carb/10));
-    //raciones = raciones/2;
-    tft.print("Carb: "); tft.print(valor); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print(" g ("); 
+                         tft.print(diaActual.getValoresDiario().getCarbRaciones()); tft.println(" raciones)\n");
     
     // ----- LIPIDOS -----
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    valor = diaActual.getValoresDiario().getLipValores();
-    raciones = diaActual.getValoresDiario().getLipRaciones();
-    //raciones = round(2.0*(lip/10));
-    //raciones = raciones/2;
-    tft.print("Lip:  "); tft.print(valor); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Lip:  "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print(" g ("); 
+                         tft.print(diaActual.getValoresDiario().getLipRaciones()); tft.println(" raciones)\n");
     
     // ----- PROTEINAS -----
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
-    valor = diaActual.getValoresDiario().getProtValores();
-    raciones = diaActual.getValoresDiario().getProtRaciones();
-    //raciones = round(2.0*(prot/10));
-    //raciones = raciones/2;
-    tft.print("Prot: "); tft.print(valor); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print(" g ("); 
+                         tft.print(diaActual.getValoresDiario().getProtRaciones()); tft.println(" raciones)\n");
     
     // ----- KCAL -----
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);

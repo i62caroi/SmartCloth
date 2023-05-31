@@ -26,6 +26,7 @@ class Diario{
     void addComida(Comida comida);      
     
     void updateValoresDiario(ValoresNutricionales val);
+    void setValoresDiario(ValoresNutricionales val){ this->_valoresDiario.setValores(val); };
     inline ValoresNutricionales getValoresDiario(){ return _valoresDiario; };
 };
 
