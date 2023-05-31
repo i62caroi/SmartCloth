@@ -81,11 +81,10 @@ File myFile;
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
 void setupSDcard();                   // Inicializar tarjeta SD
-void writeHeaderFileSD();
-void saveDataSD(ValoresNutricionales val, float peso);
-void getAcumuladoHoyFromSD();
-//void readDataSD();
-/*-----------------------------------------------------------------------------*/
+void writeHeaderFileSD();             // Crear fichero CSV y escribir header 
+//void saveDataSD(ValoresNutricionales val, float peso);
+void saveComidaSD();                  // Guardar valores de la comida en fichero CSV
+void getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 /*-----------------------------------------------------------------------------*/
 
 
@@ -94,10 +93,6 @@ void getAcumuladoHoyFromSD();
    setupSDcard(): Inicializar tarjeta SD
 -------------------------------------------------------------------------------*/
 void setupSDcard(){
-    // initialize the bus for a device on pin 4 ==> Extended SPI Library Usage with the Arduino Due
-                                                //   (https://docs.arduino.cc/tutorials/due/due-extended-spi)
-    //SPI.begin(SD_CARD_SCS);
-
     if(!SD.begin(SD_CARD_SCS)){
         Serial.println(F("SD card failure!"));
         //while(1);
@@ -119,9 +114,7 @@ void writeHeaderFileSD(){
     Serial.print(F("\n Creando fichero ")); Serial.print(fileCSV); Serial.println(F(" ...\n"));
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
-    // columnas directamente. Si se separa por comas, no divide las columnas porque
-    // en la región de España las comas se usan para los decimales, aunque se haya
-    // indicado en las preferencias que se use el punto para separar la parte decimal.
+    // columnas directamente:
 
     String header = "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso";
 
@@ -142,40 +135,20 @@ void writeHeaderFileSD(){
           Parámetros:
               val - ValoresNutricionales de la comida a guardar
 -------------------------------------------------------------------------------*/
-void saveDataSD(ValoresNutricionales val, float peso){
+//void saveDataSD(ValoresNutricionales val, float peso){
+  void saveComidaSD(){
     Serial.println(F("Guardando info...\n"));
 
-    // Se ha utilizado un RTC para conocer la hora a la que se guarda la comida
-    
-    // ---------- RACIONES ------------------
-    // 0.3 <= carb_R <= 0.7   -->  carb_R = 0.5
-    float carb = val.getCarbValores();
-    int carb_R = round(2.0*(carb/10));
-    carb_R = carb_R/2;
-
-    // 0.3 <= lip_R <= 0.7   -->  lip_R = 0.5
-    float lip = val.getLipValores();
-    int lip_R = round(2.0*(lip/10));
-    lip_R = lip_R/2;
-
-    // 0.3 <= prot_R <= 0.7   -->  prot_R = 0.5
-    float prot = val.getProtValores();
-    int prot_R = round(2.0*(prot/10));
-    prot_R = prot_R/2;
-    // -----------------------------------------
+    // Se ha utilizado un RTC para conocer la fecha a la que se guarda la comida
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
-    // columnas directamente. Si se separa por comas, no divide las columnas porque
-    // en la región de España las comas se usan para los decimales, aunque se haya
-    // indicado en las preferencias que se use el punto para separar la parte decimal.
+    // columnas directamente:
+    //    "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso"
 
-    // "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso"
+    String comidaValues = comidaActual.getComidaAllValues(); // carb;carb_R;lip;lip_R;prot;prot_R;kcal
+    String peso = String(comidaActual.getPesoComida());
 
-    String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" +   
-                        String(carb) + ";" + String(carb_R) + ";" + 
-                        String(lip) + ";" + String(lip_R) + ";" + 
-                        String(prot) + ";" + String(prot_R) + ";" + 
-                        String(val.getKcalValores()) + ";" + String(peso); 
+    String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" + comidaValues + ";" + peso; 
 
 
     myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
@@ -193,7 +166,7 @@ void saveDataSD(ValoresNutricionales val, float peso){
 
 
 /*-----------------------------------------------------------------------------
-   getAcumuladoHoy(): Leer info del fichero de la SD y actualizar el "Acumulado Hoy"
+   getAcumuladoHoy(): Leer info del fichero de la SD e inicializar el "Acumulado Hoy"
                       con las comidas guardadas en la fecha de hoy
 -------------------------------------------------------------------------------*/
 void getAcumuladoHoyFromSD(){
@@ -205,8 +178,6 @@ void getAcumuladoHoyFromSD(){
     int sumCarb_R = 0, sumLip_R = 0, sumProt_R = 0;
     int nComidas = 0;
 
-    //Diario acumuladoHoy; // nComidas = 0, peso = 0.0, valores = {0.0,0.0,0.0,0.0}
-
     char lineBuffer[128];  
 
     char *token;
@@ -215,12 +186,8 @@ void getAcumuladoHoyFromSD(){
     bool msg = true;
 
 
-    //Serial.print("Hoy es "); Serial.println(today);
-
     myFile = SD.open(fileCSV, FILE_READ);
     if (myFile){
-        //Serial.print(fileCSV); Serial.println(": ");
-
         while (myFile.available()) {
             
             myFile.readBytesUntil('\n', lineBuffer, sizeof(lineBuffer) - 1); // Leer línea completa hasta el tamaño máximo del búfer
@@ -231,7 +198,7 @@ void getAcumuladoHoyFromSD(){
             token = strtok(lineBuffer, ";"); // Separar campos de la línea utilizando el delimitador ';'
             fieldIndex = 0;
 
-            if(strcmp(today, token) == 0){ // today = primer token ==> comida guardada hoy
+            if(strcmp(today, token) == 0){ // today == primer token ==> comida guardada hoy
                 
                 if(msg){
                     Serial.println(F("Obteniendo Acumulado Hoy..."));
@@ -265,12 +232,7 @@ void getAcumuladoHoyFromSD(){
         }
 
         myFile.close();
-        
-        // ----- ACTUALIZAR ACUMULADO HOY -----
-        ValoresNutricionales valAux(sumCarb, sumLip, sumProt, sumKcal);   // Actualizar valores nutricionales del Acumulado Hoy
-        diaActual.updateValoresDiario(valAux);                            
-        diaActual.setPesoDiario(sumPeso);                                 // Actualizar peso del Acumulado Hoy
-        diaActual.setNumComidas(nComidas);                                // Actualizar nº de comidas del Acumulado Hoy
+      
 
         // Imprimir las sumas de cada columna
         /*Serial.print("\nSuma carb: ");    Serial.println(sumCarb);
@@ -282,6 +244,12 @@ void getAcumuladoHoyFromSD(){
         Serial.print("Suma kcal: ");    Serial.println(sumKcal);
         Serial.print("Suma peso: ");    Serial.println(sumPeso);
         Serial.print("N Comidas: ");    Serial.println(nComidas);*/
+
+        // ----- ACTUALIZAR ACUMULADO HOY -----
+        ValoresNutricionales valAux(sumCarb, sumLip, sumProt, sumKcal);   
+        diaActual.setValoresDiario(valAux);                               // Inicializar valores nutricionales del Acumulado Hoy
+        diaActual.setPesoDiario(sumPeso);                                 // Actualizar peso del Acumulado Hoy
+        diaActual.setNumComidas(nComidas);                                // Actualizar nº de comidas del Acumulado Hoy
         
     }
     else{
@@ -290,25 +258,6 @@ void getAcumuladoHoyFromSD(){
 
 }
 
-
-
-
-/*-----------------------------------------------------------------------------
-   readDataSD(): Leer info del fichero de la SD
--------------------------------------------------------------------------------*/
-/*void readDataSD(){
-    Serial.println(F("Leyendo fichero...\n"));
-    myFile = SD.open("data.csv", FILE_READ);
-    if (myFile){
-        while (myFile.available()) {
-            Serial.write(myFile.read());
-        }
-        myFile.close();
-    }
-    else{
-        Serial.println("Error opening file for reading!");
-    }
-}*/
 
 
 #endif

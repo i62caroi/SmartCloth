@@ -128,13 +128,9 @@ void Comida::restoreComida(){
 
 
 String Comida::getComidaAllValues(){
-    int carb_R = round(_valoresComida.getCarbValores()/10);
-    int lip_R = round(_valoresComida.getLipValores()/10);
-    int prot_R = round(_valoresComida.getProtValores()/10);
-
-    String dataString = String(_valoresComida.getCarbValores()) + ";" + String(carb_R) + ";" + 
-                        String(_valoresComida.getLipValores()) + ";" + String(lip_R) + ";" + 
-                        String(_valoresComida.getProtValores()) + ";" + String(prot_R) + ";" + 
+    String dataString = String(_valoresComida.getCarbValores()) + ";" + String(_valoresComida.getCarbRaciones()) + ";" + 
+                        String(_valoresComida.getLipValores()) + ";" + String(_valoresComida.getLipRaciones()) + ";" + 
+                        String(_valoresComida.getProtValores()) + ";" + String(_valoresComida.getProtRaciones()) + ";" + 
                         String(_valoresComida.getKcalValores()); 
 
     return dataString;

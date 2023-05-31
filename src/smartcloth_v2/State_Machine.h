@@ -774,14 +774,8 @@ void actStateSaved(){
                 errorComidaWasEmpty = false;
 
                 diaActual.addComida(comidaActual);                  // Comida ==> Diario
-                saveDataSD(comidaActual.getValoresComida(), comidaActual.getPesoComida());        // Comida ==> fichero CSV en SD
-                                // Lo suyo sería que al encender el dispositivo se cogiera la información del
-                                // fichero CSV y se introdujera directamente en el 'diaActual', de forma que se
-                                // pueda tener información actualizada incluso después de apagar.
-                                // El problema es que si no se introduce un campo de hora (RTC), no se pueden
-                                // distinguir las comidas de cada día.
-                                // Si se tuviera ese campo, solo habría que sumar los carb, lip, prot, kcal y raciones
-                                // correspondientes guardadas en un mismo día.
+                //saveDataSD(comidaActual.getValoresComida(), comidaActual.getPesoComida());        // Comida ==> fichero CSV en SD
+                saveComidaSD();                                     // Comida ==> fichero CSV en SD
 
                 comidaActual.restoreComida();                       // "Reiniciar" comidaActual para usarla de nuevo.
             }

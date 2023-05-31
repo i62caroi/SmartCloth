@@ -60,19 +60,25 @@ void setup() {
 
     //prueba();
 
-    //arranque();  // PAGE2   (OK)
+   /* arranque();  // PAGE2   (OK)
+    delay(3000);
     
-    //pantalla_inicial(); // PAGE3  (OK)
+    pantalla_inicial(); // PAGE3  (OK)
+    delay(3000);
+*/
+    select_Grupo();   // PAGE4 (~OK)
+    /*delay(3000);
 
-    //select_Grupo();   // PAGE4 (~OK)
+    add_Plato();      // PAGE4 (~OK)
+    delay(3000);
 
-    //add_Plato();      // PAGE4 (~OK)
+    delete_Plato();   // PAGE4 (~OK)
+    delay(3000);
 
-    //delete_Plato();   // PAGE4 (~OK)
+    save_Comida();    // PAGE4 (~OK)
+    delay(3000);
 
-    //save_Comida();    // PAGE4 (~OK)
-
-    crudo_cocinado();
+    crudo_cocinado(); // PAGE4 (OK)*/
 }
 
 
@@ -287,7 +293,6 @@ void arranque(){ // OK
 
 
     // ---------------- LOGO (SYMBOL) ------------------------------------------------------------------------
-
     // Logo (162x169) ==> debajo
     // Se coloca en la misma posición en la page2 que en la page1, solamente por organización. Podría ponerse
     // en cualquier posición de la page2 y luego colocarla correctamente al copiarla a la page1.
@@ -310,6 +315,7 @@ void pantalla_inicial(){ // PAGE3 (OK)
 
     // ----------- TEXTO ------------------------------------------------------------------------------------
     //PAG 1 (OK) ==> fondo rojo y texto
+    tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(RED);
 
     // ----- INTERNAL FIXED 12x24 X3 --------------
@@ -380,7 +386,7 @@ void pantalla_inicial(){ // PAGE3 (OK)
 
 
     // ----------- BRAINS -----------------------------------------------------------------------------------
-    //PAG 6 => brain1 --> centrar en el cuadrado blanco
+    //PAG 6 => BRAIN1 --> centrar en el cuadrado blanco
     //clear page3
     tft.canvasImageStartAddress(PAGE3_START_ADDR);
     tft.clearScreen(WHITE);
@@ -390,7 +396,7 @@ void pantalla_inicial(){ // PAGE3 (OK)
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,50,50,PAGE1_START_ADDR,SCREEN_WIDTH,450,325,120,108); 
     delay(1000);
 
-    //PAG 7 => brain2 (rojo)
+    //PAG 7 => BRAIN2 (rojo)
     tft.sdCardDraw16bppBIN256bits(170,50,120,108,"bin/inicial/brain2.bin"); // Escribiendo en page3
     // Se coloca en posición (170,50) en page3, pero luego se copia en la page1 en la posición correcta (450,325)
     //copy page3 picture to page1 
@@ -409,6 +415,7 @@ void select_Grupo(){ // PAGE4 (~OK)
 
     // ----- TEXTO (INTERNAL FIXED 12x24 X3) --------------------------------------------------------------
     //PAG 1 ==> fondo rojo y texto
+    tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(RED);
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
@@ -432,15 +439,16 @@ void select_Grupo(){ // PAGE4 (~OK)
     // ----------------------------------------------------------------------------------------------------
 
     
-    // ------------ CUADROS -------------------------------------------------------------------------------
+    // ------------ GRUPOS --------------------------------------------------------------------------------
     //clear page4 para escribir imágenes de grupos y luego aplicar Memory Copy de la page4 a la page1
     // 50 pixeles entre cuadro y cuadro
     tft.canvasImageStartAddress(PAGE4_START_ADDR);
     tft.clearScreen(RED);
 
-    // ------ Cuadro 1 ---------
+    // ------ Grupo 1 ---------
     // Se coloca en posición (0,0) en page4, pero luego se copia en la page1 en la posición correcta (130,125)
-    tft.sdCardDraw16bppBIN256bits(0,0,130,125,"bin/grupo/grupo1.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(0,0,130,125,"bin/grupo/grupo1.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(0,0,130,125,"bin/grupo/assets/grupo1.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); 
     //copy page2 picture to page1 with Chroma ==> No coincide el rojo con RED !!!!!!
@@ -448,25 +456,28 @@ void select_Grupo(){ // PAGE4 (~OK)
     delay(800);
     // -------------------------
 
-    // ------ Cuadro 2 ---------
+    // ------ Grupo 2 ---------
     // Se coloca en posición (131,0) en page4, pero luego se copia en la page1 en la posición correcta (436,288)
-    tft.sdCardDraw16bppBIN256bits(131,0,130,125,"bin/grupo/grupo2.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(131,0,130,125,"bin/grupo/grupo2.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(131,0,130,125,"bin/grupo/assets/grupo2.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // 396 = 236(X inicio de g1) + 130(width g1) + 30(espacio)
     delay(800);
     // -------------------------
 
-    // ------ Cuadro 3 ---------
+    // ------ Grupo 3 ---------
     // Se coloca en posición (262,0) en page4, pero luego se copia en la page1 en la posición correcta (616,288)
-    tft.sdCardDraw16bppBIN256bits(262,0,130,125,"bin/grupo/grupo3.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(262,0,130,125,"bin/grupo/grupo3.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(262,0,130,125,"bin/grupo/assets/grupo3.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,262,50,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // 556 = 396(X inicio de g1) + 130(width g2) + 30(espacio)
     delay(800);
     // -------------------------
 
-    // ------ Cuadro 4 ---------
+    // ------ Grupo 4 ---------
     // Se coloca en posición (393,0) en page4, pero luego se copia en la page1 en la posición correcta (796,288)
-    tft.sdCardDraw16bppBIN256bits(393,0,130,125,"bin/grupo/grupo4.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(393,0,130,125,"bin/grupo/grupo4.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(393,0,130,125,"bin/grupo/assets/grupo4.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // 716 = 556(X inicio de g1) + 130(width g2) + 50(espacio)
     delay(800);
@@ -480,6 +491,7 @@ void select_Grupo(){ // PAGE4 (~OK)
     //tft.sdCardDraw16bppBIN256bits(525,0,120,129,"bin/grupo/mano.bin"); // Escribiendo en page4
     //copy page4 picture to page1 // No cuadra el rojo de fondo para aplicar Chroma!!!!
     //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,525,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,RED); 
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,525,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,GREEN_HAND); 
     // ----------------------------------------------------------------------------------------------------
 
     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
@@ -498,6 +510,7 @@ void select_Grupo(){ // PAGE4 (~OK)
     tft.drawRoundRect(547,279,689,422,20,YELLOW); // Alrededor de grupo3
     tft.drawRoundRect(546,278,690,423,20,YELLOW); // Alrededor de grupo3
     // ----------------------------------------------------------------------------------------------------
+
 }
 
 //---------------------------------------------------------------------------------------------------------
@@ -541,13 +554,14 @@ void add_Plato(){ // Tb PAGE4, pero más abajo
 
     // Se coloca en posición (646,0) en page4, compartida con cuadros de grupos  y otros botones, pero luego se copia en la page1 
     // en la posición correcta (420,410)
-    tft.sdCardDraw16bppBIN256bits(646,0,172,130,"bin/botones/anadir.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(646,0,172,130,"bin/botones/anadir.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(646,0,172,130,"bin/botones/assets/anadir.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,646,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,410,172,130); 
     delay(800);
     // ----------------------------------------------------------------------------------------------------
 
-
+    
      // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
@@ -563,7 +577,18 @@ void add_Plato(){ // Tb PAGE4, pero más abajo
     tft.drawRoundRect(417,405,598,543,20,YELLOW); 
     tft.drawRoundRect(416,404,599,544,20,YELLOW); 
     tft.drawRoundRect(415,403,600,545,20,YELLOW); 
+    delay(800);
     // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ MANO -----------------------------------------------------------------------------------
+    // Se coloca en posición (820,0) en page4, pero luego se copia en la page1 en la posición correcta (556,370) => sobre grupo3
+    //tft.sdCardDraw16bppBIN256bits(820,0,120,129,"bin/botones/mano.bin"); // Escribiendo en page4
+    //copy page4 picture to page1 // No cuadra el rojo de fondo para aplicar Chroma!!!!
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,820,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); 
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,820,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); 
+    // ----------------------------------------------------------------------------------------------------
+
 
     delay(2000);
 
@@ -623,7 +648,8 @@ void delete_Plato(){ // Tb PAGE4, pero más a la derecha
 
     // Se coloca en posición (819,0) en page4, compartida con cuadros de grupos y otros botones, pero luego se copia en la page1 
     // en la posición correcta (420,410)
-    tft.sdCardDraw16bppBIN256bits(819,0,172,130,"bin/botones/borrar.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(819,0,172,130,"bin/botones/borrar.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(819,0,172,130,"bin/botones/assets/borrar.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,819,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,410,172,130); 
     delay(800);
@@ -645,7 +671,18 @@ void delete_Plato(){ // Tb PAGE4, pero más a la derecha
     tft.drawRoundRect(417,405,598,543,20,YELLOW); 
     tft.drawRoundRect(416,404,599,544,20,YELLOW); 
     tft.drawRoundRect(415,403,600,545,20,YELLOW); 
+    delay(800);
     // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ MANO -----------------------------------------------------------------------------------
+    // Se coloca en posición (820,0) en page4, pero luego se copia en la page1 en la posición correcta (556,370) => sobre grupo3
+    //tft.sdCardDraw16bppBIN256bits(820,0,120,129,"bin/botones/mano.bin"); // Escribiendo en page4
+    //copy page4 picture to page1 // No cuadra el rojo de fondo para aplicar Chroma!!!!
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,820,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); 
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,820,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); 
+    // ----------------------------------------------------------------------------------------------------
+
 
     delay(2000);
 
@@ -716,7 +753,8 @@ void save_Comida(){ // Tb PAGE4, pero más a la derecha
 
     // Se coloca en posición (0,131) en page4, compartida con cuadros de grupos y otros botones, pero luego se copia en la page1 
     // en la posición correcta (420,450)
-    tft.sdCardDraw16bppBIN256bits(0,131,172,130,"bin/botones/guardar.bin"); // Escribiendo en page4
+    //tft.sdCardDraw16bppBIN256bits(0,131,172,130,"bin/botones/guardar.bin"); // Escribiendo en page4
+    tft.sdCardDraw16bppBIN256bits(0,131,172,130,"bin/botones/assets/guardar.bin"); // Escribiendo en page4
     //copy page4 picture to page1 
     tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,0,131,PAGE1_START_ADDR,SCREEN_WIDTH,420,450,172,130); 
     delay(800);
@@ -738,7 +776,18 @@ void save_Comida(){ // Tb PAGE4, pero más a la derecha
     tft.drawRoundRect(417,445,598,583,20,YELLOW); 
     tft.drawRoundRect(416,444,599,584,20,YELLOW); 
     tft.drawRoundRect(415,443,600,585,20,YELLOW); 
+    delay(800);
     // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ MANO -----------------------------------------------------------------------------------
+    // Se coloca en posición (820,0) en page4, pero luego se copia en la page1 en la posición correcta (556,370) => sobre grupo3
+    //tft.sdCardDraw16bppBIN256bits(820,0,120,129,"bin/botones/mano.bin"); // Escribiendo en page4
+    //copy page4 picture to page1 // No cuadra el rojo de fondo para aplicar Chroma!!!!
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,820,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); 
+    //tft.bteMemoryCopyWithChromaKey(PAGE4_START_ADDR,SCREEN_WIDTH,820,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); 
+    // ----------------------------------------------------------------------------------------------------
+
 
     delay(2000);
 

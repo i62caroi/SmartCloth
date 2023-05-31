@@ -97,6 +97,7 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 // VERDE
 #define GREEN         0x07E0
+#define GREEN_HAND    0x07E2
 #define GREEN2        0x07C0
 #define LIGHTGREEN    0x87F0
 #define DARKGREEN     0x0400
