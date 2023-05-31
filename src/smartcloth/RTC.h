@@ -76,7 +76,7 @@ void setupRTC(){
 
     Serial.println(F("RTC initialized"));
 
-    today = rtc.getDateStr();
+    char *today = rtc.getDateStr();
     Serial.print("Hoy es "); Serial.println(today);
 }
 

@@ -65,7 +65,7 @@ char fileCSV[30] = "data/data-SC.csv"; //dd-mm-yy podría servir
 char fileBIN[30] = "bin/logo.bin";
 
 /* ------- RTC ------- */
-char *today; // Fecha de hoy
+//char *today; // Fecha de hoy
 
 
 

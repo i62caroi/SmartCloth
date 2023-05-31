@@ -9,15 +9,16 @@ class Diario{
   private:
     int _nComidas;
     float _peso;
-    Comida _comidas[NUM_COMIDAS];
+    //Comida _comidas[NUM_COMIDAS];
     ValoresNutricionales _valoresDiario;
 
-    inline void setNumComidas(int num){ _nComidas = num; };
-    inline int getNumComidas(){ return _nComidas; };
-    inline int firstGapDiario(){ return this->getNumComidas(); };
+    inline int _firstGapDiario(){ return this->getNumComidas(); };
 
   public:
     Diario();
+
+    inline void setNumComidas(int num){ _nComidas = num; };
+    inline int getNumComidas(){ return _nComidas; };
 
     inline void setPesoDiario(float peso){ _peso = peso; };
     inline float getPesoDiario(){ return _peso; };
@@ -36,7 +37,7 @@ Diario::Diario(){
 
 // --------------------------------------------------------------------
 void Diario::addComida(Comida comida){
-  _comidas[this->firstGapDiario()] = comida;                            // Añadir comida
+  //_comidas[this->_firstGapDiario()] = comida;                            // Añadir comida
   this->setNumComidas(this->getNumComidas()+1);                         // Incrementar num comidas
   this->setPesoDiario(this->getPesoDiario() + comida.getPesoComida());  // Incrementar peso
   this->updateValoresDiario(comida.getValoresComida());                       // Actualizar Valores Nutricionales

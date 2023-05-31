@@ -13,15 +13,15 @@ class Comida{
     Plato _platos[NUM_PLATOS];
     ValoresNutricionales _valoresComida;
 
-    inline void setNumPlatos(int num){ _nPlatos = num; };
-    inline int getNumPlatos(){ return _nPlatos; };
-    inline int firstGapComida(){ return this->getNumPlatos(); }; // Si hay algún plato en esa posición (porque no se borran realmente), se sobreescribe
-    inline int getLastPositionPlato(){ return this->getNumPlatos() - 1; };
+    inline void _setNumPlatos(int num){ _nPlatos = num; };
+    inline int _getNumPlatos(){ return _nPlatos; };
+    inline int _firstGapComida(){ return this->_getNumPlatos(); }; // Si hay algún plato en esa posición (porque no se borran realmente), se sobreescribe
+    inline int _getLastPositionPlato(){ return this->_getNumPlatos() - 1; };
 
   public:
     Comida();
 
-    inline bool isComidaEmpty(){ if(getNumPlatos() == 0) return true; else return false;};
+    inline bool isComidaEmpty(){ if(this->_getNumPlatos() == 0) return true; else return false;};
 
     inline void setPesoComida(float peso){ _peso = peso; };
     inline float getPesoComida(){ return _peso; };
@@ -44,7 +44,7 @@ class Comida{
 
 
 Comida::Comida(){
-  this->setNumPlatos(0);
+  this->_setNumPlatos(0);
   this->setPesoComida(0.0);
 }
 
@@ -63,8 +63,8 @@ void Comida::addPlato(Plato plato){
   // (valores nutricionales y peso de los alimentos) se han ido guardando uno a
   // uno. Solo haría falta aumentar el número de platos para indicar que se ha "guardado"
   // Posteriormente, al borrarlo, se restan sus valores nutricionales y peso
-    _platos[this->firstGapComida()] = plato;                            // Añadir plato
-    this->setNumPlatos(this->getNumPlatos() + 1);                       // Incrementar num platos
+    _platos[this->_firstGapComida()] = plato;                            // Añadir plato
+    this->_setNumPlatos(this->_getNumPlatos() + 1);                       // Incrementar num platos
 }
 // --------------------------------------------------------------------
 
@@ -82,12 +82,12 @@ void Comida::deletePlato(Plato &plato){
 // --------------------- DELETE RETROACTIVO -----------------------------------
 void Comida::deletePlato(){
     // Se decrementa peso de comida según peso completo del plato. 
-    this->setPesoComida(this->getPesoComida() - _platos[this->getLastPositionPlato()].getPesoPlato());        // Decrementar peso de la comida según peso del plato
+    this->setPesoComida(this->getPesoComida() - _platos[this->_getLastPositionPlato()].getPesoPlato());        // Decrementar peso de la comida según peso del último plato (actual)
 
-    this->updateValoresComida(false, _platos[this->getLastPositionPlato()].getValoresPlato());                // Restar (suma = false) Valores Nutricionales de la comida
+    this->updateValoresComida(false, _platos[this->_getLastPositionPlato()].getValoresPlato());                // Restar (suma = false) Valores Nutricionales de la comida
 
     // Hay que decrementar nPlatos aunque se borre el plato actual porque se ha guardado temporalmente
-    this->setNumPlatos(this->getNumPlatos() - 1);                                                             // Decrementar número de platos
+    this->_setNumPlatos(this->_getNumPlatos() - 1);                                                             // Decrementar número de platos
 }
 // ----------------------------------------------------------------------------
 
@@ -117,7 +117,7 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
 
 // "Reiniciar" comida
 void Comida::restoreComida(){
-    this->setNumPlatos(0);                                   // Nº platos = 0
+    this->_setNumPlatos(0);                                   // Nº platos = 0
     this->setPesoComida(0.0);                                // Peso = 0.0
     //ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);
     ValoresNutricionales valAux; //(0.0, 0.0, 0.0, 0.0)

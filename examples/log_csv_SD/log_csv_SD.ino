@@ -52,7 +52,7 @@ float peso = 150.78;
 int veces = 3;
 bool borrado = false;
 
-char fileCSV[30] = "data/data-SC6.csv";
+char fileCSV[30] = "data/data-SC2.csv";
 File myFile;
 
 char *today;
@@ -77,20 +77,24 @@ void setup()
     rtc.begin();
     Serial.println("RTC initialized.");
 
-    /*Serial.println("\nPulse una tecla para comenzar");
+    Serial.println("\nPulse una tecla para comenzar");
     while(Serial.available() == 0){;}
     charRead = Serial.read();  
-    Serial.write(charRead); //write it back to Serial window*/
+    Serial.write(charRead); //write it back to Serial window
     Serial.println();
 
-    if(!SD.exists(fileCSV)){ //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
+    /*if(SD.exists(fileCSV)){
+        deleteFile();
+    }
+    else{*/
+    if(!SD.exists(fileCSV)){ //Si no existe ya, se crea e incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
         writeHeader();
     }
 
     today = rtc.getDateStr();
-    Serial.print("Hoy es "); Serial.println(today);
+    Serial.print("Hoy es "); Serial.print(today); Serial.print(" y son las "); Serial.println(rtc.getTimeStr());
     
-    //readData();
+    readData();
     
     getAcumuladoHoy();
   
@@ -155,7 +159,7 @@ void getAcumuladoHoy(){
             token = strtok(lineBuffer, ";"); // Separar campos de la línea utilizando el delimitador ';'
             fieldIndex = 0;
 
-            if(strcmp(today, token) == 0){ 
+            if(strcmp(today, token) == 0){ // today = primer token ==> comida guardada hoy
 
                 nComidas++; // Incrementar numero comidas guardadas hoy
 
@@ -260,13 +264,14 @@ void readData(){
     else{
         Serial.println("Error opening file for reading!");
     }
+    Serial.println();
 }
 
 
 /* *************************************************************
    ************************************************************* */
-/*
-void deleteData(){
+
+void deleteFile(){
     Serial.println(F("Borrando fichero...\n"));
     SD.remove(fileCSV);
     if(!SD.exists(fileCSV)){
@@ -275,7 +280,5 @@ void deleteData(){
     }
     else{
       Serial.println(F("Error al borrar el fichero\n"));
-    }
-    
+    }    
 }
-*/

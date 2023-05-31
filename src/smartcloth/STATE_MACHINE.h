@@ -252,6 +252,9 @@ void actStateEmpty(){
         pesoPlato = 0.0;                          // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
         pesoLastAlimento = 0.0;                   // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
                                                   // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
+
+        if(diaActual.getNumComidas() == 0) getAcumuladoHoyFromSD();   // Si el Acumulado Hoy está vacío (al encender), leer fichero csv de la SD y sumar los 
+                                                                      // valores nutricionales y el peso de las comidas guardadas en el día de hoy
         
         printStateEmpty();                        // Print info estado.
         
@@ -771,7 +774,7 @@ void actStateSaved(){
                 errorComidaWasEmpty = false;
 
                 diaActual.addComida(comidaActual);                  // Comida ==> Diario
-                saveDataSD(comidaActual.getValoresComida());        // Comida ==> fichero CSV en SD
+                saveDataSD(comidaActual.getValoresComida(), comidaActual.getPesoComida());        // Comida ==> fichero CSV en SD
                                 // Lo suyo sería que al encender el dispositivo se cogiera la información del
                                 // fichero CSV y se introdujera directamente en el 'diaActual', de forma que se
                                 // pueda tener información actualizada incluso después de apagar.

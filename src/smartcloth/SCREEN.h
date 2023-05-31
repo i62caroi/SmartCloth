@@ -366,24 +366,31 @@ void printValoresComida(){
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
+    // ----- CARBOHIDRATOS -----
     tft.setCursor(MARGEN_IZQ, 375);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
-    raciones = round(2.0*(comidaActual.getValoresComida().getCarbValores()/10));
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
+    float carb = comidaActual.getValoresComida().getCarbValores();
+    raciones = round(2.0*(carb/10));
     raciones = raciones/2;
-    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Carb: "); tft.print(carb); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- LIPIDOS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
-    raciones = round(2.0*(comidaActual.getValoresComida().getLipValores()/10));
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
+    float lip = comidaActual.getValoresComida().getLipValores();
+    raciones = round(2.0*(lip/10));
     raciones = raciones/2;
-    tft.print("Lip:  "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Lip:  "); tft.print(lip); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- PROTEÍNAS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
-    raciones = round(2.0*(comidaActual.getValoresComida().getProtValores()/10));
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
+    float prot = comidaActual.getValoresComida().getProtValores();
+    raciones = round(2.0*(prot/10));
     raciones = raciones/2;
-    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Prot: "); tft.print(prot); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- KCAL -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(comidaActual.getValoresComida().getKcalValores()); tft.println(" Kcal");
 }
@@ -409,24 +416,28 @@ void printValoresTemporales(){
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
+    // ----- CARBOHIDRATOS -----
     tft.setCursor(MARGEN_IZQ, 375);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
     raciones = round(2.0*(carb/10));
     raciones = raciones/2;
     tft.print("Carb: "); tft.print(carb); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- LIPIDOS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
     raciones = round(2.0*(lip/10));
     raciones = raciones/2;
     tft.print("Lip:  "); tft.print(lip); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- PROTEINAS -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
     raciones = round(2.0*(prot/10)); 
     raciones = raciones/2;
     tft.print("Prot: "); tft.print(prot); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- KCAL -----
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(kcal); tft.println(" Kcal");
 }
@@ -446,24 +457,31 @@ void printValoresDiario(){
 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
 
+    // ----- CARBOHIDRATOS -----
     tft.setCursor(MARGEN_IZQ_ACC, 375);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
-    raciones = round(2.0*(diaActual.getValoresDiario().getCarbValores()/10));
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
+    float carb = diaActual.getValoresDiario().getCarbValores();
+    raciones = round(2.0*(carb/10));
     raciones = raciones/2;
-    tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Carb: "); tft.print(carb); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- LIPIDOS -----
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
-    raciones = round(2.0*(diaActual.getValoresDiario().getLipValores()/10));
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
+    float lip = diaActual.getValoresDiario().getLipValores();
+    raciones = round(2.0*(lip/10));
     raciones = raciones/2;
-    tft.print("Lip:  "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Lip:  "); tft.print(lip); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- PROTEINAS -----
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
-    // 0.3 <= raciones <= 0.7 ==> raciones = 0.5
-    raciones = round(2.0*(diaActual.getValoresDiario().getProtValores()/10));
+    // 0.3 <= raciones <= 0.7   -->  raciones = 0.5
+    float prot = diaActual.getValoresDiario().getProtValores();
+    raciones = round(2.0*(prot/10));
     raciones = raciones/2;
-    tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
+    tft.print("Prot: "); tft.print(prot); tft.print(" g ("); tft.print(raciones); tft.println(" raciones)\n");
     
+    // ----- KCAL -----
     tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(diaActual.getValoresDiario().getKcalValores()); tft.println(" Kcal");
 }

@@ -74,12 +74,16 @@
 #define SD_CARD_SCS  4
 
 
+File myFile;
+
+
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
 void setupSDcard();                   // Inicializar tarjeta SD
 void writeHeaderFileSD();
-void saveDataSD(ValoresNutricionales val);
+void saveDataSD(ValoresNutricionales val, float peso);
+void getAcumuladoHoyFromSD();
 //void readDataSD();
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
@@ -106,6 +110,8 @@ void setupSDcard(){
 }
 
 
+
+
 /*-----------------------------------------------------------------------------
    writeHeaderFileSD(): Crear fichero en SD y escribir header
 -------------------------------------------------------------------------------*/
@@ -117,9 +123,9 @@ void writeHeaderFileSD(){
     // en la región de España las comas se usan para los decimales, aunque se haya
     // indicado en las preferencias que se use el punto para separar la parte decimal.
 
-    String header = "date;time;carb;carb_r;lip;lip_R;prot;prot_R;kcal";
+    String header = "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso";
 
-    File myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
+    myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
     if (myFile){
         myFile.println(header);
         myFile.close(); // close the file
@@ -129,27 +135,32 @@ void writeHeaderFileSD(){
     }
 }
 
+
+
 /*-----------------------------------------------------------------------------
    saveDataSD(): Guardar información de la comida actual en SD
           Parámetros:
               val - ValoresNutricionales de la comida a guardar
 -------------------------------------------------------------------------------*/
-void saveDataSD(ValoresNutricionales val){
+void saveDataSD(ValoresNutricionales val, float peso){
     Serial.println(F("Guardando info...\n"));
 
     // Se ha utilizado un RTC para conocer la hora a la que se guarda la comida
     
     // ---------- RACIONES ------------------
-    // 0.3 <= carb_R <= 0.7 ==> carb_R = 0.5
-    int carb_R = round(2.0*(val.getCarbValores()/10));
+    // 0.3 <= carb_R <= 0.7   -->  carb_R = 0.5
+    float carb = val.getCarbValores();
+    int carb_R = round(2.0*(carb/10));
     carb_R = carb_R/2;
 
-    // 0.3 <= lip_R <= 0.7 ==> lip_R = 0.5
-    int lip_R = round(2.0*(val.getLipValores()/10));
+    // 0.3 <= lip_R <= 0.7   -->  lip_R = 0.5
+    float lip = val.getLipValores();
+    int lip_R = round(2.0*(lip/10));
     lip_R = lip_R/2;
 
-    // 0.3 <= prot_R <= 0.7 ==> prot_R = 0.5
-    int prot_R = round(2.0*(val.getProtValores()/10));
+    // 0.3 <= prot_R <= 0.7   -->  prot_R = 0.5
+    float prot = val.getProtValores();
+    int prot_R = round(2.0*(prot/10));
     prot_R = prot_R/2;
     // -----------------------------------------
 
@@ -157,14 +168,17 @@ void saveDataSD(ValoresNutricionales val){
     // columnas directamente. Si se separa por comas, no divide las columnas porque
     // en la región de España las comas se usan para los decimales, aunque se haya
     // indicado en las preferencias que se use el punto para separar la parte decimal.
-    String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" +
-                        String(val.getCarbValores()) + ";" + String(carb_R) + ";" + 
-                        String(val.getLipValores()) + ";" + String(lip_R) + ";" + 
-                        String(val.getProtValores()) + ";" + String(prot_R) + ";" + 
-                        String(val.getKcalValores()); 
+
+    // "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso"
+
+    String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" +   
+                        String(carb) + ";" + String(carb_R) + ";" + 
+                        String(lip) + ";" + String(lip_R) + ";" + 
+                        String(prot) + ";" + String(prot_R) + ";" + 
+                        String(val.getKcalValores()) + ";" + String(peso); 
 
 
-    File myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
+    myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Variables.h
     if (myFile){
         myFile.println(dataString);
         myFile.close(); // close the file
@@ -173,6 +187,110 @@ void saveDataSD(ValoresNutricionales val){
         Serial.println("Error opening file for writing!");
     }
 }
+
+
+
+
+
+/*-----------------------------------------------------------------------------
+   getAcumuladoHoy(): Leer info del fichero de la SD y actualizar el "Acumulado Hoy"
+                      con las comidas guardadas en la fecha de hoy
+-------------------------------------------------------------------------------*/
+void getAcumuladoHoyFromSD(){
+
+    char *today = rtc.getDateStr(); // Es posible que se cambie de día durante el cocinado?? Si no, hacer en setupRTC(). 
+
+    // SUMAS
+    float sumCarb = 0.0, sumLip = 0.0, sumProt = 0.0, sumKcal = 0.0, sumPeso = 0.0;    
+    int sumCarb_R = 0, sumLip_R = 0, sumProt_R = 0;
+    int nComidas = 0;
+
+    //Diario acumuladoHoy; // nComidas = 0, peso = 0.0, valores = {0.0,0.0,0.0,0.0}
+
+    char lineBuffer[128];  
+
+    char *token;
+    int fieldIndex;
+
+    bool msg = true;
+
+
+    //Serial.print("Hoy es "); Serial.println(today);
+
+    myFile = SD.open(fileCSV, FILE_READ);
+    if (myFile){
+        //Serial.print(fileCSV); Serial.println(": ");
+
+        while (myFile.available()) {
+            
+            myFile.readBytesUntil('\n', lineBuffer, sizeof(lineBuffer) - 1); // Leer línea completa hasta el tamaño máximo del búfer
+            lineBuffer[sizeof(lineBuffer) - 1] = '\0'; // Asegurar terminación nula
+
+            //Serial.println(lineBuffer);
+            
+            token = strtok(lineBuffer, ";"); // Separar campos de la línea utilizando el delimitador ';'
+            fieldIndex = 0;
+
+            if(strcmp(today, token) == 0){ // today = primer token ==> comida guardada hoy
+                
+                if(msg){
+                    Serial.println(F("Obteniendo Acumulado Hoy..."));
+                    msg = false; // Solo imprimir una vez y si hay algo que sumar
+                }
+
+                nComidas++; // Incrementar numero comidas guardadas hoy
+
+                float valueFloat;
+                int valueInt;
+
+                while (token != NULL) {
+
+                    switch (fieldIndex){ // fieldIndex = 0 => fecha     fieldIndex = 1 => hora
+                        case 2:   valueFloat = atof(token);     sumCarb   += valueFloat;     break;    // Carbohidratos
+                        case 3:   valueInt   = atoi(token);     sumCarb_R += valueInt;       break;    // Raciones de carbohidratos
+                        case 4:   valueFloat = atof(token);     sumLip    += valueFloat;     break;    // Lípidos (Grasas)
+                        case 5:   valueInt   = atoi(token);     sumLip_R  += valueInt;       break;    // Raciones de lípidos
+                        case 6:   valueFloat = atof(token);     sumProt   += valueFloat;     break;    // Proteínas
+                        case 7:   valueInt   = atoi(token);     sumProt_R += valueInt;       break;    // Raciones de proteínas
+                        case 8:   valueFloat = atof(token);     sumKcal   += valueFloat;     break;    // Kilocalorías
+                        case 9:   valueFloat = atof(token);     sumPeso   += valueFloat;     break;    // Peso
+                    }
+
+                    // Obtener el siguiente campo
+                    token = strtok(NULL, ";");
+                    fieldIndex++;
+                }
+            }
+         
+        }
+
+        myFile.close();
+        
+        // ----- ACTUALIZAR ACUMULADO HOY -----
+        ValoresNutricionales valAux(sumCarb, sumLip, sumProt, sumKcal);   // Actualizar valores nutricionales del Acumulado Hoy
+        diaActual.updateValoresDiario(valAux);                            
+        diaActual.setPesoDiario(sumPeso);                                 // Actualizar peso del Acumulado Hoy
+        diaActual.setNumComidas(nComidas);                                // Actualizar nº de comidas del Acumulado Hoy
+
+        // Imprimir las sumas de cada columna
+        /*Serial.print("\nSuma carb: ");    Serial.println(sumCarb);
+        Serial.print("Suma carb_R: ");  Serial.println(sumCarb_R);
+        Serial.print("Suma lip: ");     Serial.println(sumLip); 
+        Serial.print("Suma lip_R: ");   Serial.println(sumLip_R); 
+        Serial.print("Suma prot: ");    Serial.println(sumProt);
+        Serial.print("Suma prot_R: ");  Serial.println(sumProt_R);
+        Serial.print("Suma kcal: ");    Serial.println(sumKcal);
+        Serial.print("Suma peso: ");    Serial.println(sumPeso);
+        Serial.print("N Comidas: ");    Serial.println(nComidas);*/
+        
+    }
+    else{
+        Serial.println("Error opening file for reading!");
+    }
+
+}
+
+
 
 
 /*-----------------------------------------------------------------------------

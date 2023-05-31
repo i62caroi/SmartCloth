@@ -14,15 +14,15 @@ class Plato{
     Alimento _alimentos[NUM_ALIMENTOS];
     ValoresNutricionales _valoresPlato;
 
-    inline void setNumAlimentos(int num){ _nAlimentos = num; };
-    inline int getNumAlimentos(){ return _nAlimentos; };
-    inline int positionLastAlimento(){ return (this->getNumAlimentos()-1); };
-    inline int firstGapPlato(){ return this->getNumAlimentos(); };           
+    inline void _setNumAlimentos(int num){ _nAlimentos = num; };
+    inline int _getNumAlimentos(){ return _nAlimentos; };
+    inline int _positionLastAlimento(){ return (this->_getNumAlimentos()-1); };
+    inline int _firstGapPlato(){ return this->_getNumAlimentos(); };           
 
   public:
     Plato();
 
-    inline bool isPlatoEmpty(){ if(getNumAlimentos() == 0) return true; else return false; };
+    inline bool isPlatoEmpty(){ if(this->_getNumAlimentos() == 0) return true; else return false; };
     
     inline void setPesoPlato(float peso){ _peso = peso; };
     inline float getPesoPlato(){ return _peso; };
@@ -40,14 +40,14 @@ class Plato{
 
 
 Plato::Plato(){
-    this->setNumAlimentos(0);
+    this->_setNumAlimentos(0);
     this->setPesoPlato(0.0);
 }
 
 
 void Plato::addAlimentoPlato(Alimento alimento){
-    _alimentos[this->firstGapPlato()] = alimento;                                // Añadir alimento
-    this->setNumAlimentos(this->getNumAlimentos() + 1);                          // Incrementar num alimentos
+    _alimentos[this->_firstGapPlato()] = alimento;                                // Añadir alimento
+    this->_setNumAlimentos(this->_getNumAlimentos() + 1);                          // Incrementar num alimentos
     this->setPesoPlato(this->getPesoPlato() + alimento.getPesoAlimento());       // Incrementar peso del plato
     this->updateValoresPlato(alimento.getValoresAlimento());                     // Actualizar Valores Nutricionales
 }
@@ -65,7 +65,7 @@ void Plato::updateValoresPlato(ValoresNutricionales val){
 
 // "Reiniciar" plato
 void Plato::restorePlato(){
-    this->setNumAlimentos(0);                             // Nº alimentos = 0
+    this->_setNumAlimentos(0);                             // Nº alimentos = 0
     this->setPesoPlato(0.0);                              // Peso = 0.0
     ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);
     _valoresPlato.setValores(valAux);                     // Valores = 0
