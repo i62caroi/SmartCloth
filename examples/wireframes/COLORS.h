@@ -58,7 +58,7 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 #define COLOR_G13_G13E  0xFF4D    // AMARILLO
 
-// Falta G14
+#define COLOR_G14_G14E  0xF6C1    // AMARILLO
 
 #define COLOR_G15       0xE476    // ROSA
 #define COLOR_G15E      0xEC37
@@ -90,6 +90,7 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 // ROJO
 #define RED           0xF800 // Wireframes añadir, eliminar, guardar, recipiente, grupos, crudo-cocinado
+#define RED_HAND_R    0xC0C0
 #define LIGHTRED      0xFC10
 #define DARKRED       0x8000
   // NARANJA
@@ -115,6 +116,7 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 // AMARILLO
 #define YELLOW        0xFFE0
+#define YELLOW_HAND_Y 0xFE60
 #define YELLOW2       0xFFC0
 #define LIGHTYELLOW   0xFFF0
 #define DARKYELLOW    0x8400

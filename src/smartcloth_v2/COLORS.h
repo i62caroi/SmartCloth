@@ -58,7 +58,7 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 #define COLOR_G13_G13E  0xFF4D    // AMARILLO
 
-// Falta G14
+#define COLOR_G14_G14E  0xF6C1    // AMARILLO
 
 #define COLOR_G15       0xE476    // ROSA
 #define COLOR_G15E      0xEC37
