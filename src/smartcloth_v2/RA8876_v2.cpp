@@ -1489,7 +1489,7 @@ size_t RA8876::write(const uint8_t *buffer, size_t size)
         ;  // Ignored
       else if (c == '\n')
       {
-        setCursor(0, getCursorY() + getTextSizeY());
+        setCursor(0, getCursorY() + getTextSizeY()+20);
         _writeCmd(RA8876_REG_MRWDP);  // Reset current register for writing to memory
       }
       else if ((_fontFlags & RA8876_FONT_FLAG_XLAT_FULLWIDTH) && ((c >= 0x21) || (c <= 0x7F)))

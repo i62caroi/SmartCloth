@@ -31,9 +31,9 @@ const int LOADCELL_SCK_PIN = 2;
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
-float weighScale();
-void setupScale();
-void checkBascula();
+float   weighScale();
+void    setupScale();
+void    checkBascula();
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 
@@ -54,6 +54,7 @@ void setupScale(){
     scale.set_scale(1093.48); // bad calibration!
     scale.tare();  
     //scale.get_units(10);
+    Serial.println(F("Scale initialized"));
 }
 
 

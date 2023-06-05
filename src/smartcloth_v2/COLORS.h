@@ -6,6 +6,8 @@ En este enlace hay una colección de colores con su respectivo código HEX para 
 
 En este enlace se puede obtener el código HEX de un color seleccionado: http://www.barth-dev.de/online/rgb565-color-picker/
 
+La herramienta "Medidor de Color Digital" del MacBook permite saber el HEX de cualquier color que haya en pantalla, dándolo en R-G-B.
+
 */
 
 #ifndef COLORS_H

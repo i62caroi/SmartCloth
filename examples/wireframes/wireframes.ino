@@ -695,9 +695,6 @@ void dashboard(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setCursor(40,70);
     tft.println("Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc."); // 24 escale x1
-
-    // Reiniciar canvas window
-    tft.setCanvasWindow(0,0,tft.getWidth(),tft.getHeight());
     // -------- FIN TEXTO --------------------
     // ------------- FIN ZONA SUPERIOR ---------------------------------------
 

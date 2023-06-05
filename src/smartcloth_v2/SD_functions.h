@@ -80,11 +80,11 @@ File myFile;
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
-void setupSDcard();                   // Inicializar tarjeta SD
-void writeHeaderFileSD();             // Crear fichero CSV y escribir header 
-//void saveDataSD(ValoresNutricionales val, float peso);
-void saveComidaSD();                  // Guardar valores de la comida en fichero CSV
-void getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
+void    setupSDcard();                   // Inicializar tarjeta SD
+void    writeHeaderFileSD();             // Crear fichero CSV y escribir header 
+//void    saveDataSD(ValoresNutricionales val, float peso);
+void    saveComidaSD();                  // Guardar valores de la comida en fichero CSV
+void    getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 /*-----------------------------------------------------------------------------*/
 
 
@@ -97,11 +97,14 @@ void setupSDcard(){
         Serial.println(F("SD card failure!"));
         //while(1);
     }
-    Serial.println(F("SD card initialized"));
+    else Serial.println(F("SD card initialized"));
 
     if(!SD.exists(fileCSV)){ //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
         writeHeaderFileSD();
     }
+
+    getAcumuladoHoyFromSD();   // Leer fichero csv de la SD y sumar los valores nutricionales y el peso de las 
+                               // comidas guardadas en el día de hoy
 }
 
 

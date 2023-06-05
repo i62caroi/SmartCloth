@@ -44,13 +44,13 @@ DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la libre
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
-void setupRTC();          // Inicializar RTC
-bool checkSummerTime();   // Comprobar si hay que cambiar al horario de verano
-bool checkWinterTime();   // Comprobar si hay que cambiar al horario de invierno
-void adjustSummerTime();  // Ajustar horario de verano 
-void adjustWinterTime();  // Ajustar horario de invierno
-uint8_t getLastSunday(uint8_t month, uint16_t year);       // Último domingo del mes
-uint8_t getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día específico
+void      setupRTC();          // Inicializar RTC
+bool      checkSummerTime();   // Comprobar si hay que cambiar al horario de verano
+bool      checkWinterTime();   // Comprobar si hay que cambiar al horario de invierno
+void      adjustSummerTime();  // Ajustar horario de verano 
+void      adjustWinterTime();  // Ajustar horario de invierno
+uint8_t   getLastSunday(uint8_t month, uint16_t year);       // Último domingo del mes
+uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día específico
 /*-----------------------------------------------------------------------------*/
 
 
@@ -74,10 +74,10 @@ void setupRTC(){
     }
     // --------------------------------------
 
-    Serial.println(F("RTC initialized"));
+    Serial.print(F("RTC initialized"));
 
     char *today = rtc.getDateStr();
-    Serial.print("Hoy es "); Serial.println(today);
+    Serial.print(F(" => Hoy es ")); Serial.print(today); Serial.print(F(" y son las ")); Serial.println(rtc.getTimeStr());
 }
 
 

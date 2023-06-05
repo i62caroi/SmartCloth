@@ -47,20 +47,20 @@ void setup() {
     while (!Serial);
     delay(1000);
 
-    /* ------ SCALE --------- */
-    setupScale();   //scale.h
-    
-    /* ------ SCREEN --------- */
-    setupScreen();  //screen.h
+    /* ------ RTC ------------ */
+    setupRTC(); 
 
     /* ------ SD card -------- */
-    setupSDcard();
+    setupSDcard(); // Incluye sumar en "Acumulado hoy" las comidas guardadas el día de hoy
 
-    /* ------ RTC ------------ */
-    setupRTC();
+    /* ------ SCALE --------- */
+    setupScale();   
+    
+    /* ------ SCREEN --------- */
+    setupScreen();  
+    
 
     /*------- ESTADO INICIAL --------- */
-    Welcome();  // Mostrar logo de SmartCloth como bienvenida
     state_actual = STATE_Empty;
 
 
@@ -98,6 +98,9 @@ void setup() {
     ISR_Timer.setInterval(TIMER_INTERVAL_5MS,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 100 ms
 
 
+    /* ------- BIENVENIDA ------------------------ */
+    Welcome();  // Cargar imágenes y mostrar logo de SmartCloth
+
 }
 
 
@@ -132,8 +135,10 @@ void loop() {
             if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
+                state_prev_prev = state_prev;
                 state_prev = state_actual;
                 state_actual = state_new;
+                Serial.print(F("\nEstado anterior al anterior: ")); Serial.println(state_prev_prev);
                 Serial.print(F("\nEstado anterior: ")); Serial.println(state_prev);
                 Serial.print(F("\nNuevo estado: "));    Serial.println(state_new);
             }
