@@ -1620,18 +1620,38 @@ int RA8876::getTextSizeY(void)
    ************************************************************* */
 void RA8876::setCursor(uint16_t x, uint16_t y)
 {
-  if(x < 0) x = 0; if(x >= _width) x = _width-1;
+ /* if(x < 0) x = 0; if(x >= _width) x = _width-1;
   if(y < 0) y = 0; if(y >= _height) y = _height-1;
 
   if((x != _cursorX) || (y != _cursorY)){
       _cursorX = x;
-      _cursorY = y;
+      _cursorY = y;*/
       SPI.beginTransaction(_spiSettings);
       _writeReg16(RA8876_REG_F_CURX0, x);  // Text cursor X-coordinate register 0
       _writeReg16(RA8876_REG_F_CURY0, y);  // Text cursor Y-coordinate register 0
       SPI.endTransaction();
-  }
+  //}
 }
+
+/* *************************************************************
+    ************************************************************* */
+ uint16_t RA8876::getCursorX(void)
+ {
+   SPI.beginTransaction(_spiSettings);
+   uint16_t x = _readReg16(RA8876_REG_F_CURX0);
+   SPI.endTransaction();
+   return x;
+ }
+
+ /* *************************************************************
+    ************************************************************* */
+ uint16_t RA8876::getCursorY(void)
+ {
+   SPI.beginTransaction(_spiSettings);
+   uint16_t y = _readReg16(RA8876_REG_F_CURY0);
+   SPI.endTransaction();
+   return y;
+ }
 
 
 /* *************************************************************
@@ -1753,9 +1773,9 @@ void RA8876:: putString(uint16_t x0,uint16_t y0, char *str)
   ramAccessPrepare();
   while(*str != '\0')
   {
-  _checkWriteFifoNotFull();  
-  _writeData(*str);
-  ++str; 
+      _checkWriteFifoNotFull();  
+      _writeData(*str);
+      ++str; 
   } 
   //_check2dBusy();
   // Wait for completion
@@ -2557,7 +2577,7 @@ size_t RA8876::write(const uint8_t *buffer, size_t size)
       ;  // Ignored
     else if (c == '\n')
     {
-      setCursor(0, getCursorY() + getTextSizeY());
+      setCursor(0, getCursorY() + getTextSizeY()+20);
       _writeCmd(RA8876_REG_MRWDP);  // Reset current register for writing to memory
     }
     else if ((_fontFlags & RA8876_FONT_FLAG_XLAT_FULLWIDTH) && ((c >= 0x21) || (c <= 0x7F)))
@@ -2580,8 +2600,8 @@ size_t RA8876::write(const uint8_t *buffer, size_t size)
 
   _setGraphicsMode();
 
-  _cursorX = _readReg16(RA8876_REG_F_CURX0);
-  _cursorY = _readReg16(RA8876_REG_F_CURY0);
+ // _cursorX = _readReg16(RA8876_REG_F_CURX0);
+  //_cursorY = _readReg16(RA8876_REG_F_CURY0);
 
   SPI.endTransaction();
  

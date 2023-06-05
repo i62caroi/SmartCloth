@@ -948,8 +948,8 @@ private:
   uint16_t            _textBackColor;
   uint8_t             _textBackTrans; //0 (OFF) o 1 (ON)
 
-  uint16_t            _cursorX;
-  uint16_t            _cursorY;
+  //uint16_t            _cursorX;
+  //uint16_t            _cursorY;
 
   uint8_t             _textScaleX;
   uint8_t             _textScaleY;
@@ -1084,8 +1084,10 @@ public:
 
   // TEXT CURSOR
   void            setCursor(uint16_t x, uint16_t y);                 // setTextCursor() en RA8876_Lite
-  inline uint16_t getCursorX(void){ return _cursorX; };
-  inline uint16_t getCursorY(void){ return _cursorY; };
+  uint16_t        getCursorX(void); 
+  uint16_t        getCursorY(void);
+  //inline uint16_t getCursorX(void){ return _cursorX; };
+  //inline uint16_t getCursorY(void){ return _cursorY; };
   
   
   // TEXT COLOR (FOREGROUND/BACKGROUND)

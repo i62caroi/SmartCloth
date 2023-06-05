@@ -13,17 +13,17 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 
 // ---------------- COLORES DASHBOARD --------------
-#define AZUL_FONDO            0x2126
-#define GRIS_CUADROS          0x29A8
-#define GRIS_BORDE_CUADRO     0xC6DE
-#define GRIS_CUADROS_VALORES  0x426C
-#define ROJO_PESO             0xF902
-#define AZUL_CARB             0x059E
-#define NARANJA_PROT          0xF2A5
-#define AMARILLO_GRASAS       0xEEC5
-#define ROJO_KCAL             0xF801
+#define AZUL_FONDO            0x2126 //OK
+#define GRIS_CUADROS          0x29A8 //OK
+#define AZUL_BORDE_CUADRO     0xC6DE //OK
+#define GRIS_CUADROS_VALORES  0x426C //OK
+#define ROJO_PESO             0xF902 //OK
+#define AZUL_CARB             0x059E //OK
+#define NARANJA_PROT          0xEA85 //OK
+#define AMARILLO_GRASAS       0xEEC5 //OK
+#define ROJO_KCAL             0xF801 // NO LO TENGOOOOO
 
-#define COLOR_G1        0xEB4C    // ROJO
+#define COLOR_G1        0xEB4C    // ROJO - OK
 #define COLOR_G1E       0xFB0B
 
 #define COLOR_G2        0x5DAA    // VERDE
