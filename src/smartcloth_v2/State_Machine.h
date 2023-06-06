@@ -236,9 +236,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
 states_t state_actual;      // Estado actual
 states_t state_new;         // Nuevo estado al que se va a pasar
-states_t state_prev;        // Estado anterior. 
-states_t state_prev_prev;   // Estado anterior al anterior => para saber si se ha querido add/delete/save desde STATE_Empty, pasando
-                            // por los estados de check de add/delete/save (state_prev)
+states_t state_prev;        // Estado anterior
 
 event_t lastEvent;          // Último evento ocurrido
 
@@ -323,17 +321,19 @@ bool checkStateConditions(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateEmpty(){ 
     if(!doneState){
-        Serial.println(F("\nSTATE_Empty...")); 
-        
-        tareScale();                              // Tara inicial
-        
-        pesoRecipiente = 0.0;                     // Se inicializa 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
-        pesoPlato = 0.0;                          // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
-        pesoLastAlimento = 0.0;                   // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
-                                                  // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
-        
-        printStateEmpty();                        // Print info estado.
-        
+        if(state_prev != STATE_Empty){
+            Serial.println(F("\nSTATE_Empty...")); 
+            
+            tareScale();                              // Tara inicial
+            
+            pesoRecipiente = 0.0;                     // Se inicializa 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
+            pesoPlato = 0.0;                          // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
+            pesoLastAlimento = 0.0;                   // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
+                                                      // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
+            
+            printStateEmpty();                        // Print info estado.
+        }
+
         doneState = true;                         // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                   // cada vez que se entre a esta función debido al loop de Arduino.
                                                   // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
@@ -373,15 +373,12 @@ void actStatePlato(){
    actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void actGruposAlimentos(){ 
-    if(!doneState){
-        
-        //procesamiento = "CRUDO";                                            // El procesamiento es 'CRUDO' de forma predeterminada. 
-        
+    if(!doneState){        
         if(state_prev == STATE_Plato){                                      // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
             pesoRecipiente = pesoBascula;                                   // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             //tareScale();                                                    // Tarar para tomar peso real del alimento que se va a colocar.
         }
-        //else if((state_prev_p == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+        //else if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
                                                                             //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
                                                                             //     debe incluirse en el plato. 
         else if(pesoBascula != 0.0){ 
@@ -400,9 +397,16 @@ void actGruposAlimentos(){
                 
         }
 
-        tareScale();                                                // Tarar cada vez que se seleccione un grupo de alimentos nuevo.
         
-        printStateGroups();                                         // Print info del estado.
+
+        if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
+            printStateGroups();             
+            tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.                  
+        }
+        else{   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
+            printGrupoyEjemplos();
+            tarado = false;        // Desactivar flag de haber 'tarado' 
+        }
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -421,13 +425,14 @@ void actStateRaw(){
     if(!doneState){
         Serial.println(F("\nAlimento crudo...")); 
         
-        //procesamiento = "CRUDO";                                            // Procesamiento del alimento a 'CRUDO'. 
+        procesado = false;
         
         if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        printStateRaw();                                                   // Print info del estado.
+        //printStateRaw();                                                   // Print info del estado.
+        printProcesamiento();
         
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
@@ -445,13 +450,14 @@ void actStateCooked(){
     if(!doneState){
         Serial.println(F("\nAlimento cocinado...")); 
         
-        //procesamiento = "COCINADO";                                         // Procesamiento del alimento a 'COCINADO'.  
+        procesado = true;
         
         if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        printStateCooked();                                                 // Print info del estado.
+        //printStateCooked();                                                 // Print info del estado.
+        printProcesamiento();
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -530,7 +536,7 @@ void actStateAdded(){
 
 
             /* ----- ACTUALIZAR PLATO  ----- */
-            //if((state_prev_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+            //if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
                                                                            //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
                                                                            //     debe incluirse en el plato. 
             if(pesoBascula != 0.0){
@@ -639,7 +645,7 @@ void actStateDeleted(){
 
             
             /* ----- PESO ÚLTIMO ALIMENTO  ----- */
-            //if((state_prev_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+            //if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
                                                                            //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
                                                                            //     debe incluirse en el plato. 
             if(pesoBascula != 0.0){
@@ -676,7 +682,7 @@ void actStateDeleted(){
                 }
                 else{   // PLATO VACÍO Y NO HAY ÚLTIMO ALIMENTO ==> NADA QUE RETIRAR 
                     errorPlatoWasEmpty = true;
-                    //if(state_prev_prev == STATE_Empty){
+                    //if(state_prev == STATE_Empty){
                     if(pesoARetirar < 1.0){ // STATE_Empty
                               // Si se pulsa 'borrar' estando en INI, el plato seguramente estará vacío y se avisa. Tras unos segundos
                               // para mostrar mensaje de no poder borrar, se debe forzar el regreso a INI para que no se quede aquí (delete) 
@@ -857,7 +863,7 @@ void actStateSaved(){
             Serial.println(F("\nGuardando comida..."));  
 
             /* ----- ACTUALIZAR PLATO  ----- */
-            //if((state_prev_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
+            //if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
                                                                            //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
                                                                            //     debe incluirse en el plato. 
             if(pesoBascula != 0.0){ 
@@ -895,7 +901,7 @@ void actStateSaved(){
             /* ----- GUARDAR COMIDA EN DIARIO  ----- */
             if(comidaActual.isComidaEmpty()){                       // ==> Si la comida está vacía -> no se guarda
                 errorComidaWasEmpty = true;
-                //if(state_prev_prev == STATE_Empty){
+                //if(state_prev == STATE_Empty){
                 if(pesoARetirar < 1.0){ // STATE_Empty
                     printEmptyObjectWarning("No se puede guardar la comida porque est\xE1"" vac\xED""a");
 
@@ -936,7 +942,7 @@ void actStateSaved(){
         /* -----  INFORMACIÓN MOSTRADA  ----- */
         if(!errorComidaWasEmpty){                                   // ==> Si la comida no estaba vacía y se ha guardado
               printStateSaved();                                   // Print info del estado.
-              //if(state_prev_prev == STATE_Empty){
+              //if(state_prev == STATE_Empty){
               if(pesoARetirar < 1.0){ // STATE_Empty
                   // Si se libera la báscula tras addPlato o deletePlato, se vuelve a INI y se quiere guardar la comida,
                   // se quedaría atascado aquí (save) esperando una liberación que no llega, ya que el último eventoBascula 
@@ -1070,7 +1076,7 @@ void shiftLeftEventBuffer(){
    addEventToBuffer(): Añadir el último evento al buffer de eventos
 ----------------------------------------------------------------------------------------------------------*/
 void addEventToBuffer(event_t evento){
-    Serial.println(F("\n\n***********************************"));
+    Serial.println(F("\n***********************************"));
     Serial.println(F("Añadiendo evento al buffer..."));
     int pos;
     if(isBufferEmpty()){
@@ -1092,6 +1098,8 @@ void addEventToBuffer(event_t evento){
         Serial.print(event_buffer[i]); Serial.print(" ");
     }
     Serial.print(F("Last event: ")); Serial.println(lastEvent);
+    Serial.println(F("\n***********************************"));
+    Serial.println(F("***********************************"));
 }
 
 

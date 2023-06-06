@@ -135,10 +135,8 @@ void loop() {
             if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
-                state_prev_prev = state_prev;
                 state_prev = state_actual;
                 state_actual = state_new;
-                Serial.print(F("\nEstado anterior al anterior: ")); Serial.println(state_prev_prev);
                 Serial.print(F("\nEstado anterior: ")); Serial.println(state_prev);
                 Serial.print(F("\nNuevo estado: "));    Serial.println(state_new);
             }

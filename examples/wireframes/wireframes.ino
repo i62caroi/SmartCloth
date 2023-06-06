@@ -71,7 +71,7 @@ void setup() {
     loadPicturesRelojCompletoCuarto(); // 1/4 de tamaño
 
 
-    dashboard(); // PAGE3
+//    dashboard(); // PAGE3
 
 
   /*  arranque();  // PAGE2   (OK)
@@ -85,10 +85,10 @@ void setup() {
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(BLACK);
     delay(500);
-
+*/
     select_Grupo();   // PAGE3 (~OK)
     delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
+/*    tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(BLACK);
     delay(500);
 
@@ -399,7 +399,7 @@ void loadPicturesRelojCompletoCuarto(){
                                                                              kcal -> (529,174)
     --------------------------------------------------------------------------------------------------------------------------------------------------------------
   */
-/*
+
     // ----------------- CARGA INICIAL -------------------------------------------------------------------
       // -------- LOGFULL Y RELOJ1 -------
       tft.canvasImageStartAddress(PAGE2_START_ADDR);
@@ -625,7 +625,7 @@ void loadPicturesRelojCompletoCuarto(){
       putReloj2(); // Mostrar reloj2 en PAGE1
 
     // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
-*/
+
 
     // --------- DASHBOARD -------------------------------------------------------------------------------
       // cociPeq
@@ -874,7 +874,7 @@ void dashboard(){
 
 
 
-void arranque(){ // OK
+void arranque(){ // OK ==> HECHO
     tft.clearScreen(WHITE); // Fondo blanco en PAGE1
     delay(300);
 
@@ -921,7 +921,7 @@ void arranque(){ // OK
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void pantalla_inicial(){ // PAGE2 (OK)
+void pantalla_inicial(){ // PAGE2 (OK) ==> HECHO
 
     // ----------- TEXTO ------------------------------------------------------------------------------------
     tft.clearScreen(RED); // Fondo rojo en PAGE1
@@ -999,7 +999,7 @@ void pantalla_inicial(){ // PAGE2 (OK)
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-void select_Grupo(){ // PAGE3 (OK)
+void select_Grupo(){ // PAGE3 (OK) ==> HECHO
 
     // ----- TEXTO (INTERNAL FIXED 12x24 X3) --------------------------------------------------------------
     tft.clearScreen(RED); // Fondo rojo en PAGE1

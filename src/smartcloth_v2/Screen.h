@@ -163,7 +163,7 @@
 #define SCREEN_H
 
 
-#include "RA8876_v2.h"
+#include "RA8876_v2.h" // COLORS.h
 #include "State_Machine.h"
 #include "Variables.h"
 //#include "icons.h"  // iconos de 'crudo', 'cocinado' y 'smartcloth_icono' como bitmap
@@ -195,20 +195,32 @@ String cad;
 -----------------------------------------------------------------------------*/
 void    setupScreen();
 void    Welcome();                     // Cargar imágenes (loadPicturesShowHourglass()) y mostrar wireframe de Arranque (logo SmartCloth)
+
 void    printEjemplosyGrupo();
+void    printGrupoyEjemplos();         // Mostrar nombre de grupo escogido y ejemplos
+
+void    printProcesamiento();          // Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo (comienza en crudo)
+
 void    printCentral();
+
 void    printValoresComida();
+void    printPlatoActual();            // Mostrar valores del "Plato actual"
 void    printValoresTemporales();
+
 void    printValoresDiario();
+void    printAcumuladoHoy();           // Mostrar valores del "Acumulado hoy"
+
+// --- estados ---
 void    printStateEmpty();
 void    printStatePlato();
 void    printStateGroups();
-void    printStateRaw();
-void    printStateCooked();
+//void    printStateRaw();
+//void    printStateCooked();
 void    printStateWeighted();
 void    printStateAdded();
 void    printStateDeleted();
 void    printStateSaved();
+// --- Errores o avisos ---
 void    printEventError(String msg);
 void    printEmptyObjectError(String msg);
 // --- Carga de imágenes ---
@@ -344,6 +356,93 @@ void printEjemplosyGrupo(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   printGrupoyEjemplos(): Muestra ejemplos del grupo de alimentos seleccionado, así como si está
+                          crudo o cocinado.
+----------------------------------------------------------------------------------------------------------*/
+void printGrupoyEjemplos(){    
+    /*
+    // ----------- VERSION SIMPLE -------------------------------------------------------------
+    // ----- EJEMPLOS ----- 
+    tft.setTextScale(1);
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);       // Tamaño texto
+    tft.setCursor(MARGEN_IZQ, 40);                     // Posicion inicio texto
+    tft.setTextColor(YELLOW);                        // Color texto                  
+    tft.print(grupoEscogido.Ejemplos_grupo);         // Imprimir texto
+
+    // ----- GRUPO ----- 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
+    tft.setCursor(MARGEN_IZQ, 120);                    // Posicion inicio texto => tft.getCursorY()
+    tft.setTextColor(WHITE);                          // Color texto      
+    tft.setTextScale(1);        
+    tft.print(grupoEscogido.Nombre_grupo);           // Imprimir texto
+
+    // ----- CRUDO/COCINADO ----- 
+    //tft.setCursor(850, 130); 
+    //tft.selectInternalFont(RA8876_FONT_SIZE_16);                           
+    //tft.setTextColor(CIAN);      
+    //tft.print(procesamiento);                          // Predeterminadamente "CRUDO"
+    
+    // ------------ FIN VERSION SIMPLE ---------------------------------------------------------
+    */
+
+
+    // ------------ ZONA SUPERIOR --------------------------------------------
+    // ---------- GRÁFICOS -------------------
+    // Recuadro grupo y ejemplos
+    tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
+    // Recuadros procesamiento
+    printProcesamiento(); // imagen de 'crudo' o 'cocinado' según procesamiento activo (comienza en crudo)
+    // ---------- FIN GRÁFICOS ---------------
+
+
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+
+    // Título
+    tft.setCursor(40,30);
+    tft.print("Grupo Actual: ");  // 16x32 escale x1
+
+    // Nombre grupo
+    tft.setTextForegroundColor(grupoEscogido.color_grupo); // 'color_grupo'' como atributo de struct 'Grupo'
+    tft.setCursor(tft.getCursorX(),tft.getCursorY());
+    tft.print(grupoEscogido.Nombre_grupo); // Nombre grupo // 16x32 escale x1
+
+    // Ejemplos grupo
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setCursor(40,68);
+    tft.print(grupoEscogido.Ejemplos_grupo); // 12x24 escale x1
+    // -------- FIN TEXTO --------------------
+    // ------------- FIN ZONA SUPERIOR ---------------------------------------
+    
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printProcesamiento(): Muestra el símbolo de 'crudo' o 'cocinado' según el procesamiento activo
+----------------------------------------------------------------------------------------------------------*/
+void printProcesamiento(){ 
+    if(procesado){
+        // cociPeq
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
+
+        // Recuadro crudo pequeño ==> borrar crudo ==> TODO hacerlo semi opaco
+        tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
+    }
+    else{
+        // crudoPeq
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
+
+        // Recuadro cocinado pequeño ==> borrar cocinado ==> TODO hacerlo semi opaco
+        tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
+    }
+}
+
+
+
 
 /***************************************************************************************************/
 /*------------------------------- ESTRUCTURA CENTRAL   --------------------------------------------*/
@@ -368,7 +467,7 @@ void printCentral(){
     tft.print("Plato: "); 
     tft.setCursor(tft.getCursorX(), 217); 
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    tft.print(platoActual.getPesoPlato()); tft.print(" g\n");
+    tft.print(platoActual.getPesoPlato()); tft.print(" g\n"); // No se incluye en la nueva versión de la interfaz
 
     // ------------ TOTAL  -------------------------
     /* El peso total se actualiza al guardar la comida final */
@@ -416,6 +515,128 @@ void printValoresComida(){
     tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
     tft.print("Kcal: "); tft.print(comidaActual.getValoresComida().getKcalValores()); tft.print(" Kcal");
 }
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printPlatoActual(): Muestra los valores nutricionales del "Plato actual"
+----------------------------------------------------------------------------------------------------------*/
+void printPlatoActual(){
+  /*
+  // ----------- VERSION SIMPLE -------------------------------------------------------------
+    tft.setCursor(MARGEN_IZQ, 300);
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextScale(1);
+    tft.setTextColor(WHITE);
+    tft.print("Comida Actual\n");
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
+    // ----- CARBOHIDRATOS -----
+    tft.setCursor(MARGEN_IZQ, 375);
+    tft.print("Carb: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.print(" g ("); 
+                         tft.print(comidaActual.getValoresComida().getCarbRaciones()); tft.print(" raciones)\n");
+    
+    // ----- LIPIDOS -----
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Lip:  "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.print(" g ("); 
+                         tft.print(comidaActual.getValoresComida().getLipRaciones()); tft.print(" raciones)\n");
+    
+    // ----- PROTEÍNAS -----
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Prot: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.print(" g ("); 
+                         tft.print(comidaActual.getValoresComida().getProtRaciones()); tft.print(" raciones)\n");
+    
+    // ----- KCAL -----
+    tft.setCursor(MARGEN_IZQ, tft.getCursorY()+10);
+    tft.print("Kcal: "); tft.print(comidaActual.getValoresComida().getKcalValores()); tft.print(" Kcal");
+
+    // ------------ FIN VERSION SIMPLE ---------------------------------------------------------
+    */
+
+
+    // ------------- PLATO ACTUAL  -------------------------------------------
+    // ---------- GRÁFICOS -------------------
+    // Recuadro "Plato actual"
+    tft.fillRoundRect(30,145,504,580,20,GRIS_CUADROS); // 474 x 425
+    tft.drawRoundRect(30,145,504,580,20,AZUL_BORDE_CUADRO); // Borde => 474 x 425
+    tft.drawRoundRect(31,146,503,579,20,AZUL_BORDE_CUADRO); // Borde => 473 x 424
+
+    // Recuadro Raciones Carbohidratos
+    tft.fillRoundRect(401,288,479,345,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Raciones Proteinas
+    tft.fillRoundRect(401,365,479,422,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Raciones Grasas
+    tft.fillRoundRect(401,442,479,499,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+     // Dibujo kcal
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    // ---------- FIN GRÁFICOS ---------------
+
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setTextForegroundColor(WHITE); 
+
+    // Título
+    tft.setCursor(120,155);
+    tft.print("Plato actual");  // 12x24 escale x2
+
+    // Peso
+    tft.setCursor(50,220);
+    tft.setTextForegroundColor(ROJO_PESO); 
+    tft.print("Peso: "); tft.print(pesoBascula); tft.print("g"); // 12x24 escale x2
+
+    // ---- RACIONES ------ // Antes que valores y "Raciones" para no estar continuamente cambiando los tamaños y escalas
+    // Raciones de Carbohidratos
+    tft.setCursor(416,293);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print(comidaActual.getValoresComida().getCarbRaciones()); // 12x24 escale x2
+
+    // Raciones de Proteinas
+    tft.setCursor(416,370);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print(comidaActual.getValoresComida().getProtRaciones()); // 12x24 escale x2
+
+    // Raciones de Grasas
+    tft.setCursor(416,447);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print(comidaActual.getValoresComida().getLipRaciones()); // 12x24 escale x2
+    // ---- FIN RACIONES ----
+
+    // ---- VALORES --------- // Después de las raciones para no estar continuamente cambiando los tamaños y escalas
+    // Texto "Raciones"
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(370,243);
+    tft.print("Raciones"); // 16x32 escale x1
+
+    // Carbohidratos
+    tft.setCursor(50,293);
+    tft.setTextForegroundColor(AZUL_CARB); 
+    tft.print("Carbohidratos: "); tft.print(comidaActual.getValoresComida().getCarbValores()); tft.print(" g");  // 16x32 escale x1
+    
+    // Proteinas
+    tft.setCursor(50,370);
+    tft.setTextForegroundColor(NARANJA_PROT); 
+    tft.print("Prote\xED""nas: "); tft.print(comidaActual.getValoresComida().getProtValores()); tft.print(" g"); // 16x32 escale x1
+    
+    // Grasas
+    tft.setCursor(50,447);
+    tft.setTextForegroundColor(AMARILLO_GRASAS); 
+    tft.print("Grasas: "); tft.print(comidaActual.getValoresComida().getLipValores()); tft.print(" g"); // 16x32 escale x1
+    
+    // Kcal
+    tft.setCursor(207,516);
+    tft.setTextForegroundColor(ROJO_KCAL); 
+    tft.print(comidaActual.getValoresComida().getKcalValores()); tft.print(" Kcal."); // 16x32 escale X1
+    // ----- FIN VALORES ----
+    // -------- FIN TEXTO --------------------
+    // ------------- FIN PLATO ACTUAL ----------------------------------------
+}
+
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -492,6 +713,126 @@ void printValoresDiario(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   printAcumuladoHoy(): Muestra los valores nutricionales del "Acumulado hoy"
+----------------------------------------------------------------------------------------------------------*/
+void printAcumuladoHoy(){   
+  /*
+  // ----------- VERSION SIMPLE ------------------------------------------------------------- 
+    tft.setCursor(MARGEN_IZQ_ACC, 300);
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextScale(1);
+    tft.setTextColor(WHITE);
+    tft.print("Acumulado Hoy\n");
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
+    // ----- CARBOHIDRATOS -----
+    tft.setCursor(MARGEN_IZQ_ACC, 375);
+    tft.print("Carb: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print(" g ("); 
+                         tft.print(diaActual.getValoresDiario().getCarbRaciones()); tft.print(" raciones)\n");
+    
+    // ----- LIPIDOS -----
+    tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
+    tft.print("Lip:  "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print(" g ("); 
+                         tft.print(diaActual.getValoresDiario().getLipRaciones()); tft.print(" raciones)\n");
+    
+    // ----- PROTEINAS -----
+    tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
+    tft.print("Prot: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print(" g ("); 
+                         tft.print(diaActual.getValoresDiario().getProtRaciones()); tft.print(" raciones)\n");
+    
+    // ----- KCAL -----
+    tft.setCursor(MARGEN_IZQ_ACC, tft.getCursorY()+10);
+    tft.print("Kcal: "); tft.print(diaActual.getValoresDiario().getKcalValores()); tft.print(" Kcal");
+
+    // ------------ FIN VERSION SIMPLE ---------------------------------------------------------
+    */
+
+
+    // ------------- ACUMULADO HOY  -------------------------------------------
+    // ---------- GRÁFICOS -------------------
+    // Recuadro "Acumulado hoy"
+    tft.fillRoundRect(520,145,994,580,20,GRIS_CUADROS); // 474 x 425
+
+    // Recuadro Carbohidratos
+    tft.fillRoundRect(891,288,969,345,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Proteinas
+    tft.fillRoundRect(891,365,969,422,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Grasas
+    tft.fillRoundRect(891,442,969,499,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // kcal
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    // ---------- FIN GRÁFICOS ---------------
+
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setTextForegroundColor(WHITE); 
+
+    // Título
+    tft.setCursor(590, 155);
+    tft.print("Acumulado hoy");  // 12x24 escale x2
+
+    // Peso
+    tft.setCursor(540,220);
+    tft.setTextForegroundColor(ROJO_PESO); 
+    tft.print("Peso: "); tft.print(diaActual.getPesoDiario()); tft.print("g"); // 12x24 escale x2
+
+    // ---- RACIONES ------ // Antes que valores y "Raciones" para no estar continuamente cambiando los tamaños y escalas
+    // Raciones de Carbohidratos
+    tft.setCursor(906,293);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print(diaActual.getValoresDiario().getCarbRaciones()); // 12x24 escale x2
+
+    // Raciones de Proteinas
+    tft.setCursor(906,370);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print(diaActual.getValoresDiario().getProtRaciones()); // 12x24 escale x2
+
+    // Raciones de Grasas
+    tft.setCursor(906,447);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print(diaActual.getValoresDiario().getLipRaciones()); // 12x24 escale x2
+    // ---- FIN RACIONES ----
+
+    // ---- VALORES --------- // Después de las raciones para no estar continuamente cambiando los tamaños y escalas
+    // Texto "Raciones"
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(860,243);
+    tft.print("Raciones"); // 32 escale x1
+
+    // Carbohidratos
+    tft.setCursor(540,293);
+    tft.setTextForegroundColor(AZUL_CARB); 
+    tft.print("Carbohidratos: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print(" g"); // 16x32 escale x1
+    
+    // Proteinas
+    tft.setCursor(540,370);
+    tft.setTextForegroundColor(NARANJA_PROT); 
+    tft.print("Prote\xED""nas: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print(" g"); // 16x32 escale x1
+    
+    // Grasas
+    tft.setCursor(540,447);
+    tft.setTextForegroundColor(AMARILLO_GRASAS); 
+    tft.print("Grasas: "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print(" g"); // 16x32 escale x1
+    
+    // Kcal
+    tft.setCursor(697,516);
+    tft.setTextForegroundColor(ROJO_KCAL); 
+    tft.print(diaActual.getValoresDiario().getKcalValores()); tft.print(" Kcal."); // 16x32 escale X1
+    // ----- FIN VALORES ----
+    // -------- FIN TEXTO --------------------
+    // -------------- FIN ACUMULADO HOY ---------------------------------------
+}
+
+
+
 /*********************************************************************************************************/
 /*-------------------------------------------------------------------------------------------------------*/
 /*---------------------------------- INFORMACIÓN POR ESTADO ---------------------------------------------*/
@@ -501,7 +842,7 @@ void printValoresDiario(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStateEmpty(): Información del STATE_Empty
+   printStateEmpty(): Información del STATE_Empty ==> Wireframe de pantalla inicial
 ----------------------------------------------------------------------------------------------------------*/
 void printStateEmpty(){
   /*
@@ -538,9 +879,9 @@ void printStateEmpty(){
     tft.setTextForegroundColor(WHITE); 
     //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
     tft.setCursor(130, 90);
-    tft.println("COLOQUE UN RECIPIENTE");
+    tft.println("COLOQUE UN RECIPIENTE"); // 12x24 escalado x3
     tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-10);
-    tft.print("EN LA ZONA DE PESADA"); 
+    tft.print("EN LA ZONA DE PESADA"); // 12x24 escalado x3
 
     // -------- CIRCULO ---------------
     tft.fillCircle(512,380,65,WHITE); // 65 pixeles de diametro
@@ -583,11 +924,12 @@ void printStateEmpty(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printStatePlato(): Información del STATE_Plato
+   printStatePlato(): Información del STATE_Plato ==> Wireframe de plato colocado y escoger grupo
 ----------------------------------------------------------------------------------------------------------*/
 void printStatePlato(){
   /*
-    // ----------- VERSION SIMPLE -------------------------------------------------------------                               // Limpiar
+    // ----------- VERSION SIMPLE -------------------------------------------------------------                               
+    // Limpiar
     tft.clearArea(0,0,tft.getWidth(),180,0); //(xOrig, yOrig, xDest, yDest, color) ==> Limpiar zona superior de Ejemplos y Grupo
     
     tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
@@ -612,16 +954,77 @@ void printStatePlato(){
     // ------------ FIN VERSION SIMPLE ---------------------------------------------------------
    */
 
-   // ----- TEXTO (PLATO AÑADIDO) -------------------------------------------------------------------------
+   // ----- TEXTO (RECIPIENTE COLOCADO) -------------------------------------------------------------------
     tft.clearScreen(RED);
     // ------ LINEA ---------
     tft.fillRoundRect(252,200,764,208,3,WHITE);
     // ------ TEXTO ---------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setCursor(170, 258);
-    tft.println("RECIPIENTE COLOCADO");
+    tft.println("RECIPIENTE COLOCADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
+    // ----------------------------------------------------------------------------------------------------
+
+    delay(1000);
+
+    // ----- TEXTO (INTERNAL FIXED 12x24 X3) --------------------------------------------------------------
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(130, 50);
+    tft.println("SELECCIONE UN GRUPO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    tft.setCursor(255, tft.getCursorY() + tft.getTextSizeY()-10);
+    tft.print("DE ALIMENTOS"); 
+    delay(500);
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------------ LINEAS --------------------------------------------------------------------------------
+    tft.fillRoundRect(0,250,220,258,3,WHITE);
+    tft.fillRoundRect(0,450,512,458,3,WHITE);
+    delay(500);
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------------ GRUPOS --------------------------------------------------------------------------------
+    // 30 pixeles entre cuadro y cuadro
+    // Mostrar en PAGE1 (copiar de PAGE3 a PAGE1)
+
+    // ------ Grupo 1 (130x125) ---------
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
+    delay(400);
+
+    // ------ Grupo 2 (130x125) ---------
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
+    delay(400);
+
+    // ------ Grupo 3 (130x125) ---------
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
+    delay(400);
+
+    // ------ Grupo 4 (130x125) ---------
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
+    delay(400);
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    tft.drawRoundRect(556,288,680,413,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(555,287,681,414,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(554,286,682,415,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(553,285,683,416,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(552,284,684,417,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(551,283,685,418,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(550,282,686,419,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(549,281,687,420,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(548,280,688,421,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(547,279,689,422,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(546,278,690,423,20,YELLOW); // Alrededor de grupo3
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ MANO (120x129) -----------------------------------------------------------------------------------
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,RED); // manoR (120x129)
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,GREEN_HAND); // manoG (120x129)
     // ----------------------------------------------------------------------------------------------------
 }
 
@@ -632,18 +1035,27 @@ void printStatePlato(){
    printStateGroups(): Incluye grupo de alimentos, ejemplos y valores nutricionales de la comida actual
 ----------------------------------------------------------------------------------------------------------*/
 void printStateGroups(){
+  /*
+  // ----------- VERSION SIMPLE -------------------------------------------------------------    
     tft.clearScreen(0);           // Limpiar ==> TODO => Ver qué ha cambiado (grupo y valores) y solo borrar esa zona
     printEjemplosyGrupo();        // 1 - Ejemplos, grupo y procesamiento (crudo/cocinado) 
     printCentral();               // 2 - Estructura central (peso 0.0)
     printValoresComida();         // 3 - Valores comida actual
     printValoresDiario();         // 4 - Valores acumulado hoy
+    // ------------ FIN VERSION SIMPLE ---------------------------------------------------------
+  */
+
+    tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
+
+    printGrupoyEjemplos();        // 1 - Grupo, ejemplos y procesamiento (crudo/cocinado)
+    printPlatoActual();           // 2 - Valores Plato actual
+    printAcumuladoHoy();          // 3 - Valores Acumulado hoy
 }
 
 /*---------------------------------------------------------------------------------------------------------
    printStateRaw():
 ----------------------------------------------------------------------------------------------------------*/
-void printStateRaw()
-{
+/*void printStateRaw(){
     //tft.clearArea(800,100,895,891,0); //(xOrig, yOrig, xDest, yDest,color)
     tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest,color) ==> Limpiar zona superior de Ejemplos y Grupo
     printEjemplosyGrupo();        // Grupo (crudo) => Esto solo es para cambiar el nombre del grupo, pues hay algunos que tienen "(crudo)"
@@ -651,12 +1063,11 @@ void printStateRaw()
     //tft.sdCardDraw24bppBMP(fileRaw, 800, 100);
     //tft.putPicture_16bpp(800,95,95,91,crudo);
 }
-
+*/
 /*---------------------------------------------------------------------------------------------------------
    printStateCooked():
 ----------------------------------------------------------------------------------------------------------*/
-void printStateCooked()
-{
+/*void printStateCooked(){
     //tft.clearArea(800,100,895,891,0); //(xOrig, yOrig, xDest, yDest,color)
     tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest,color) ==> Limpiar zona superior de Ejemplos y Grupo
     printEjemplosyGrupo();        // Grupo (cocinado) => Esto solo es para cambiar el nombre del grupo, pues hay algunos que tienen "(cocinado)"
@@ -664,7 +1075,7 @@ void printStateCooked()
     //tft.sdCardDraw24bppBMP(fileCooked, 800, 100);
     //tft.putPicture_16bpp(800,95,95,91,cocinado); 
 }
-
+*/
 
 
 

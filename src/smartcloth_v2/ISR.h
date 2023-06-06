@@ -59,7 +59,7 @@ uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const c
 void ISR_crudo(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 300) {
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 1;
         flagEvent = true;
     }
@@ -74,7 +74,7 @@ void ISR_crudo(){
 void ISR_cocinado(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 300) {
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 2;
         flagEvent = true;
     }
@@ -89,7 +89,7 @@ void ISR_cocinado(){
 void ISR_addPlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 300) {
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 3;
         flagEvent = true;
     }
@@ -104,7 +104,7 @@ void ISR_addPlato(){
 void ISR_deletePlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 300) {
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 4;
         flagEvent = true;
     }
@@ -119,7 +119,7 @@ void ISR_deletePlato(){
 void ISR_guardar(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 300) {
+    if ((interrupt_time - last_interrupt_time) > 200) {
         buttonMain = 5;
         flagEvent = true;
     }
@@ -138,7 +138,7 @@ void ISR_guardar(){
 void ISR_pulsandoButtonsGrande(){
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 300) {
+    if ((interrupt_time - last_interrupt_time) > 200) {
         pulsandoGrande = true;
         flagEvent = true;
     }
