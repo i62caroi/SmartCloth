@@ -400,8 +400,9 @@ void actGruposAlimentos(){
         
 
         if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
+            tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.
+                                    // Esta tara DEBE hacerse antes de printStateGroups() para que muestre el peso a 0.      
             printStateGroups();             
-            tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.                  
         }
         else{   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
             printGrupoyEjemplos();
@@ -423,17 +424,17 @@ void actGruposAlimentos(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateRaw(){ 
     if(!doneState){
-        Serial.println(F("\nAlimento crudo...")); 
-        
-        procesado = false;
-        
-        if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
-            tarado = false;                                                 // Desactivar flag de haber 'tarado' 
+        if(state_prev != STATE_raw){
+            Serial.println(F("\nAlimento crudo...")); 
+            
+            procesado = false;
+            
+            if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
+                tarado = false;                                                 // Desactivar flag de haber 'tarado' 
+            }
+            
+            printProcesamiento();                                               // Mostrar imagen de 'crudo'
         }
-        
-        //printStateRaw();                                                   // Print info del estado.
-        printProcesamiento();
-        
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -448,17 +449,18 @@ void actStateRaw(){
 ----------------------------------------------------------------------------------------------------------*/
 void actStateCooked(){ 
     if(!doneState){
-        Serial.println(F("\nAlimento cocinado...")); 
-        
-        procesado = true;
-        
-        if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
-            tarado = false;                                                 // Desactivar flag de haber 'tarado' 
+        if(state_prev != STATE_cooked){
+            Serial.println(F("\nAlimento cocinado...")); 
+            
+            procesado = true;
+            
+            if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
+                tarado = false;                                                 // Desactivar flag de haber 'tarado' 
+            }
+            
+            printProcesamiento();                                               // Mostrar imagen de 'cocinado'
         }
-        
-        //printStateCooked();                                                 // Print info del estado.
-        printProcesamiento();
-        
+
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
@@ -478,8 +480,8 @@ void actStateWeighted(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        printStateWeighted();                                               // Print info del estado.
-        
+        printPlatoActual(false);                                            // 'false' para mostrar valores temporales del Plato actual según el peso del alimento
+
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
@@ -499,7 +501,7 @@ void actStateAddCheck(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        //printStateAddCheck();                                               // Print info del estado.
+        printStateAddCheck();                                               // Mostrar pregunta de confirmación
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -574,18 +576,17 @@ void actStateAdded(){
             }
             /* --------------------------------------- */
 
+            /* -----  INFORMACIÓN MOSTRADA  ----- */
+            if(!errorPlatoWasEmpty){                                    // ==> Si el plato no estaba vacío y se ha guardado/creado otro 
+                  printStateAdded();                                   // Print info del estado.
+            }
+            /* ---------------------------------- */
+
         }
         else if(tarado){                                                       // ==> Si se viene del propio STATE_added, donde se puede haber tarado.
             tarado = false;                                         // Desactivar flag de haber 'tarado'.          
         }
                                                  
-
-        /* -----  INFORMACIÓN MOSTRADA  ----- */
-        if(!errorPlatoWasEmpty){                                    // ==> Si el plato no estaba vacío y se ha guardado/creado otro 
-               printStateAdded();                                   // Print info del estado.
-        }
-        /* ---------------------------------- */
-
         
         doneState = true;                                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                     // cada vez que se entre a esta función debido al loop de Arduino.
@@ -606,7 +607,7 @@ void actStateDeleteCheck(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        //printStateDeleteCheck();                                            // Print info del estado.
+        printStateDeleteCheck();                                            // Mostrar pregunta de confirmación
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -703,17 +704,17 @@ void actStateDeleted(){
                 }
             }
 
+            // -----  INFORMACIÓN MOSTRADA  ----- 
+            if(!errorPlatoWasEmpty){   // ==> Si la comida no estaba vacía (incluyendo último alimento) y se ha borrado 
+                printStateDeleted();     // Print info del estado.
+            } // ---------------------------------- 
+
 
         }
         else if(tarado){                                            // ==> Si se viene del propio STATE_deleted, donde se puede haber tarado.
             tarado = false;                                         // Desactivar flag de haber 'tarado'.        
             //pesoLastAlimento = 0.0;  
         }
-
-        // -----  INFORMACIÓN MOSTRADA  ----- 
-        if(!errorPlatoWasEmpty){   // ==> Si la comida no estaba vacía (incluyendo último alimento) y se ha borrado 
-            printStateDeleted();     // Print info del estado.
-        } // ---------------------------------- 
         // ----------- FIN DELETE ACTUAL --------------------------------------------
 
 
@@ -831,7 +832,7 @@ void actStateSaveCheck(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        //printStateSaveCheck();                                               // Print info del estado.
+        printStateSaveCheck();                                              // Mostrar pregunta de confirmación
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -932,32 +933,32 @@ void actStateSaved(){
 
             }
             /* --------------------------------------- */
+
+
+            /* -----  INFORMACIÓN MOSTRADA  ----- */
+            if(!errorComidaWasEmpty){                                   // ==> Si la comida no estaba vacía y se ha guardado
+                  printStateSaved();                                   // Print info del estado.
+                  //if(state_prev == STATE_Empty){
+                  if(pesoARetirar < 1.0){ // STATE_Empty
+                      // Si se libera la báscula tras addPlato o deletePlato, se vuelve a INI y se quiere guardar la comida,
+                      // se quedaría atascado aquí (save) esperando una liberación que no llega, ya que el último eventoBascula 
+                      // es TARAR, realizado en INI. 
+                      // Por eso, se debe forzar la liberación (eventoBascula = LIBERAR) tras un delay, para poder
+                      // leer los mensajes de haber guardado o no y luego regresar a INI.
+                      Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
+                      delay(3000);                                    
+                      eventoBascula = LIBERAR;
+                      addEventToBuffer(eventoBascula);
+                      flagEvent = true;
+                  }
+            }
+            /* ---------------------------------- */
         
         }
         else if(tarado){                                            // ==> Si se viene del propio STATE_saved, donde se puede haber tarado.
             tarado = false;                                         // Desactivar flag de haber 'tarado'.          
         }
 
-
-        /* -----  INFORMACIÓN MOSTRADA  ----- */
-        if(!errorComidaWasEmpty){                                   // ==> Si la comida no estaba vacía y se ha guardado
-              printStateSaved();                                   // Print info del estado.
-              //if(state_prev == STATE_Empty){
-              if(pesoARetirar < 1.0){ // STATE_Empty
-                  // Si se libera la báscula tras addPlato o deletePlato, se vuelve a INI y se quiere guardar la comida,
-                  // se quedaría atascado aquí (save) esperando una liberación que no llega, ya que el último eventoBascula 
-                  // es TARAR, realizado en INI. 
-                  // Por eso, se debe forzar la liberación (eventoBascula = LIBERAR) tras un delay, para poder
-                  // leer los mensajes de haber guardado o no y luego regresar a INI.
-                  Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
-                  delay(3000);                                    
-                  eventoBascula = LIBERAR;
-                  addEventToBuffer(eventoBascula);
-                  flagEvent = true;
-              }
-        }
-        /* ---------------------------------- */
-        
         
         doneState = true;                                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                     // cada vez que se entre a esta función debido al loop de Arduino.

@@ -31,11 +31,11 @@ float pesoARetirar;
 
 HX711 scale; //Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
-
 bool tarado;
+float weighScale(){ return scale.get_units(1); }
 void tareScale(){ 
   scale.tare(1);  //1 toma de valor
-  pesoBascula = weight;
+  pesoBascula = weighScale();;
   if(pesoBascula < 1.0) pesoBascula = 0.0; //fixPesoBascula
   tarado = true;
 };

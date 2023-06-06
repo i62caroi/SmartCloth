@@ -659,7 +659,7 @@ void loadPicturesRelojCompletoCuarto(){
 
 
 
-void dashboard(){
+void dashboard(){ // OK ==> HECHO
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     // ------------ ZONA SUPERIOR --------------------------------------------

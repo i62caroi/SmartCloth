@@ -32,6 +32,7 @@ class ValoresNutricionales{
     inline float getKcalValores(){ return _kcal; };
 
     void setValores(ValoresNutricionales val);
+    void setValores(float carb, float lip, float prot, float kcal);
 };
 
 
@@ -75,6 +76,13 @@ void ValoresNutricionales::setValores(ValoresNutricionales val){
   this->setLipValores(val.getLipValores());
   this->setProtValores(val.getProtValores());
   this->setKcalValores(val.getKcalValores());
+}
+
+void ValoresNutricionales::setValores(float carb, float lip, float prot, float kcal){
+  this->setCarbValores(carb);
+  this->setLipValores(lip);
+  this->setProtValores(prot);
+  this->setKcalValores(kcal);
 }
 
 
