@@ -1,3 +1,23 @@
+/**
+ * @file Comida.h
+ * @brief Definición de la clase Comida que representa una comida compuesta por varios platos.
+ *
+ * @author Irene Casares Rodríguez
+ * @date 31/05/23
+ * @version 1.0
+ *
+ * Esta clase permite agregar y eliminar platos de la comida, calcular el peso total de la comida
+ * y actualizar los valores nutricionales totales de la misma.
+ *
+ * @note Este archivo asume la existencia de los siguientes archivos de encabezado:
+ *       - "Valores_Nutricionales.h" para la definición de la clase ValoresNutricionales
+ *       - "Plato.h" para la definición de la clase Plato
+ * 
+ * @see ValoresNutricionales.h
+ * @see Plato.h
+ * 
+ */
+
 #ifndef COMIDA_H
 #define COMIDA_H
 
@@ -6,39 +26,126 @@
 
 #define NUM_PLATOS 10
 
+/**
+ * @brief Clase que representa una comida compuesta por varios platos.
+ */
 class Comida{
   private:
-    int _nPlatos;
-    float _peso;
-    Plato _platos[NUM_PLATOS];
-    ValoresNutricionales _valoresComida;
+    int                   _nPlatos;                 /**< Número de platos en la comida. */
+    float                 _peso;                    /**< Peso total de la comida. */
+    Plato                 _platos[NUM_PLATOS];      /**< Arreglo de platos de la comida. */
+    ValoresNutricionales  _valoresComida;           /**< Valores nutricionales totales de la comida. */
 
+    /**
+     * @brief Establece el número de platos.
+     * 
+     * @param num Número de platos a establecer
+     */
     inline void _setNumPlatos(int num){ _nPlatos = num; };
+    
+    /**
+     * @brief Obtiene el número de platos de la comida.
+     * 
+     * @return El número de platos de la comida
+     */
     inline int _getNumPlatos(){ return _nPlatos; };
-    inline int _firstGapComida(){ return this->_getNumPlatos(); }; // Si hay algún plato en esa posición (porque no se borran realmente), se sobreescribe
-    inline int _getLastPositionPlato(){ return this->_getNumPlatos() - 1; };
+    
+    /**
+     * @brief Obtiene la primera posición disponible en el array de platos.
+     * 
+     * @return La primera posición disponible en el array de platos
+     */
+    inline int _firstGapComida(){ return this->_getNumPlatos(); }; 
+    
+    /**
+     * @brief Obtiene la posición del último plato en el array de platos.
+     * 
+     * @return La última posición ocupada en el array de platos
+     */
+    inline int _getLastPositionPlato(){ return this->_getNumPlatos() - 1; }; 
+
+
+
 
   public:
+    /**
+     * @brief Constructor de la clase Comida.
+     */
     Comida();
 
-    inline bool isComidaEmpty(){ if(this->_getNumPlatos() == 0) return true; else return false;};
+    /**
+     * @brief Verifica si la comida está vacía.
+     * 
+     * @return True si la comida está vacía, False en caso contrario.
+     */
+    inline bool isComidaEmpty(){ if(this->_getNumPlatos() == 0) return true; else return false;}; 
 
-    inline void setPesoComida(float peso){ _peso = peso; };
-    inline float getPesoComida(){ return _peso; };
+    /**
+     * @brief Establece el peso total de la comida.
+     * 
+     * @param peso Valor de peso a establecer
+     */
+    inline void setPesoComida(float peso){ _peso = peso; }; 
+    
+    /**
+     * @brief Obtiene el peso total de la comida.
+     * 
+     * @return El peso total de la comida
+     */
+    inline float getPesoComida(){ return _peso; }; 
 
-    void addAlimentoComida(Alimento &alimento);
+    /**
+     * @brief Agrega un Alimento a la comida.
+     * 
+     * @param alimento Objeto Alimento a agregar
+     */
+    void addAlimentoComida(Alimento &alimento); 
 
+    /**
+     * @brief Agrega un Plato a la comida.
+     * 
+     * @param plato Objeto Plato a agregar
+     */
     void addPlato(Plato plato);
     
-    void deletePlato(Plato &plato);
-    void deletePlato(); //actual o previo
+    /**
+     * @brief Elimina un plato de la comida (solo el plato actual).
+     * 
+     * @param plato Plato a eliminar
+     */
+    void deletePlato(Plato &plato); 
 
-    void updateValoresComida(bool suma, ValoresNutricionales val);
-    inline ValoresNutricionales getValoresComida(){ return _valoresComida; };
+    /**
+     * @brief Elimina el plato actual de la comida (retroactivo).
+     */
+    void deletePlato();
 
-    void restoreComida();
+    /**
+     * @brief Actualiza los valores nutricionales de la comida.
+     * 
+     * @param suma True si se quieren sumar los valores nutricionales (al agregar alimento), False si se quieren restar (al eliminar plato)
+     * @param val Valores nutricionales con los que actualizar la comida
+     */
+    void updateValoresComida(bool suma, ValoresNutricionales val); 
+    
+    /**
+     * @brief Obtiene los valores nutricionales totales de la comida. 
+     * 
+     * @return Los valores nutricionales de la comida
+     */
+    inline ValoresNutricionales getValoresComida(){ return _valoresComida; }; 
 
-    String getComidaAllValues(); //Para guardar en SD
+    /**
+     * @brief "Reinicia" la comida, eliminando todos los platos y reiniciando los valores nutricionales.
+     */
+    void restoreComida(); 
+
+    /**
+     * @brief Obtiene todos los valores de la comida en formato de cadena de texto
+     * 
+     * @return Cadena de texto con los valores nutricionales de la comida
+     */
+    String getComidaAllValues(); 
 };
 
 

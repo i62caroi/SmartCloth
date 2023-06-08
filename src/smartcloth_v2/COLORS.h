@@ -1,14 +1,26 @@
-/*
-
-Tratamos con colores en formato RGB 5:6:5 de 16bpp (2Byte/pixel).
-
-En este enlace hay una colección de colores con su respectivo código HEX para rgb565: https://github.com/newdigate/rgb565_colors
-
-En este enlace se puede obtener el código HEX de un color seleccionado: http://www.barth-dev.de/online/rgb565-color-picker/
-
-La herramienta "Medidor de Color Digital" del MacBook permite saber el HEX de cualquier color que haya en pantalla, dándolo en R-G-B.
-
-*/
+/**
+ * @file Colors.h
+ * @brief Librería para definir colores en formato RGB 5:6:5 de 16 bpp (2 bytes/pixel)
+ *
+ * @author Irene Casares Rodríguez
+ * @date 05/06/2023
+ * @version 1.0
+ * 
+ * Este archivo contiene la definición de varios colores en formato RGB 5:6:5 de 16 bpp.
+ * También se incluyen enlaces útiles para obtener códigos HEX de colores y una colección
+ * de colores predefinidos con sus respectivos códigos HEX para rgb565.
+ * 
+ * Los colores definidos se pueden utilizar en aplicaciones de interfaz gráfica o visualización de datos.
+ * 
+ * @note Los colores se definen en formato RGB 5:6:5, donde los 5 bits superiores corresponden a la
+ *       intensidad del componente rojo, los siguientes 6 bits corresponden al componente verde y los
+ *       5 bits inferiores corresponden al componente azul.
+ * 
+ * @see https://github.com/newdigate/rgb565_colors Colección de colores con códigos HEX para rgb565
+ * @see http://www.barth-dev.de/online/rgb565-color-picker/ Herramienta para obtener el código HEX de un color seleccionado
+ * @see La herramienta "Medidor de Color Digital" del MacBook permite obtener el HEX de cualquier color en pantalla
+ * 
+ */
 
 #ifndef COLORS_H
 #define COLORS_H

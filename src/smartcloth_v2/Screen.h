@@ -1,56 +1,65 @@
+/** 
+ * @file Screen.h.h
+ * @brief Módulo Tarjeta SD
+ * 
+ * @author Irene Casares Rodríguez
+ * @date 07/06/23
+ * @version 1.0
+ *
+ * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
+ * @see https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel 
+ */
 
-/* 
+ /*
  
-  Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
-
-	------ ESPECIFICACIONES BASE --------------
-	* 1024x600 (7") TFT LCD
-	* Pantalla táctil capacitiva
-	* Comunicación SPI
-	-------------------------------------------
-
-	------ FLASH ------------------------------
-	* No tiene memoria Flash externa!!!
-	-------------------------------------------
-
+  ------ ESPECIFICACIONES BASE --------------
+   * 1024x600 (7") TFT LCD
+ 	 * Pantalla táctil capacitiva
+   * Comunicación SPI
+  -------------------------------------------
+ 
+  ------ FLASH ------------------------------
+   * No tiene memoria Flash externa!!!
+  -------------------------------------------
+ 
   ------ CHIP GRÁFICO ---------------------------------------------------------------------------
-  * Chip gráfico RA8876L4N. Este es una verión más reciente y mejorada del controlador RA8876 [2].  
-    Algunas de las mejoras incluyen:
-
-  		1 - Mejor rendimiento: El RA8876L4N puede ofrecer una mayor velocidad de actualización de 
-  			  la pantalla y un rendimiento mejorado en términos de respuesta y procesamiento de gráficos.
-
-		  2 - Mayor resolución: El RA8876L4N es compatible con una resolución de pantalla más alta, 
-			    lo que permite una mayor densidad de píxeles y una calidad de imagen mejorada.
-
-		  3 - Funcionalidad adicional: El RA8876L4N puede ofrecer nuevas características y funcionalidades, 
-			    como la capacidad de soportar más colores, una mayor cantidad de capas gráficas superpuestas y 
-			    mejoras en la administración de energía.
+   * Chip gráfico RA8876L4N. Este es una verión más reciente y mejorada del controlador RA8876 [2].  
+      Algunas de las mejoras incluyen:
+ 
+   		1 - Mejor rendimiento: El RA8876L4N puede ofrecer una mayor velocidad de actualización de 
+   			  la pantalla y un rendimiento mejorado en términos de respuesta y procesamiento de gráficos.
+ 
+ 		  2 - Mayor resolución: El RA8876L4N es compatible con una resolución de pantalla más alta, 
+ 			    lo que permite una mayor densidad de píxeles y una calidad de imagen mejorada.
+ 
+ 		  3 - Funcionalidad adicional: El RA8876L4N puede ofrecer nuevas características y funcionalidades, 
+ 			    como la capacidad de soportar más colores, una mayor cantidad de capas gráficas superpuestas y 
+ 			    mejoras en la administración de energía.
   -----------------------------------------------------------------------------------------------
-
+ 
   -------- MEMORIA SDRAM  -----------------------------------------------------------------------
-    * Memoria SDRAM tipo W9812G6KH-6 [3]:
-	  		- 2 M words x 4 banks x 16 bits (128 Mbits)
-	  		- 166 MHz de frecuencia de reloj
-	  		- modo auto-refresh
-	  		- 64 ms de tiempo de refresh
-	  		- CAS Latency: 2 y 3
-	  		- Velocidad de acceso CL3 (3 ciclos de reloj)
-        - Row address: A0-A11
-	  		- Column address: A0-A8
-
+   * Memoria SDRAM tipo W9812G6KH-6 [3]:
+ 	  		- 2 M words x 4 banks x 16 bits (128 Mbits)
+ 	  		- 166 MHz de frecuencia de reloj
+ 	  		- modo auto-refresh
+ 	  		- 64 ms de tiempo de refresh
+ 	  		- CAS Latency: 2 y 3
+ 	  		- Velocidad de acceso CL3 (3 ciclos de reloj)
+         - Row address: A0-A11
+ 	  		- Column address: A0-A8
+ 
   	  Esto se corresponde con los siguientes valores de Datasheet 8.1.2 SDRAM Connection del RA8876:
-        Density: 128 Mb (4 banks) 
-        Addressing => row: [A0-A11]
-                   => column: [A0-A8]  
-      
-      En la ra8876SdramInitial() de RA8876_Lite no aparece esta SDRAM como opción, pero sí la W9812G6JH. La principal 
-      diferencia entre la W9812G6JH y la W9812G6KH-6 es la velocidad de acceso y el tiempo de ciclo de reloj, siendo 
-      la W9812G6JH más rápida en esos términos.
+         Density: 128 Mb (4 banks) 
+         Addressing => row: [A0-A11]
+                    => column: [A0-A8]  
+        
+     En la ra8876SdramInitial() de RA8876_Lite no aparece esta SDRAM como opción, pero sí la W9812G6JH. La principal 
+     diferencia entre la W9812G6JH y la W9812G6KH-6 es la velocidad de acceso y el tiempo de ciclo de reloj, siendo 
+     la W9812G6JH más rápida en esos términos.
   ------------------------------------------------------------------------------------------------
-
+ 
   -------------- FUENTES INTERNAS -----------------------------------------------------------------
-  * El chip RA8876 tiene una fuente interna de ancho fijo disponible en tres tamaños:
+   * El chip RA8876 tiene una fuente interna de ancho fijo disponible en tres tamaños:
       RA8876_FONT_SIZE_16    =>  8x16
       RA8876_FONT_SIZE_24    =>  12x24
       RA8876_FONT_SIZE_32    =>  16x32
@@ -61,7 +70,7 @@
       Escala x2              =>  RA8876_TEXT_W_SCALE_X2 | RA8876_TEXT_H_SCALE_X2
       Escala x3              =>  RA8876_TEXT_W_SCALE_X3 | RA8876_TEXT_H_SCALE_X3
       Escala x4              =>  RA8876_TEXT_W_SCALE_X4 | RA8876_TEXT_H_SCALE_X4
-
+ 
   ------------------------------------------------------------------------------------------------
 
   -------- MEMORIA ROM FUENTES EXTERNAS  ----------------------------------------------------------------

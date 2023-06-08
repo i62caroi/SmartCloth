@@ -1,16 +1,19 @@
-/*
-File Name : smartcloth_v1.ino                              
-Author    : Irene Casares Rodríguez                          
-Edit Date : 31/05/2023
-Version   : v1.0
-Coments   : Version con interfaz sencilla. No incluye comprobaciones para añadir, borrar y guardar
-       
-*/
+/**
+ * @file  smartcloth_v1.ino
+ * @brief Programa principal de SmartCloth
+ *
+ * @author Irene Casares Rodríguez
+ * @date 12/05/2023
+ * @version 1.0
+ * 
+ * @note Versión con interfaz a partir de diseño wireframe
+ * 
+ */
 
 
 
 
-#include "Buttons.h"       /* Buttons.h 
+#include "Buttons.h"       /**< Buttons.h 
                                 => ISR.h 
                                       => Scale.h
                                           => HX711.h
@@ -34,13 +37,13 @@ Coments   : Version con interfaz sencilla. No incluye comprobaciones para añadi
                             */
 
 /* Time */
-const unsigned long period = 50;
-unsigned long prevMillis = 0;
-unsigned long tiempoPrevio = 0;
+const unsigned long   period = 50;
+unsigned long         prevMillis = 0;
+unsigned long         tiempoPrevio = 0;
 
 
 /*---------------------------------------------------------------------------------------------------------
-   setup(): Función para inicializar la pantalla, las botoneras y las interrupciones
+   \brief Función para inicializar el RTC, la SD, la pantalla, la báscula, las botoneras y las interrupciones
 ----------------------------------------------------------------------------------------------------------*/
 void setup() {
     Serial.begin(115200);

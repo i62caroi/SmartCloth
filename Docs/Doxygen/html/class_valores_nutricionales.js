@@ -1,0 +1,28 @@
+var class_valores_nutricionales =
+[
+    [ "ValoresNutricionales", "class_valores_nutricionales.html#a7093c53001bd3ccda51833a36d291519", null ],
+    [ "ValoresNutricionales", "class_valores_nutricionales.html#a844298f8f4cf85aa2e2f4ca5eaa84724", null ],
+    [ "getCarbRaciones", "class_valores_nutricionales.html#a57ae6a7d6f99537c69ff23ab2ae55b12", null ],
+    [ "getCarbValores", "class_valores_nutricionales.html#ab3fd2593632af0509aa63a1d468d54b7", null ],
+    [ "getKcalValores", "class_valores_nutricionales.html#afc1a81527d2b6aacb51cd286505684c8", null ],
+    [ "getLipRaciones", "class_valores_nutricionales.html#abdc764e52691276ef4c6638bbb867926", null ],
+    [ "getLipValores", "class_valores_nutricionales.html#a13623a881cf15e0b37988bc99a55c0a7", null ],
+    [ "getProtRaciones", "class_valores_nutricionales.html#a0b4bee7cc3e5fba54802ea567b9e0a6a", null ],
+    [ "getProtValores", "class_valores_nutricionales.html#a5877896212d7a1de2fc3b41f1e1eea06", null ],
+    [ "setCarbRaciones", "class_valores_nutricionales.html#a6d0e8f2600f027c593009ba9baba50e7", null ],
+    [ "setCarbValores", "class_valores_nutricionales.html#a301a4fd7d8b5a08e95d00771bc0231a6", null ],
+    [ "setKcalValores", "class_valores_nutricionales.html#a3ede554e6aec0f161a3651407cc29e8f", null ],
+    [ "setLipRaciones", "class_valores_nutricionales.html#afde2c5c15b3b593ed0c2deb71b3ab2a3", null ],
+    [ "setLipValores", "class_valores_nutricionales.html#a6ed44278abd2ff26bf35f7ae36485a09", null ],
+    [ "setProtRaciones", "class_valores_nutricionales.html#a6d9bae098c758cd432dd1afb63c1dc80", null ],
+    [ "setProtValores", "class_valores_nutricionales.html#a335e82edc001d59f797c6c4fe45b8778", null ],
+    [ "setValores", "class_valores_nutricionales.html#a0d511a94d8b3261c281a824036b4c674", null ],
+    [ "setValores", "class_valores_nutricionales.html#a22902fb806ce22f8cf6e56e590aff635", null ],
+    [ "_carb", "class_valores_nutricionales.html#ad5c65b77712688b591fbc18f1d57f37d", null ],
+    [ "_carb_R", "class_valores_nutricionales.html#a977e9dfada16e0220fbc1e61d444f583", null ],
+    [ "_kcal", "class_valores_nutricionales.html#a418e02918425b6418ab887c83a96bfc2", null ],
+    [ "_lip", "class_valores_nutricionales.html#a518a5f9fb4653c97f5b75313218c6c60", null ],
+    [ "_lip_R", "class_valores_nutricionales.html#a3ab48cd81a99243fbf9c36da8a2d0971", null ],
+    [ "_prot", "class_valores_nutricionales.html#a6e2cbdcda1c7b79349120c49e7982b56", null ],
+    [ "_prot_R", "class_valores_nutricionales.html#acb7c511199f22941ac53b6950050fd78", null ]
+];

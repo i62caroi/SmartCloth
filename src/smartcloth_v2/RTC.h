@@ -1,16 +1,30 @@
+/** @file RTC.h
+ *  @brief Funciones de un Real Time Clock (RTC) 
+ *
+ *  @author Irene Casares Rodríguez
+ *  @date 31/05/23
+ *  @version 1.0
+ *
+ *  Este archivo contiene las funciones relacionadas con la funcionalidad Real Time Clock (RTC).
+ *  Incluye la inicialización del RTC, verificación de cambios de horario de verano, ajustar
+ *  la hora para el horario de verano e invierno, y calcular el último domingo de un mes.
+ *
+ *  @note Se ha utilizado un RTC DS3231 de Az-Delivery
+ *  @see https://www.amazon.es/AZDelivery-Reloj-tiempo-DS3231-Parent/dp/B082MN58TN Módulo RTC DS3231 de Az-Delivery
+ *
+ *  
+ */
 
-/* ------------- Real Time Clock (RTC) ---------------------
+/*
 
-  Se ha utilizado un RTC DS3231 de Az-Delivery [1]
+   ------ ESPECIFICACIONES -------------------
+      - Alimentación de 3.3V
+      - Batería backup de 3V (CR2032)
+      - Comunicación I2C
+   -------------------------------------------
 
-  ------ ESPECIFICACIONES -------------------
-    * Alimentación de 3.3V
-    * Batería backup de 3V (CR2032)
-    * Comunicación I2C
-	-------------------------------------------
+   --------- CONEXIÓN RTC CON ARDUINO DUE -----------
 
-  --------- CONEXIÓN RTC CON ARDUINO DUE -----------
-     
       --------------------------
       |  RTC  |  Arduino Due   |
       --------------------------
@@ -20,12 +34,6 @@
       |  SCL  |  SCL (pin 21)  |  
       --------------------------
 
-  --------------------------------------------------
-
-
-  [1] https://www.amazon.es/AZDelivery-Reloj-tiempo-DS3231-Parent/dp/B082MN58TN 
-
------------------------------------------------------
 */
 
 #ifndef RTC_H
@@ -54,11 +62,15 @@ uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día espe
 /*-----------------------------------------------------------------------------*/
 
 
-
-/*-----------------------------------------------------------------------------
-   setupRTC(): Inicializar RTC
--------------------------------------------------------------------------------*/
-void setupRTC(){
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Inicializar el RTC.
+ *
+ * Esta función inicializa el objeto RTC y ajusta la hora si es necesario por
+ * el cambio de hora en verano e invierno.
+ */
+ /*-----------------------------------------------------------------------------*/
+ void setupRTC(){
     // Initialize the rtc object
     rtc.begin();
 
@@ -82,12 +94,17 @@ void setupRTC(){
 
 
 
-/*-----------------------------------------------------------------------------
-   checkSummerTime():
 
-   Comprobar si es el último domingo de Marzo, cuando se realiza el cambio
-   a horario de verano (se adelanta una hora)
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Comprobar si es horario de verano.
+ *
+ * Esta función comprueba si hoy es el último domingo de marzo, cuando comienza 
+ * el horario de verano.
+ *
+ * @return true si es horario de verano, false en caso contrario
+ */
+/*-----------------------------------------------------------------------------*/
 bool checkSummerTime() {
     // Fecha de hoy
     Time t = rtc.getTime();
@@ -105,12 +122,16 @@ bool checkSummerTime() {
 
 
 
-/*-----------------------------------------------------------------------------
-   checkWinterTime():
-
-   Comprobar si es el último domingo de Octubre, cuando se realiza el cambio
-   a horario de invierno (se retrasa una hora)
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Comprobar si es horario estándar (horario de invierno).
+ *
+ * Esta función comprueba si hoy es el último domingo de octubre, cuando comienza 
+ * el horario estándar.
+ *
+ * @return true si es horario estándar, false en caso contrario
+ */
+/*-----------------------------------------------------------------------------*/
 bool checkWinterTime() {
     // Fecha de hoy
     Time t = rtc.getTime();
@@ -128,9 +149,13 @@ bool checkWinterTime() {
 
 
 
-/*-----------------------------------------------------------------------------
-   adjustSummerTime(): Adelantar 1 hora
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Ajustar la hora para el horario de verano.
+ *
+ * Esta función ajusta la hora sumando 1 hora.
+ */
+/*-----------------------------------------------------------------------------*/
 void adjustSummerTime() {
     Time t = rtc.getTime();
     rtc.setTime(t.hour + 1, t.min, t.sec);
@@ -138,9 +163,13 @@ void adjustSummerTime() {
 
 
 
-/*-----------------------------------------------------------------------------
-   adjustWinterTime(): Retrasar 1 hora
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Ajustar la hora para el horario estándar (horario de invierno).
+ *
+ * Esta función ajusta la hora restando 1 hora.
+ */
+/*-----------------------------------------------------------------------------*/
 void adjustWinterTime() {
     Time t = rtc.getTime();
     rtc.setTime(t.hour - 1, t.min, t.sec);
@@ -148,13 +177,20 @@ void adjustWinterTime() {
 
 
 
-/*-----------------------------------------------------------------------------
-   getLastSunday(): Calcular el último domingo de un mes y año específico
-
-   Utiliza la función getDOW para obtener el día de la semana (DOW) del último día 
-   del mes. Luego, resta el DOW de ese día al día máximo del mes para obtener el 
-   último domingo.
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Calcular el último domingo de un mes y año específico.
+ *
+ * Esta función calcula el último domingo de un mes y año específico.
+ * Utiliza la función getDOW para obtener el día de la semana (DOW) del último día 
+ * del mes. Luego, resta el DOW de ese día al día máximo del mes para obtener el 
+ * último domingo.
+ *
+ * @param month El mes
+ * @param year El año
+ * @return El último domingo del mes
+ */
+/*-----------------------------------------------------------------------------*/
 uint8_t getLastSunday(uint8_t month, uint16_t year) {
   // Obtener el día máximo del mes
   uint8_t lastDay = 31;
@@ -183,16 +219,22 @@ uint8_t getLastSunday(uint8_t month, uint16_t year) {
 
 
 
-/*-----------------------------------------------------------------------------
-   getDOW(): Obtener día de la semana (DOW) de un día específico
-
-    Esta función utiliza el Algoritmo de Zeller para determinar el día
-    de la semana de una fecha específica mediante cálculos matemáticos.
-  
-    El algoritmo toma como entrada el día, mes y año de una fecha y 
-    devuelve un número del 0 al 6, de lunes a domingo. Se ha modificado
-    la función para que devuelva del 1 al 7.
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Obtener el día de la semana (DOW) para una fecha específica.
+ *
+ * Esta función calcula el día de la semana (DOW) para una fecha específica 
+ * utilizando el algoritmo de Zeller.
+ * El algoritmo toma como entrada el día, mes y año de una fecha y devuelve un 
+ * número del 0 al 6, de lunes a domingo. Se ha modificado la función para que 
+ * devuelva del 1 al 7.
+ *
+ * @param day El día
+ * @param month El mes
+ * @param year El año
+ * @return El día de la semana (DOW)
+ */
+/*-----------------------------------------------------------------------------*/
 uint8_t getDOW(uint8_t day, uint8_t month, uint16_t year) {
   // Ajustar Enero y Febrero como meses 13 y 14 del año anterior. Necesario para el algoritmo.
   if (month < 3) {

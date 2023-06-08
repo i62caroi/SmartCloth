@@ -1,3 +1,23 @@
+/**
+ * @file ISR.h
+ * @brief Definiciones de las Rutinas de Servicio de Interrupción (ISR)
+ *
+ * @author Irene Casares Rodríguez
+ * @date 06/06/23
+ * @version 1.0
+ *
+ * Este archivo contiene las definiciones de las funciones utilizadas para la 
+ * activación y detección de interrupciones causadas por la pulsación de algún
+ * botón en cualquiera de las botoneras (grande y main) y por el timer de interrupción
+ * utilizado para la lectura de la báscula cada 0.5 seg.
+ *
+ * @note Este archivo asume la existencia del siguiente archivo de encabezado:
+ *       - "Scale.h" para la definición de las funciones de la báscula
+ * 
+ * @see Scale.h
+ * 
+ */
+
 #ifndef ISR_H
 #define ISR_H
 
@@ -53,9 +73,11 @@ uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const c
 
 
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_crudo(): Función activada por interrupción RISING de botón CRUDO
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botón de 'crudo'
+ */
+/*-----------------------------------------------------------------------------*/
 void ISR_crudo(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
@@ -68,9 +90,11 @@ void ISR_crudo(){
 
 
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_cocinado(): Función activada por interrupción RISING de botón COCINADO
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botón de 'cocinado'
+ */
+/*-----------------------------------------------------------------------------*/
 void ISR_cocinado(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
@@ -83,9 +107,11 @@ void ISR_cocinado(){
 
 
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_addPlato(): Función activada por interrupción RISING de botón ADDPLATO
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botón de 'añadir plato'
+ */
+/*-----------------------------------------------------------------------------*/
 void ISR_addPlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
@@ -98,9 +124,11 @@ void ISR_addPlato(){
 
 
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_deletePlato(): Función activada por interrupción RISING de botón DELETE
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botón de 'eliminar plato'
+ */
+/*-----------------------------------------------------------------------------*/
 void ISR_deletePlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
@@ -113,9 +141,11 @@ void ISR_deletePlato(){
 
 
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_guardar(): Función activada por interrupción RISING de botón Guardar
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botón de 'guardar comida'
+ */
+/*-----------------------------------------------------------------------------*/
 void ISR_guardar(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
@@ -132,9 +162,11 @@ void ISR_guardar(){
 /*---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_pulsandoButtonsGrande(): Función ativada por interrupción RISING de botonera Grande
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botonera de grupos de alimentos
+ */
+/*-----------------------------------------------------------------------------*/
 void ISR_pulsandoButtonsGrande(){
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
@@ -150,23 +182,35 @@ void ISR_pulsandoButtonsGrande(){
 
 //--------------------------------------------------
 
-/*---------------------------------------------------------------------------------------------------------
-   TimerHandler(): Función para activar el timer de interrupción
-----------------------------------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Activar timer de interrupción de la báscula
+ */
+/*-----------------------------------------------------------------------------*/
 void TimerHandler() { ISR_Timer.run(); }
 
-/*---------------------------------------------------------------------------------------------------------
-   ISR_pesarBascula(): Función para pesar por interrupción
-----------------------------------------------------------------------------------------------------------*/
-void ISR_pesarBascula(){  
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Activar báscula para pesar cuando salte timer de interrupción
+ */
+ /*-----------------------------------------------------------------------------*/
+ void ISR_pesarBascula(){  
     weight = weighScale();
     pesado = true; 
 }
 
-/*---------------------------------------------------------------------------------------------------------
-   attachDueInterrupt(): Función para adjuntar interrupción al timer
-----------------------------------------------------------------------------------------------------------*/
-uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName){
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Adjuntar interrupción al timer
+ * @param microseconds Intervalo de tiempo en microsegundos
+ * @param callback Función de devolución de llamada para la interrupción
+ * @param TimerName Nombre del temporizador
+ * @return Número del temporizador utilizado
+ */
+ /*-----------------------------------------------------------------------------*/
+ uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName){
     // Primer timer libre 
     DueTimerInterrupt dueTimerInterrupt = DueTimer.getAvailable(); 
     

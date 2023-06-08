@@ -1,3 +1,16 @@
+/**
+ * @file Buttons.h
+ * @brief Librería para el manejo de las placas botoneras
+ *
+ * @author Irene Casares Rodríguez
+ * @date 23/05/2023
+ * @version 1.0
+ * 
+ * Este archivo contiene las definiciones y funciones necesarias para el manejo
+ * de las placas botoneras. Se definen las conexiones de los pines, se implementa
+ * la lectura de los botones y se asignan eventos según las pulsaciones.
+ * 
+ */
 
 /* --------- CONEXIÓN PLACAS BOTONERAS CON ARDUINO DUE -----------
   
@@ -51,16 +64,21 @@ int buttons[countRows][countColumns] = {{1,2,3,4,5},
 /*-----------------------------------------------------------------------------
                           DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
-void readButtonsGrande();     // Polling de botonera grande tras saltar interrupción de pulsación
-void checkAllButtons();       // Asignación de eventos según botón pulsado en Grande o Main
+void  readButtonsGrande();     // Polling de botonera grande tras saltar interrupción de pulsación
+void  checkAllButtons();       // Asignación de eventos según botón pulsado en Grande o Main
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 
-
-/*---------------------------------------------------------------------------------------------------------
-   readButtonsGrande(): Función para encontrar botón pulsado en botonera Grande
-----------------------------------------------------------------------------------------------------------*/
-void readButtonsGrande(){
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Función para leer el botón pulsado en la botonera grande
+ * 
+ * Esta función realiza la lectura del botón pulsado en la botonera grande
+ * utilizando el método de polling. Se busca el botón activo en cada fila y columna
+ * y se actualizan las variables iRow e iCol con la posición del botón pulsado.
+ */
+ /*-----------------------------------------------------------------------------*/
+ void readButtonsGrande(){
     for (byte c = 0; c < countColumns; c++){  
         pinMode(columnsPins[c], INPUT); //Para proteger eléctricamente los puertos de los botones y que no llegue 0 y 1 a la vez
     }
@@ -84,11 +102,16 @@ void readButtonsGrande(){
 }
 
 
-
-/*---------------------------------------------------------------------------------------------------------
-   checkAllButtons(): Chequeo de ISR de pulsaciones y polling de botoneras
-----------------------------------------------------------------------------------------------------------*/
-void checkAllButtons(){
+ /*-----------------------------------------------------------------------------*/
+/**
+ * @brief Función para chequear los botones de ambas botoneras
+ * 
+ * Esta función comprueba las interrupciones de pulsaciones de los botones en
+ * ambas botoneras (grande y main). Dependiendo del botón pulsado, se asigna
+ * un evento correspondiente y se agrega al búfer de eventos.
+ */
+  /*-----------------------------------------------------------------------------*/
+ void checkAllButtons(){
         /*--------------------------------------------------------------*/
         /* ---------------    PULSACIONES BOTONERAS   ----------------- */
         /*--------------------------------------------------------------*/

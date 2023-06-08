@@ -1,43 +1,38 @@
 
-/* ------------- MÓDULO TARJETA SD ---------------------
-
-  Se ha utilizado el módulo de SD integrado en la pantalla TFT:
-    Pantalla modelo: ER-TFTM070-6 de BuyDisplay
-      - SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
-      https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel
-   
-  Este módulo no está conectado directamente con el micro de la pantalla,
-  por lo que se debe conectar de forma independiente al bus SPI del Arduino.
-  Esto produce que 2 dispositivos, la pantalla y la SD, estén compartiendo el
-  mismo bus SPI. 
-  
-  Resulta que el micro RA8876 tiene el mismo problema en relación al pin MISO del SPI
-  que el micro RA8875 (véase https://github.com/wwatson4506/Ra8876LiteTeensy), y es que 
-  no se "suelta" el dispositivo (su chipselect) tras finalizar la transacción SPI, 
-  lo cual debería hacerse automáticamente. Esto crea un problema a la hora de usar la 
-  misma interfaz SPI para diferentes dispositivos.
-  
-  Lo mejor sería utilizar diferentes pines para el CS de cada dispositivo, lo que se
-  ha hecho en este caso (SD en pin 4 y TFT en pin 12). Otra opción sería utilizar un
-  chip externo de buffer triestado como el 74HCT125.
-
-  Véase el tema "Fix compatibility with other SPI devices" de esta wiki:
-    https://github.com/sumotoy/RA8875/wiki/Fix-compatibility-with-other-SPI-devices
-  
-  También véase el apartado "SDO Defect" de la siguiente fuente:
-    https://os.mbed.com/components/RA8875-Based-Display/
-
-  Aun así, el micro SAM3X del Arduino Due tiene capacidades SPI avanzadas, por lo que 
-  puede manejar automáticamente la selección de chipselect entre diferentes dispositivos que 
-  compartan el bus SPI, incluso teniendo diferentes atributos como velocidad y datamode. 
-  En este caso no ha hecho falta utilizar esta API extendida del SPI, sino que ha bastado con
-  utilizar diferentes pines para el CS de cada dispositivo. 
-
-  Véase el tema "Extended SPI Library Usage with the Arduino Due" de la documentación oficial
-  de Arduino:
-    (https://docs.arduino.cc/tutorials/due/due-extended-spi)
+/** 
+ * @file SD_functions.h
+ * @brief Módulo Tarjeta SD
+ *
+ * @author Irene Casares Rodríguez
+ * @date 05/06/23
+ * @version 1.0
+ *
+ * Se ha utilizado el módulo de SD integrado en la pantalla TFT:
+ *   Pantalla modelo: ER-TFTM070-6 de BuyDisplay
+ * 
+ * Este módulo no está conectado directamente con el micro de la pantalla,
+ * por lo que se debe conectar de forma independiente al bus SPI del Arduino.
+ * Esto produce que 2 dispositivos, la pantalla y la SD, estén compartiendo el
+ * mismo bus SPI.
+ *
+ * Resulta que el micro RA8876 tiene el mismo problema en relación al pin MISO del SPI
+ * que el micro RA8875 (véase https://github.com/wwatson4506/Ra8876LiteTeensy), y es que
+ * no se "suelta" el dispositivo (su chipselect) tras finalizar la transacción SPI,
+ * lo cual debería hacerse automáticamente. Esto crea un problema a la hora de usar la
+ * misma interfaz SPI para diferentes dispositivos.
+ *
+ * Lo mejor sería utilizar diferentes pines para el CS de cada dispositivo, lo que se
+ * ha hecho en este caso (SD en pin 4 y TFT en pin 12). Otra opción sería utilizar un
+ * chip externo de buffer triestado como el 74HCT125.
+ *
+ * @see https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel  SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
+ * @see https://github.com/sumotoy/RA8875/wiki/Fix-compatibility-with-other-SPI-devices "Fix compatibility with other SPI devices" 
+ * @see https://os.mbed.com/components/RA8875-Based-Display/ apartado "SDO Defect"
+ *
+ */
 
 
+/*
   --------- CONEXIÓN SD CON ARDUINO DUE -----------
 
 
@@ -82,16 +77,18 @@ File myFile;
 -----------------------------------------------------------------------------*/
 void    setupSDcard();                   // Inicializar tarjeta SD
 void    writeHeaderFileSD();             // Crear fichero CSV y escribir header 
-//void    saveDataSD(ValoresNutricionales val, float peso);
 void    saveComidaSD();                  // Guardar valores de la comida en fichero CSV
 void    getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 /*-----------------------------------------------------------------------------*/
 
 
 
-/*-----------------------------------------------------------------------------
-   setupSDcard(): Inicializar tarjeta SD
--------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Inicializar la tarjeta SD.
+ */
+/*-----------------------------------------------------------------------------*/
 void setupSDcard(){
     if(!SD.begin(SD_CARD_SCS)){
         Serial.println(F("SD card failure!"));
@@ -110,9 +107,12 @@ void setupSDcard(){
 
 
 
-/*-----------------------------------------------------------------------------
-   writeHeaderFileSD(): Crear fichero en SD y escribir header
--------------------------------------------------------------------------------*/
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Crear un nuevo archivo CSV en la tarjeta SD y escribir el encabezado.
+ */
+/*-----------------------------------------------------------------------------*/
 void writeHeaderFileSD(){
     Serial.print(F("\n Creando fichero ")); Serial.print(fileCSV); Serial.println(F(" ...\n"));
 
@@ -133,13 +133,13 @@ void writeHeaderFileSD(){
 
 
 
-/*-----------------------------------------------------------------------------
-   saveDataSD(): Guardar información de la comida actual en SD
-          Parámetros:
-              val - ValoresNutricionales de la comida a guardar
--------------------------------------------------------------------------------*/
-//void saveDataSD(ValoresNutricionales val, float peso){
-  void saveComidaSD(){
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Guardar los valores de la comida actual en el archivo CSV en la tarjeta SD.
+ */
+/*-----------------------------------------------------------------------------*/
+void saveComidaSD(){
     Serial.println(F("Guardando info...\n"));
 
     // Se ha utilizado un RTC para conocer la fecha a la que se guarda la comida
@@ -168,10 +168,12 @@ void writeHeaderFileSD(){
 
 
 
-/*-----------------------------------------------------------------------------
-   getAcumuladoHoy(): Leer info del fichero de la SD e inicializar el "Acumulado Hoy"
-                      con las comidas guardadas en la fecha de hoy
--------------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Leer las comidas guardadas en el día actual desde el archivo CSV en 
+ * la tarjeta SD y calcular el total acumulado.
+ */
+/*-----------------------------------------------------------------------------*/
 void getAcumuladoHoyFromSD(){
 
     char *today = rtc.getDateStr(); // Es posible que se cambie de día durante el cocinado?? Si no, hacer en setupRTC(). 
@@ -235,18 +237,7 @@ void getAcumuladoHoyFromSD(){
         }
 
         myFile.close();
-      
 
-        // Imprimir las sumas de cada columna
-        /*Serial.print("\nSuma carb: ");    Serial.println(sumCarb);
-        Serial.print("Suma carb_R: ");  Serial.println(sumCarb_R);
-        Serial.print("Suma lip: ");     Serial.println(sumLip); 
-        Serial.print("Suma lip_R: ");   Serial.println(sumLip_R); 
-        Serial.print("Suma prot: ");    Serial.println(sumProt);
-        Serial.print("Suma prot_R: ");  Serial.println(sumProt_R);
-        Serial.print("Suma kcal: ");    Serial.println(sumKcal);
-        Serial.print("Suma peso: ");    Serial.println(sumPeso);
-        Serial.print("N Comidas: ");    Serial.println(nComidas);*/
 
         // ----- ACTUALIZAR ACUMULADO HOY -----
         ValoresNutricionales valAux(sumCarb, sumLip, sumProt, sumKcal);   

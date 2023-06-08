@@ -1,3 +1,23 @@
+/**
+ * @file grupos.h
+ * @brief Definiciones de grupos de alimentos
+ *
+ * @author Irene Casares Rodríguez
+ * @date 06/06/23
+ * @version 1.0
+ *
+ * Este archivo contiene la definición de los grupos de alimentos y sus características.
+ *
+* @note Este archivo asume la existencia del siguiente archivo de encabezado:
+ *       - "COLORS.h" para la definición de las macros de colores
+ * 
+ * @see COLORS.h
+ * @see https://cs.stanford.edu/people/miles/iso8859.html Colección de caracteres ASCII/ISO 8859-1 (Latin-1) en HEX
+ * @see https://www.raio.com.tw/data_raio/Datasheet/RA887677/RA8876_Brief_DS_V11_Eng.pdf Table 14-1 (pag 99) del datasheet de RA8876 para caracteres Latin-1
+ * 
+ */
+
+
 #ifndef GRUPOS_H
 #define GRUPOS_H
 
@@ -5,23 +25,26 @@
 
 #include "COLORS.h" // Colores del texto de nombre de grupo y ejemplos
 
+/**
+ * @struct Grupo
+ * @brief Estructura que representa un grupo de alimentos.
+ *
+ * Esta estructura contiene información sobre un grupo de alimentos, como su ID, color, nombre,
+ * ejemplos y contenido nutricional por gramo.
+ */
 typedef struct {
-    int ID_grupo;
-    uint16_t color_grupo;
-    String Nombre_grupo;
-    String Ejemplos_grupo;
-    float Kcal_g; //por 1 gramo
-    float Prot_g;
-    float Lip_g;
-    float Carb_g;
+    int           ID_grupo;         /**< ID del grupo */
+    uint16_t      color_grupo;      /**< Color del texto del grupo */
+    String        Nombre_grupo;     /**< Nombre del grupo */
+    String        Ejemplos_grupo;   /**< Ejemplos del grupo */
+    float         Kcal_g;           /**< Calorías por gramo */
+    float         Prot_g;           /**< Proteínas por gramo */
+    float         Lip_g;            /**< Lípidos por gramo */
+    float         Carb_g;           /**< Carbohidratos por gramo */
 }Grupo;
 
 
 /* 
-   Caracteres ASCII/ISO 8859-1 (Latin-1) en HEX ==> https://cs.stanford.edu/people/miles/iso8859.html
-
-   También en Table 14-1 (pag 99) del datasheet de RA8876:
- 
     á --> E1    Á --> C1
     é --> E9    É --> C9
     í --> ED    Í --> CD
@@ -31,12 +54,16 @@ typedef struct {
     ñ --> F1    Ñ --> D1
 
     ¿ --> BF    ? --> 3F
-
 */
 
 
                                     // ID |     Nombre     |           Ejemplos                  |   Kcal   |  Proteinas | Lipidos | Carbohidratos
-                                    
+/**
+ * @var gruposAlimentos
+ * @brief Arreglo de objetos Grupo que representa los grupos de alimentos.
+ *
+ * Este arreglo almacena los distintos grupos de alimentos y sus características.
+ */                                   
 Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.684059925,0.038014981,0.037910112,0.047191011},
                                       {2,COLOR_G2,"L\xE1""cteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.465,0.033,0.016,0.046},
                                       {3,COLOR_G3,"L\xE1""cteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.391466667,0.041822222,0.0016,0.052133333},
@@ -65,13 +92,25 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche 
                                       {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, at\xFA""n o sardinas en aceite, caballa,\n   salm\xF3""n, jam\xF3""n curado con grasa, huevo, queso fresco, reques\xF3""n, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443}
                                     };
 
+/**
+ * @var grupoEscogido
+ * Grupo de alimentos seleccionado.
+ */
 Grupo grupoEscogido;
+/**
+ * @var grupoAnterior
+ * Grupo de alimentos anteriormente seleccionado.
+ */
 Grupo grupoAnterior;
 
 
 /*---------------------------------------------------------------------------------------------------------
    getGrupoAlimentos(): Obtener grupo de alimentos seleccionado (checkAllButtons() en BUTTONS.h)
 ----------------------------------------------------------------------------------------------------------*/
+/**
+ * @brief Establece el grupo de alimentos seleccionado.
+ * @param id ID del grupo a seleccionar.
+ */
 void setGrupoAlimentos(int id){       // 'id' pasado es buttonGrande 
     int posGrupo = 0;
     for(int i = 0; i < NUM_GRUPOS; i++){

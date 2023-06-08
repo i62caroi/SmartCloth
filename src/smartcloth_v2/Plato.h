@@ -1,3 +1,21 @@
+/**
+ * @file Plato.h
+ * @brief Definición de la clase Plato que representa una plato compuesto por varios alimentos.
+ *
+ * @author Irene Casares Rodríguez
+ * @date 15/05/23
+ * @version 1.0
+ *
+ * Esta clase permite agregar y eliminar alimentos del plato, calcular el peso total del plato
+ * y actualizar los valores nutricionales totales del mismo.
+ *
+ * @note Este archivo asume la existencia del siguiente archivo de encabezado:
+ *       - "Alimento.h" para la definición de la clase Alimento
+ * 
+ * @see Alimento.h
+ * 
+ */
+
 #ifndef PLATO_H
 #define PLATO_H
 
@@ -7,12 +25,17 @@
 
 
 
+/**
+ * @brief Clase que representa un plato compuesto por varios alimentos.
+ * @note Esta clase permite gestionar los alimentos de un plato y calcular sus valores nutricionales.
+ * @see Alimento, ValoresNutricionales
+ */
 class Plato{
   private:
-    int _nAlimentos;
-    float _peso;
-    Alimento _alimentos[NUM_ALIMENTOS];
-    ValoresNutricionales _valoresPlato;
+    int _nAlimentos;                      /**< Número de alimentos en el plato */
+    float _peso;                          /**< Peso total del plato */
+    Alimento _alimentos[NUM_ALIMENTOS];   /**< Array de alimentos del plato */
+    ValoresNutricionales _valoresPlato;   /**< Valores nutricionales del plato */
 
     inline void _setNumAlimentos(int num){ _nAlimentos = num; };
     inline int _getNumAlimentos(){ return _nAlimentos; };
@@ -20,22 +43,60 @@ class Plato{
     inline int _firstGapPlato(){ return this->_getNumAlimentos(); };           
 
   public:
+    /**
+     * @brief Constructor por defecto de la clase Plato.
+     *        Inicializa el número de alimentos y el peso del plato a 0.
+     */
     Plato();
 
+    /**
+     * @brief Comprueba si el plato está vacío (sin alimentos).
+     * 
+     * @return true si el plato está vacío, false en caso contrario
+     */
     inline bool isPlatoEmpty(){ if(this->_getNumAlimentos() == 0) return true; else return false; };
     
+    /**
+     * @brief Establece el peso total del plato.
+     * 
+     * @param peso Peso del plato
+     */
     inline void setPesoPlato(float peso){ _peso = peso; };
+
+    /**
+     * @brief Obtiene el peso total del plato.
+     * 
+     * @return Peso del plato
+     */
     inline float getPesoPlato(){ return _peso; };
     
+    /**
+     * @brief Añade un alimento al plato.
+     * 
+     * @param alimento Alimento a añadir
+     */
     void addAlimentoPlato(Alimento alimento);         
     
+    /**
+     * @brief Obtiene los valores nutricionales del plato.
+     * 
+     * @return Los valores nutricionales del plato
+     */
     inline ValoresNutricionales getValoresPlato(){ return _valoresPlato; };
+
+    /**
+     * @brief Actualiza los valores nutricionales del plato según los valores del alimento especificado.
+     * 
+     * @param val Valores nutricionales del alimento
+     */
     void updateValoresPlato(ValoresNutricionales val); 
 
+    /**
+     * @brief "Reinicia" el plato, eliminando todos los alimentos y reiniciando los valores nutricionales.
+     */
     void restorePlato();
-
-
 };
+
 
 
 
