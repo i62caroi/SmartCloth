@@ -1125,9 +1125,6 @@ public:
   void    sdCardDraw16bppBIN8bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);
   void    sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
   void    sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
-
-  // BMP (SD)
-  //void    sdCardDraw24bppBMP(char *filename, int x, int y);
  /* ------------------------------------------------------------ */
 
 

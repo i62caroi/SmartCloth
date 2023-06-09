@@ -25,9 +25,9 @@
  * ha hecho en este caso (SD en pin 4 y TFT en pin 12). Otra opción sería utilizar un
  * chip externo de buffer triestado como el 74HCT125.
  *
+ * @see https://cs.stanford.edu/people/miles/iso8859.html Colección de caracteres ASCII/ISO 8859-1 (Latin-1) en HEX
+ * @see https://www.raio.com.tw/data_raio/Datasheet/RA887677/RA8876_Brief_DS_V11_Eng.pdf Table 14-1 (pag 99) del datasheet de RA8876 para caracteres Latin-1
  * @see https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel  SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen
- * @see https://github.com/sumotoy/RA8875/wiki/Fix-compatibility-with-other-SPI-devices "Fix compatibility with other SPI devices" 
- * @see https://os.mbed.com/components/RA8875-Based-Display/ apartado "SDO Defect"
  *
  */
 

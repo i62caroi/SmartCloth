@@ -13,10 +13,7 @@
  * lípidos, proteínas y kcal, además de las raciones. 
  * El objeto ValoresNutricionales se incluye en las clases Alimento, Plato, Comida y Diario.
  * 
- * @see Alimento.h
- * @see Plato.h
- * @see Comida.h
- * @see Diario.h
+ * @see Alimento, Plato, Comida y Diario
  * 
  */
 

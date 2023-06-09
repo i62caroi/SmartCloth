@@ -8,7 +8,7 @@
  *
  * Este archivo contiene la definición de los grupos de alimentos y sus características.
  *
-* @note Este archivo asume la existencia del siguiente archivo de encabezado:
+ * @note Este archivo asume la existencia del siguiente archivo de encabezado:
  *       - "COLORS.h" para la definición de las macros de colores
  * 
  * @see COLORS.h

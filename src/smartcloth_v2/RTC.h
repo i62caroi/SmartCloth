@@ -10,7 +10,7 @@
  *  la hora para el horario de verano e invierno, y calcular el último domingo de un mes.
  *
  *  @note Se ha utilizado un RTC DS3231 de Az-Delivery
- *  @see https://www.amazon.es/AZDelivery-Reloj-tiempo-DS3231-Parent/dp/B082MN58TN Módulo RTC DS3231 de Az-Delivery
+ *  @note https://www.amazon.es/AZDelivery-Reloj-tiempo-DS3231-Parent/dp/B082MN58TN Módulo RTC DS3231 de Az-Delivery
  *
  *  
  */
