@@ -529,6 +529,7 @@ typedef uint8_t FontFlags;
 #define RA8876_S0_X1     0x9A
 #define RA8876_S0_Y0     0x9B
 #define RA8876_S0_Y1     0x9C
+
 #define RA8876_S1_STR0   0x9D
 #define RA8876_S1_STR1   0x9E
 #define RA8876_S1_STR2   0x9F
@@ -538,11 +539,11 @@ typedef uint8_t FontFlags;
 #define RA8876_S1_STR3   0xA0
 #define RA8876_S1_WTH0   0xA1
 #define RA8876_S1_WTH1   0xA2
-
 #define RA8876_S1_X0     0xA3
 #define RA8876_S1_X1     0xA4
 #define RA8876_S1_Y0     0xA5
 #define RA8876_S1_Y1     0xA6
+
 #define RA8876_DT_STR0   0xA7
 #define RA8876_DT_STR1   0xA8
 #define RA8876_DT_STR2   0xA9
@@ -553,11 +554,51 @@ typedef uint8_t FontFlags;
 #define RA8876_DT_X1     0xAE
 #define RA8876_DT_Y0     0xAF
 #define RA8876_DT_Y1     0xB0
+
 #define RA8876_BTE_WTH0  0xB1
 #define RA8876_BTE_WTH1  0xB2
 #define RA8876_BTE_HIG0  0xB3
 #define RA8876_BTE_HIG1  0xB4
-#define RA8876_APB_CTRL  0xB5
+
+#define RA8876_APB_CTRL  0xB5 // Alpha level
+//-values RA8876_APB_CTRL-
+// The value of alpha in the color code ranges from 1.0 down to 0.0, 
+// where 1.0 represents a fully opaque color, and 0.0 represents a fully transparent color.
+#define RA8876_ALPHA_OPACITY_0  0   // Fully transparent
+#define RA8876_ALPHA_OPACITY_1  1
+#define RA8876_ALPHA_OPACITY_2  2
+#define RA8876_ALPHA_OPACITY_3  3
+#define RA8876_ALPHA_OPACITY_4  4
+#define RA8876_ALPHA_OPACITY_5  5
+#define RA8876_ALPHA_OPACITY_6  6
+#define RA8876_ALPHA_OPACITY_7  7
+#define RA8876_ALPHA_OPACITY_8  8
+#define RA8876_ALPHA_OPACITY_9  9
+#define RA8876_ALPHA_OPACITY_10 10
+#define RA8876_ALPHA_OPACITY_11 11
+#define RA8876_ALPHA_OPACITY_12 12
+#define RA8876_ALPHA_OPACITY_13 13
+#define RA8876_ALPHA_OPACITY_14 14
+#define RA8876_ALPHA_OPACITY_15 15
+#define RA8876_ALPHA_OPACITY_16 16    // Half transparent/opaque
+#define RA8876_ALPHA_OPACITY_17 17
+#define RA8876_ALPHA_OPACITY_18 18
+#define RA8876_ALPHA_OPACITY_19 19
+#define RA8876_ALPHA_OPACITY_20 20
+#define RA8876_ALPHA_OPACITY_21 21
+#define RA8876_ALPHA_OPACITY_22 22
+#define RA8876_ALPHA_OPACITY_23 23
+#define RA8876_ALPHA_OPACITY_24 24
+#define RA8876_ALPHA_OPACITY_25 25
+#define RA8876_ALPHA_OPACITY_26 26
+#define RA8876_ALPHA_OPACITY_27 27
+#define RA8876_ALPHA_OPACITY_28 28
+#define RA8876_ALPHA_OPACITY_29 29
+#define RA8876_ALPHA_OPACITY_30 30
+#define RA8876_ALPHA_OPACITY_31 31
+#define RA8876_ALPHA_OPACITY_32 32    // Fully opaque
+//-end values RA8876_APB_CTRL-
+//------------- FIN BLOCK TRANSFER ENGINE (BTE) -------------
 //------------------------------------------------------------------
 
 

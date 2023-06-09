@@ -1759,6 +1759,47 @@ void RA8876::bteMemoryCopyWithChromaKey(uint32_t s0_addr,uint16_t s0_image_width
 }
 
 
+/* *************************************************************
+   ************************************************************* */
+void RA8876::bteMemoryCopyWithOpacity(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,
+                            uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint8_t alpha_level)
+{
+  SPI.beginTransaction(_spiSettings);
+
+  bte_Source0_MemoryStartAddr(s0_addr);
+  bte_Source0_ImageWidth(s0_image_width);
+  bte_Source0_WindowStartXY(s0_x,s0_y);
+
+  bte_Source1_MemoryStartAddr(s1_addr);
+  bte_Source1_ImageWidth(s1_image_width);
+  bte_Source1_WindowStartXY(s1_x,s1_y);
+
+  bte_DestinationMemoryStartAddr(des_addr);
+  bte_DestinationImageWidth(des_image_width);
+  bte_DestinationWindowStartXY(des_x,des_y);
+
+  bte_WindowSize(copy_width,copy_height);
+
+  _writeReg(RA8876_BTE_CTRL1,RA8876_BTE_MEMORY_COPY_WITH_OPACITY);//91h
+  _writeReg(RA8876_BTE_COLR,RA8876_S0_COLOR_DEPTH_16BPP<<5|RA8876_S1_COLOR_DEPTH_16BPP<<2|RA8876_DESTINATION_COLOR_DEPTH_16BPP);//92h
+  _writeReg(RA8876_APB_CTRL,alpha_level); // Setting alpha blend weight => B5h
+  _writeReg(RA8876_BTE_CTRL0,RA8876_BTE_ENABLE<<4);//90h
+  
+  //_check2dBusy();
+  // Wait for completion
+  uint8_t status = _readStatus();
+  int iter = 0;
+  while (status & 0x08)
+  {
+    status = _readStatus();
+    iter++;
+  }
+
+  SPI.endTransaction();
+}
+
+
+
 
 
 

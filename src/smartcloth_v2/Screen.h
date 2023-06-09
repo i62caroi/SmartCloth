@@ -369,19 +369,26 @@ void printGrupoyEjemplos(){
    printProcesamiento(): Zona 2 => Muestra el símbolo de 'crudo' o 'cocinado' según el procesamiento activo
 ----------------------------------------------------------------------------------------------------------*/
 void printProcesamiento(){ 
-    if(procesado){
-        // cociPeq
+    // Recuadro cocinado pequeño 
+    tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
+
+    // Recuadro crudo pequeño
+    tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
+
+
+    if(procesado){ // COCINADO activo
+        // Mostrar cociPeq normal
         tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
 
-        // Recuadro crudo pequeño ==> borrar crudo ==> TODO hacerlo semi opaco
-        tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
+        // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
     }
-    else{
-        // crudoPeq
-        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
+    else{ // CRUDO activo
+        // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
 
-        // Recuadro cocinado pequeño ==> borrar cocinado ==> TODO hacerlo semi opaco
-        tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
+        // Mostrar crudoPeq normal
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
     }
 }
 
@@ -447,17 +454,17 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
     // Raciones de Carbohidratos
     tft.setCursor(416,293);
     tft.setTextForegroundColor(WHITE); 
-    tft.print(valores.getCarbRaciones()); // 12x24 escale x2
+    tft.print(valores.getCarbRaciones(),1); // 12x24 escale x2
 
     // Raciones de Proteinas
     tft.setCursor(416,370);
     tft.setTextForegroundColor(WHITE); 
-    tft.print(valores.getProtRaciones()); // 12x24 escale x2
+    tft.print(valores.getProtRaciones(),1); // 12x24 escale x2
 
     // Raciones de Grasas
     tft.setCursor(416,447);
     tft.setTextForegroundColor(WHITE); 
-    tft.print(valores.getLipRaciones()); // 12x24 escale x2
+    tft.print(valores.getLipRaciones(),1); // 12x24 escale x2
     // ---- FIN RACIONES ----
 
     // ---- VALORES --------- // Después de las raciones para no estar continuamente cambiando los tamaños y escalas
@@ -533,17 +540,17 @@ void printAcumuladoHoy(){
     // Raciones de Carbohidratos
     tft.setCursor(906,293);
     tft.setTextForegroundColor(WHITE); 
-    tft.print(diaActual.getValoresDiario().getCarbRaciones()); // 12x24 escale x2
+    tft.print(diaActual.getValoresDiario().getCarbRaciones(),1); // 12x24 escale x2
 
     // Raciones de Proteinas
     tft.setCursor(906,370);
     tft.setTextForegroundColor(WHITE); 
-    tft.print(diaActual.getValoresDiario().getProtRaciones()); // 12x24 escale x2
+    tft.print(diaActual.getValoresDiario().getProtRaciones(),1); // 12x24 escale x2
 
     // Raciones de Grasas
     tft.setCursor(906,447);
     tft.setTextForegroundColor(WHITE); 
-    tft.print(diaActual.getValoresDiario().getLipRaciones()); // 12x24 escale x2
+    tft.print(diaActual.getValoresDiario().getLipRaciones(),1); // 12x24 escale x2
     // ---- FIN RACIONES ----
 
     // ---- VALORES --------- // Después de las raciones para no estar continuamente cambiando los tamaños y escalas
@@ -586,7 +593,7 @@ void printAcumuladoHoy(){
 void showFullDashboard(){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
-    printGrupoyEjemplos();        // 1 - Grupo, ejemplos y procesamiento (crudo/cocinado)
+    printGrupoyEjemplos();        // 1 - Grupo y ejemplos. Incluye printProcesamiento() -> crudo/cocinado
     printPlatoActual(true);       // 2 - Valores Plato actual ('true' para mostrar valores reales del plato, no temporales)
     printAcumuladoHoy();          // 3 - Valores Acumulado hoy
 }
@@ -1219,8 +1226,9 @@ void loadPicturesShowHourglass(){
 
 
     // --------- DASHBOARD -------------------------------------------------------------------------------
-      // cociPeq
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+
+      // cociPeq
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
 
       putReloj3(); // Mostrar reloj3 en PAGE1
@@ -1232,6 +1240,10 @@ void loadPicturesShowHourglass(){
 
       // kcal
       tft.sdCardDraw16bppBIN256bits(529,174,80,87,fileKcal); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+
+      // Recuadro azul utilizado para la transparencia de crudo/cocinado
+      // Tiene el mismo tamaño que las imágenes para evitar posibles problemas
+      tft.fillRect(610,174,657,216,GRIS_CUADROS); // Cargar cuadro (47x42) en PAGE3 => x = <kcal(529) + kcal(80) + 1 = 610    ->  y = <kcal = 174
     // --------- FIN DASHBOARD ---------------------------------------------------------------------------
 
     //delay(200);
