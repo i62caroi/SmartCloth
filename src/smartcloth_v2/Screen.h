@@ -898,7 +898,8 @@ void showAccionConfirmada(int option){
               break; 
               
       case 3: // GUARDADA
-              if(pesoARetirar == 0.0){
+              // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
+              if((pesoRecipiente + pesoPlato) == 0.0){
                   tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
                   tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
               }
