@@ -166,6 +166,8 @@ void checkBascula(){
             Serial.print(F("Peso actual: ")); Serial.println(newWeight); 
             Serial.print(F("Peso Bascula: ")); Serial.println(pesoBascula);
             Serial.print(F("Peso a retirar: ")); Serial.println(pesoARetirar);
+            Serial.print(F("Peso recipiente: ")); Serial.println(pesoRecipiente);
+            Serial.print(F("Peso plato: ")); Serial.println(pesoPlato);
             Serial.println(F("\n--------------------------------------"));
 
             addEventToBuffer(eventoBascula);

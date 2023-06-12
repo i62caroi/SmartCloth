@@ -2,7 +2,7 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 93 
+#define RULES 95
 
 #include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Alimento.h -> Valores_Nutricionales.h)
 #include "SD_functions.h"
@@ -77,6 +77,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_Empty,STATE_Empty,TARAR},                // Tara inicial
                                         {STATE_Empty,STATE_Plato,INCREMENTO},
                                         {STATE_Empty,STATE_save_check,GUARDAR},         // Guardar comida directamente (comidaActual no está vacía)
+                                        {STATE_Empty,STATE_groupA,TIPO_A},              // Escoger grupo (tipo A) sin colocar recipiente
+                                        {STATE_Empty,STATE_groupB,TIPO_B},              // Escoger grupo (tipo B) sin colocar recipiente
                                         //{STATE_Empty,STATE_deleted,DELETE_PLATO},       // Previamente se ha borrado el actual y se ha retirado, volviendo a INI. Ahora se quiere
                                                                                           // seguir borrando los anteriores.
                                         // ----------------------------
@@ -373,14 +375,19 @@ void actStatePlato(){
    actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void actGruposAlimentos(){ 
+    static unsigned long last_interrupt_time;     // Tiempos utilizados para regresar al STATE_Empty (pedir recipiente) si pasan 5 segundos sin
+    unsigned long interrupt_time;                 // colocar alimento y previamente no se colocó recipiente, sino que se escogió grupo directamente. 
+                                                  // El "temporizador" de 5 segundos se reinicia cada vez que se escoge un grupo nuevo.
+
     if(!doneState){        
-        if(state_prev == STATE_Plato){                                      // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
+
+        last_interrupt_time = millis();           // Reiniciar "temporizador" de 5 segundos para regresar a STATE_Empty y pedir recipiente.
+        
+        // ----- ACCIONES ------------------------------
+        if(state_prev == STATE_Plato){                                     // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
             pesoRecipiente = pesoBascula;                                   // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             //tareScale();                                                    // Tarar para tomar peso real del alimento que se va a colocar.
         }
-        //else if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
-                                                                            //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
-                                                                            //     debe incluirse en el plato. 
         else if(pesoBascula != 0.0){ 
                 Serial.println(F("Añadiendo alimento al plato..."));
                 
@@ -396,10 +403,11 @@ void actGruposAlimentos(){
                 pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
                 
         }
+        // ----- FIN ACCIONES --------------------------
 
         
-
-        if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
+        // ----- INFO PANTALLA -------------------------
+        if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
             tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.
                                     // Esta tara DEBE hacerse antes de showFullDashboard() para que muestre el peso a 0.      
             showFullDashboard();             
@@ -408,12 +416,29 @@ void actGruposAlimentos(){
             printGrupoyEjemplos();
             tarado = false;        // Desactivar flag de haber 'tarado' 
         }
+        // ----- FIN INFO PANTALLA ---------------------
+
+            
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                                                             // las acciones.
     }
+
+
+    // ----- TIEMPO DE ESPERA ------------------------------
+    if((pesoRecipiente == 0.0) && (pesoPlato == 0.0)){                // Si se escogió grupo sin colocar recipiente y aún no se ha colocado alimento
+        interrupt_time = millis();
+        if ((interrupt_time - last_interrupt_time) > 5000) {          // Si han pasado 5 segundos sin colocar alimento, se vuelve a Empty para pedir recipiente
+            Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
+            eventoBascula = LIBERAR;                                  // Forzar regreso a STATE_Empty para volver a pedir recipiente
+            addEventToBuffer(eventoBascula);
+            flagEvent = true;
+        }
+    }
+    // ----- FIN TIEMPO DE ESPERA --------------------------
+
 }
 
 
