@@ -2,7 +2,7 @@
 #define STATE_MACHINE_H
 
 #define MAX_EVENTS 5
-#define RULES 95
+#define RULES 97
 
 #include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Alimento.h -> Valores_Nutricionales.h)
 #include "SD_functions.h"
@@ -208,7 +208,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_deleted,STATE_deleted,TARAR},             // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
                                         {STATE_deleted,STATE_deleted,QUITAR},            // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
                                         {STATE_deleted,STATE_deleted,INCREMENTO},        // Para evitar error de evento cuando, al retirar el plato, puede detectar un ligero incremento.
-                                        {STATE_deleted,STATE_Empty,LIBERAR},             // Se ha retirado el plato completo (+ recipiente). 
+                                        {STATE_deleted,STATE_Empty,LIBERAR},             // Se ha retirado el plato completo (+ recipiente) o se fuerza el regreso porque estaba vacío. 
+                                        {STATE_deleted,STATE_groupA,TIPO_A},             // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso manteniendo recipiente.
+                                        {STATE_deleted,STATE_groupB,TIPO_B},             // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso manteniendo recipiente.
                                         {STATE_deleted,STATE_saved,GUARDAR},             // Guardar la comida tras borrar el plato actual. Solo se incluirían los platos anteriores.
                                         // -----------------------
 
@@ -375,13 +377,13 @@ void actStatePlato(){
    actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void actGruposAlimentos(){ 
-    static unsigned long last_interrupt_time;     // Tiempos utilizados para regresar al STATE_Empty (pedir recipiente) si pasan 5 segundos sin
-    unsigned long interrupt_time;                 // colocar alimento y previamente no se colocó recipiente, sino que se escogió grupo directamente. 
-                                                  // El "temporizador" de 5 segundos se reinicia cada vez que se escoge un grupo nuevo.
+    static unsigned long previousTime;     // Tiempos utilizados para regresar al STATE_Empty (pedir recipiente) si pasan 5 segundos sin
+    unsigned long currentTime;             // colocar alimento y previamente no se colocó recipiente, sino que se escogió grupo directamente. 
+                                           // El "temporizador" de 5 segundos se reinicia cada vez que se escoge un grupo nuevo.
 
     if(!doneState){        
 
-        last_interrupt_time = millis();           // Reiniciar "temporizador" de 5 segundos para regresar a STATE_Empty y pedir recipiente.
+        previousTime = millis();           // Reiniciar "temporizador" de 5 segundos para regresar a STATE_Empty y pedir recipiente.
         
         // ----- ACCIONES ------------------------------
         if(state_prev == STATE_Plato){                                     // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
@@ -405,7 +407,13 @@ void actGruposAlimentos(){
         }
         // ----- FIN ACCIONES --------------------------
 
-        
+        Serial.println(F("\n--  ---------------------------------- --"));
+            Serial.print(F(". Peso Bascula: ")); Serial.println(pesoBascula);
+            Serial.print(F(". Peso a retirar: ")); Serial.println(pesoARetirar);
+            Serial.print(F(". Peso recipiente: ")); Serial.println(pesoRecipiente);
+            Serial.print(F(". Peso plato: ")); Serial.println(pesoPlato);
+            Serial.println(F("\n--  ---------------------------------- --"));
+
         // ----- INFO PANTALLA -------------------------
         if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
             tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.
@@ -429,8 +437,8 @@ void actGruposAlimentos(){
 
     // ----- TIEMPO DE ESPERA ------------------------------
     if((pesoRecipiente == 0.0) && (pesoPlato == 0.0)){                // Si se escogió grupo sin colocar recipiente y aún no se ha colocado alimento
-        interrupt_time = millis();
-        if ((interrupt_time - last_interrupt_time) > 5000) {          // Si han pasado 5 segundos sin colocar alimento, se vuelve a Empty para pedir recipiente
+        currentTime = millis();
+        if ((currentTime - previousTime) > 5000) {                    // Si han pasado 5 segundos sin colocar alimento, se vuelve a STATE_Empty para pedir recipiente
             Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
             eventoBascula = LIBERAR;                                  // Forzar regreso a STATE_Empty para volver a pedir recipiente
             addEventToBuffer(eventoBascula);
@@ -660,29 +668,27 @@ void actStateDeleteCheck(){
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 ----------------------------------------------------------------------------------------------------------*/
 void actStateDeleted(){
+    static unsigned long previousTime;     // Tiempos utilizados para regresar al STATE_Empty si se ha querido borrar pero el plato 
+    unsigned long currentTime;             // estaba vacío. Se muestra un aviso y pasados 3 segundos se regresa al estado inicial.
+
+    static bool errorPlatoWasEmpty;        // Flag utilizada para saber si se debe mostrar la información "normal"
+                                           // o un mensaje de aviso indicando no se ha borrado el plato porque el 
+                                           // actual ya está vacío.
+
     if(!doneState){
 
-        // -------------------- DELETE ACTUAL ------------------------
-        static bool errorPlatoWasEmpty;                             // Flag utilizada para saber si se debe mostrar la información "normal"
-                                                                    // o un mensaje de aviso indicando no se ha borrado el plato porque el 
-                                                                    // actual ya está vacío.
-        
+        // -------------------- DELETE ACTUAL ------------------------        
         if(state_prev != STATE_deleted){                            // ==> Si no se viene del propio STATE_deleted, para evitar que se vuelva 
                                                                     //     a eliminar el plato de la comida.
           
             
             Serial.println(F("\nEliminando plato..."));
 
-          /*  if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
-                tarado = false;                                                 // Desactivar flag de haber 'tarado' 
-            }*/
-
             
             /* ----- PESO ÚLTIMO ALIMENTO  ----- */
-            //if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){   // ==> Si se viene del STATE_weighted, porque se ha colocado algo nuevo en la báscula,
-                                                                           //     y el pesoBascula marca algo, indicando que lo que se ha colocado no se ha retirado,
-                                                                           //     debe incluirse en el plato. 
-            if(pesoBascula != 0.0){
+            if(pesoBascula != 0.0){           // ==> Si se ha colocado algo nuevo en la báscula (pesoBascula marca algo) y no se ha retirado,
+                                              //     debe incluirse en el plato. 
+
                                               // En este caso no se va a guardar el alimento porque se va a borrar el plato. Solamente se guardará el 'pesoLastAlimento'
                                               // para añadirlo a 'pesoPlato' y luego, tras sumarlo al 'pesoRecipiente', saber el 'pesoARetirar'.
 
@@ -710,30 +716,15 @@ void actStateDeleted(){
             }
             else{   // PLATO VACÍO ==> NO HAY QUE BORRAR, PERO PUEDE QUE SÍ RETIRAR (último alimento)
                 if(pesoLastAlimento != 0.0){ // ÚLTIMO ALIMENTO ==> ALGO QUE RETIRAR
-                    errorPlatoWasEmpty = false;       // Para mostrar mensaje de plato borrado, aunque no sea cierto porque no se ha guardado el
-                                                      // último alimento y el plato está realmente vacío, y pedir retirarlo.
+                    errorPlatoWasEmpty = false;       // Para mostrar mensaje de plato borrado y pedir retirarlo, aunque no sea cierto porque no se ha guardado el
+                                                      // último alimento (solo su peso) y el objeto Plato está realmente vacío.
                     pesoPlato = pesoLastAlimento;     // Incluir último alimento en el 'pesoPlato' para saber 'pesoARetirar'.
                 }
                 else{   // PLATO VACÍO Y NO HAY ÚLTIMO ALIMENTO ==> NADA QUE RETIRAR 
                     errorPlatoWasEmpty = true;
-                    //if(state_prev == STATE_Empty){
-                    if(pesoARetirar < 1.0){ // STATE_Empty
-                              // Si se pulsa 'borrar' estando en INI, el plato seguramente estará vacío y se avisa. Tras unos segundos
-                              // para mostrar mensaje de no poder borrar, se debe forzar el regreso a INI para que no se quede aquí (delete) 
-                              // esperando una liberación que no llega, porque el último eventoBascula es TARAR, realizado en INI, y necesita
-                              // LIBERAR para volver al inicio.
-                        printEmptyObjectWarning("No se ha borrado el plato porque est\xE1"" vac\xED""o");
-                        Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
-                        delay(3000);                                    
-                        eventoBascula = LIBERAR;
-                        addEventToBuffer(eventoBascula);
-                        flagEvent = true;
-                    }
-                    else{     // En los otros estados (groupA, groupB, raw, cooked, weighted) habrá recipiente,
-                              // por lo que el regreso a STATE_Empty no es automático, sino que se debe liberar la báscula.
-                        //printEmptyObjectError("No se puede borrar el plato porque est\xE1"" vac\xED""o"". \n Si ha puesto un recipiente, ret\xED""relo para empezar de nuevo.");
-                        printEmptyObjectWarning("No se puede borrar el plato porque est\xE1"" vac\xED""o"". \n Retire el recipiente para empezar de nuevo.");
-                    }
+                    previousTime = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
+                    printEmptyObjectWarning("No se ha borrado el plato porque est\xE1"" vac\xED""o");
+                    Serial.println(F("No se ha borrado el plato porque está vacío"));
                 }
             }
 
@@ -746,14 +737,36 @@ void actStateDeleted(){
         }
         else if(tarado){                                            // ==> Si se viene del propio STATE_deleted, donde se puede haber tarado.
             tarado = false;                                         // Desactivar flag de haber 'tarado'.        
-            //pesoLastAlimento = 0.0;  
         }
         // ----------- FIN DELETE ACTUAL --------------------------------------------
 
 
+            doneState = true;                                       // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                                                    // cada vez que se entre a esta función debido al loop de Arduino.
+                                                                    // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                                                    // las acciones.
+    }
+
+    // ----- TIEMPO DE ESPERA ------------------------------
+    if(errorPlatoWasEmpty){     // Si no se ha borrado nada porque el plato está vacío 
+        currentTime = millis();
+        if ((currentTime - previousTime) > 3000) {    // Tras 3 segundos mostrando warning...
+            Serial.print(F("\nTIPO_A o TIPO_B forzada. Regreso a GRUPOS..."));
+            addEventToBuffer(eventoGrande);   // Se regresa a STATE_groupA o STATE_groupB, según el último grupo escogido. 
+            flagEvent = true;
+                                              // Si se había colocado recipiente, se mantiene su peso al volver a STATE_groupA / B y se podrá regresar a STATE_Empty si se retira.
+                                              // Si no se había colocado recipiente, al regresar a STATE_groupA / B salta el temporizador de 5 segundos para volver a STATE_Empty a  
+                                              // pedir recipiente si no se coloca ningún alimento.
+        }
+    }
+    // ----- FIN TIEMPO DE ESPERA --------------------------
+
+
+
+    /*
+    if(!doneState){
 
         // -------------------- DELETE RETROACTIVO ------------------------
-        /*
         static bool errorComidaWasEmpty;
         if(state_prev != STATE_deleted){
             Serial.println(F("\nEliminando plato..."));
@@ -840,7 +853,7 @@ void actStateDeleted(){
             showAccionConfirmada(2);                                 // Mostrar confirmación de haber eliminado el plato
         } // ---------------------------------- 
         
-        */
+        
         // --------------------------------------------------------------
         // -------------- FIN DELETE RETROACTIVO ----------------------------------------------
         
@@ -850,7 +863,8 @@ void actStateDeleted(){
                                                                     // cada vez que se entre a esta función debido al loop de Arduino.
                                                                     // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                                                     // las acciones.
-    }
+    }*/
+
 }
 
 
