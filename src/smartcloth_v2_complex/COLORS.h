@@ -37,65 +37,26 @@
 #define   AMARILLO_GRASAS       0xEEC5 //OK
 #define   ROJO_KCAL             0xF801 // NO LO TENGOOOOO
 
-#define   COLOR_G1              0xEB4C    // ROJO
-#define   COLOR_G1E             0xFB0B
-
-#define   COLOR_G2              0x5DAA    // VERDE
-#define   COLOR_G2E             0x2DC7
-
+#define   COLOR_G1              0xEB4C    // ROJO         
+#define   COLOR_G2              0x2DC7    // VERDE
 #define   COLOR_G3              0x8E5E    // AZUL
-#define   COLOR_G3E             0x8E5E    
-
-#define   COLOR_G4              0xFE74    // ROSA
-#define   COLOR_G4E             0xFE5A
-
-#define   COLOR_G5              0xFE44    // AMARILLO
-#define   COLOR_G5E             0xFE40
-
-#define   COLOR_G6              0xB45B    // MORADO
-#define   COLOR_G6E             0xBC3C
-
-#define   COLOR_G7              0x7E25    // VERDE
-#define   COLOR_G7E             0x5E40
-
-#define   COLOR_G8              0xFF7B    // BEIGE
-#define   COLOR_G8E             0xFF7A
-
-#define   COLOR_G9              0xCCCE    // MARRON
-#define   COLOR_G9E             0xD4CD
-
+#define   COLOR_G4              0xFE5A    // ROSA
+#define   COLOR_G5              0xFE40    // AMARILLO
+#define   COLOR_G6              0xBC3C    // MORADO
+#define   COLOR_G7              0x5E40    // VERDE
+#define   COLOR_G8              0xFF9A    // BEIGE
+#define   COLOR_G9              0xD4CD    // MARRON
 #define   COLOR_G10             0xFD7D    // ROSA
-#define   COLOR_G10E            0xFD7D    
-
-#define   COLOR_G11             0xCEC9    // VERDE
-#define   COLOR_G11E            0xD6E9
-
+#define   COLOR_G11             0xD6E9    // VERDE
 #define   COLOR_G12             0xFE80    // AMARILLO
-#define   COLOR_G12E            0xFE80    
-
 #define   COLOR_G13             0xFF4D    // AMARILLO
-#define   COLOR_G13E            0xFF4D    
-
 #define   COLOR_G14             0xF6C1    // AMARILLO
-#define   COLOR_G14E            0xF6C1
-
 #define   COLOR_G15             0xE476    // ROSA
-#define   COLOR_G15E            0xEC37
-
-#define   COLOR_G16             0x95B7    // GRIS
-#define   COLOR_G16E            0x8DB7
-
-#define   COLOR_G17             0xFAD0    // ROSA
-#define   COLOR_G17E            0xFA30
-
-#define   COLOR_G18             0xFB2B    // NARANJA
-#define   COLOR_G18E            0xFAEA
-
-#define   COLOR_G19             0xFEEC    // AMARILLO
-#define   COLOR_G19E            0xFEE8
-
+#define   COLOR_G16             0x8DB7    // GRIS
+#define   COLOR_G17             0xFA30    // ROSA
+#define   COLOR_G18             0xFACA    // NARANJA
+#define   COLOR_G19             0xFEE8    // AMARILLO
 #define   COLOR_G20             0xFF1A    // BEIGE
-#define   COLOR_G20E            0xFF1A
 // -------------------------------------------------
 
 

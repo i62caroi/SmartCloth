@@ -3,7 +3,7 @@
  * @brief Módulo Tarjeta SD
  * 
  * @author Irene Casares Rodríguez
- * @date 07/06/23
+ * @date 13/06/23
  * @version 1.0
  *
  * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
@@ -1229,17 +1229,13 @@ void loadPicturesShowHourglass(){
       putRelojGirado2(); // Mostrar relGir2 en PAGE1 
 
       // -------- MANOS (tb para botones) ---------
-      // Estas imágenes dejan residuos de rojo o verde al aplicar el chroma porque no todos los píxeles
-      // que se quieren eliminar tienen el color que se quiere filtrar (no es un rojo o verde puro, sino
-      // que está mezclado con blanco al encontrarse en el borde de la figura)
-
-      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoG);  // Cargar manoG (120x129) en PAGE3 =>  x  =   <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
-      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoR);  // Cargar manoR (120x129) en PAGE3  =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
-      
       // Esta otra imagen con la mano roja y el fondo blanco se filtra mejor. Aunque queden residuos de
       // blanco en el borde de la figura, no queda mal.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+
+      // Otra imagen de mano roja con fondo blanco
+      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoW);    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
       
       putRelojGirado3(); // Mostrar relGir3 en PAGE1 
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
@@ -1279,18 +1275,28 @@ void loadPicturesShowHourglass(){
     // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
 
 
+    // --------- ERRORES ---------------------------------------------------------------------------------
+       // cruz
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(0,292,118,126,fileCruz); // Cargar cruz (118x126) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+      //tft.sdCardDraw16bppBIN256bits(0,292,512,126,fileCruzAll); // Cargar cruzAll (512x126) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+
+      putReloj3(); // Mostrar reloj3 en PAGE1
+    // --------- FIN ERRORES -----------------------------------------------------------------------------
+
+
     // --------- DASHBOARD -------------------------------------------------------------------------------
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
 
       // cociPeq
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
 
-      putReloj3(); // Mostrar reloj3 en PAGE1
+      putReloj4(); // Mostrar reloj4 en PAGE1
 
       // crudoPeq
       tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
 
-      putReloj4(); // Mostrar reloj4 en PAGE1
+      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
 
       // kcal
       tft.sdCardDraw16bppBIN256bits(529,174,80,87,fileKcal); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174

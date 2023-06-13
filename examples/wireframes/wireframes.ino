@@ -68,7 +68,11 @@ void setup() {
     
     //loadPicturesRelojCompleto();  // 15 segundos solamente cargando imágenes de reloj (girando)
     //loadPicturesRelojCompletoMitad(); // 1/2 de tamaño para tardar menos
-    loadPicturesRelojCompletoCuarto(); // 1/4 de tamaño
+    //loadPicturesRelojCompletoCuarto(); // 1/4 de tamaño
+
+
+    error();
+    aviso();
 
 
 //    dashboard(); // PAGE3
@@ -85,10 +89,10 @@ void setup() {
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(BLACK);
     delay(500);
-*/
+
     select_Grupo();   // PAGE3 (~OK)
     delay(3000);
-/*    tft.canvasImageStartAddress(PAGE1_START_ADDR);
+    tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(BLACK);
     delay(500);
 
@@ -585,7 +589,9 @@ void loadPicturesRelojCompletoCuarto(){
       // Esta otra imagen con la mano roja y el fondo blanco se filtra mejor. Aunque queden residuos de
       // blanco en el borde de la figura, no queda mal.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,"bin/grupo/handW.bin");    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,"bin/grupo/handW.bin");    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      // Otra imagen de mano roja con fondo blanco
+      tft.sdCardDraw16bppBIN256bits(524,0,120,129,"bin/grupo/manoW.bin");    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
       
       putRelojGirado3(); // Mostrar relGir3 en PAGE1 
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
@@ -627,22 +633,34 @@ void loadPicturesRelojCompletoCuarto(){
     // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
 
 
+    // --------- ERRORES ---------------------------------------------------------------------------------
+       // cruz
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(0,292,114,127,"bin/error/cruz.bin"); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+      //tft.sdCardDraw16bppBIN256bits(0,292,512,126,"bin/error/cruzAll.bin"); // Cargar cruzAll (512x126) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+
+    // --------- FIN ERRORES -----------------------------------------------------------------------------
+
+
     // --------- DASHBOARD -------------------------------------------------------------------------------
       // cociPeq
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      //tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,"bin/dash/cociPeq.bin"); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
 
-      //putReloj3(); // Mostrar reloj3 en PAGE1
+      putReloj3(); // Mostrar reloj3 en PAGE1
 
       // crudoPeq
       tft.sdCardDraw16bppBIN256bits(577,131,47,42,"bin/dash/crudoPeq.bin"); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
 
-      //putReloj4(); // Mostrar reloj4 en PAGE1
+      putReloj4(); // Mostrar reloj4 en PAGE1
 
       // kcal
       tft.sdCardDraw16bppBIN256bits(529,174,80,87,"bin/dash/kcal.bin"); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
     // --------- FIN DASHBOARD ---------------------------------------------------------------------------
 
+
+
+    
     //delay(200);
 
     // Regresamos la dirección de inicio del canvas a la PAGE1 
@@ -655,6 +673,99 @@ void loadPicturesRelojCompletoCuarto(){
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+void error(){ // Tb PAGE3, pero más abajo
+     // cruz
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(0,292,114,127,"bin/error/cruz.bin"); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+
+    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+    tft.setCursor(170, 100);
+    tft.println("\xA1""ACCI\xD3""N INCORRECTA\x21""");
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ CRUZ --------------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127,RED); // Mostrar cruz (114x127) en PAGE1
+    // PARA QUÉ USO CHROMA SI TIENE EL MISMO ROJO DEL FONDO???
+    // PROBAR CON Y SIN CHROMA:
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127); // Mostrar cruz (114x127) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    // Por encima de la imagen de cruz para no tener que cuadrarla con la línea de la imagen
+    tft.fillRoundRect(252,290,764,298,3,WHITE);
+    // ----------------------------------------------------------------------------------------------------
+
+
+
+    // ----- TEXTO (SUGERENCIA SEGÚN ESTADO ACTUAL) -------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setCursor(270, 420);
+    tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
+    tft.setCursor(240, tft.getCursorY() + tft.getTextSizeY()+30);
+    tft.print("SELECCIONAR UN GRUPO DE ALIMENTOS"); 
+    // ----------------------------------------------------------------------------------------------------
+}
+
+
+void aviso(){ // Tb PAGE3, pero más abajo
+    // aviso
+    tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+
+    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+    tft.setCursor(350, 100);
+    tft.println("\xA1""AVISO\x21""");
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+    // CON CHROMA, PERO NO CREO QUE SEA NECESARIO PORQUE TIENE EL MISMO ROJO QUE EL FONDO.
+    // PROBAR PRIMERO CON EL WIREFRAME DE ERROR CON Y SIN CHROMA
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113,RED); // Mostrar aviso1 (135x113) en PAGE1
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113,RED); // Mostrar aviso2 (135x113) en PAGE1
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,235,135,119,RED); // Mostrar aviso3 (135x119) en PAGE1
+    
+    // SIN CHROMA:
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113); // Mostrar aviso1 (135x113) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113); // Mostrar aviso2 (135x113) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,235,135,119); // Mostrar aviso3 (135x119) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setCursor(270, 420);
+    tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+    tft.setCursor(240, tft.getCursorY() + tft.getTextSizeY()+30);
+    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
+    // ----------------------------------------------------------------------------------------------------
+}
 
 
 
