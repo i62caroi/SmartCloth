@@ -213,11 +213,11 @@ void    showFullDashboard();                 // Mostrar dashboard completo (zona
 // --- pantallas transitorias ---
 void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Empty
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
-void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check, STATE_delete_check y STATE_save_check
-void    showAccionConfirmada(int option); // Mensaje general de confirmación   =>  STATE_add_check, STATE_delete_check y STATE_save_check
+void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
+void    showAccionConfirmada(int option); // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // --- Errores o avisos ---
 void    printEventError(String msg);
-void    printEmptyObjectWarning(String msg);
+void    showWarning(int option);          // Warning general de acción inncesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // --- Carga de imágenes ---
 void    loadPicturesShowHourglass();   // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloje de arena (hourglass)
 void    putReloj1();
@@ -337,7 +337,7 @@ void printGrupoyEjemplos(){
     tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
 
     // Recuadros procesamiento
-    printProcesamiento(); // imagen de 'crudo' o 'cocinado' según procesamiento activo (comienza en crudo)
+    //printProcesamiento(); // imagen de 'crudo' o 'cocinado' según procesamiento activo (comienza en crudo)
     // ---------- FIN GRÁFICOS ---------------
 
 
@@ -646,9 +646,10 @@ void printAcumuladoHoy(){
 void showFullDashboard(){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
-    printGrupoyEjemplos();        // 1 - Grupo y ejemplos. Incluye printProcesamiento() -> crudo/cocinado
-    printPlatoActual(true);       // 2 - Valores Plato actual ('true' para mostrar valores reales del plato, no temporales)
-    printAcumuladoHoy();          // 3 - Valores Acumulado hoy
+    printGrupoyEjemplos();        // Zona 1 - Grupo y ejemplos
+    printProcesamiento();         // Zona 2 - Procesamiento crudo o cocinado
+    printPlatoActual(true);       // Zona 3 - Valores Plato actual ('true' para mostrar valores reales del plato, 'false' para temporales según peso actual)
+    printAcumuladoHoy();          // Zona 4 - Valores Acumulado hoy
 }
 
 
@@ -1007,33 +1008,96 @@ void printEventError(String msg){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printEmptyObjectWarning(): Información de aviso por intentar guardar/borrar plato o comida estando vacíos
-          Parámetros:
-                msg - String => mensaje mostrado según el estado
+   showWarning(): Pantalla genérica para avisar de que no se ha realizado la acción porque 
+                  no era necesaria. Solo para casos de añadir, eliminar o guardar. 
+        Parámetros: 
+            - option -> 1: añadir   2: eliminar   3: guardar
 ----------------------------------------------------------------------------------------------------------*/
-void printEmptyObjectWarning(String msg){    
-    cad = "\xA1""\xA1""AVISO\x21""\x21""";
-    
-    //tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest,color) ==> Limpiar zona superior de Ejemplos y Grupo
-    
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(350, 50);                            // Posicion inicio texto
-    tft.setTextColor(YELLOW);                        // Color texto
-    tft.setTextScale(1);        
-    tft.print(cad);                                  // Imprimir texto
+void showWarning(int option){
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
 
-    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    //tft.setTextScale(0);        
-    tft.setCursor(MARGEN_IZQ, 120);                             
-    //tft.setTextColor(CIAN);                                
-    tft.print(msg);           
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+
+    tft.setCursor(384, 80);
+    tft.println("\xA1""AVISO\x21""");
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+
+    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
+    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
+    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
+    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
+    // al modificar el punto de inicio de la imagen en PAGE3. 
+
+    // aviso2 
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,180,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,350,764,358,3,WHITE);
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
+    
+    // OPCION 1 DE TAMAÑO 16X32 SIN ESCALA ==> QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
+    /*tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); */
+    
+    // OPCION 2 DE TAMAÑO 12X24 ESCALA X2 ==> MEJOR
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    switch (option){
+      case 1: // AÑADIR
+              
+              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: 
+              //tft.setCursor(270, 430); tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+              //tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30); tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
+              
+              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: 
+              tft.setCursor(150, 410); tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY()); tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
+              
+              break;
+
+      case 2: // ELIMINAR
+              
+              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: 
+              //tft.setCursor(150, 430); tft.println("NO SE HA ELIMINADO EL PLATO PORQUE EST\xC1"" VAC\xCD""O"); 
+              
+              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: 
+              tft.setCursor(180, 410); tft.println("NO SE HA ELIMINADO EL PLATO"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()); tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
+              
+              break;
+
+      case 3: // BOTÓN GUARDAR
+              
+              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: 
+              //tft.setCursor(150, 430); tft.println("NO SE HA GUARDADO LA COMIDA PORQUE EST\xC1"" VAC\xCD""A"); 
+              
+              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: 
+              tft.setCursor(190, 410); tft.println("NO SE HA GUARDADO LA COMIDA"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()); tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
+     
+              break;
+    }
+    // ----------------------------------------------------------------------------------------------------  
+
+
+    
 }
-
-
-
-
 
 
 
@@ -1229,17 +1293,13 @@ void loadPicturesShowHourglass(){
       putRelojGirado2(); // Mostrar relGir2 en PAGE1 
 
       // -------- MANOS (tb para botones) ---------
-      // Estas imágenes dejan residuos de rojo o verde al aplicar el chroma porque no todos los píxeles
-      // que se quieren eliminar tienen el color que se quiere filtrar (no es un rojo o verde puro, sino
-      // que está mezclado con blanco al encontrarse en el borde de la figura)
-
-      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoG);  // Cargar manoG (120x129) en PAGE3 =>  x  =   <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
-      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoR);  // Cargar manoR (120x129) en PAGE3  =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
-      
       // Esta otra imagen con la mano roja y el fondo blanco se filtra mejor. Aunque queden residuos de
       // blanco en el borde de la figura, no queda mal.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+
+      // Otra imagen de mano roja con fondo blanco
+      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoW);    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
       
       putRelojGirado3(); // Mostrar relGir3 en PAGE1 
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
@@ -1279,24 +1339,44 @@ void loadPicturesShowHourglass(){
     // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
 
 
-    // --------- DASHBOARD -------------------------------------------------------------------------------
+    
+    // --------- ERROR / AVISO ---------------------------------------------------------------------------
+      // error
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-
-      // cociPeq
-      tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
+      tft.sdCardDraw16bppBIN256bits(0,292,114,127,fileCruz); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
 
       putReloj3(); // Mostrar reloj3 en PAGE1
 
-      // crudoPeq
-      tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
+      // aviso
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAviso); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
 
       putReloj4(); // Mostrar reloj4 en PAGE1
+    // --------- FIN ERROR / AVISO -----------------------------------------------------------------------
+
+
+    // --------- DASHBOARD -------------------------------------------------------------------------------
+      // cociPeq
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
+
+      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+
+      // crudoPeq
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
+
+      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
 
       // kcal
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,174,80,87,fileKcal); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+
+      putRelojGirado3(); // Mostrar relGir3 en PAGE1 
 
       // Recuadro azul utilizado para la transparencia de crudo/cocinado
       // Tiene el mismo tamaño que las imágenes para evitar posibles problemas
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.fillRect(610,174,657,216,GRIS_CUADROS); // Cargar cuadro (47x42) en PAGE3 => x = <kcal(529) + kcal(80) + 1 = 610    ->  y = <kcal = 174
     // --------- FIN DASHBOARD ---------------------------------------------------------------------------
 

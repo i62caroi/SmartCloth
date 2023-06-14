@@ -97,9 +97,8 @@ char    fileGrupo1[30]  = "bin/grupo/grupo1.bin";
 char    fileGrupo2[30]  = "bin/grupo/grupo2.bin";
 char    fileGrupo3[30]  = "bin/grupo/grupo3.bin";
 char    fileGrupo4[30]  = "bin/grupo/grupo4.bin";
-char    fileHandW[30]   = "bin/grupo/handW.bin";
-//char    fileManoG[30]   = "bin/grupo/assets/manoG.bin";
-//char    fileManoR[30]   = "bin/grupo/assets/manoR.bin";
+//char    fileHandW[30]   = "bin/grupo/handW.bin";
+char    fileManoW[30]   = "bin/grupo/manoW.bin";
 
 // --- IMAGENES BOTONES ---
 char    fileBotonAnadir[30]     = "bin/botones/anadir.bin";
@@ -112,6 +111,11 @@ char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
 char    fileCocinadoPeq[30]     = "bin/dash/cociPeq.bin";
 char    fileCrudoPeq[30]        = "bin/dash/crudoPeq.bin";
 char    fileKcal[30]            = "bin/dash/kcal.bin";
+
+// --- IMAGENES AVISO/ERROR ---
+char    fileCruz[30]    = "bin/error/cruz.bin";
+char    fileAviso[30]   = "bin/aviso/aviso2.bin";
+
 
 
 /* ------- RTC ------- */

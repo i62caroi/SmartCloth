@@ -601,8 +601,8 @@ void actStateAdded(){
             if(!errorPlatoWasEmpty){           // ==> Si el plato no estaba vacío y se ha guardado/creado otro 
                 showAccionConfirmada(1);            // Mostrar mensaje de plato añadido
             }
-            else{
-                printEmptyObjectWarning("No se ha creado otro plato porque el actual est\xE1"" vac\xED""o");
+            else{   // ==> Si el plato está vacío, no se crea otro
+                showWarning(1); // Mostrar aviso de plato vacío y no se crea otro
                 Serial.println(F("No se ha creado otro plato porque el actual está vacío"));
                 previousTime = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
             }
@@ -730,8 +730,8 @@ void actStateDeleted(){
             if(!errorPlatoWasEmpty){   // ==> Si la comida no estaba vacía (incluyendo último alimento) y se ha borrado 
                 showAccionConfirmada(2);     // Mostrar confirmacion de haber eliminado el plato
             }
-            else{
-                printEmptyObjectWarning("No se ha borrado el plato porque est\xE1"" vac\xED""o");
+            else{     // ==> Si el plato está vacío, no se borra
+                showWarning(2); // Mostrar aviso de plato vacío y no se borra
                 Serial.println(F("No se ha borrado el plato porque está vacío"));
                 previousTime = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
             }
@@ -982,7 +982,7 @@ void actStateSaved(){
 
             }
             else{     // ==> Si la comida estaba vacía y no se ha guardado
-                printEmptyObjectWarning("No se ha guardado la comida porque est\xE1"" vac\xED""a");
+                showWarning(3); // Mostrar aviso de comida vacía y no se guarda
                 Serial.println(F("No se ha guardado la comida porque está vacía"));
                 previousTimeGroups = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO guardar, regresar a STATE_groupA / B, según el último grupo escogido.
             }
