@@ -52,11 +52,11 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "_alimento_8h.html",
-"_r_a8876__v2_8h.html#a20a88303fe2fc69e4db59cc841edd627",
-"_r_a8876__v2_8h.html#a8c491ada96d8312c75d368555c55f041",
-"_r_a8876__v2_8h.html#afb8c70c77f1b7bd5c903541d0a889f45",
-"class_plato.html#a92c17824c68925ef1d230094bfb03f9e",
-"struct_display_info.html#ad4007c794eab636ff6877e493d2ed62c"
+"_r_a8876__v2_8h.html#a271c78e5b7e46f213adaf4345ca5dfc4",
+"_r_a8876__v2_8h.html#a9039b55b761d8b483672bbf53dfe8694",
+"_r_a8876__v2_8h.html#af97616806279a37136bd4638a63670ea",
+"class_comida.html#ace21a15ce69bd779322cc4f804532528",
+"globals_g.html"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

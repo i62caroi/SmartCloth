@@ -40,5 +40,7 @@ var searchData=
   ['setvaloresdiario_37',['setValoresDiario',['../class_diario.html#aaa822a3184b12706b25da6810f1289e7',1,'Diario']]],
   ['shiftlefteventbuffer_38',['shiftLeftEventBuffer',['../_state___machine_8h.html#af0c0876b7157f671d22a34d982a4886a',1,'State_Machine.h']]],
   ['showaccionconfirmada_39',['showAccionConfirmada',['../_screen_8h.html#a2a094d19613854753cee1f8b79a43274',1,'Screen.h']]],
-  ['showfulldashboard_40',['showFullDashboard',['../_screen_8h.html#a0a124562966aebe6d36c8da17bc8cf66',1,'Screen.h']]]
+  ['showerror_40',['showError',['../_screen_8h.html#ac88e3134d9f30421d54850ce1dfd4bcc',1,'Screen.h']]],
+  ['showfulldashboard_41',['showFullDashboard',['../_screen_8h.html#a0a124562966aebe6d36c8da17bc8cf66',1,'Screen.h']]],
+  ['showwarning_42',['showWarning',['../_screen_8h.html#a1496c5000f3e4c7a1ce3c6f4eadd6649',1,'Screen.h']]]
 ];

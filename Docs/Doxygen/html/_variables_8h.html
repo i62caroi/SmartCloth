@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.7"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>SmartCloth: /Users/irenecasares/Desktop/SmartCloth/repositorio-GitHub/smartcloth/src/smartcloth_v2/Variables.h File Reference</title>
+<title>SmartCloth: /Users/irenecasares/Desktop/SmartCloth/repositorio-GitHub/smartcloth/src/smartcloth_v2_complex/Variables.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -95,6 +95,9 @@ $(document).ready(function(){initNavTree('_variables_8h.html',''); initResizable
   <div class="headertitle"><div class="title">Variables.h File Reference</div></div>
 </div><!--header-->
 <div class="contents">
+
+<p>Contiene algunas variables y declaraciones utilizadas en la máquina de estados.  
+<a href="#details">More...</a></p>
 <div class="textblock"><code>#include &quot;<a class="el" href="_scale_8h_source.html">Scale.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="_diario_8h_source.html">Diario.h</a>&quot;</code><br />
 </div>
@@ -103,9 +106,10 @@ $(document).ready(function(){initNavTree('_variables_8h.html',''); initResizable
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="func-members" name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a3421849cf1dce9f63708bb6ae72fe319"><td class="memItemLeft" align="right" valign="top">float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a3421849cf1dce9f63708bb6ae72fe319">weighScale</a> ()</td></tr>
-<tr class="memdesc:a3421849cf1dce9f63708bb6ae72fe319"><td class="mdescLeft">&#160;</td><td class="mdescRight">Función para pesar la báscula.  <br /></td></tr>
+<tr class="memdesc:a3421849cf1dce9f63708bb6ae72fe319"><td class="mdescLeft">&#160;</td><td class="mdescRight">Obtiene el peso de la báscula.  <br /></td></tr>
 <tr class="separator:a3421849cf1dce9f63708bb6ae72fe319"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac8b5b41784064f53291396d5455d353c"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#ac8b5b41784064f53291396d5455d353c">tareScale</a> ()</td></tr>
+<tr class="memdesc:ac8b5b41784064f53291396d5455d353c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Realiza la tara de la báscula y actualiza el peso base.  <br /></td></tr>
 <tr class="separator:ac8b5b41784064f53291396d5455d353c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="var-members" name="var-members"></a>
@@ -116,7 +120,10 @@ Variables</h2></td></tr>
 <tr class="separator:a34e4a281c0d14b0412708da137ca5403"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad4e398a38df9fc6b6b8f2f860cf9116c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#ad4e398a38df9fc6b6b8f2f860cf9116c">flagEvent</a></td></tr>
 <tr class="separator:ad4e398a38df9fc6b6b8f2f860cf9116c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8768fc7f82906a321ca156adee106067"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a8768fc7f82906a321ca156adee106067">flagError</a></td></tr>
+<tr class="separator:a8768fc7f82906a321ca156adee106067"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a00ae98a4159af3c83990ee276c786eed"><td class="memItemLeft" align="right" valign="top">volatile float&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a00ae98a4159af3c83990ee276c786eed">weight</a> = 0.0</td></tr>
+<tr class="memdesc:a00ae98a4159af3c83990ee276c786eed"><td class="mdescLeft">&#160;</td><td class="mdescRight">Peso real tomado por ISR.  <br /></td></tr>
 <tr class="separator:a00ae98a4159af3c83990ee276c786eed"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1ba3f7f0e9df2c209a9c58e0df8aeeaa"><td class="memItemLeft" align="right" valign="top">volatile bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a1ba3f7f0e9df2c209a9c58e0df8aeeaa">pesado</a> = false</td></tr>
 <tr class="separator:a1ba3f7f0e9df2c209a9c58e0df8aeeaa"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -145,6 +152,7 @@ Variables</h2></td></tr>
 <tr class="memitem:abe06445fcd30fa94d638ed12bd6500cf"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_diario.html">Diario</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#abe06445fcd30fa94d638ed12bd6500cf">diaActual</a></td></tr>
 <tr class="separator:abe06445fcd30fa94d638ed12bd6500cf"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abca86492adc2abd103cd939606e4c2eb"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#abca86492adc2abd103cd939606e4c2eb">fileCSV</a> [30] = &quot;data/data-SC.csv&quot;</td></tr>
+<tr class="memdesc:abca86492adc2abd103cd939606e4c2eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Nombre del archivo para guardar las comidas realizadas.  <br /></td></tr>
 <tr class="separator:abca86492adc2abd103cd939606e4c2eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9270443e1f9ae5c70b55d16621463961"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a9270443e1f9ae5c70b55d16621463961">fileReloj1</a> [30] = &quot;bin/carga/cuarto/reloj1.bin&quot;</td></tr>
 <tr class="separator:a9270443e1f9ae5c70b55d16621463961"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -198,8 +206,8 @@ Variables</h2></td></tr>
 <tr class="separator:aa20484b6d03155f1518e7dd544c07dbd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aead41f3c5e2cbd697eb7af8a8ffe92ae"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#aead41f3c5e2cbd697eb7af8a8ffe92ae">fileGrupo4</a> [30] = &quot;bin/grupo/grupo4.bin&quot;</td></tr>
 <tr class="separator:aead41f3c5e2cbd697eb7af8a8ffe92ae"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa264dcec0a8cc34f4dceae6a25067c2c"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#aa264dcec0a8cc34f4dceae6a25067c2c">fileHandW</a> [30] = &quot;bin/grupo/handW.bin&quot;</td></tr>
-<tr class="separator:aa264dcec0a8cc34f4dceae6a25067c2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af75bdb43a60570a93d6fdacf3cc73f41"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#af75bdb43a60570a93d6fdacf3cc73f41">fileManoW</a> [30] = &quot;bin/grupo/manoW.bin&quot;</td></tr>
+<tr class="separator:af75bdb43a60570a93d6fdacf3cc73f41"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a25394d0762a7ed7b3aa6e149a877c41c"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a25394d0762a7ed7b3aa6e149a877c41c">fileBotonAnadir</a> [30] = &quot;bin/botones/anadir.bin&quot;</td></tr>
 <tr class="separator:a25394d0762a7ed7b3aa6e149a877c41c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac48320908df85883f24acadd6181577b"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#ac48320908df85883f24acadd6181577b">fileBotonEliminar</a> [30] = &quot;bin/botones/borrar.bin&quot;</td></tr>
@@ -216,8 +224,20 @@ Variables</h2></td></tr>
 <tr class="separator:ae7824efbf91dc0949e1018f2c1acab93"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a58f72e67a907abee24a3d5487e40a962"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a58f72e67a907abee24a3d5487e40a962">fileKcal</a> [30] = &quot;bin/dash/kcal.bin&quot;</td></tr>
 <tr class="separator:a58f72e67a907abee24a3d5487e40a962"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a4b12929d9ec06a2595b64982a457376f"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a4b12929d9ec06a2595b64982a457376f">fileCruz</a> [30] = &quot;bin/error/cruz.bin&quot;</td></tr>
+<tr class="separator:a4b12929d9ec06a2595b64982a457376f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a60dece8fd7e0dc2461be3bee1a8565a0"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a60dece8fd7e0dc2461be3bee1a8565a0">fileAvisoRed</a> [30] = &quot;bin/aviso/aviso2R.bin&quot;</td></tr>
+<tr class="separator:a60dece8fd7e0dc2461be3bee1a8565a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f14e6211bdb952459524063035c18d9"><td class="memItemLeft" align="right" valign="top">char&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_variables_8h.html#a9f14e6211bdb952459524063035c18d9">fileAvisoDarkOrange</a> [30] = &quot;bin/aviso/aviso2O.bin&quot;</td></tr>
+<tr class="separator:a9f14e6211bdb952459524063035c18d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<h2 class="groupheader">Function Documentation</h2>
+<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
+<div class="textblock"><p>Contiene algunas variables y declaraciones utilizadas en la máquina de estados. </p>
+<dl class="section author"><dt>Author</dt><dd>Irene Casares Rodríguez </dd></dl>
+<dl class="section date"><dt>Date</dt><dd>14/06/23 </dd></dl>
+<dl class="section version"><dt>Version</dt><dd>1.0</dd></dl>
+<p>Este archivo contiene las definiciones de los estados y eventos, además de las funciones realizadas en cada estado y para el funcionamiento de la máquina de estados, incluyendo el manejo de errores y avisos. </p>
+</div><h2 class="groupheader">Function Documentation</h2>
 <a id="ac8b5b41784064f53291396d5455d353c" name="ac8b5b41784064f53291396d5455d353c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ac8b5b41784064f53291396d5455d353c">&#9670;&#160;</a></span>tareScale()</h2>
 
@@ -232,6 +252,8 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Realiza la tara de la báscula y actualiza el peso base. </p>
 
 </div>
 </div>
@@ -250,8 +272,9 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Función para pesar la báscula. </p>
-<dl class="section return"><dt>Returns</dt><dd>El peso medido por la báscula. </dd></dl>
+<p>Obtiene el peso de la báscula. </p>
+<p>Función para pesar la báscula.</p>
+<dl class="section return"><dt>Returns</dt><dd>El peso actual de la báscula. </dd></dl>
 
 </div>
 </div>
@@ -334,6 +357,34 @@ Variables</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">char fileA[30] = &quot;bin/arranque/A.bin&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a9f14e6211bdb952459524063035c18d9" name="a9f14e6211bdb952459524063035c18d9"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f14e6211bdb952459524063035c18d9">&#9670;&#160;</a></span>fileAvisoDarkOrange</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char fileAvisoDarkOrange[30] = &quot;bin/aviso/aviso2O.bin&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="a60dece8fd7e0dc2461be3bee1a8565a0" name="a60dece8fd7e0dc2461be3bee1a8565a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a60dece8fd7e0dc2461be3bee1a8565a0">&#9670;&#160;</a></span>fileAvisoRed</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char fileAvisoRed[30] = &quot;bin/aviso/aviso2R.bin&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -480,6 +531,20 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a4b12929d9ec06a2595b64982a457376f" name="a4b12929d9ec06a2595b64982a457376f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a4b12929d9ec06a2595b64982a457376f">&#9670;&#160;</a></span>fileCruz</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char fileCruz[30] = &quot;bin/error/cruz.bin&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="abca86492adc2abd103cd939606e4c2eb" name="abca86492adc2abd103cd939606e4c2eb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#abca86492adc2abd103cd939606e4c2eb">&#9670;&#160;</a></span>fileCSV</h2>
 
@@ -491,6 +556,8 @@ Variables</h2></td></tr>
         </tr>
       </table>
 </div><div class="memdoc">
+
+<p>Nombre del archivo para guardar las comidas realizadas. </p>
 
 </div>
 </div>
@@ -564,20 +631,6 @@ Variables</h2></td></tr>
 
 </div>
 </div>
-<a id="aa264dcec0a8cc34f4dceae6a25067c2c" name="aa264dcec0a8cc34f4dceae6a25067c2c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa264dcec0a8cc34f4dceae6a25067c2c">&#9670;&#160;</a></span>fileHandW</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">char fileHandW[30] = &quot;bin/grupo/handW.bin&quot;</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-</div>
-</div>
 <a id="a58f72e67a907abee24a3d5487e40a962" name="a58f72e67a907abee24a3d5487e40a962"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a58f72e67a907abee24a3d5487e40a962">&#9670;&#160;</a></span>fileKcal</h2>
 
@@ -628,6 +681,20 @@ Variables</h2></td></tr>
       <table class="memname">
         <tr>
           <td class="memname">char fileM[30] = &quot;bin/arranque/M.bin&quot;</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="af75bdb43a60570a93d6fdacf3cc73f41" name="af75bdb43a60570a93d6fdacf3cc73f41"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af75bdb43a60570a93d6fdacf3cc73f41">&#9670;&#160;</a></span>fileManoW</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">char fileManoW[30] = &quot;bin/grupo/manoW.bin&quot;</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -830,6 +897,20 @@ Variables</h2></td></tr>
 
 </div>
 </div>
+<a id="a8768fc7f82906a321ca156adee106067" name="a8768fc7f82906a321ca156adee106067"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8768fc7f82906a321ca156adee106067">&#9670;&#160;</a></span>flagError</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool flagError</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
 <a id="ad4e398a38df9fc6b6b8f2f860cf9116c" name="ad4e398a38df9fc6b6b8f2f860cf9116c"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ad4e398a38df9fc6b6b8f2f860cf9116c">&#9670;&#160;</a></span>flagEvent</h2>
 
@@ -996,6 +1077,8 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
+<p>Peso real tomado por ISR. </p>
+
 </div>
 </div>
 </div><!-- contents -->
@@ -1003,8 +1086,8 @@ Variables</h2></td></tr>
 <!-- start footer part -->
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
-    <li class="navelem"><a class="el" href="dir_d57dd07bbe524b94ae78e08cf697a22d.html">SmartCloth</a></li><li class="navelem"><a class="el" href="dir_4a6d09f2386a5dbabc21a5318131f0be.html">repositorio-GitHub</a></li><li class="navelem"><a class="el" href="dir_6698f548fb04a8ac68707b69537ee06e.html">smartcloth</a></li><li class="navelem"><a class="el" href="dir_a2a37979c7997c91175022abb760c401.html">src</a></li><li class="navelem"><a class="el" href="dir_5ee69dbef00fff0ceee44c11a5f8790e.html">smartcloth_v2</a></li><li class="navelem"><a class="el" href="_variables_8h.html">Variables.h</a></li>
-    <li class="footer">Generated on Thu Jun 8 2023 19:44:58 for SmartCloth by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
+    <li class="navelem"><a class="el" href="dir_d57dd07bbe524b94ae78e08cf697a22d.html">SmartCloth</a></li><li class="navelem"><a class="el" href="dir_4a6d09f2386a5dbabc21a5318131f0be.html">repositorio-GitHub</a></li><li class="navelem"><a class="el" href="dir_6698f548fb04a8ac68707b69537ee06e.html">smartcloth</a></li><li class="navelem"><a class="el" href="dir_a2a37979c7997c91175022abb760c401.html">src</a></li><li class="navelem"><a class="el" href="dir_e50570c634fa81673cf591ccfa5ee99d.html">smartcloth_v2_complex</a></li><li class="navelem"><a class="el" href="_variables_8h.html">Variables.h</a></li>
+    <li class="footer">Generated on Wed Jun 14 2023 18:26:18 for SmartCloth by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>
 </body>

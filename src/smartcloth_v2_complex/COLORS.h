@@ -75,6 +75,7 @@
 #define   DARKRED       0x8000
   // NARANJA
 #define   ORANGE        0xFC80
+#define   DARKORANGE    0xCB20 // 0xC86406 en RGB-8:8:8
 
 // VERDE
 #define   GREEN         0x07E0

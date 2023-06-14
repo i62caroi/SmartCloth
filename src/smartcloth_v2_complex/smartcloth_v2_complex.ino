@@ -130,10 +130,15 @@ void loop() {
         /* ---------------    MOTOR DE INFERENCIA   ----------------- */
         /*------------------------------------------------------------*/
 
-        if(flagEvent){    // Para evitar que marque evento para cada interrupción, ya que
-                          // lo marcaría cada medio segundo por la interrupción de la báscula.
-                          // Con esta flag 'flagEvent' solo se da aviso de un evento real 
-                          // (pulsación, incremento o decremento).
+        if(flagEvent or flagError){     // Para evitar que marque evento para cada interrupción, ya que
+                                        // lo marcaría cada medio segundo por la interrupción de la báscula.
+                                        // Con esta flag 'flagEvent' solo se da aviso de un evento real 
+                                        // (pulsación, incremento o decremento).
+
+                                        // Se incluye 'flagError' en la condición para que también compruebe las reglas
+                                        // de transición en el caso de error y pase al STATE_ERROR.
+                                        // Esta flag se activa en actEventError() y se desactiva tras los 3 segundos para
+                                        // mostrar la pantalla de error en actStateERROR().
             
             if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
                                             // inicial fuera el actual, se modifica el estado actual por

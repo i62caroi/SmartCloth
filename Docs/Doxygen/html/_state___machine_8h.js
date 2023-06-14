@@ -16,7 +16,21 @@ var _state___machine_8h =
       [ "DECREMENTO", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a2fa7f6efda60f48ce13e33c775fd56c7", null ],
       [ "TARAR", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a07cf64b47a5404144875731f2583faf5", null ],
       [ "QUITAR", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8af7f53d926bf3141f4318d2fa63174a5d", null ],
-      [ "LIBERAR", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8ad1c0dc4e5cdb1cac28ff28df732b9ac8", null ]
+      [ "LIBERAR", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8ad1c0dc4e5cdb1cac28ff28df732b9ac8", null ],
+      [ "ERROR", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a2fd6f336d08340583bd620a7f5694c90", null ],
+      [ "BACK_TO_EMPTY", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8afd26c6a9ccd8f7e59dd821555f75382b", null ],
+      [ "BACK_TO_PLATO", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8acb92e2ed2b96e3f4bb2c26788eb8952f", null ],
+      [ "BACK_TO_GROUP_A", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8aa275633adfd7b0c0d190312212a422d4", null ],
+      [ "BACK_TO_GROUP_B", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8acc51d2a424d380c756b6da28721025ed", null ],
+      [ "BACK_TO_RAW", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a0b7fb8ee6236615ae1086b97923adeba", null ],
+      [ "BACK_TO_COOKED", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a902d733c51327491211a752084b4230b", null ],
+      [ "BACK_TO_WEIGHTED", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a9f31b2d52959a0617b590b5807a43dea", null ],
+      [ "BACK_TO_ADD_CHECK", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8aa01820defcf80ca877c592ce0f4876e9", null ],
+      [ "BACK_TO_ADDED", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8aee7b1f3da5ac93e0ceb0a455b06d24c4", null ],
+      [ "BACK_TO_DELETE_CHECK", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8adea43b2972f0ccc387fe20bc29d64e11", null ],
+      [ "BACK_TO_DELETED", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a37dfbfb92f2ead631dc275c6a41f7d36", null ],
+      [ "BACK_TO_SAVE_CHECK", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a567db8f1a78aa6450f942f6166b46e2f", null ],
+      [ "BACK_TO_SAVED", "_state___machine_8h.html#a2fb9b58e4e5f14f40af8b4a1425841f8a74827d8d1179f7eaa169037c79aa28ef", null ]
     ] ],
     [ "states_t", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021", [
       [ "STATE_Empty", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021a31c04cb16a3b84cf397f2ea289ad3e73", null ],
@@ -31,7 +45,8 @@ var _state___machine_8h =
       [ "STATE_delete_check", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021a6655045ce12bbe7d7df9c59bb60280be", null ],
       [ "STATE_deleted", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021a53ddd3a8cb0be195d84e860b4e938be8", null ],
       [ "STATE_save_check", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021adfc77a9cab8f08d4b9717af552589749", null ],
-      [ "STATE_saved", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021a6492aa1e2eb75d862f20bf6177464723", null ]
+      [ "STATE_saved", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021a6492aa1e2eb75d862f20bf6177464723", null ],
+      [ "STATE_ERROR", "_state___machine_8h.html#ae4bcd51a032844028300b600d585d021ad55c0bfe3a7d3ae983e81a98e3384d6c", null ]
     ] ],
     [ "actEventError", "_state___machine_8h.html#aac6f71bd6f330e3f669818b1d114223d", null ],
     [ "actGruposAlimentos", "_state___machine_8h.html#af4774fed141e73af8322d7bbb52e3add", null ],
@@ -41,6 +56,7 @@ var _state___machine_8h =
     [ "actStateDeleteCheck", "_state___machine_8h.html#ab7a812190209d0b37f3e4ffb39440104", null ],
     [ "actStateDeleted", "_state___machine_8h.html#ad2fef43c3789945db9dd66211e7276b3", null ],
     [ "actStateEmpty", "_state___machine_8h.html#a7a283e5949caeb2382afc2ce9c216703", null ],
+    [ "actStateERROR", "_state___machine_8h.html#a3dd497f02f8a148060277cacaf805206", null ],
     [ "actStatePlato", "_state___machine_8h.html#ab8ed369410c65121345fe989a09781b4", null ],
     [ "actStateRaw", "_state___machine_8h.html#a7dd1a15650bcb9fe23e57b0385bfa856", null ],
     [ "actStateSaveCheck", "_state___machine_8h.html#a0d02c9deb7dde7dae9a6e280d73f7536", null ],

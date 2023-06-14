@@ -47,6 +47,7 @@ var class_r_a8876 =
     [ "bte_WindowSize", "class_r_a8876.html#ad18e29d84cd269a00460195ea35521de", null ],
     [ "bteMemoryCopy", "class_r_a8876.html#ad757f1c652fcc4c5e2d1fa48fde77672", null ],
     [ "bteMemoryCopyWithChromaKey", "class_r_a8876.html#a0211b47b7eff088456973b9e2e12fb42", null ],
+    [ "bteMemoryCopyWithOpacity", "class_r_a8876.html#ac9ec3441b39aaf7878e2fe68b52dff50", null ],
     [ "bteMemoryCopyWithROP", "class_r_a8876.html#abeb764c138c99a5d80c719c1831925b1", null ],
     [ "canvasImageStartAddress", "class_r_a8876.html#aa8b86558a5deac4338052ec52b9128be", null ],
     [ "canvasImageWidth", "class_r_a8876.html#a4701dde412aa9e25005e0f9122ccb7a1", null ],

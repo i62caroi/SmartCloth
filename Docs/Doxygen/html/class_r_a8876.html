@@ -245,6 +245,8 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:abeb764c138c99a5d80c719c1831925b1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0211b47b7eff088456973b9e2e12fb42"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_a8876.html#a0211b47b7eff088456973b9e2e12fb42">bteMemoryCopyWithChromaKey</a> (uint32_t s0_addr, uint16_t s0_image_width, uint16_t s0_x, uint16_t s0_y, uint32_t des_addr, uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t copy_width, uint16_t copy_height, uint16_t chromakey_color)</td></tr>
 <tr class="separator:a0211b47b7eff088456973b9e2e12fb42"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac9ec3441b39aaf7878e2fe68b52dff50"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_a8876.html#ac9ec3441b39aaf7878e2fe68b52dff50">bteMemoryCopyWithOpacity</a> (uint32_t s0_addr, uint16_t s0_image_width, uint16_t s0_x, uint16_t s0_y, uint32_t s1_addr, uint16_t s1_image_width, uint16_t s1_x, uint16_t s1_y, uint32_t des_addr, uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t copy_width, uint16_t copy_height, uint8_t alpha_level)</td></tr>
+<tr class="separator:ac9ec3441b39aaf7878e2fe68b52dff50"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a5932e670f0975778557a346d784cb592"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_a8876.html#a5932e670f0975778557a346d784cb592">putPicture_16bpp</a> (uint16_t x, uint16_t y, uint16_t width, uint16_t height, const unsigned short *data)</td></tr>
 <tr class="separator:a5932e670f0975778557a346d784cb592"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a92d3d499cd5c18decc08500516ce6473"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_r_a8876.html#a92d3d499cd5c18decc08500516ce6473">sdCardDraw16bppBIN8bits</a> (uint16_t x, uint16_t y, uint16_t width, uint16_t height, char *filename)</td></tr>
@@ -1861,6 +1863,112 @@ Private Attributes</h2></td></tr>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
           <td class="paramname"><em>chromakey_color</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+</div>
+</div>
+<a id="ac9ec3441b39aaf7878e2fe68b52dff50" name="ac9ec3441b39aaf7878e2fe68b52dff50"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac9ec3441b39aaf7878e2fe68b52dff50">&#9670;&#160;</a></span>bteMemoryCopyWithOpacity()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">void bteMemoryCopyWithOpacity </td>
+          <td>(</td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>s0_addr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>s0_image_width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>s0_x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>s0_y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>s1_addr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>s1_image_width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>s1_x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>s1_y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>des_addr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>des_image_width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>des_x</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>des_y</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>copy_width</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>copy_height</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>alpha_level</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -4446,8 +4554,8 @@ Private Attributes</h2></td></tr>
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li>/Users/irenecasares/Desktop/SmartCloth/repositorio-GitHub/smartcloth/src/smartcloth_v2/<a class="el" href="_r_a8876__v2_8h_source.html">RA8876_v2.h</a></li>
-<li>/Users/irenecasares/Desktop/SmartCloth/repositorio-GitHub/smartcloth/src/smartcloth_v2/<a class="el" href="_r_a8876__v2_8cpp.html">RA8876_v2.cpp</a></li>
+<li>/Users/irenecasares/Desktop/SmartCloth/repositorio-GitHub/smartcloth/src/smartcloth_v2_complex/<a class="el" href="_r_a8876__v2_8h_source.html">RA8876_v2.h</a></li>
+<li>/Users/irenecasares/Desktop/SmartCloth/repositorio-GitHub/smartcloth/src/smartcloth_v2_complex/<a class="el" href="_r_a8876__v2_8cpp.html">RA8876_v2.cpp</a></li>
 </ul>
 </div><!-- contents -->
 </div><!-- doc-content -->
@@ -4455,7 +4563,7 @@ Private Attributes</h2></td></tr>
 <div id="nav-path" class="navpath"><!-- id is needed for treeview function! -->
   <ul>
     <li class="navelem"><a class="el" href="class_r_a8876.html">RA8876</a></li>
-    <li class="footer">Generated on Thu Jun 8 2023 19:44:58 for SmartCloth by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
+    <li class="footer">Generated on Wed Jun 14 2023 18:26:18 for SmartCloth by <a href="https://www.doxygen.org/index.html"><img class="footer" src="doxygen.svg" width="104" height="31" alt="doxygen"/></a> 1.9.7 </li>
   </ul>
 </div>
 </body>

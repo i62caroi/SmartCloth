@@ -3,7 +3,7 @@
  * @brief Módulo Tarjeta SD
  * 
  * @author Irene Casares Rodríguez
- * @date 07/06/23
+ * @date 14/06/23
  * @version 1.0
  *
  * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
@@ -216,7 +216,6 @@ void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =
 void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 void    showAccionConfirmada(int option); // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // --- Errores o avisos ---
-void    printEventError(String msg);
 void    showError(int option);            // Pantalla de error con mensaje según estado (del 1 al 13)
 void    showWarning(int option);          // Warning de acción inncesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // --- Carga de imágenes ---
@@ -985,31 +984,6 @@ void showAccionConfirmada(int option){
 /*-------------------------------------- ERRORES POR ESTADO ---------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------------------------------------
-   printEventError(): Información de error según estado
-          Parámetros:
-                msg - String => mensaje mostrado según el estado
-----------------------------------------------------------------------------------------------------------*/
-void printEventError(String msg){    
-    cad = "\xA1""ACCI\xD3N INCORRECTA\x21""";
-    
-    //tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest,color) ==> Limpiar zona superior de Ejemplos y Grupo
-    
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(RED);                        // Color texto
-    tft.setTextScale(1);        
-    tft.print(cad);                                  // Imprimir texto
-
-    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    //tft.setTextScale(0);        
-    tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CYAN);                                
-    tft.print(msg);           
-}
-
 
 /*---------------------------------------------------------------------------------------------------------
    showError(): Pantalla genérica de error que indica una acción incorrecta. Según la opción indicada como
@@ -1050,133 +1024,67 @@ void showError(int option){
 
 
     // ----- TEXTO (SUGERENCIA SEGÚN ESTADO ACTUAL) ------------------------------------------------------
-    // OPCION 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    //tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    
-    // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
     switch (option){
       case 1: // Empty
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(270, 420);                                        tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
-              //tft.setCursor(280, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(160, 420);                                     tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
               tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); 
               break;
 
       case 2: // Plato
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(280, 420);                                        tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
-              //tft.setCursor(250, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("ANTES DE ESCOGER COCINADO O CRUDO"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(160, 420);                                     tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
               tft.setCursor(120, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE ESCOGER COCINADO O CRUDO"); 
               break;
 
       case 3: // grupoA
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(330, 420);                                        tft.println("ESCOJA COCINADO O CRUDO"); 
-              //tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("ANTES DE PESAR EL ALIMENTO"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
               tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
               break;
 
       case 4: // grupoB
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(330, 420);                                        tft.println("ESCOJA COCINADO O CRUDO"); 
-              //tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("ANTES DE PESAR EL ALIMENTO"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
               tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
               break;
 
       case 5: // Crudo
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(220, 450);                                        tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA");  
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(100, 450);                                     tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA");  
               break;
 
       case 6: // Cocinado
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(220, 450);                                        tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA");  
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(100, 450);                                     tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA"); 
               break;
 
       case 7: // Pesado
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(270, 420);                                        tft.println("ESCOJA GRUPO PARA OTRO ALIMENTO,"); 
-              //tft.setCursor(240, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("A\xD1""ADA OTRO PLATO O GUARDE LA COMIDA"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(140, 420);                                     tft.println("ESCOJA GRUPO PARA OTRO ALIMENTO,"); 
               tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());   tft.print("A\xD1""ADA OTRO PLATO O GUARDE LA COMIDA"); 
               break;
 
       case 8: // add_check
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(210, 420);                                        tft.println("PULSE \"A\xD1""ADIR\" DE NUEVO PARA CONFIRMAR"); 
-              //tft.setCursor(220, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(70, 420);                                     tft.println("PULSE \"A\xD1""ADIR\" DE NUEVO PARA CONFIRMAR"); 
               tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
               break;
       
       case 9: // Added
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(200, 450);                                        tft.println("RETIRE EL PLATO PARA COMENZAR UNO NUEVO");  
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(50, 450);                                        tft.println("RETIRE EL PLATO PARA COMENZAR UNO NUEVO");  
               break;
 
       case 10: // delete_check
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(210, 420);                                        tft.println("PULSE \"BORRAR\" DE NUEVO PARA CONFIRMAR"); 
-              //tft.setCursor(220, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(60, 420);                                     tft.println("PULSE \"BORRAR\" DE NUEVO PARA CONFIRMAR"); 
               tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
               break;
 
       case 11: // Deleted
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(250, 450);                                        tft.println("RETIRE EL PLATO QUE HA ELIMINADO"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(130, 450);                                    tft.println("RETIRE EL PLATO QUE HA ELIMINADO"); 
               break;
 
       case 12: // save_check
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(200, 420);                                        tft.println("PULSE \"GUARDAR\" DE NUEVO PARA CONFIRMAR"); 
-              //tft.setCursor(220, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(50, 420);                                     tft.println("PULSE \"GUARDAR\" DE NUEVO PARA CONFIRMAR"); 
               tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
               break;
 
-
       case 13: // Saved
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-              //tft.setCursor(270, 450);                                        tft.println("RETIRE EL PLATO PARA CONTINUAR");  
-
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: MEJOR
               tft.setCursor(155, 450);                                        tft.println("RETIRE EL PLATO PARA CONTINUAR");  
               break;
     }
@@ -1195,7 +1103,8 @@ void showError(int option){
 ----------------------------------------------------------------------------------------------------------*/
 void showWarning(int option){
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
-    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
@@ -1228,48 +1137,23 @@ void showWarning(int option){
 
 
     // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
-    
-    // OPCION 1 DE TAMAÑO 16X32 SIN ESCALA ==> QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
-    /*tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); */
-    
-    // OPCION 2 DE TAMAÑO 12X24 ESCALA X2 ==> MEJOR
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
     switch (option){
       case 1: // AÑADIR
-              
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: 
-              //tft.setCursor(270, 430);                                        tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
-              //tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30);   tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: 
               tft.setCursor(150, 410);                                      tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
               tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
-              
               break;
 
       case 2: // ELIMINAR
-              
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: 
-              //tft.setCursor(150, 430); tft.println("NO SE HA ELIMINADO EL PLATO PORQUE EST\xC1"" VAC\xCD""O"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: 
               tft.setCursor(180, 410);                                      tft.println("NO SE HA ELIMINADO EL PLATO"); 
               tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
-              
               break;
 
       case 3: // BOTÓN GUARDAR
-              
-              // OPCIÓN 1 DE TAMAÑO 16X32 SIN ESCALA: 
-              //tft.setCursor(150, 430); tft.println("NO SE HA GUARDADO LA COMIDA PORQUE EST\xC1"" VAC\xCD""A"); 
-              
-              // OPCION 2 DE TAMAÑO 12X24 ESCALA X2: 
               tft.setCursor(190, 410);                                      tft.println("NO SE HA GUARDADO LA COMIDA"); 
               tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
-     
               break;
     }
     // ----------------------------------------------------------------------------------------------------  

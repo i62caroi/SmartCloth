@@ -12,5 +12,6 @@ var searchData=
   ['bte_5fwindowsize_9',['bte_WindowSize',['../class_r_a8876.html#ad18e29d84cd269a00460195ea35521de',1,'RA8876']]],
   ['btememorycopy_10',['bteMemoryCopy',['../class_r_a8876.html#ad757f1c652fcc4c5e2d1fa48fde77672',1,'RA8876']]],
   ['btememorycopywithchromakey_11',['bteMemoryCopyWithChromaKey',['../class_r_a8876.html#a0211b47b7eff088456973b9e2e12fb42',1,'RA8876']]],
-  ['btememorycopywithrop_12',['bteMemoryCopyWithROP',['../class_r_a8876.html#abeb764c138c99a5d80c719c1831925b1',1,'RA8876']]]
+  ['btememorycopywithopacity_12',['bteMemoryCopyWithOpacity',['../class_r_a8876.html#ac9ec3441b39aaf7878e2fe68b52dff50',1,'RA8876']]],
+  ['btememorycopywithrop_13',['bteMemoryCopyWithROP',['../class_r_a8876.html#abeb764c138c99a5d80c719c1831925b1',1,'RA8876']]]
 ];
