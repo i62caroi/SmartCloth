@@ -73,8 +73,14 @@ void setup() {
 
     //error();
     //aviso_v1(); // Primero texto de ¡AVISO! entre líneas, luego imagen y luego comentario
-    aviso_v2(); // Primero texto, luego imagen, luego una línea y luego comentario
-
+    //aviso_v2(); // Primero texto, luego imagen, luego una línea y luego comentario
+    showWarning(3);
+ /* showWarning(1); // Igual que aviso_v2() pero con comentario específico según opción (1: añadir, 2: eliminar o 3: guardar)
+    delay(3000);
+    showWarning(2); 
+    delay(3000);
+    showWarning(3); 
+*/
 
 //    dashboard(); // PAGE3
 
@@ -837,6 +843,102 @@ void aviso_v2(){ // Tb PAGE3, pero más abajo
     tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30);
     tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
     // ----------------------------------------------------------------------------------------------------
+}
+
+
+
+void showWarning(int option){
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+    // Imagen de "aviso"
+    tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+
+    tft.setCursor(384, 80);
+    tft.println("\xA1""AVISO\x21""");
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+
+    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
+    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
+    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
+    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
+    // al modificar el punto de inicio de la imagen en PAGE3. 
+
+    // aviso2 
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,180,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,350,764,358,3,WHITE);
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
+    
+    // OPCION 1 DE TAMAÑO: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
+    /*tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); */
+    
+    // OPCION 2 DE TAMAÑO:
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    switch (option){
+      case 1: // AÑADIR
+              
+              // OPCIÓN 1 DE TAMAÑO: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
+              //tft.setCursor(270, 430); tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+              //tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30); tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
+              
+              // OPCION 2:
+              tft.setCursor(150, 410); tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY()); tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
+              
+              break;
+
+      case 2: // ELIMINAR
+              
+              // OPCIÓN 1 DE TAMAÑO: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
+              //tft.setCursor(150, 430); tft.println("NO SE HA ELIMINADO EL PLATO PORQUE EST\xC1"" VAC\xCD""O"); 
+              
+              tft.setCursor(180, 410); tft.println("NO SE HA ELIMINADO EL PLATO"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()); tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
+              
+              break;
+
+      case 3: // BOTÓN GUARDAR
+              
+              // OPCIÓN 1 DE TAMAÑO: QUEDA OK PERO PUEDE QUE EL COMENTARIO SE QUEDE PEQUEÑO
+              //tft.setCursor(150, 430); tft.println("NO SE HA GUARDADO LA COMIDA PORQUE EST\xC1"" VAC\xCD""A"); 
+              
+              tft.setCursor(190, 410); tft.println("NO SE HA GUARDADO LA COMIDA"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()); tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
+     
+              break;
+    }
+    // ----------------------------------------------------------------------------------------------------  
+
+
+    
 }
 
 
