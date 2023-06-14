@@ -1,5 +1,6 @@
 var NAVTREEINDEX4 =
 {
+"class_comida.html#ac88f312b2f931ca503d8016bb2f9a732":[0,0,1,9],
 "class_comida.html#ace21a15ce69bd779322cc4f804532528":[0,0,1,10],
 "class_comida.html#ad0be669abff35e6cdab88847d917449c":[0,0,1,14],
 "class_comida.html#ae180d6fc0a84d2f2c5834316b915530b":[0,0,1,7],
@@ -248,6 +249,5 @@ var NAVTREEINDEX4 =
 "globals_e.html":[1,1,0,5],
 "globals_enum.html":[1,1,4],
 "globals_eval.html":[1,1,5],
-"globals_f.html":[1,1,0,6],
-"globals_func.html":[1,1,1]
+"globals_f.html":[1,1,0,6]
 };

@@ -779,21 +779,38 @@ void pedirGrupoAlimentos(){
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
     delay(400);
     // ----------------------------------------------------------------------------------------------------
-
+/*
     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-    tft.drawRoundRect(556,288,680,413,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(555,287,681,414,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(554,286,682,415,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(553,285,683,416,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(552,284,684,417,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(551,283,685,418,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(550,282,686,419,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(549,281,687,420,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(548,280,688,421,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(547,279,689,422,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(546,278,690,423,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(556,288,680,413,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(555,287,681,414,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(554,286,682,415,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(553,285,683,416,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(552,284,684,417,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(551,283,685,418,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(550,282,686,419,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(549,281,687,420,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(548,280,688,421,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(547,279,689,422,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(546,278,690,423,20,RED_BUTTON); // Alrededor de grupo3
+    // ----------------------------------------------------------------------------------------------------
+    */
+
+    // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    tft.drawRect(556,288,680,413,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(555,287,681,414,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(554,286,682,415,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(553,285,683,416,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(552,284,684,417,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(551,283,685,418,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(550,282,686,419,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(549,281,687,420,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(548,280,688,421,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(547,279,689,422,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(546,278,690,423,RED_BUTTON); // Alrededor de grupo3
     // ----------------------------------------------------------------------------------------------------
 
 
@@ -869,36 +886,69 @@ void pedirConfirmacion(int option){
     }
     delay(800);
     // ----------------------------------------------------------------------------------------------------
-
+/*
     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
     if(option == 3){ // Guardar
-        tft.drawRoundRect(425,453,590,575,20,YELLOW); // Alrededor de botón guardar
-        tft.drawRoundRect(424,452,591,576,20,YELLOW); 
-        tft.drawRoundRect(423,451,592,577,20,YELLOW); 
-        tft.drawRoundRect(422,450,593,578,20,YELLOW); 
-        tft.drawRoundRect(421,449,594,579,20,YELLOW); 
-        tft.drawRoundRect(420,448,595,580,20,YELLOW); 
-        tft.drawRoundRect(419,447,596,581,20,YELLOW); 
-        tft.drawRoundRect(418,446,597,582,20,YELLOW); 
-        tft.drawRoundRect(417,445,598,583,20,YELLOW); 
-        tft.drawRoundRect(416,444,599,584,20,YELLOW); 
-        tft.drawRoundRect(415,443,600,585,20,YELLOW); 
+        tft.drawRoundRect(425,453,590,575,20,RED_BUTTON); // Alrededor de botón guardar
+        tft.drawRoundRect(424,452,591,576,20,RED_BUTTON); 
+        tft.drawRoundRect(423,451,592,577,20,RED_BUTTON); 
+        tft.drawRoundRect(422,450,593,578,20,RED_BUTTON); 
+        tft.drawRoundRect(421,449,594,579,20,RED_BUTTON); 
+        tft.drawRoundRect(420,448,595,580,20,RED_BUTTON); 
+        tft.drawRoundRect(419,447,596,581,20,RED_BUTTON); 
+        tft.drawRoundRect(418,446,597,582,20,RED_BUTTON); 
+        tft.drawRoundRect(417,445,598,583,20,RED_BUTTON); 
+        tft.drawRoundRect(416,444,599,584,20,RED_BUTTON); 
+        tft.drawRoundRect(415,443,600,585,20,RED_BUTTON); 
     }
     else{ // Añadir y eliminar
-        tft.drawRoundRect(425,413,590,535,20,YELLOW); // Alrededor de botón añadir o eliminar
-        tft.drawRoundRect(424,412,591,536,20,YELLOW); 
-        tft.drawRoundRect(423,411,592,537,20,YELLOW); 
-        tft.drawRoundRect(422,410,593,538,20,YELLOW); 
-        tft.drawRoundRect(421,409,594,539,20,YELLOW); 
-        tft.drawRoundRect(420,408,595,540,20,YELLOW); 
-        tft.drawRoundRect(419,407,596,541,20,YELLOW); 
-        tft.drawRoundRect(418,406,597,542,20,YELLOW); 
-        tft.drawRoundRect(417,405,598,543,20,YELLOW); 
-        tft.drawRoundRect(416,404,599,544,20,YELLOW); 
-        tft.drawRoundRect(415,403,600,545,20,YELLOW); 
+        tft.drawRoundRect(425,413,590,535,20,RED_BUTTON); // Alrededor de botón añadir o eliminar
+        tft.drawRoundRect(424,412,591,536,20,RED_BUTTON); 
+        tft.drawRoundRect(423,411,592,537,20,RED_BUTTON); 
+        tft.drawRoundRect(422,410,593,538,20,RED_BUTTON); 
+        tft.drawRoundRect(421,409,594,539,20,RED_BUTTON); 
+        tft.drawRoundRect(420,408,595,540,20,RED_BUTTON); 
+        tft.drawRoundRect(419,407,596,541,20,RED_BUTTON); 
+        tft.drawRoundRect(418,406,597,542,20,RED_BUTTON); 
+        tft.drawRoundRect(417,405,598,543,20,RED_BUTTON); 
+        tft.drawRoundRect(416,404,599,544,20,RED_BUTTON); 
+        tft.drawRoundRect(415,403,600,545,20,RED_BUTTON); 
+    }
+    // ----------------------------------------------------------------------------------------------------
+    */
+
+    // ------------ CUADRADO ESQUINADO (PULSACION) -------------------------------------------------------
+    tft.canvasImageStartAddress(PAGE1_START_ADDR);
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    if(option == 3){ // Guardar
+        tft.drawRect(425,453,590,575,RED_BUTTON); // Alrededor de botón guardar
+        tft.drawRect(424,452,591,576,RED_BUTTON); 
+        tft.drawRect(423,451,592,577,RED_BUTTON); 
+        tft.drawRect(422,450,593,578,RED_BUTTON); 
+        tft.drawRect(421,449,594,579,RED_BUTTON); 
+        tft.drawRect(420,448,595,580,RED_BUTTON); 
+        tft.drawRect(419,447,596,581,RED_BUTTON); 
+        tft.drawRect(418,446,597,582,RED_BUTTON); 
+        tft.drawRect(417,445,598,583,RED_BUTTON); 
+        tft.drawRect(416,444,599,584,RED_BUTTON); 
+        tft.drawRect(415,443,600,585,RED_BUTTON); 
+    }
+    else{ // Añadir y eliminar
+        tft.drawRect(425,413,590,535,RED_BUTTON); // Alrededor de botón añadir o eliminar
+        tft.drawRect(424,412,591,536,RED_BUTTON); 
+        tft.drawRect(423,411,592,537,RED_BUTTON); 
+        tft.drawRect(422,410,593,538,RED_BUTTON); 
+        tft.drawRect(421,409,594,539,RED_BUTTON); 
+        tft.drawRect(420,408,595,540,RED_BUTTON); 
+        tft.drawRect(419,407,596,541,RED_BUTTON); 
+        tft.drawRect(418,406,597,542,RED_BUTTON); 
+        tft.drawRect(417,405,598,543,RED_BUTTON); 
+        tft.drawRect(416,404,599,544,RED_BUTTON); 
+        tft.drawRect(415,403,600,545,RED_BUTTON); 
     }
     // ----------------------------------------------------------------------------------------------------
 

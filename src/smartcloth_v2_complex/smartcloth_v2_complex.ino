@@ -3,9 +3,10 @@
  * @brief Programa principal de SmartCloth
  *
  * @author Irene Casares Rodríguez
- * @date 12/05/2023
+ * @date 14/06/2023
  * @version 1.0
  * 
+ * @note Esta versión da mayor libertad al usuario para usar SmartCloth de varias formas, alterando el orden de algunos pasos.
  * @note Versión con interfaz a partir de diseño wireframe
  * 
  */

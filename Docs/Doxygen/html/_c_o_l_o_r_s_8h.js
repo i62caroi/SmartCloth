@@ -86,6 +86,7 @@ var _c_o_l_o_r_s_8h =
     [ "PINK", "_c_o_l_o_r_s_8h.html#ada419fe3b48fcf19daed7cc57ccf1174", null ],
     [ "PURPLE", "_c_o_l_o_r_s_8h.html#a0bb0b009e7a7390473ace4d98bd843c0", null ],
     [ "RED", "_c_o_l_o_r_s_8h.html#a8d23feea868a983c8c2b661e1e16972f", null ],
+    [ "RED_BUTTON", "_c_o_l_o_r_s_8h.html#a8f580c75601bad3129726556e2bcc153", null ],
     [ "ROJO_KCAL", "_c_o_l_o_r_s_8h.html#a395cce2564a479aa769dbe4a04257fe7", null ],
     [ "ROJO_PESO", "_c_o_l_o_r_s_8h.html#a31d81d7468c8c91ccdd6f92042f3e458", null ],
     [ "WHITE", "_c_o_l_o_r_s_8h.html#a87b537f5fa5c109d3c05c13d6b18f382", null ],
