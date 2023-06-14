@@ -72,12 +72,13 @@ void setup() {
 
 
     //error();
-    showError(13);
+    //showError(1);
+    //delay(2000);
 
     //aviso_v1(); // Primero texto de ¡AVISO! entre líneas, luego imagen y luego comentario
     //aviso_v2(); // Primero texto, luego imagen, luego una línea y luego comentario
     
-    //showWarning(3);
+    showWarning(3);
  
  /* showWarning(1); // Igual que aviso_v2() pero con comentario específico según opción (1: añadir, 2: eliminar o 3: guardar)
     delay(3000);
@@ -901,11 +902,18 @@ void aviso_v1(){ // Tb PAGE3, pero más abajo
     // Imagen de "aviso"
     tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
     //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
-    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    // Imagen aviso2 con fondo rojo
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2R.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    // Imagen aviso2 con fondo naranja oscuro
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2O.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
     //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
 
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
-    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
 
     // ----- TEXTO (AVISO) ----------------------------------------------------------------------------
     // ------ LINEA ---------
@@ -960,11 +968,18 @@ void aviso_v2(){ // Tb PAGE3, pero más abajo
     // Imagen de "aviso"
     tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
     //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
-    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    // Imagen aviso2 con fondo rojo
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2R.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    // Imagen aviso2 con fondo naranja oscuro
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2O.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
     //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
 
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
-    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
 
 
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
@@ -1025,13 +1040,19 @@ void showWarning(int option){
     // Imagen de "aviso"
     tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
     //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
-    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    // Imagen aviso2 con fondo rojo
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2R.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    // Imagen aviso2 con fondo naranja oscuro
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2O.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
     //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
 
 
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
-    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
@@ -1039,6 +1060,11 @@ void showWarning(int option){
 
     tft.setCursor(384, 80);
     tft.println("\xA1""AVISO\x21""");
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,286,764,294,3,WHITE);
     // ---------------------------------------------------------------------------------------------------
 
 
@@ -1054,13 +1080,13 @@ void showWarning(int option){
     // al modificar el punto de inicio de la imagen en PAGE3. 
 
     // aviso2 
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,180,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,230,135,112); // Mostrar aviso2 (135x113) en PAGE1
     // ----------------------------------------------------------------------------------------------------
 
 
 
     // ------------ LINEA --------------------------------------------------------------------------------
-    tft.fillRoundRect(252,350,764,358,3,WHITE);
+   // tft.fillRoundRect(252,350,764,358,3,WHITE);
     // ---------------------------------------------------------------------------------------------------
 
 
