@@ -922,7 +922,7 @@ void aviso_v1(){ // Tb PAGE3, pero más abajo
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(380, 80);
+    tft.setCursor(380, 100);
     tft.println("\xA1""AVISO\x21""");
     // ------ LINEA ---------
     tft.fillRoundRect(252,180,764,187,3,WHITE);
@@ -986,7 +986,7 @@ void aviso_v2(){ // Tb PAGE3, pero más abajo
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(384, 80);
+    tft.setCursor(384, 100);
     tft.println("\xA1""AVISO\x21""");
     // ---------------------------------------------------------------------------------------------------
 
@@ -1058,13 +1058,13 @@ void showWarning(int option){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
 
-    tft.setCursor(384, 80);
+    tft.setCursor(384, 100);
     tft.println("\xA1""AVISO\x21""");
     // ---------------------------------------------------------------------------------------------------
 
 
     // ------------ LINEA --------------------------------------------------------------------------------
-    tft.fillRoundRect(252,286,764,294,3,WHITE);
+    tft.fillRoundRect(252,286,764,294,3,WHITE); // Cruza la imagen de aviso por detrás
     // ---------------------------------------------------------------------------------------------------
 
 
@@ -1086,7 +1086,7 @@ void showWarning(int option){
 
 
     // ------------ LINEA --------------------------------------------------------------------------------
-   // tft.fillRoundRect(252,350,764,358,3,WHITE);
+   // tft.fillRoundRect(252,350,764,358,3,WHITE); // Por debajo de la imagen de aviso
     // ---------------------------------------------------------------------------------------------------
 
 

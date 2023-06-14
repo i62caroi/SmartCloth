@@ -112,9 +112,10 @@ char    fileCocinadoPeq[30]     = "bin/dash/cociPeq.bin";
 char    fileCrudoPeq[30]        = "bin/dash/crudoPeq.bin";
 char    fileKcal[30]            = "bin/dash/kcal.bin";
 
-// --- IMAGENES AVISO/ERROR ---
-char    fileCruz[30]    = "bin/error/cruz.bin";
-char    fileAviso[30]   = "bin/aviso/aviso2.bin";
+// --- IMAGENES ERROR Y AVISO ---
+char    fileCruz[30]              = "bin/error/cruz.bin";
+char    fileAvisoRed[30]          = "bin/aviso/aviso2R.bin";
+char    fileAvisoDarkOrange[30]   = "bin/aviso/aviso2O.bin";
 
 
 

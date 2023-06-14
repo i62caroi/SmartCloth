@@ -1060,6 +1060,21 @@ void doStateActions(){
 ----------------------------------------------------------------------------------------------------------*/
 void actEventError(){
     switch (state_actual){
+      case 1:   showError(1);   break;  // Empty
+      case 2:   showError(2);   break;  // Plato
+      case 3:   showError(3);   break;  // grupoA 
+      case 4:   showError(4);   break;  // grupoB
+      case 5:   showError(5);   break;  // Crudo
+      case 6:   showError(6);   break;  // Cocinado
+      case 7:   showError(7);   break;  // Pesado
+      case 8:   showError(8);   break;  // add_check
+      case 9:   showError(9);   break;  // Added
+      case 10:  showError(10);  break;  // delete_check
+      case 11:  showError(11);  break;  // Deleted
+      case 12:  showError(12);  break;  // save_check
+      case 13:  showError(13);  break;  // Saved
+    }
+    /*switch (state_actual){
       case 1:   printEventError("Coloque un recipiente sobre la b\xE1""scula");                                   break;  // Empty
       case 2:   printEventError("Escoja un grupo de alimentos");                                                  break;  // Plato
       case 3:   printEventError("Coloque un alimento, indique crudo/cocinado o escoja otro \n grupo");            break;  // grupoA 
@@ -1073,7 +1088,7 @@ void actEventError(){
       case 11:  printEventError("Retire el plato que acaba de eliminar");                                         break;  // Deleted
       case 12:  printEventError("Vuelva a pulsar el bot\xF3""n de guardar o escoja otra acci\xF3""n");            break;  // save_check
       case 13:  printEventError("Retire el plato");                                                               break;  // Saved
-    }
+    }*/
 }
 
 
