@@ -71,8 +71,9 @@ void setup() {
     //loadPicturesRelojCompletoCuarto(); // 1/4 de tamaño
 
 
-    error();
-    aviso();
+    //error();
+    //aviso_v1(); // Primero texto de ¡AVISO! entre líneas, luego imagen y luego comentario
+    aviso_v2(); // Primero texto, luego imagen, luego una línea y luego comentario
 
 
 //    dashboard(); // PAGE3
@@ -682,13 +683,12 @@ void error(){ // Tb PAGE3, pero más abajo
 
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
 
-    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
+    // ----- TEXTO (ERROR) --------------------------------------------------------------------------------
     tft.clearScreen(RED); // Fondo rojo en PAGE1
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
     tft.setCursor(170, 100);
     tft.println("\xA1""ACCI\xD3""N INCORRECTA\x21""");
     // ----------------------------------------------------------------------------------------------------
@@ -696,10 +696,7 @@ void error(){ // Tb PAGE3, pero más abajo
 
     // ------------ CRUZ --------------------------------------------------------------------------------
     // Copiar de PAGE3 a PAGE1
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127,RED); // Mostrar cruz (114x127) en PAGE1
-    // PARA QUÉ USO CHROMA SI TIENE EL MISMO ROJO DEL FONDO???
-    // PROBAR CON Y SIN CHROMA:
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127); // Mostrar cruz (114x127) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127); // Mostrar cruz (114x127) en PAGE1
     // ----------------------------------------------------------------------------------------------------
 
 
@@ -721,51 +718,131 @@ void error(){ // Tb PAGE3, pero más abajo
 }
 
 
-void aviso(){ // Tb PAGE3, pero más abajo
-    // aviso
+void aviso_v1(){ // Tb PAGE3, pero más abajo
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+    // Imagen de "aviso"
     tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
-    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
     //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
 
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
-
-    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     tft.clearScreen(RED); // Fondo rojo en PAGE1
 
+    // ----- TEXTO (AVISO) ----------------------------------------------------------------------------
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,50,764,57,3,WHITE);
+    // ------ TEXTO ---------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
-    tft.setCursor(350, 100);
+    tft.setCursor(380, 80);
     tft.println("\xA1""AVISO\x21""");
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,180,764,187,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
+
 
 
     // ------------ ADVERTENCIA ---------------------------------------------------------------------------
     // Copiar de PAGE3 a PAGE1
-    // CON CHROMA, PERO NO CREO QUE SEA NECESARIO PORQUE TIENE EL MISMO ROJO QUE EL FONDO.
-    // PROBAR PRIMERO CON EL WIREFRAME DE ERROR CON Y SIN CHROMA
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113,RED); // Mostrar aviso1 (135x113) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113,RED); // Mostrar aviso2 (135x113) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,235,135,119,RED); // Mostrar aviso3 (135x119) en PAGE1
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+
+    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
+    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
+    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
+    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
+    // al modificar el punto de inicio de la imagen en PAGE3. 
+
+    // aviso1 => Apenas de se ve el borde rojo de la figura
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,240,135,112); // Mostrar aviso1 (135x113) en PAGE1
     
-    // SIN CHROMA:
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113); // Mostrar aviso1 (135x113) en PAGE1
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,238,135,113); // Mostrar aviso2 (135x113) en PAGE1
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,292,PAGE1_START_ADDR,SCREEN_WIDTH,445,235,135,119); // Mostrar aviso3 (135x119) en PAGE1
+    // aviso2 => Queda guay. Mejor opción en este estilo de pantalla
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,240,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    
+    // aviso3 => No se ve el borde pero queda bien porque el interior es negro, aunque el negro puede desentonar con el resto de la pantalla.
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,237,135,118); // Mostrar aviso3 (135x119) en PAGE1
     // ----------------------------------------------------------------------------------------------------
 
 
     // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    tft.setCursor(270, 420);
+    tft.setCursor(270, 430);
     tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
-    tft.setCursor(240, tft.getCursorY() + tft.getTextSizeY()+30);
+    tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30);
     tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
     // ----------------------------------------------------------------------------------------------------
 }
+
+
+void aviso_v2(){ // Tb PAGE3, pero más abajo
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+    // Imagen de "aviso"
+    tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso1.bin"); // Cargar aviso1 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    tft.sdCardDraw16bppBIN256bits(115,292,135,113,"bin/aviso/aviso2.bin"); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+    //tft.sdCardDraw16bppBIN256bits(115,292,135,119,"bin/aviso/aviso3.bin"); // Cargar aviso3 (135x119) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
+
+
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(384, 80);
+    tft.println("\xA1""AVISO\x21""");
+    // ---------------------------------------------------------------------------------------------------
+
+
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+
+    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
+    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
+    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
+    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
+    // al modificar el punto de inicio de la imagen en PAGE3. 
+
+    // aviso1 => Apenas de se ve el borde rojo de la figura
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,50,135,112); // Mostrar aviso1 (135x113) en PAGE1
+    
+    // aviso2 => Queda guay. Mejor opción en este estilo de pantalla
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,180,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    
+    // aviso3 => No se ve el borde pero queda bien porque el interior es negro, aunque el negro puede desentonar con el resto de la pantalla.
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,47,135,118); // Mostrar aviso3 (135x119) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,350,764,358,3,WHITE);
+    // ---------------------------------------------------------------------------------------------------
+
+
+
+
+    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setCursor(270, 430);
+    tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+    tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY()+30);
+    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O"); 
+    // ----------------------------------------------------------------------------------------------------
+}
+
+
+
+
+
 
 
 
