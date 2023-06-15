@@ -3,7 +3,7 @@
  * @brief Módulo Tarjeta SD
  * 
  * @author Irene Casares Rodríguez
- * @date 14/06/23
+ * @date 15/06/23
  * @version 1.0
  *
  * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
@@ -209,7 +209,7 @@ void    printGrupoyEjemplos();               // Zona 1 => Mostrar nombre de grup
 void    printProcesamiento();                // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo (comienza en crudo) => STATE_raw y STATE_cooked
 void    printPlatoActual(bool definitivo);   // Zona 3 => Mostrar valores del "Plato actual"   =>   true: valores reales  ->  false: valores temporales
 void    printAcumuladoHoy();                 // Zona 4 => Mostrar valores del "Acumulado hoy"
-void    showFullDashboard();                 // Mostrar dashboard completo (zonas 1-4)  =>  STATE_GroupA, STATE_GroupB y STATE_weighted
+void    showFullDashboard(bool definitivo);  // Mostrar dashboard completo (zonas 1-4)  =>  STATE_GroupA, STATE_GroupB y STATE_weighted. 'definitivo' para pasarlo a printPlatoActual()
 // --- pantallas transitorias ---
 void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Empty
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
@@ -433,7 +433,7 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
     // Peso
     tft.setCursor(50,220); 
     tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("PESO: "); tft.print(pesoBascula); tft.print("g"); // 12x24 escale x2 
+    tft.print("PESO: "); tft.print(pesoBascula,1); tft.print("g"); // 12x24 escale x2 
 
 
 
@@ -462,24 +462,24 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
     // ------------ Carbohidratos ------------
     tft.setCursor(50,303);
     tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("CARBOHIDRATOS: "); tft.print(valores.getCarbValores()); tft.print("g");  // 16x32 escale x1
+    tft.print("CARBOHIDRATOS: "); tft.print(valores.getCarbValores(),1); tft.print("g");  // 16x32 escale x1
     
     // ------------ Proteinas ------------
     tft.setCursor(50,380);
     tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("PROTE\xCD""NAS: "); tft.print(valores.getProtValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("PROTE\xCD""NAS: "); tft.print(valores.getProtValores(),1); tft.print("g"); // 16x32 escale x1
     
     // ------------ Grasas ------------
     tft.setCursor(50,457);
     tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("GRASAS: "); tft.print(valores.getLipValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("GRASAS: "); tft.print(valores.getLipValores(),1); tft.print("g"); // 16x32 escale x1
     
     // ------------ Kcal ------------
     tft.setCursor(197,516);
     tft.setTextForegroundColor(ROJO_KCAL); 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    tft.print(valores.getKcalValores()); tft.print(" Kcal"); // 12x24 escale X2
+    tft.print(valores.getKcalValores(),0); tft.print(" Kcal"); // 12x24 escale X2
     // ----- FIN VALORES ------------------------------------------------------------------------- 
 
 
@@ -606,7 +606,7 @@ void printAcumuladoHoy(){
     // Peso
     tft.setCursor(540,220);
     tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("PESO: "); tft.print(diaActual.getPesoDiario()); tft.print("g"); // 12x24 escale x2
+    tft.print("PESO: "); tft.print(diaActual.getPesoDiario(),1); tft.print("g"); // 12x24 escale x2
 
 
 
@@ -617,24 +617,24 @@ void printAcumuladoHoy(){
     // ------------ Carbohidratos ------------
     tft.setCursor(540,303);
     tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("CARBOHIDRATOS: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("CARBOHIDRATOS: "); tft.print(diaActual.getValoresDiario().getCarbValores(),1); tft.print("g"); // 16x32 escale x1
     
     // ------------ Proteinas ------------
     tft.setCursor(540,380);
     tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("PROTE\xCD""NAS: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("PROTE\xCD""NAS: "); tft.print(diaActual.getValoresDiario().getProtValores(),1); tft.print("g"); // 16x32 escale x1
     
     // ------------ Grasas ------------
     tft.setCursor(540,457);
     tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("GRASAS: "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("GRASAS: "); tft.print(diaActual.getValoresDiario().getLipValores(),1); tft.print("g"); // 16x32 escale x1
     
     // ------------ Kcal ------------
     tft.setCursor(697,516);
     tft.setTextForegroundColor(ROJO_KCAL); 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
-    tft.print(diaActual.getValoresDiario().getKcalValores()); tft.print(" Kcal"); // 12x24 escale X2
+    tft.print(diaActual.getValoresDiario().getKcalValores(),0); tft.print(" Kcal"); // 12x24 escale X2
     // ----- FIN VALORES -----------------------------------------------------------------------
 
 
@@ -707,12 +707,12 @@ void printAcumuladoHoy(){
    showFullDashboard(): Muestra grupo de alimentos y sus ejemplos, valores nutricionales y raciones de la 
                         comida actual ("Plato actual") y del día ("Acumulado hoy")
 ----------------------------------------------------------------------------------------------------------*/
-void showFullDashboard(){
+void showFullDashboard(bool definitivo){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     printGrupoyEjemplos();        // Zona 1 - Grupo y ejemplos
     printProcesamiento();         // Zona 2 - Procesamiento crudo o cocinado
-    printPlatoActual(true);       // Zona 3 - Valores Plato actual ('true' para mostrar valores reales del plato, 'false' para temporales según peso actual)
+    printPlatoActual(definitivo); // Zona 3 - Valores Plato actual ('true' para mostrar valores reales del plato, 'false' para temporales según peso actual)
     printAcumuladoHoy();          // Zona 4 - Valores Acumulado hoy
 }
 

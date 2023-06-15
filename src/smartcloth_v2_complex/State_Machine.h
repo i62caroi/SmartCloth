@@ -3,7 +3,7 @@
  * @brief Máquina de Estados (State Machine) de SmartCloth
  *
  * @author Irene Casares Rodríguez
- * @date 14/06/23
+ * @date 15/06/23
  * @version 1.0
  *
  *  Este archivo contiene las definiciones de los estados y eventos, además de las funciones
@@ -25,7 +25,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 127
+#define RULES 125 // 134 con las comentadas
 
 
 #include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Alimento.h -> Valores_Nutricionales.h)
@@ -59,7 +59,8 @@ typedef enum {
               STATE_deleted       =   (11),   // plato eliminado
               STATE_save_check    =   (12),   // Comprobar que se quiere guardar comida
               STATE_saved         =   (13),   // comida guardada
-              STATE_ERROR         =   (14)    // Estado ficticio de error (acción incorrecta)
+              STATE_ERROR         =   (14),   // Estado ficticio de error (acción incorrecta)
+              STATE_CANCEL        =   (15)    // Estado ficticio de Cancelación
 } states_t;
 
 
@@ -87,19 +88,20 @@ typedef enum {
               QUITAR                =   (11),   // Quitar de la báscula
               LIBERAR               =   (12),   // Báscula vacía real
               ERROR                 =   (13),   // Error (acción incorrecta)
-              BACK_TO_EMPTY         =   (14),   // Evento ficticio para volver a STATE_Empty porque saltó un error o un aviso
-              BACK_TO_PLATO         =   (15),   // Evento ficticio para volver a STATE_Plato porque saltó un error o un aviso
-              BACK_TO_GROUP_A       =   (16),   // Evento ficticio para volver a STATE_groupA porque saltó un error o un aviso
-              BACK_TO_GROUP_B       =   (17),   // Evento ficticio para volver a STATE_groupB porque saltó un error o un aviso
-              BACK_TO_RAW           =   (18),   // Evento ficticio para volver a STATE_raw porque saltó un error o un aviso
-              BACK_TO_COOKED        =   (19),   // Evento ficticio para volver a STATE_cooked porque saltó un error o un aviso
-              BACK_TO_WEIGHTED      =   (20),   // Evento ficticio para volver a STATE_weighted porque saltó un error o un aviso
-              BACK_TO_ADD_CHECK     =   (21),   // Evento ficticio para volver a STATE_add_check porque saltó un error o un aviso
-              BACK_TO_ADDED         =   (22),   // Evento ficticio para volver a STATE_added porque saltó un error o un aviso
-              BACK_TO_DELETE_CHECK  =   (23),   // Evento ficticio para volver a STATE_delete_check porque saltó un error o un aviso
-              BACK_TO_DELETED       =   (24),   // Evento ficticio para volver a STATE_deleted porque saltó un error o un aviso
-              BACK_TO_SAVE_CHECK    =   (25),   // Evento ficticio para volver a STATE_save_check porque saltó un error o un aviso
-              BACK_TO_SAVED         =   (26)    // Evento ficticio para volver a STATE_saved porque saltó un error o un aviso
+              CANCELAR              =   (14),   // Cancelar acción de añadir, eliminar o guardar
+              BACK_TO_EMPTY         =   (15),   // Evento ficticio para volver a STATE_Empty porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              BACK_TO_PLATO         =   (16),   // Evento ficticio para volver a STATE_Plato porque saltó un error 
+              BACK_TO_GROUP_A       =   (17),   // Evento ficticio para volver a STATE_groupA porque saltó un error 
+              BACK_TO_GROUP_B       =   (18),   // Evento ficticio para volver a STATE_groupB porque saltó un error
+              BACK_TO_RAW           =   (19),   // Evento ficticio para volver a STATE_raw porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              BACK_TO_COOKED        =   (20),   // Evento ficticio para volver a STATE_cooked porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              BACK_TO_WEIGHTED      =   (21),   // Evento ficticio para volver a STATE_weighted porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              BACK_TO_ADD_CHECK     =   (22),   // Evento ficticio para volver a STATE_add_check porque saltó un error 
+              BACK_TO_ADDED         =   (23),   // Evento ficticio para volver a STATE_added porque saltó un error 
+              BACK_TO_DELETE_CHECK  =   (24),   // Evento ficticio para volver a STATE_delete_check porque saltó un error 
+              BACK_TO_DELETED       =   (25),   // Evento ficticio para volver a STATE_deleted porque saltó un error
+              BACK_TO_SAVE_CHECK    =   (26),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
+              BACK_TO_SAVED         =   (27)    // Evento ficticio para volver a STATE_saved porque saltó un error 
 } event_t;
 
 
@@ -162,9 +164,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_groupA,STATE_raw,CRUDO},                         
                                         {STATE_groupA,STATE_cooked,COCINADO},              
                                         {STATE_groupA,STATE_weighted,INCREMENTO},       // Se ha colocado alimento. Aprovechar 'crudo' predeterminado para pesar directamente
-                                        {STATE_groupA,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento
-                                        {STATE_groupA,STATE_delete_check,DELETE_PLATO}, // Borrar plato actual
-                                        {STATE_groupA,STATE_save_check,GUARDAR},        // Guardar comida, aunque no se haya colocado alimento
+                                        //{STATE_groupA,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento
+                                        //{STATE_groupA,STATE_delete_check,DELETE_PLATO}, // Borrar plato actual
+                                        //{STATE_groupA,STATE_save_check,GUARDAR},        // Guardar comida, aunque no se haya colocado alimento
                                         {STATE_groupA,STATE_ERROR,ERROR},               // Acción incorrecta
                                         // --------------------------
 
@@ -177,9 +179,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_groupB,STATE_raw,CRUDO},                         
                                         {STATE_groupB,STATE_cooked,COCINADO},              
                                         {STATE_groupB,STATE_weighted,INCREMENTO},       // Se ha colocado alimento. Aprovechar 'crudo' predeterminado para pesar directamente.  
-                                        {STATE_groupB,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento.
-                                        {STATE_groupB,STATE_delete_check,DELETE_PLATO}, // Borrar plato actual. 
-                                        {STATE_groupB,STATE_save_check,GUARDAR},        // Guardar comida, aunque no se haya colocado alimento.  
+                                        //{STATE_groupB,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento.
+                                        //{STATE_groupB,STATE_delete_check,DELETE_PLATO}, // Borrar plato actual. 
+                                        //{STATE_groupB,STATE_save_check,GUARDAR},        // Guardar comida, aunque no se haya colocado alimento.  
                                         {STATE_groupB,STATE_ERROR,ERROR},               // Acción incorrecta
                                         // -------------------------
 
@@ -228,14 +230,15 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // -----------------------
 
                                         // --- Check añadir plato ---
-                                        {STATE_add_check,STATE_added,ADD_PLATO},         // Sí se quiere añadir plato.
-                                        {STATE_add_check,STATE_delete_check,DELETE_PLATO}, // No se quiere añadir plato, se quiere eliminar.
-                                        {STATE_add_check,STATE_save_check,GUARDAR},      // No se quiere añadir plato, se quiere guardar comida.
-                                        {STATE_add_check,STATE_groupA,TIPO_A},           // No se quiere añadir plato, se quiere escoger otro grupo tipo A.
-                                        {STATE_add_check,STATE_groupB,TIPO_B},           // No se quiere añadir plato, se quiere escoger otro grupo tipo B.
-                                        {STATE_add_check,STATE_raw,CRUDO},               // No se quiere añadir plato, se quiere escoger procesamiento 'crudo'.
-                                        {STATE_add_check,STATE_cooked,COCINADO},         // No se quiere añadir plato, se quiere escoger procesamiento 'cocinado'.
-                                        {STATE_add_check,STATE_ERROR,ERROR},             // Acción incorrecta
+                                        {STATE_add_check,STATE_added,ADD_PLATO},         // Confirmar añadir plato.
+                                        {STATE_add_check,STATE_CANCEL,TIPO_A},           // Cancelar añadir plato pulsando botón de grupo tipoA.
+                                        {STATE_add_check,STATE_CANCEL,TIPO_B},           // Cancelar añadir plato pulsando botón de grupo tipoB.
+                                        {STATE_add_check,STATE_CANCEL,CRUDO},            // Cancelar añadir plato pulsando botón de CRUDO.
+                                        {STATE_add_check,STATE_CANCEL,COCINADO},         // Cancelar añadir plato pulsando botón de COCINADO.
+                                        {STATE_add_check,STATE_CANCEL,DELETE_PLATO},     // Cancelar añadir plato pulsando botón de BORRAR PLATO.
+                                        {STATE_add_check,STATE_CANCEL,GUARDAR},          // Cancelar añadir plato pulsando botón de GUARDAR.
+                                        {STATE_add_check,STATE_CANCEL,CANCELAR},         // Cancelar añadir plato tras 10 segundos de inactividad.
+                                        {STATE_add_check,STATE_ERROR,ERROR},             // Acción incorrecta.
                                         // --------------------------
 
                                         // --- Plato añadido ---
@@ -245,20 +248,21 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_added,STATE_Empty,LIBERAR},               // Se ha retirado el plato completo (+ recipiente) tras añadir uno nuevo.
                                         {STATE_added,STATE_groupA,TIPO_A},               // No se ha creado otro plato porque estaba vacío. Se fuerza el regreso manteniendo recipiente.
                                         {STATE_added,STATE_groupB,TIPO_B},               // No se ha creado otro plato porque estaba vacío. Se fuerza el regreso manteniendo recipiente.
-                                        {STATE_added,STATE_saved,GUARDAR},               // Guardar la comida tras decir que se quiere añadir plato, aunque no se haga. Es posible que 
+                                        //{STATE_added,STATE_saved,GUARDAR},               // Guardar la comida tras decir que se quiere añadir plato, aunque no se haga. Es posible que 
                                                                                          // el usuario trate el "Añadir plato" como un "Guardar plato".
                                         {STATE_added,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         // ---------------------
 
                                         // --- Check eliminar plato ---
-                                        {STATE_delete_check,STATE_deleted,DELETE_PLATO},    // Sí se quiere eliminar plato.
-                                        {STATE_delete_check,STATE_add_check,ADD_PLATO},     // No se quiere eliminar plato, se quiere añadir.
-                                        {STATE_delete_check,STATE_save_check,GUARDAR},      // No se quiere eliminar plato, se quiere guardar comida.
-                                        {STATE_delete_check,STATE_groupA,TIPO_A},           // No se quiere eliminar plato, se quiere escoger otro grupo tipo A.
-                                        {STATE_delete_check,STATE_groupB,TIPO_B},           // No se quiere eliminar plato, se quiere escoger otro grupo tipo B.
-                                        {STATE_delete_check,STATE_raw,CRUDO},               // No se quiere eliminar plato, se quiere escoger procesamiento 'crudo'.
-                                        {STATE_delete_check,STATE_cooked,COCINADO},         // No se quiere eliminar plato, se quiere escoger procesamiento 'cocinado'.
-                                        {STATE_delete_check,STATE_ERROR,ERROR},             // Acción incorrecta
+                                        {STATE_delete_check,STATE_deleted,DELETE_PLATO},    // Confirmar eliminar plato.
+                                        {STATE_delete_check,STATE_CANCEL,TIPO_A},           // Cancelar eliminar plato pulsando botón de grupo tipoA.
+                                        {STATE_delete_check,STATE_CANCEL,TIPO_B},           // Cancelar eliminar plato pulsando botón de grupo tipoB.
+                                        {STATE_delete_check,STATE_CANCEL,CRUDO},            // Cancelar eliminar plato pulsando botón de CRUDO.
+                                        {STATE_delete_check,STATE_CANCEL,COCINADO},         // Cancelar eliminar plato pulsando botón de COCINADO.
+                                        {STATE_delete_check,STATE_CANCEL,ADD_PLATO},        // Cancelar eliminar plato pulsando botón de AÑADIR PLATO.
+                                        {STATE_delete_check,STATE_CANCEL,GUARDAR},          // Cancelar eliminar plato pulsando botón de GUARDAR.
+                                        {STATE_delete_check,STATE_CANCEL,CANCELAR},         // Cancelar eliminar plato tras 10 segundos de inactividad.
+                                        {STATE_delete_check,STATE_ERROR,ERROR},             // Acción incorrecta.
                                         // --------------------------
 
                                         // --- Plato eliminado ---
@@ -268,19 +272,20 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_deleted,STATE_Empty,LIBERAR},             // Se ha retirado el plato completo (+ recipiente) tras borrar. 
                                         {STATE_deleted,STATE_groupA,TIPO_A},             // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso manteniendo recipiente.
                                         {STATE_deleted,STATE_groupB,TIPO_B},             // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso manteniendo recipiente.
-                                        {STATE_deleted,STATE_saved,GUARDAR},             // Guardar la comida tras borrar el plato actual. Solo se incluirían los platos anteriores.
+                                        //{STATE_deleted,STATE_saved,GUARDAR},             // Guardar la comida tras borrar el plato actual. Solo se incluirían los platos anteriores.
                                         {STATE_deleted,STATE_ERROR,ERROR},               // Acción incorrecta
                                         // -----------------------
 
                                         // --- Check guardar comida ---
-                                        {STATE_save_check,STATE_saved,GUARDAR},             // Sí se quiere guardar comida.
-                                        {STATE_save_check,STATE_add_check,ADD_PLATO},       // No se quiere guardar comida, se quiere añadir.
-                                        {STATE_save_check,STATE_delete_check,DELETE_PLATO}, // No se quiere guardar comida, se quiere eliminar plato.
-                                        {STATE_save_check,STATE_groupA,TIPO_A},             // No se quiere guardar comida, se quiere escoger otro grupo tipo A.
-                                        {STATE_save_check,STATE_groupB,TIPO_B},             // No se quiere guardar comida, se quiere escoger otro grupo tipo B.
-                                        {STATE_save_check,STATE_raw,CRUDO},                 // No se quiere guardar comida, se quiere escoger procesamiento 'crudo'.
-                                        {STATE_save_check,STATE_cooked,COCINADO},           // No se quiere guardar comida, se quiere escoger procesamiento 'cocinado'.
-                                        {STATE_save_check,STATE_ERROR,ERROR},               // Acción incorrecta
+                                        {STATE_save_check,STATE_saved,GUARDAR},          // Confirmar guardar comida.
+                                        {STATE_save_check,STATE_CANCEL,TIPO_A},          // Cancelar guardar comida pulsando botón de grupo tipoA.
+                                        {STATE_save_check,STATE_CANCEL,TIPO_B},          // Cancelar guardar comida pulsando botón de grupo tipoB.
+                                        {STATE_save_check,STATE_CANCEL,CRUDO},           // Cancelar guardar comida pulsando botón de CRUDO.
+                                        {STATE_save_check,STATE_CANCEL,COCINADO},        // Cancelar guardar comida pulsando botón de COCINADO.
+                                        {STATE_save_check,STATE_CANCEL,ADD_PLATO},       // Cancelar guardar comida pulsando botón de AÑADIR PLATO.
+                                        {STATE_save_check,STATE_CANCEL,DELETE_PLATO},    // Cancelar guardar comida pulsando botón de BORRAR PLATO.
+                                        {STATE_save_check,STATE_CANCEL,CANCELAR},        // Cancelar guardar comida tras 10 segundos de inactividad.
+                                        {STATE_save_check,STATE_ERROR,ERROR},            // Acción incorrecta.
                                         // --------------------------
 
                                         // --- Comida guardada ---
@@ -289,7 +294,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_saved,STATE_saved,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_saved,STATE_Empty,LIBERAR},               // Se ha retirado el plato completo (+ recipiente) o se fuerza el regreso porque se ha guardado desde STATE_Empty.   
                                         {STATE_saved,STATE_groupA,TIPO_A},               // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso manteniendo recipiente.
-                                        {STATE_saved,STATE_groupB,TIPO_B},                // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso manteniendo recipiente.
+                                        {STATE_saved,STATE_groupB,TIPO_B},               // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso manteniendo recipiente.
                                         {STATE_saved,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         // -----------------------
 
@@ -307,7 +312,15 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_ERROR,STATE_delete_check,BACK_TO_DELETE_CHECK},    // Regresar a STATE_delete_check tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_deleted,BACK_TO_DELETED},              // Regresar a STATE_deleted tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_save_check,BACK_TO_SAVE_CHECK},        // Regresar a STATE_save_check tras mostrar error cometido allí
-                                        {STATE_ERROR,STATE_saved,BACK_TO_SAVED}                  // Regresar a STATE_saved tras mostrar error cometido allí
+                                        {STATE_ERROR,STATE_saved,BACK_TO_SAVED},                  // Regresar a STATE_saved tras mostrar error cometido allí
+                                        // -----------------------
+
+
+                                        // --- CANCELAR ----------
+                                        {STATE_CANCEL,STATE_Empty,BACK_TO_EMPTY},         // Regresar a STATE_Empty tras cancelar acción de guardar iniciada desde STATE_Empty
+                                        {STATE_CANCEL,STATE_raw,BACK_TO_RAW},             // Regresar a STATE_raw tras cancelar add/delete/save iniciada desde STATE_raw   
+                                        {STATE_CANCEL,STATE_cooked,BACK_TO_COOKED},       // Regresar a STATE_cooked tras cancelar add/delete/save iniciada desde STATE_cooked
+                                        {STATE_CANCEL,STATE_weighted,BACK_TO_WEIGHTED}    // Regresar a STATE_weighted tras cancelar add/delete/save iniciada desde STATE_weighted
                                         // -----------------------
                                       };
 
@@ -320,6 +333,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 states_t state_actual;      // Estado actual
 states_t state_new;         // Nuevo estado al que se va a pasar
 states_t state_prev;        // Estado anterior
+states_t state_prev_prev;   // Estado anterior al anterior. 
+                            // Utilizado para saber a qué estado regresar (Empty, raw, cooked o weighted) tras cancelar una acción (añadir, eliminar o guardar)
 
 event_t lastEvent;          // Último evento ocurrido
 
@@ -349,7 +364,8 @@ void    actStateDeleteCheck();                         // Actividade STATE_delet
 void    actStateDeleted();                             // Actividades STATE_deleted
 void    actStateSaveCheck();                           // Actividade STATE_save_check
 void    actStateSaved();                               // Actividades STATE_saved
-void    actStateERROR();                               // Actividade STATE_ERROR
+void    actStateERROR();                               // Actividades STATE_ERROR
+void    actStateCANCEL();                              // Actividades STATE_CANCEL
 
 // --- Actividades estado actual ---
 void    doStateActions();                              // Actividades según estado actual
@@ -360,7 +376,7 @@ void    actEventError();                               // Mensaje de error de ev
 // --- Buffer de eventos ---
 bool    isBufferEmpty();                               // Comprobar buffer de eventos vacío
 bool    isBufferFull();                                // Comprobar buffer de eventos lleno
-int     firstGapBuffer();                              // Obtener primer hueco en el buffer
+int     getFirstGapBuffer();                           // Obtener primer hueco en el buffer
 void    shiftLeftEventBuffer();                        // Desplazar buffer a izquierda para incluir nuevo evento
 void    addEventToBuffer(event_t evento);              // Añadir evento al buffer
 /*-----------------------------------------------------------------------------*/
@@ -491,7 +507,7 @@ void actGruposAlimentos(){
         if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
             tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.
                                     // Esta tara DEBE hacerse antes de showFullDashboard() para que muestre el peso a 0.      
-            showFullDashboard();             
+            showFullDashboard(true);             
         }
         else{   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
             printGrupoyEjemplos();
@@ -539,9 +555,9 @@ void actStateRaw(){
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
             }
             
-            // Si se ha dado a add/delete/save, pero finalmente no se confirma esa acción y se pulsa 'crudo' para volver
-            // al dashboard, entonces se muestra el dashboard completo y no se modifica únicamente la zona 2 (procesamiento).
-            if((state_prev == STATE_add_check) or (state_prev == STATE_delete_check) or (state_prev == STATE_save_check)) showFullDashboard();    
+            // Si se ha dado a add/delete/save, pero finalmente se cancela esa acción, entonces se 
+            // muestra el dashboard completo y no se modifica únicamente la zona 2 (procesamiento).
+            if(state_prev == STATE_CANCEL) showFullDashboard(true);     
             else printProcesamiento();                                      // Mostrar imagen de 'crudo'
 
         }
@@ -568,9 +584,9 @@ void actStateCooked(){
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
             }
             
-            // Si se ha dado a add/delete/save, pero finalmente no se confirma esa acción y se pulsa 'cocinado' para volver
-            // al dashboard, entonces se muestra el dashboard completo y no se modifica únicamente la zona 2 (procesamiento).
-            if((state_prev == STATE_add_check) or (state_prev == STATE_delete_check) or (state_prev == STATE_save_check)) showFullDashboard();    
+            // Si se ha dado a add/delete/save, pero finalmente se cancela esa acción, entonces se 
+            // muestra el dashboard completo y no se modifica únicamente la zona 2 (procesamiento).
+            if(state_prev == STATE_CANCEL) showFullDashboard(true);    
             else printProcesamiento();                                      // Mostrar imagen de 'cocinado'
 
         }
@@ -594,7 +610,10 @@ void actStateWeighted(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        printPlatoActual(false);                                            // 'false' para mostrar valores temporales del Plato actual según el peso del alimento
+        // Si se ha dado a add/delete/save, pero finalmente se cancela esa acción, entonces se 
+        // muestra el dashboard completo y no se modifica únicamente la zona 2 (procesamiento).
+        if(state_prev == STATE_CANCEL) showFullDashboard(false);    // 'false' para mostrar valores temporales del Plato actual según el peso del alimento
+        else printPlatoActual(false);               // 'false' para mostrar valores temporales del Plato actual según el peso del alimento
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -629,8 +648,10 @@ void actStateAddCheck(){
    actStateAdded(): Acciones del STATE_added
 ----------------------------------------------------------------------------------------------------------*/
 void actStateAdded(){ 
-    static unsigned long previousTime;     // Tiempos utilizados para regresar a STATE_groupA / B si se ha querido borrar pero el plato 
-    unsigned long currentTime;             // estaba vacío. Se muestra un aviso y pasados 3 segundos se regresa al estado según el último grupo escogido.
+    static unsigned long previousTimeWarning;     // Tiempos utilizados para regresar a STATE_groupA / B si se ha querido borrar pero el plato 
+    unsigned long currentTime;                    // estaba vacío. Se muestra un aviso y pasados 3 segundos se regresa al estado según el último grupo escogido.
+
+    static unsigned long previousTimeCancel = millis();      // Tiempo usado para cancelar la acción tras 10 segundos de inactividad
 
     static bool errorPlatoWasEmpty;        // Flag utilizada para saber si se debe mostrar la información "normal"
                                            // o un mensaje de aviso indicando no se ha creado otro plato porque el 
@@ -694,7 +715,7 @@ void actStateAdded(){
             else{   // ==> Si el plato está vacío, no se crea otro
                 showWarning(1); // Mostrar aviso de plato vacío y no se crea otro
                 Serial.println(F("No se ha creado otro plato porque el actual está vacío"));
-                previousTime = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
+                previousTimeWarning = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
             }
             /* ----- FIN INFO MOSTRADA ---------------------------------------- */
 
@@ -714,7 +735,7 @@ void actStateAdded(){
     // ----- TIEMPO DE ESPERA ------------------------------
     if(errorPlatoWasEmpty){     // Si no se ha creado otro plato porque el plato actual está vacío 
         currentTime = millis();
-        if ((currentTime - previousTime) > 3000) {    // Tras 3 segundos mostrando warning...
+        if ((currentTime - previousTimeWarning) > 3000) {    // Tras 3 segundos mostrando warning...
             Serial.print(F("\nTIPO_A o TIPO_B forzada. Regreso a GRUPOS..."));
             addEventToBuffer(eventoGrande);   // Se regresa a STATE_groupA o STATE_groupB, según el último grupo escogido. 
             flagEvent = true;
@@ -723,6 +744,14 @@ void actStateAdded(){
                                               // pedir recipiente si no se coloca ningún alimento.
         }
     }
+
+    // --- CANCELACIÓN AUTOMÁTICA ---
+    if ((millis() - previousTimeCancel) > 10000) {    // Tras 10 segundos de inactividad, se cancela automáticamente la acción añadir plato
+        Serial.print(F("\nTime out. Cancelando añadir plato..."));
+        addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició añadir plato
+        flagEvent = true;
+    }
+    // --- FIN CANCELACIÓN AUTOMÁTICA ---
     // ----- FIN TIEMPO DE ESPERA --------------------------
 }
 
@@ -1137,7 +1166,6 @@ void actStateSaved(){
 
 
 
-
 /*---------------------------------------------------------------------------------------------------------
    actStateERROR(): Acciones del STATE_ERROR
 ----------------------------------------------------------------------------------------------------------*/
@@ -1145,13 +1173,11 @@ void actStateERROR(){
     static unsigned long previousTimeError;  // Para regresar a STATE_groupA / B si se ha querido guardar desde ahí.
     unsigned long currentTime;                // Tiempo actual  
 
-    Serial.println(F("Mensaje de error 1")); 
-
     if(!doneState){
         previousTimeError = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de error, regresar al estado anterior.
 
         /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */
-        Serial.println(F("Mensaje de error 2")); 
+        Serial.println(F("Mensaje de error")); 
         // Mensaje de error según estado en el que se ha cometido el error (state_prev)
         switch (state_prev){
           case 1:   showError(1);   break;  // Empty
@@ -1167,7 +1193,7 @@ void actStateERROR(){
           case 11:  showError(11);  break;  // Deleted
           case 12:  showError(12);  break;  // save_check
           case 13:  showError(13);  break;  // Saved
-          case 14:  break;  // Para evitar el warning de "'STATE_ERROR' not handled in switch"
+          default:  break;  
         }
         /* ----- FIN INFO MOSTRADA ------------------------------------ */
         
@@ -1196,13 +1222,47 @@ void actStateERROR(){
           case 11:  Serial.print(F("\nRegreso a deleted tras ERROR..."));       addEventToBuffer(BACK_TO_DELETED);       flagEvent = true;   break;  // Deleted
           case 12:  Serial.print(F("\nRegreso a save_check tras ERROR..."));    addEventToBuffer(BACK_TO_SAVE_CHECK);    flagEvent = true;   break;  // save_check
           case 13:  Serial.print(F("\nRegreso a saved tras ERROR..."));         addEventToBuffer(BACK_TO_SAVED);         flagEvent = true;   break;  // Saved
-          case 14:  break;  // Para evitar el warning de "'STATE_ERROR' not handled in switch"
+          default:  break;  
         }
 
         flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
                   
     }
     // ----- FIN TIEMPO DE ESPERA --------------------------
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   actStateCANCEL(): Acciones del STATE_CANCEL
+----------------------------------------------------------------------------------------------------------*/
+void actStateCANCEL(){ 
+    if(!doneState){ // ¿Hace falta aquí si es inmediato?
+
+        /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */
+        Serial.println(F("Acción cancelada")); 
+
+        // Regreso al estado desde donde se inició la acción cancelada.
+        // Es previo al último estado (add_check, delete_check o save_check), por eso es 'state_prev_prev'
+        switch (state_prev_prev){
+          case 1:   Serial.print(F("\nRegreso a Empty tras CANCELACION..."));       addEventToBuffer(BACK_TO_EMPTY);       break;  // Empty
+          case 5:   Serial.print(F("\nRegreso a raw tras CANCELACION..."));         addEventToBuffer(BACK_TO_RAW);         break;  // Crudo
+          case 6:   Serial.print(F("\nRegreso a cooked tras CANCELACION..."));      addEventToBuffer(BACK_TO_COOKED);      break;  // Cocinado
+          case 7:   Serial.print(F("\nRegreso a weighted tras CANCELACION..."));    addEventToBuffer(BACK_TO_WEIGHTED);    break;  // Pesado
+          default:  break;  
+        }
+
+        flagEvent = true; 
+        
+
+        doneState = true;             // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                      // cada vez que se entre a esta función debido al loop de Arduino.
+                                      // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
+                                      // las acciones.
+
+                                      // ¿Hace falta aquí si es inmediato? 
+
+    }
 }
 
 
@@ -1226,6 +1286,7 @@ void doStateActions(){
       case 12:  actStateSaveCheck();    break;
       case 13:  actStateSaved();        break;
       case 14:  actStateERROR();        break;
+      case 15:  actStateCANCEL();       break;
     }
 }
 
@@ -1279,9 +1340,9 @@ bool isBufferFull(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   firstGapBuffer(): Primer hueco libre del buffer
+   getFirstGapBuffer(): Primer hueco libre del buffer
 ----------------------------------------------------------------------------------------------------------*/
-int firstGapBuffer(){
+int getFirstGapBuffer(){
     for (int i = 0; i < MAX_EVENTS; i++){
         if (event_buffer[i] == NONE) return i;     // Primer hueco
     }
@@ -1326,7 +1387,7 @@ void addEventToBuffer(event_t evento){
             pos = MAX_EVENTS-1;                  // Último hueco
         }
         else{
-            pos = firstGapBuffer();
+            pos = getFirstGapBuffer();
         }
     }
     event_buffer[pos] = evento;                  // Añadir a buffer

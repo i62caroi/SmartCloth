@@ -140,10 +140,16 @@ void loop() {
                                         // de transición en el caso de error y pase al STATE_ERROR.
                                         // Esta flag se activa en actEventError() y se desactiva tras los 3 segundos para
                                         // mostrar la pantalla de error en actStateERROR().
+
+                                        // Si solo se usaba 'flagEvent', tras activarla en actEventError(), se desactivaba
+                                        // al salir del if(checkStateConditions()), por lo que no se podía chequear el buffer
+                                        // de eventos para ver el evento de ERROR incluido en actEventError().
+                                        // Esto no ocurre con los eventos de cancelación de acción
             
             if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
+                state_prev_prev = state_prev;
                 state_prev = state_actual;
                 state_actual = state_new;
                 Serial.print(F("\nEstado anterior: ")); Serial.println(state_prev);

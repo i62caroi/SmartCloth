@@ -32,7 +32,7 @@ volatile int  buttonMain = 0;
 bool  flagEvent;                   /* Para evitar que marque evento para cada interrupción, ya que
                                      lo marcaría cada medio segundo por la interrupción de la báscula.
                                      Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento) */
-bool  flagError;                   // Aunque ERROR sea un evento, es de diferente naturaleza porque es ficitio, por eso
+bool  flagError;                   // Aunque ERROR sea un evento, es de diferente naturaleza porque es ficticio, por eso
                                    // se utiliza una flag diferente para cuando ocurra.
 
 
