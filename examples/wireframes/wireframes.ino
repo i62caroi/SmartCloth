@@ -78,7 +78,7 @@ void setup() {
     //aviso_v1(); // Primero texto de ¡AVISO! entre líneas, luego imagen y luego comentario
     //aviso_v2(); // Primero texto, luego imagen, luego una línea y luego comentario
     
-    showWarning(3);
+    //showWarning(3);
  
  /* showWarning(1); // Igual que aviso_v2() pero con comentario específico según opción (1: añadir, 2: eliminar o 3: guardar)
     delay(3000);
@@ -87,7 +87,7 @@ void setup() {
     showWarning(3); 
 */
 
-//    dashboard(); // PAGE3
+    dashboard(); // PAGE3
 
 
   /*  arranque();  // PAGE2   (OK)
@@ -647,8 +647,8 @@ void loadPicturesRelojCompletoCuarto(){
 
     // --------- ERRORES ---------------------------------------------------------------------------------
        // cruz
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(0,292,114,127,"bin/error/cruz.bin"); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+   //   tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+   //   tft.sdCardDraw16bppBIN256bits(0,292,114,127,"bin/error/cruz.bin"); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
       //tft.sdCardDraw16bppBIN256bits(0,292,512,126,"bin/error/cruzAll.bin"); // Cargar cruzAll (512x126) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
 
     // --------- FIN ERRORES -----------------------------------------------------------------------------
@@ -1151,6 +1151,23 @@ void showWarning(int option){
 
 
 void dashboard(){ // OK ==> HECHO
+    // --------- DASHBOARD -------------------------------------------------------------------------------
+      // cociPeq
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(529,131,47,42,"bin/dash/cociPeq.bin"); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
+
+      // crudoPeq
+      tft.sdCardDraw16bppBIN256bits(577,131,47,42,"bin/dash/crudoPeq.bin"); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
+
+      // kcal
+      //tft.sdCardDraw16bppBIN256bits(529,174,80,87,"bin/dash/kcal.bin"); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+      //tft.sdCardDraw16bppBIN256bits(529,174,70,76,"bin/dash/kcal_10.bin"); // Cargar kcal_10 (70x76) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+      tft.sdCardDraw16bppBIN256bits(529,174,60,65,"bin/dash/kcal_20.bin"); // Cargar kcal_20 (60x65) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+      //tft.sdCardDraw16bppBIN256bits(529,174,50,54,"bin/dash/kcal_30.bin"); // Cargar kcal_30 (50x54) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+
+    // --------- FIN DASHBOARD ---------------------------------------------------------------------------
+
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); // Regresar a PAGE1
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     // ------------ ZONA SUPERIOR --------------------------------------------
@@ -1207,7 +1224,11 @@ void dashboard(){ // OK ==> HECHO
     tft.fillRoundRect(401,442,479,499,10,GRIS_CUADROS_VALORES); // 78 x 57
 
      // Dibujo kcal
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,117,497,70,75);  // Mostrar kcal_10 (70x76) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,127,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,496,50,54);  // Mostrar kcal_30 (50x54) en PAGE1
+   
     // ---------- FIN GRÁFICOS ---------------
 
 
@@ -1223,27 +1244,38 @@ void dashboard(){ // OK ==> HECHO
     // Peso
     tft.setCursor(50,220);
     tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("Peso: 145g"); // 24 escale x2
+    tft.print("PESO: 145.2g"); // 24 escale x2
 
-    // ---- RACIONES ------
-    // Antes que valores para no estar continuamente cambiando los tamaños y escalas
-    // Raciones de Carbohidratos
-    tft.setCursor(416,293);
-    tft.setTextForegroundColor(WHITE); 
-    tft.print("10"); // 24 escale x2
-
-    // Raciones de Proteinas
-    tft.setCursor(416,370);
-    tft.setTextForegroundColor(WHITE); 
-    tft.print("7"); // 24 escale x2
-
-    // Raciones de Grasas
-    tft.setCursor(416,447);
-    tft.setTextForegroundColor(WHITE); 
-    tft.print("5"); // 24 escale x2
-    // ---- FIN RACIONES ----
 
     // ---- VALORES ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1);
+
+    // Carbohidratos
+    tft.setCursor(50,303);
+    tft.setTextForegroundColor(AZUL_CARB); 
+    tft.print("CARBOHIDRATOS: 100.1g"); // 32 escale x1
+    
+    // Proteinas
+    tft.setCursor(50,380);
+    tft.setTextForegroundColor(NARANJA_PROT); 
+    tft.print("PROTE\xCD""NAS: 70.1g"); // 32 escale x1
+    
+    // Grasas
+    tft.setCursor(50,457);
+    tft.setTextForegroundColor(AMARILLO_GRASAS); 
+    tft.print("GRASAS: 49.1g");  // 32 escale x1
+    
+    // Kcal
+    tft.setCursor(197,516);
+    tft.setTextForegroundColor(ROJO_KCAL); 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.print("121 Kcal."); // 24 escale x2
+    // ----- FIN VALORES ----
+
+
+    // ---- RACIONES ------
     // Texto "Raciones"
     tft.selectInternalFont(RA8876_FONT_SIZE_32); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
@@ -1251,26 +1283,30 @@ void dashboard(){ // OK ==> HECHO
     tft.setCursor(370,243);
     tft.print("Raciones"); // 32 escale x1
 
-    // Carbohidratos
-    tft.setCursor(50,293);
-    tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("Carbohidratos: 100 g"); // 32 escale x1
+    // Cambiamos el tamaño de texto para los valores de Raciones. 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    // Raciones de Carbohidratos
+    tft.setCursor(416,293);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("1"); // 24 escale x2
+
+    // Raciones de Proteinas
+    tft.setCursor(416,370);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("1"); // 24 escale x2
+
+    // Raciones de Grasas
+    tft.setCursor(416,447);
+    tft.setTextForegroundColor(WHITE); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); 
+    tft.print("0.5"); // 24 escale x2
+    // ---- FIN RACIONES ----
+
+    // ---- RACIONES ------ 
+
     
-    // Proteinas
-    tft.setCursor(50,370);
-    tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("Prote\xED""nas: 70 g"); // 32 escale x1
-    
-    // Grasas
-    tft.setCursor(50,447);
-    tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("Grasas: 49 g");  // 32 escale x1
-    
-    // Kcal
-    tft.setCursor(207,516);
-    tft.setTextForegroundColor(ROJO_KCAL); 
-    tft.print("1121 Kcal."); // 32 escale X1
-    // ----- FIN VALORES ----
     // -------- FIN TEXTO --------------------
     // ------------- FIN PLATO ACTUAL ----------------------------------------
 
@@ -1292,7 +1328,9 @@ void dashboard(){ // OK ==> HECHO
     tft.fillRoundRect(891,442,969,499,10,GRIS_CUADROS_VALORES); // 78 x 57
 
     // kcal
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,617,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
+
     // ---------- FIN GRÁFICOS ---------------
 
 
@@ -1308,10 +1346,49 @@ void dashboard(){ // OK ==> HECHO
     // Peso
     tft.setCursor(540,220);
     tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("Peso: 145g"); // 24 escale x2
+    tft.print("PESO: 2145.2g"); // 24 escale x2
+
+
+    // ---- VALORES ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1);
+    
+    // Carbohidratos
+    tft.setCursor(540,303);
+    tft.setTextForegroundColor(AZUL_CARB); 
+    tft.print("CARBOHIDRATOS: 1000.1g"); // 32 escale x1
+    
+    // Proteinas
+    tft.setCursor(540,380);
+    tft.setTextForegroundColor(NARANJA_PROT); 
+    tft.print("PROTE\xCD""NAS: 700.1g"); // 32 escale x1
+    
+    // Grasas
+    tft.setCursor(540,457);
+    tft.setTextForegroundColor(AMARILLO_GRASAS); 
+    tft.print("GRASAS: 490.1g");  // 32 escale x1
+    
+    // Kcal
+    tft.setCursor(687,516);
+    tft.setTextForegroundColor(ROJO_KCAL); 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.print("1121 Kcal."); // 24 escale x2
+    // ----- FIN VALORES ----
+
 
     // ---- RACIONES ------
-    // Antes que valores para no estar continuamente cambiando los tamaños y escalas
+    // Texto "Raciones"
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(860,243);
+    tft.print("Raciones"); // 32 escale x1
+
+    // Cambiamos el tamaño de texto para los valores de Raciones. 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
     // Raciones de Carbohidratos
     tft.setCursor(906,293);
     tft.setTextForegroundColor(WHITE); 
@@ -1327,35 +1404,6 @@ void dashboard(){ // OK ==> HECHO
     tft.setTextForegroundColor(WHITE); 
     tft.print("5"); // 24 escale x2
     // ---- FIN RACIONES ----
-
-    // ---- VALORES ---------
-    // Texto "Raciones"
-    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(860,243);
-    tft.print("Raciones"); // 32 escale x1
-
-    // Carbohidratos
-    tft.setCursor(540,293);
-    tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("Carbohidratos: 100 g"); // 32 escale x1
-    
-    // Proteinas
-    tft.setCursor(540,370);
-    tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("Prote\xED""nas: 70 g"); // 32 escale x1
-    
-    // Grasas
-    tft.setCursor(540,447);
-    tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("Grasas: 49 g");  // 32 escale x1
-    
-    // Kcal
-    tft.setCursor(697,516);
-    tft.setTextForegroundColor(ROJO_KCAL); 
-    tft.print("1121 Kcal."); // 32 escale X1
-    // ----- FIN VALORES ----
     // -------- FIN TEXTO --------------------
     // -------------- FIN ACUMULADO HOY ---------------------------------------
 

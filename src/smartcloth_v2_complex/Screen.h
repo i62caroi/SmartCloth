@@ -453,7 +453,7 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
 
 
     // ---- VALORES --------- 
-    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    //tft.selectInternalFont(RA8876_FONT_SIZE_32); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
     // Carbohidratos
