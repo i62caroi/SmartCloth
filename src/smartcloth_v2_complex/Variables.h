@@ -135,7 +135,8 @@ char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
 // --- IMAGENES DASHBOARD ---
 char    fileCocinadoPeq[30]     = "bin/dash/cociPeq.bin";
 char    fileCrudoPeq[30]        = "bin/dash/crudoPeq.bin";
-char    fileKcal[30]            = "bin/dash/kcal.bin";
+//char    fileKcal[30]            = "bin/dash/kcal.bin";
+char    fileKcal20[30]          = "bin/dash/kcal_20.bin";
 
 // --- IMAGENES ERROR Y AVISO ---
 char    fileCruz[30]              = "bin/error/cruz.bin";

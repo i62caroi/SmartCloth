@@ -1151,6 +1151,9 @@ void showWarning(int option){
 
 
 void dashboard(){ // OK ==> HECHO
+    float raciones;
+    int integerPart;
+
     // --------- DASHBOARD -------------------------------------------------------------------------------
       // cociPeq
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
@@ -1288,14 +1291,28 @@ void dashboard(){ // OK ==> HECHO
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
     // Raciones de Carbohidratos
-    tft.setCursor(416,293);
+    raciones = 1.0;
+    integerPart = abs((int)raciones);
+    if((integerPart == 0) or ((integerPart/10) == 0)){ // Una cifra entera
+      tft.setCursor(426,293);
+    }
+    else{ // 2 cifras enteras
+      tft.setCursor(416,293);
+    } 
     tft.setTextForegroundColor(WHITE); 
-    tft.print("1"); // 24 escale x2
+    tft.print(integerPart); // 24 escale x2
 
     // Raciones de Proteinas
-    tft.setCursor(416,370);
+    raciones = 10.0;
+    integerPart = abs((int)raciones);
+    if((integerPart == 0) or ((integerPart/10) == 0)){ // Una cifra entera
+      tft.setCursor(426,370);
+    }
+    else{ // 2 cifras enteras
+      tft.setCursor(416,370);
+    } 
     tft.setTextForegroundColor(WHITE); 
-    tft.print("1"); // 24 escale x2
+    tft.print(integerPart); // 24 escale x2
 
     // Raciones de Grasas
     tft.setCursor(416,447);
@@ -1395,12 +1412,12 @@ void dashboard(){ // OK ==> HECHO
     tft.print("10"); // 24 escale x2
 
     // Raciones de Proteinas
-    tft.setCursor(906,370);
+    tft.setCursor(916,370);
     tft.setTextForegroundColor(WHITE); 
     tft.print("7"); // 24 escale x2
 
     // Raciones de Grasas
-    tft.setCursor(906,447);
+    tft.setCursor(916,447);
     tft.setTextForegroundColor(WHITE); 
     tft.print("5"); // 24 escale x2
     // ---- FIN RACIONES ----
