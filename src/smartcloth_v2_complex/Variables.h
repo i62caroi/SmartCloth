@@ -122,8 +122,9 @@ char    fileGrupo1[30]  = "bin/grupo/grupo1.bin";
 char    fileGrupo2[30]  = "bin/grupo/grupo2.bin";
 char    fileGrupo3[30]  = "bin/grupo/grupo3.bin";
 char    fileGrupo4[30]  = "bin/grupo/grupo4.bin";
+char    fileManoR[30]   = "bin/grupo/manoR.bin";
 //char    fileHandW[30]   = "bin/grupo/handW.bin";
-char    fileManoW[30]   = "bin/grupo/manoW.bin";
+//char    fileManoW[30]   = "bin/grupo/manoW.bin";
 
 // --- IMAGENES BOTONES ---
 char    fileBotonAnadir[30]     = "bin/botones/anadir.bin";

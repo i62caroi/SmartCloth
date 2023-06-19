@@ -3,7 +3,7 @@
  * @brief Módulo Tarjeta SD
  * 
  * @author Irene Casares Rodríguez
- * @date 15/06/23
+ * @date 16/06/23
  * @version 1.0
  *
  * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
@@ -215,6 +215,7 @@ void    pedirRecipiente();                // Pedir colocar recipiente          =
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
 void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 void    showAccionConfirmada(int option); // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showAccionCancelada();            // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
 // --- Errores o avisos ---
 void    showError(int option);            // Pantalla de error con mensaje según estado (del 1 al 13)
 void    showWarning(int option);          // Warning de acción inncesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
@@ -486,10 +487,10 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
 
     // ---- RACIONES ----------------------------------------------------------------------------- 
     // Texto "Raciones"
-    tft.setCursor(370,243);
-    tft.setTextForegroundColor(WHITE);
     tft.selectInternalFont(RA8876_FONT_SIZE_32); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE);
+    tft.setCursor(370,243);
     tft.print("Raciones"); // 16x32 escale x1
 
 
@@ -653,50 +654,69 @@ void printAcumuladoHoy(){
 
 
     // ------------ Raciones de Carbohidratos ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
     raciones = diaActual.getValoresDiario().getCarbRaciones();
     if (fmod(raciones, 1.0) == 0){ // Termina en .0
         // Cursor según la cantidad de cifras enteras para centrar en el cuadro
         if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,293); // Una cifra entera
         else tft.setCursor(906,293); // 2 cifras enteras
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
         tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     }
     else{ // Termina en .5
-        tft.setCursor(906,293);
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(896,293);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(906,293); 
+        }          
         tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
 
 
     // ------------ Raciones de Proteinas ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
     raciones = diaActual.getValoresDiario().getProtRaciones();
     if (fmod(raciones, 1.0) == 0){ // Termina en .0
         // Cursor según la cantidad de cifras enteras para centrar en el cuadro
         if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,370); // Una cifra entera
         else tft.setCursor(906,370); // 2 cifras enteras
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
         tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     } 
     else{ // Termina en .5
-      tft.setCursor(906,370);
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(896,370);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(906,370); 
+        } 
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
 
 
     // ------------ Raciones de Grasas ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
     raciones = diaActual.getValoresDiario().getLipRaciones();
     if (fmod(raciones, 1.0) == 0){ // Termina en .0
         // Cursor según la cantidad de cifras enteras para centrar en el cuadro
         if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,447); // Una cifra entera
         else tft.setCursor(906,447); // 2 cifras enteras
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
         tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     } 
     else{ // Termina en .5
-        tft.setCursor(906,447);
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(896,447);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(906,447); 
+        }   
         tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    
     }
     // ---- FIN RACIONES -----------------------------------------------------------------------
     // -------- FIN TEXTO ---------------------------------------------------------------------------------------
@@ -879,9 +899,8 @@ void pedirGrupoAlimentos(){
 
 
     // ------------ MANO (120x129) -----------------------------------------------------------------------------------
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,RED); // manoR (120x129)
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,GREEN_HAND); // manoG (120x129)
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,127,RED); // manoR (120x129)
     // ----------------------------------------------------------------------------------------------------
 }
 
@@ -1018,9 +1037,8 @@ void pedirConfirmacion(int option){
 
 
     // ------------ MANO -----------------------------------------------------------------------------------
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); // manoR (120x129)
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); // manoG (120x129)
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,1,PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,127,RED); // manoR (120x129)
     // ----------------------------------------------------------------------------------------------------
 
 }
@@ -1089,6 +1107,25 @@ void showAccionConfirmada(int option){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   showAccionCancelada(): Indica que se ha cancelado la acción de añadir, eliminar o guardar.
+                          Puede ser indicado por el usuario o por time-out de 10 segundos.
+----------------------------------------------------------------------------------------------------------*/
+void showAccionCancelada(){
+    // ----- TEXTO (ACCION CANCELADA) -----------------------------------
+    tft.clearScreen(RED);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,200,764,208,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(220, 258);
+    tft.println("ACCI\xD3""N CANCELADA"); // 12x24 escalado x3
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,380,764,388,3,WHITE);
+    // -------------------------------------------------------------------
+}
 
 
 
@@ -1473,10 +1510,11 @@ void loadPicturesShowHourglass(){
       // Esta otra imagen con la mano roja y el fondo blanco se filtra mejor. Aunque queden residuos de
       // blanco en el borde de la figura, no queda mal.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
 
-      // Otra imagen de mano roja con fondo blanco
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoW);    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoW);    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      
+      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoR);    // Cargar manoR (120x129) en PAGE3  =>  x  =  <manoR  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
       
       putRelojGirado3(); // Mostrar relGir3 en PAGE1 
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
