@@ -68,9 +68,16 @@ void            tareScale(){
 
 
 /* ----- CRUDO/COCINADO ----- */
-bool      procesado = false; // procesado = false --> crudo    procesado = true --> cocinado     
-//String procesamiento; // "CRUDO" o "COCINADO"
-
+/**
+ * @enum procesamiento
+ * @brief Enumeración de los diferentes valores del procesamiento del alimento.
+ */
+typedef enum {
+              SIN_PROCESAMIENTO   =   (0),   /**< Alimento sin procesamiento indicado  */
+              ALIMENTO_CRUDO      =   (1),   /**< Alimento crudo  */
+              ALIMENTO_COCINADO   =   (2)    /**< Alimento cocinado  */
+} procesado_t;
+procesado_t procesamiento;
 
 
 /* ----- PLATO/COMIDA/DIARIO ----- */
@@ -78,7 +85,8 @@ Plato     platoActual;
 float     pesoRecipiente; 
 float     pesoPlato;
 float     pesoLastAlimento;
-Comida    comidaActual;
+Comida    comidaActual;       // Comida actual real, actualizada en tiempo real
+Comida    comidaActualCopia;  // Comida copiada de la actual real, solamente para mostrar sus valores tras guardarla en el acumulado y limpiar el objeto 'comidaActual'.
 Diario    diaActual; // Acumulado Hoy
 
 

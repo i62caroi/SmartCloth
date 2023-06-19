@@ -25,7 +25,15 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 125 // 134 con las comentadas
+#define RULES 122
+
+#define  ASK_CONFIRMATION_ADD     1
+#define  ASK_CONFIRMATION_DELETE  2
+#define  ASK_CONFIRMATION_SAVE    3  
+
+#define  CONFIRMATION_ADD     1
+#define  CONFIRMATION_DELETE  2
+#define  CONFIRMATION_SAVE    3  
 
 
 #include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Alimento.h -> Valores_Nutricionales.h)
@@ -137,12 +145,14 @@ typedef struct{
  */
 static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_Empty,STATE_Empty,TARAR},                // Tara inicial
+                                        {STATE_Empty,STATE_Empty,DECREMENTO},           // Por si se ha colocado el recipiente mientras se estaba en error. Al regresar a
+                                                                                        // STATE_Empty se vuelve a pedir, pero si se retiraba saltaba error porque no estaba
+                                                                                        // contemplada la liberación de la báscula.
+                                                                                        // No se incluye una transición con LIBERAR porque en este estado nunca se va a dar
+                                                                                        // ese evento, pues aún no se ha establecido el peso del recipiente, utilizado para
+                                                                                        // detectar la liberación.
                                         {STATE_Empty,STATE_Plato,INCREMENTO},
                                         {STATE_Empty,STATE_save_check,GUARDAR},         // Guardar comida directamente (comidaActual no está vacía)
-                                        {STATE_Empty,STATE_groupA,TIPO_A},              // Escoger grupo (tipo A) sin colocar recipiente
-                                        {STATE_Empty,STATE_groupB,TIPO_B},              // Escoger grupo (tipo B) sin colocar recipiente
-                                        //{STATE_Empty,STATE_deleted,DELETE_PLATO},       // Previamente se ha borrado el actual y se ha retirado, volviendo a INI. Ahora se quiere
-                                                                                          // seguir borrando los anteriores.
                                         {STATE_Empty,STATE_ERROR,ERROR},                // Acción incorrecta
                                         // ----------------------------
 
@@ -163,10 +173,6 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_groupA,STATE_groupB,TIPO_B},                
                                         {STATE_groupA,STATE_raw,CRUDO},                         
                                         {STATE_groupA,STATE_cooked,COCINADO},              
-                                        {STATE_groupA,STATE_weighted,INCREMENTO},       // Se ha colocado alimento. Aprovechar 'crudo' predeterminado para pesar directamente
-                                        //{STATE_groupA,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento
-                                        //{STATE_groupA,STATE_delete_check,DELETE_PLATO}, // Borrar plato actual
-                                        //{STATE_groupA,STATE_save_check,GUARDAR},        // Guardar comida, aunque no se haya colocado alimento
                                         {STATE_groupA,STATE_ERROR,ERROR},               // Acción incorrecta
                                         // --------------------------
 
@@ -178,10 +184,6 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_groupB,STATE_groupA,TIPO_A},                
                                         {STATE_groupB,STATE_raw,CRUDO},                         
                                         {STATE_groupB,STATE_cooked,COCINADO},              
-                                        {STATE_groupB,STATE_weighted,INCREMENTO},       // Se ha colocado alimento. Aprovechar 'crudo' predeterminado para pesar directamente.  
-                                        //{STATE_groupB,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento.
-                                        //{STATE_groupB,STATE_delete_check,DELETE_PLATO}, // Borrar plato actual. 
-                                        //{STATE_groupB,STATE_save_check,GUARDAR},        // Guardar comida, aunque no se haya colocado alimento.  
                                         {STATE_groupB,STATE_ERROR,ERROR},               // Acción incorrecta
                                         // -------------------------
 
@@ -419,6 +421,17 @@ bool checkStateConditions(){
    actStateEmpty(): Acciones del STATE_Empty
 ----------------------------------------------------------------------------------------------------------*/
 void actStateEmpty(){ 
+    // Tiempos utilizados para alternar entre dashboard y pantalla de pedir recipiente:
+    static unsigned long previousTime;               // Variable estática para almacenar el tiempo anterior
+    const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
+    const unsigned long recipienteInterval = 5000;  // Intervalo de tiempo para pedir colocar recipiente (5 segundos)
+
+    unsigned long currentTime;
+
+    static bool showing_dash;       
+    static bool showing_pedir_recipiente;
+
+    
     if(!doneState){
         if(state_prev != STATE_Empty){
             Serial.println(F("\nSTATE_Empty...")); 
@@ -431,22 +444,66 @@ void actStateEmpty(){
             pesoPlato = 0.0;                // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
             pesoLastAlimento = 0.0;         // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
                                             // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
+
+            procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
             
-            pedirRecipiente();              // Pedir recipiente
+            
         }
+
+        // ----- INFO INICIAL DE PANTALLA -------------------------
+        showDashboardStyle1();              // Mostrar dashboard al inicio
+        showing_dash = true;                // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+        showing_pedir_recipiente = false;   
+        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
+        // ----- FIN INFO INICIAL DE PANTALLA ---------------------
 
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                             // las acciones.
     }
+
+
+    // ----- ALTERNANCIA PANTALLAS -------------------------
+    currentTime = millis();
+    if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir recipiente
+            previousTime = currentTime;
+            pedirRecipiente();
+            showing_dash = false;  
+            showing_pedir_recipiente = true;   // Mostrando pedir recipiente
+        }
+    }
+    else if(showing_pedir_recipiente){ // Se está mostrando pedir recipiente
+        if (currentTime - previousTime >= recipienteInterval) { // Si el pedir recipiente ha estado 5 segundos, se cambia a dashboard estilo 1
+            previousTime = currentTime;
+            showDashboardStyle1();
+            showing_dash = true;  // Mostrando dashboard estilo 1 (Comida | Acumulado)
+            showing_pedir_recipiente = false;   
+        }
+    }
+    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
+
 } 
+
 
 
 /*---------------------------------------------------------------------------------------------------------
    actStatePlato(): Acciones del STATE_Plato
 ----------------------------------------------------------------------------------------------------------*/
 void actStatePlato(){ 
+    // Tiempos utilizados para alternar entre dashboard y pantalla de escoger grupo:
+    static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
+    const unsigned long recipienteColocadoInterval  = 1000; // Intervalo de tiempo para mostrar "Recipiente colocado" (1 segundo)
+    const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
+    const unsigned long grupoInterval = 5000;       // Intervalo de tiempo para pedir escoger grupo (5 segundos)
+
+    unsigned long currentTime;
+
+    static bool showing_recipiente_colocado;  
+    static bool showing_dash;      
+    static bool showing_escoger_grupo;
+
     if(!doneState){
         if(state_prev != STATE_Plato){
             Serial.println(F("\nPlato colocado")); 
@@ -457,69 +514,134 @@ void actStatePlato(){
                                             // El peso definitivo del recipiente no se guarda hasta que se escoja grupo de alimentos.
                                             // Por eso, 'pesoRecipiente' y 'pesoARetirar' son iguales a 0.0 en este estado. Esto no impide que se
                                             // realice LIBERAR, ya que ese evento ocurre cuando el peso de la báscula es igual a 'pesoARetirar'. 
-                                            // Así, se puede detectar que se ha quitado el recipiente (bascula = 0.0) y se vuelve al estado STATE_Empty.
+                                            // Así, se puede detectar que se ha quitado el recipiente (bascula = 0.0) y se vuelve al estado STATE_Empty.            
+        
+            // ----- INFO INICIAL DE PANTALLA -------------------------
+            if(state_prev != STATE_ERROR){  // ==> Si es la primera vez que se entra, sin haber cometido error, se indica "Recipiente colocado".
+                recipienteColocado();                 // Mostrar "Recipiente colocado" una vez al inicio. No volverlo a mostrar si se comete error.
+                showing_recipiente_colocado = true;   // Se está mostrando "Recipiente colocado"
+                showing_dash = false;      
+                showing_escoger_grupo = false;
+            }
+            else{ // ==> Si se ha cometido error, mostrar dashboard completo
+                showDashboardStyle1();                // Mostrar dashboard
+                showing_recipiente_colocado = false;                
+                showing_dash = true;                  // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+                showing_escoger_grupo = false;
+            }
             
-            pedirGrupoAlimentos();          // Print info del estado.
+            // ----- FIN INFO INICIAL DE PANTALLA ---------------------
         }
-            
+
+
+        previousTime = millis();                              // Inicializar 'previousTime' para la alternancia de pantallas
+
+
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                             // las acciones.
     }
+
+
+    // ----- ALTERNANCIA PANTALLAS -------------------------
+    currentTime = millis();
+    if(showing_recipiente_colocado){ // Mostrando "Recipiente colocado". Solo aparece una vez al inicio y si no se viene de error.
+        if (currentTime - previousTime >= recipienteColocadoInterval) { // Si el "Recipiente colocado" ha estado 1 segundo, se cambia a dashboard estilo 1
+            previousTime = currentTime;
+            showDashboardStyle1();
+            showing_recipiente_colocado = false; // Dejar de mostrar "Recipiente colocado". Solo aparece una vez al inicio.
+            showing_dash = true;                  // Mostrando dashboard estilo 1 (Comida | Acumulado)
+            showing_escoger_grupo = false;
+        }
+    }
+    else{ // Ya no se muestra "Recipiente colocado"
+        if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+            if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger grupo
+                previousTime = currentTime;
+                pedirGrupoAlimentos();
+                showing_dash = false;  
+                showing_escoger_grupo = true; // Mostrando escoger grupo
+            }
+        }
+        else if(showing_escoger_grupo){ // Se está mostrando escoger grupo
+            if (currentTime - previousTime >= grupoInterval) { // Si el escoger grupo ha estado 5 segundos, se cambia a dashboard estilo 1
+                previousTime = currentTime;
+                showDashboardStyle1();
+                showing_dash = true;  // Mostrando dashboard estilo 1 (Comida | Acumulado)
+                showing_escoger_grupo = false;
+            }
+        }
+    }
+    
+    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
+
 }
+
 
 
 /*---------------------------------------------------------------------------------------------------------
    actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void actGruposAlimentos(){ 
-    static unsigned long previousTime;     // Tiempos utilizados para regresar al STATE_Empty (pedir recipiente) si pasan 5 segundos sin
-    unsigned long currentTime;             // colocar alimento y previamente no se colocó recipiente, sino que se escogió grupo directamente. 
-                                           // El "temporizador" de 5 segundos se reinicia cada vez que se escoge un grupo nuevo.
+    // Tiempos utilizados para alternar entre dashboard y pantalla de escoger crudo o cocinado:
+    static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
+    const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
+    const unsigned long procesamientoInterval = 5000;       // Intervalo de tiempo para pedir escoger crudo o cocinado (5 segundos)
+
+    unsigned long currentTime;
+
+    static bool showing_dash;       
+    static bool showing_just_groups;
+    static bool showing_escoger_procesamiento;
 
     if(!doneState){        
-
-        previousTime = millis();           // Reiniciar "temporizador" de 5 segundos para regresar a STATE_Empty y pedir recipiente.
         
         // ----- ACCIONES ------------------------------
-        if((state_prev == STATE_Plato) or (state_prev == STATE_Empty)){     
+        if((state_prev == STATE_Plato)){ 
             // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
-            // ==> Si se viene de STATE_Empty, cogiendo 0 como el peso o si se ha cometido un error y
-            //      se coloca el recipiente durante la pantalla de error, cogerá el peso de la báscula.
             pesoRecipiente = pesoBascula;                                   // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             //tareScale();                                                    // Tarar para tomar peso real del alimento que se va a colocar.
         }
         else if(pesoBascula != 0.0){ 
                 Serial.println(F("Añadiendo alimento al plato..."));
                 
-                Alimento alimento(grupoAnterior, pesoBascula);                // Cálculo automático de valores nutricionales.
+                Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
                                                                             // Al escoger un nuevo grupo se guarda el alimento del grupo anterior
                                                                             // colocado en la iteración anterior. Por eso se utiliza 'grupoAnterior' para
                                                                             // crear el alimento, porque 'grupoEscogido' ya ha tomado el valor del
                                                                             // nuevo grupo.
                                                              
-                platoActual.addAlimentoPlato(alimento);                               // Alimento ==> Plato
-                comidaActual.addAlimentoComida(alimento);                             // Alimento ==> Comida
+                platoActual.addAlimentoPlato(alimento);                     // Alimento ==> Plato
+                comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
 
                 pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
                 
         }
+
+        procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
         // ----- FIN ACCIONES --------------------------
 
 
         // ----- INFO PANTALLA -------------------------
-        if((state_prev != STATE_groupA) && (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, plato actual y acumulado)
+        if(showing_escoger_procesamiento or ((state_prev != STATE_groupA) and (state_prev != STATE_groupB))){ // ==> Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, alimento y comida actual)
             tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.
-                                    // Esta tara DEBE hacerse antes de showFullDashboard() para que muestre el peso a 0.      
-            showFullDashboard(true);             
+                                    // Esta tara DEBE hacerse antes de showDashboardStyle2() para que muestre el peso a 0.      
+            showDashboardStyle2();  // Mostrar dashboard al inicio
+            showing_dash = true;    // Mostrando dashboard estilo 2 (Alimento | Comida)
+            showing_just_groups = false;
+            showing_escoger_procesamiento = false;
         }
-        else{   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
-            printGrupoyEjemplos();
+        else if(!showing_escoger_procesamiento and ((state_prev == STATE_groupA) or (state_prev == STATE_groupB))){   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
             tarado = false;        // Desactivar flag de haber 'tarado' 
+            printGrupoyEjemplos(); // Predeterminado 'true' como parámetro para mostrar el grupo
+            showing_dash = false;
+            showing_just_groups = true;
+            showing_escoger_procesamiento = false;
         }
-        // ----- FIN INFO PANTALLA ---------------------
 
+        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
+        // ----- FIN INFO PANTALLA ---------------------
             
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
@@ -529,17 +651,27 @@ void actGruposAlimentos(){
     }
 
 
-    // ----- TIEMPO DE ESPERA ------------------------------
-    if((pesoRecipiente == 0.0) && (pesoPlato == 0.0)){                // Si se escogió grupo sin colocar recipiente y aún no se ha colocado alimento
-        currentTime = millis();
-        if ((currentTime - previousTime) > 5000) {                    // Si han pasado 5 segundos sin colocar alimento, se vuelve a STATE_Empty para pedir recipiente
-            Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
-            eventoBascula = LIBERAR;                                  // Forzar regreso a STATE_Empty para volver a pedir recipiente
-            addEventToBuffer(eventoBascula);
-            flagEvent = true;
+    // ----- ALTERNANCIA PANTALLAS -------------------------
+    currentTime = millis();
+    if(showing_dash or showing_just_groups){ // Se está mostrando dashboard estilo 2 (habiendolo modificado completo o solo Zona 1)
+        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger crudo o cocinado
+            previousTime = currentTime;
+            pedirProcesamiento();
+            showing_dash = false;
+            showing_just_groups = false;
+            showing_escoger_procesamiento = true;  // Mostrando escoger crudo o cocinado
         }
     }
-    // ----- FIN TIEMPO DE ESPERA --------------------------
+    else if(showing_escoger_procesamiento){ // Se está mostrando escoger crudo o cocinado
+        if (currentTime - previousTime >= procesamientoInterval) { // Si el escoger crudo o cocinado ha estado 5 segundos, se cambia a dashboard estilo 2
+            previousTime = currentTime;
+            showDashboardStyle2();
+            showing_dash = true;  // Mostrando dashboard estilo 2 (Alimento | Comida)
+            showing_just_groups = false;
+            showing_escoger_procesamiento = false;
+        }
+    }
+    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 
 }
 
@@ -554,18 +686,17 @@ void actStateRaw(){
         if(state_prev != STATE_raw){
             Serial.println(F("\nAlimento crudo...")); 
             
-            procesado = false;
+            procesamiento = ALIMENTO_CRUDO;
             
             if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
             }
-            
-            // Si se ha dado a add/delete/save, pero finalmente se cancela esa acción, entonces se 
-            // muestra el dashboard completo. Igual en el caso de haber cometido un error (acción incorrecta).
-            if((state_prev == STATE_ERROR) or (state_prev == STATE_CANCEL)) showFullDashboard(true);     // 'true' para mostrar valores reales del Plato actual 
-            else printProcesamiento();                                      // Si se acaba de escoger grupo, el dashboard ya está en pantalla, por lo que 
-                                                                            // solo se modifica la zona 2 (procesamiento) con 'crudo'.
-
+        
+            if(state_prev == STATE_cooked) printProcesamiento(); // => Si se viene de cooked (si viene de raw no se hace nada), se modifica solo zona 2.
+            else showDashboardStyle2();    // => Si se acaba de escoger grupo, el dashboard ya está en pantalla, pero puede ocurrir
+                                           //    que se escoja cocinado mientras se muestra la pantalla de escoger procesamiento.
+                                           //    Por eso, si se viene de cualquier otro estado, se actualiza la pantalla completa, por si ha ocurrido
+                                           //    error, cancelación, aviso o la pantalla temporal de pedir procesamiento.
         }
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
@@ -584,18 +715,17 @@ void actStateCooked(){
         if(state_prev != STATE_cooked){
             Serial.println(F("\nAlimento cocinado...")); 
             
-            procesado = true;
+            procesamiento = ALIMENTO_COCINADO;
             
             if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
             }
             
-            // Si se ha dado a add/delete/save, pero finalmente se cancela esa acción, entonces se 
-            // muestra el dashboard completo. Igual en el caso de haber cometido un error (acción incorrecta).
-            if((state_prev == STATE_ERROR) or (state_prev == STATE_CANCEL)) showFullDashboard(true);     // 'true' para mostrar valores reales del Plato actual 
-            else printProcesamiento();                                      // Si se acaba de escoger grupo, el dashboard ya está en pantalla, por lo que 
-                                                                            // solo se modifica la zona 2 (procesamiento) con 'cocinado'.
-
+            if(state_prev == STATE_raw) printProcesamiento(); // => Si se viene de raw (si viene de cooked no se hace nada), se modifica solo zona 2.
+            else showDashboardStyle2();    // => Si se acaba de escoger grupo, el dashboard ya está en pantalla, pero puede ocurrir
+                                           //    que se escoja cocinado mientras se muestra la pantalla de escoger procesamiento.
+                                           //    Por eso, si se viene de cualquier otro estado, se actualiza la pantalla completa, por si ha ocurrido
+                                           //    error, cancelación, aviso o la pantalla temporal de pedir procesamiento.
         }
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
@@ -617,12 +747,12 @@ void actStateWeighted(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
 
-        // Si se ha dado a add/delete/save, pero finalmente se cancela esa acción, entonces se 
-        // muestra el dashboard completo. Igual en el caso de haber cometido un error (acción incorrecta).
-        if((state_prev == STATE_ERROR) or (state_prev == STATE_CANCEL)) showFullDashboard(false);  // 'false' para mostrar valores temporales del Plato actual según el peso del alimento
-        else printPlatoActual(false);                                   // Si se acaba de escoger grupo y procesamiento, el dashboard ya está en pantalla, por lo que 
-                                                                        // solo se modifica la zona 3 (plato actual) con 'false' para mostrar valores temporales 
-                                                                        // del Plato actual según el peso del alimento.
+        if(state_prev == STATE_weighted){ // Si se está modificando el peso, solo se modifican Zona 3 (alimento actual) y Zona 4 (Comida actual).
+            printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
+            printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
+        } 
+        else showDashboardStyle2();    // => Si se viene de cualquier otro estado, se actualiza la pantalla completa por si se viene de
+                                       //   error, cancelación o aviso.
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -647,7 +777,7 @@ void actStateAddCheck(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        pedirConfirmacion(1);                                               // Mostrar pregunta de confirmación para añadir plato
+        pedirConfirmacion(ASK_CONFIRMATION_ADD);                            // Mostrar pregunta de confirmación para añadir plato
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -725,11 +855,11 @@ void actStateAdded(){
 
 
             /* -----  INFORMACIÓN MOSTRADA  ---------------------------------- */
-            if((state_prev == STATE_ERROR)) showAccionConfirmada(1);   // Mostrar mensaje de plato añadido porque es lo único que ha podido ocurrir previo a un error en este estado
+            if((state_prev == STATE_ERROR)) showAccionConfirmada(CONFIRMATION_ADD);   // Mostrar mensaje de plato añadido porque es lo único que ha podido ocurrir previo a un error en este estado
                                                                        // De esta forma, se sigue pidiendo que se retire el plato.
             else{
                 if(!errorPlatoWasEmpty){  // ==> Si el plato no estaba vacío y se ha guardado/creado otro
-                    showAccionConfirmada(1);            // Mostrar mensaje de plato añadido
+                    showAccionConfirmada(CONFIRMATION_ADD);            // Mostrar mensaje de plato añadido
                 }
                 else{   // ==> Si el plato está vacío, no se crea otro. Si se viene de error tras guardar, saltaría aviso de comida vacía.
                     showWarning(1); // Mostrar aviso de plato vacío y no se crea otro
@@ -806,7 +936,7 @@ void actStateDeleteCheck(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        pedirConfirmacion(2);                                               // Mostrar pregunta de confirmación para eliminar plato
+        pedirConfirmacion(ASK_CONFIRMATION_DELETE);                         // Mostrar pregunta de confirmación para eliminar plato
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -893,11 +1023,11 @@ void actStateDeleted(){
 
 
             /* -----  INFORMACIÓN MOSTRADA  ---------------------------------- */
-            if((state_prev == STATE_ERROR)) showAccionConfirmada(2);   // Mostrar mensaje de plato eliminado porque es lo único que ha podido ocurrir previo a un error en este estado
+            if((state_prev == STATE_ERROR)) showAccionConfirmada(CONFIRMATION_DELETE);   // Mostrar mensaje de plato eliminado porque es lo único que ha podido ocurrir previo a un error en este estado
                                                                        // De esta forma, se sigue pidiendo que se retire el plato.
             else{
                 if(!errorPlatoWasEmpty){   // ==> Si la comida no estaba vacía (incluyendo último alimento) y se ha borrado 
-                    showAccionConfirmada(2);     // Mostrar confirmacion de haber eliminado el plato
+                    showAccionConfirmada(CONFIRMATION_DELETE);     // Mostrar confirmacion de haber eliminado el plato
                 }
                 else{     // ==> Si el plato está vacío, no se borra
                     showWarning(2); // Mostrar aviso de plato vacío y no se borra
@@ -936,109 +1066,6 @@ void actStateDeleted(){
     // ----- FIN TIEMPO DE ESPERA --------------------------
 
 
-
-    /*
-    if(!doneState){
-
-        // -------------------- DELETE RETROACTIVO ------------------------
-        static bool errorComidaWasEmpty;
-        if(state_prev != STATE_deleted){
-            Serial.println(F("\nEliminando plato..."));
-            if((state_prev == STATE_weighted) and (pesoBascula != 0.0)){
-                // Para poder borrar platos retroactivamente, comenzando por el actual, se debe guardar en la comida antes de borrarlo. 
-                // Esto es necesario porque se pueden haber ido metiendo alimento del plato directamente en la comida al escoger
-                // diferentes grupos de alimentos, por eso hay que terminar de incluir el plato para eliminarlo por completo.
-                // -- Se podría tener un ID de plato para que cada alimento esté asignado a ese ID, de forma que no hubiera que
-                // -- terminar de incluir el plato para borrarlo, sino que bastaría con borrar la info de los alimentos relacionados
-                // -- con el plato del mismo ID.
-                Alimento alimento(grupoEscogido, pesoBascula);        // Cálculo automático de valores nutricionales. 
-                                                                    // Usamos 'grupoEscogido' porque no se ha modificado. 
-                platoActual.addAlimentoPlato(alimento);                       // Alimento ==> Plato
-                comidaActual.addAlimentoComida(alimento);                     // Alimento ==> Comida
-            }
-            if(!platoActual.isPlatoEmpty()){    // Si tiene algo, añadir plato actual a la comida. 
-                                                // Se pone aquí por si no ha habido que actualizarlo con último alimento
-                  comidaActual.addPlato(platoActual);      // Plato ==> Comida (no se vuelven a incluir los alimentos. Solo modifica nPlatos)
-            } 
-            // ----------------- BORRAR PLATO CON DELETE RETROACTIVO -------------------------
-            // Caso 1 - Si la comida está vacía (ni siquiera el actual tiene algo), se avisa de que no hay nada que borrar.   
-            // Caso 2 - Si la comida no está vacía, porque haya platos previos o solamente el actual, temporalmente guardado,
-            //           se borra el último.
-
-            if(comidaActual.isComidaEmpty()){ // Caso 1 ==> No queda ningún plato, ni el actual 
-                errorComidaWasEmpty = true;
-
-                if(state_prev == STATE_Empty){
-                    printEmptyObjectWarning("No hay nada que borrar");
-                    
-
-                    // Si se libera la báscula tras addPlato o deletePlato, se vuelve a INI y se quiere seguir borrando,
-                    // se quedaría atascado aquí (delete) esperando una liberación que no llega, ya que el último eventoBascula 
-                    // es TARAR, realizado en INI. 
-                    // Por eso, se debe forzar la liberación (eventoBascula = LIBERAR) tras un delay, para poder
-                    // leer los mensajes de haber borrado o no y luego regresar a INI.
-                    Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
-                    delay(3000);                                    
-                    eventoBascula = LIBERAR;
-                    addEventToBuffer(eventoBascula);
-                    flagEvent = true;
-                }
-                else{                                               // En los otros estados (groupA, groupB, raw, cooked, weighted) habrá recipiente,
-                                                                    // por lo que el regreso a STATE_Empty no es automático, sino que se debe liberar la báscula.
-                    printEmptyObjectWarning("No hay nada que borrar. \n Si ha puesto un recipiente, ret\xED""relo para empezar de nuevo.");
-                }
-            }
-            else{ // Caso 2 ==> Hay algún plato, aunque sea el actual 
-                errorComidaWasEmpty = false;
-        
-                comidaActual.deletePlato();   //Delete último plato, aunque sea el actual (se guarda el actual para poderlo borrar)
-
-                if(!platoActual.isPlatoEmpty()){    // El plato borrado ha sido el actual porque no estaba vacío
-                    pesoPlato += platoActual.getPesoPlato();   // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y
-                                                                // saber el 'pesoARetirar'.
-                    platoActual.restorePlato();    // "Reiniciar" platoActual para usarlo de nuevo.
-                }
-
-                // -----  REGRESO A INI, SE HAYA PODIDO BORRAR O NO  -----
-                // Si se ha borrado el platoActual, se debe LIBERAR la báscula para salir del estado deletePlato y
-                // volver a INI. NO SE PERMITE SEGUIR BORRANDO PLATOS SI NO SE LIBERA ANTES LA BÁSCULA.
-
-                // Si se libera la báscula, se vuelve a INI y se quiere borrar platos previos, se quedaría atascado aquí (deletePlato)
-                // esperando una liberación que no llega, ya que el último eventoBascula es TARAR, realizado en INI.
-                // Por eso, se debe forzar la liberación (eventoBascula = LIBERAR) tras un delay, para poder leer los
-                // mensajes de haber borrado o no y luego regresar a INI.
-                if(state_prev == STATE_Empty){
-                    Serial.print(F("\nLIBERAR forzada. Regreso a INI..."));
-                    delay(2000);  
-                    eventoBascula = LIBERAR;
-                    addEventToBuffer(eventoBascula);
-                    flagEvent = true;
-                } // ------------------------------------------------------- 
-
-            } // --------------------------------------------------------------
-
-        }  
-        else{                                                       // ==> Si se viene del propio STATE_deleted, donde se puede haber tarado.
-            tarado = false;                                         // Desactivar flag de haber 'tarado'.          
-        }
-        
-        // -----  INFORMACIÓN MOSTRADA  ----- 
-        if(!errorComidaWasEmpty){                                    // ==> Si la comida no estaba vacía y se ha borrado algún plato
-            showAccionConfirmada(2);                                 // Mostrar confirmación de haber eliminado el plato
-        } // ---------------------------------- 
-        
-        
-        // --------------------------------------------------------------
-        // -------------- FIN DELETE RETROACTIVO ----------------------------------------------
-        
-
-        
-        doneState = true;                                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
-                                                                    // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                    // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                    // las acciones.
-    }*/
-
 }
 
 
@@ -1057,7 +1084,7 @@ void actStateSaveCheck(){
             tarado = false;                                                 // Desactivar flag de haber 'tarado' 
         }
         
-        pedirConfirmacion(3);                                               // Mostrar pregunta de confirmación para guardar comida
+        pedirConfirmacion(ASK_CONFIRMATION_SAVE);                           // Mostrar pregunta de confirmación para guardar comida
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -1157,13 +1184,13 @@ void actStateSaved(){
 
 
             /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */
-            if(state_prev == STATE_ERROR) showAccionConfirmada(3); 
+            if(state_prev == STATE_ERROR) showAccionConfirmada(CONFIRMATION_SAVE); 
                       // ==> Si ha ocurrido un error, pero no se ha quitado el plato durante la pantalla de error
                       //      Mostrar mensaje de comida guardada porque es lo último que ocurrió previo al error.
                       //      De esta forma, se sigue pidiendo que se retire el plato.
             else{
                 if(!errorComidaWasEmpty){     // ==> Si la comida no estaba vacía y se ha guardado desde Empty, se regresa a Empty
-                    showAccionConfirmada(3);          //  Mostrar confirmación de haber guardado la comida
+                    showAccionConfirmada(CONFIRMATION_SAVE);          //  Mostrar confirmación de haber guardado la comida
                     Serial.println(F("COMIDA GUARDADA"));
                     // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
                     if((pesoRecipiente + pesoPlato) == 0.0) previousTimeComidaSaved = millis();     //  Reiniciar "temporizador" de 3 segundos para, tras guardar, regresar a STATE_Empty.

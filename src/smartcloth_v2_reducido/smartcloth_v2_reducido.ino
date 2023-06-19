@@ -162,7 +162,7 @@ void loop() {
             }
             flagEvent = false;
 
-            Serial.println(F("***********************************"));
+            if(flagEvent) Serial.println(F("***********************************"));
        }
 
         
