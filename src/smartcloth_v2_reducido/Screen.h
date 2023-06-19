@@ -374,7 +374,7 @@ void printGrupoyEjemplos(bool show_group){
     else{
         // Tiempos utilizados para alternar el resaltado del recuadro de los grupos:
         static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
-        const unsigned long interval = 1000;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no
+        const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no
 
         unsigned long currentTime = millis();
 
@@ -433,13 +433,13 @@ void printProcesamiento(){
                                             //  no se ha escogido aún.
         // Tiempos utilizados para alternar el resaltado entre los recuadros de crudo y cocinado aún sin escoger:
         static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
-        const unsigned long interval = 1000;        // Intervalo de tiempo para alternar entre resaltar un recuadro u otro
+        const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar un recuadro u otro
 
         unsigned long currentTime = millis();
 
        /*      
 
-        // ----- ALTERNANCIA RESALTADO CUADROS -------------------------
+        // ----- ALTERNANCIA RESALTADO CUADROS ------------------------- POR SEPARADO
         static bool resaltar_cuadro_cocinado = true;
         static bool resaltar_cuadro_crudo;  
 
@@ -473,7 +473,7 @@ void printProcesamiento(){
                 resaltar_cuadro_crudo = false; 
             }
         }
-        // ----- FIN ALTERNANCIA RESALTADO CUADROS ---------------------*/
+        // ----- FIN ALTERNANCIA RESALTADO CUADROS --------------------- POR SEPARADO */
 
 
         // ----- ALTERNANCIA RESALTADO JUNTOS -------------------------

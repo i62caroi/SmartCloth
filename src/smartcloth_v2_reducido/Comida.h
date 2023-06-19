@@ -33,7 +33,7 @@ class Comida{
   private:
     int                   _nPlatos;                 /**< Número de platos en la comida. */
     float                 _peso;                    /**< Peso total de la comida. */
-    Plato                 _platos[NUM_PLATOS];      /**< Arreglo de platos de la comida. */
+    Plato                 _platos[NUM_PLATOS];      /**< Array de platos de la comida. */
     ValoresNutricionales  _valoresComida;           /**< Valores nutricionales totales de la comida. */
 
     /**
@@ -115,10 +115,7 @@ class Comida{
      */
     void deletePlato(Plato &plato); 
 
-    /**
-     * @brief Elimina el plato actual de la comida (retroactivo).
-     */
-    void deletePlato();
+    //void deletePlato();
 
     /**
      * @brief Actualiza los valores nutricionales de la comida.
@@ -134,6 +131,12 @@ class Comida{
      * @return Los valores nutricionales de la comida
      */
     inline ValoresNutricionales getValoresComida(){ return _valoresComida; }; 
+
+    /**
+     * @brief Copiar los valores de un objeto 'Comida' (valores nutricionales, platos y peso) en el objeto Comida tratado.
+     * @param comida Objeto Comida a copiar
+     */
+    void copyComida(Comida comida); 
 
     /**
      * @brief "Reinicia" la comida, eliminando todos los platos y reiniciando los valores nutricionales.
@@ -187,7 +190,7 @@ void Comida::deletePlato(Plato &plato){
 
 
 // --------------------- DELETE RETROACTIVO -----------------------------------
-void Comida::deletePlato(){
+/*void Comida::deletePlato(){
     // Se decrementa peso de comida según peso completo del plato. 
     this->setPesoComida(this->getPesoComida() - _platos[this->_getLastPositionPlato()].getPesoPlato());        // Decrementar peso de la comida según peso del último plato (actual)
 
@@ -195,7 +198,7 @@ void Comida::deletePlato(){
 
     // Hay que decrementar nPlatos aunque se borre el plato actual porque se ha guardado temporalmente
     this->_setNumPlatos(this->_getNumPlatos() - 1);                                                             // Decrementar número de platos
-}
+}*/
 // ----------------------------------------------------------------------------
 
 
@@ -221,12 +224,21 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
 
 // --------------------------------------------------------------------
 
+// Copiar comida
+void Comida::copyComida(Comida comida){
+    this->_setNumPlatos(comida._getNumPlatos());                  // Nº platos 
+    this->setPesoComida(comida.getPesoComida());                  // Peso
+    this->_valoresComida.setValores(comida.getValoresComida());   // Valores 
+    // No hace falta copiar el array de platos porque esta función solo es para la comida
+    // copiada al guardar la 'comidaActual'
+}
+// --------------------------------------------------------------------
+
 
 // "Reiniciar" comida
 void Comida::restoreComida(){
-    this->_setNumPlatos(0);                                   // Nº platos = 0
+    this->_setNumPlatos(0);                                  // Nº platos = 0
     this->setPesoComida(0.0);                                // Peso = 0.0
-    //ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);
     ValoresNutricionales valAux; //(0.0, 0.0, 0.0, 0.0)
     this->_valoresComida.setValores(valAux);                 // Valores = 0.0
 }
