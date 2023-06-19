@@ -25,7 +25,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 122
+#define RULES 125
 
 #define  ASK_CONFIRMATION_ADD     1
 #define  ASK_CONFIRMATION_DELETE  2
@@ -167,6 +167,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Alimentos grupo A ---
                                         {STATE_groupA,STATE_Empty,LIBERAR},             // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
+                                        {STATE_groupA,STATE_groupA,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_groupA,STATE_groupA,TIPO_A},                
                                         {STATE_groupA,STATE_groupA,QUITAR},             // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
                                         {STATE_groupA,STATE_groupA,TARAR},              // Tarar tras colocar recipiente o alimento   
@@ -178,6 +179,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Alimentos grupo B ---
                                         {STATE_groupB,STATE_Empty,LIBERAR},             // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
+                                        {STATE_groupB,STATE_groupB,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_groupB,STATE_groupB,TIPO_B},                
                                         {STATE_groupB,STATE_groupB,QUITAR},             // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
                                         {STATE_groupB,STATE_groupB,TARAR},              // Tarar cada vez que se escoja grupo. Podría ser tras colocar recipiente o alimento   
@@ -315,6 +317,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_ERROR,STATE_deleted,BACK_TO_DELETED},              // Regresar a STATE_deleted tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_save_check,BACK_TO_SAVE_CHECK},        // Regresar a STATE_save_check tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_saved,BACK_TO_SAVED},                  // Regresar a STATE_saved tras mostrar error cometido allí
+                                        //{STATE_ERROR,STATE_Empty,LIBERAR},                        // Regresar a STATE_Empty tras liberación de báscula durante error
                                         // -----------------------
 
 
@@ -446,6 +449,17 @@ void actStateEmpty(){
                                             // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
 
             procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
+
+            /*if(!platoActual.isPlatoEmpty()){ // ==> Si se regresa a Empty con el plato aún con cosas, es porque no se ha borrado con "Eliminar plato" ni
+                                            //    se ha restaurado con "Añadir plato" o "Guardar comida", sino que se ha retirado de repente en mitad del proceso.
+                                            //    Si ocurre esa liberación tan repentina y cuando no toca (no me refiero a retirarlo tras add/delete/save),
+                                            //    entonces se borra. Lo entiendo como una eliminación forzada del plato. 
+                                            //    Si no se hiciera así, seguiría apareciendo su información en la comida desde el dashboard estilo 1, aunque 
+                                            //    no se hubiera guardado ni eliminado.
+
+                comidaActual.deletePlato(platoActual);    // Borrar plato actual
+                platoActual.restorePlato();               // Restaurar plato
+            }*/
             
             
         }
@@ -467,6 +481,8 @@ void actStateEmpty(){
     // ----- ALTERNANCIA PANTALLAS -------------------------
     currentTime = millis();
     if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+        printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
+        printGrupoyEjemplos(false); // SIN GRUPO --> alternar resaltado de recuadro
         if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir recipiente
             previousTime = currentTime;
             pedirRecipiente();
@@ -557,6 +573,8 @@ void actStatePlato(){
     }
     else{ // Ya no se muestra "Recipiente colocado"
         if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+            printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
+            printGrupoyEjemplos(false); // SIN GRUPO --> alternar resaltado de recuadro
             if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger grupo
                 previousTime = currentTime;
                 pedirGrupoAlimentos();
@@ -619,7 +637,7 @@ void actGruposAlimentos(){
                 
         }
 
-        procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
+        procesamiento = SIN_PROCESAMIENTO;   // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
         // ----- FIN ACCIONES --------------------------
 
 
@@ -634,7 +652,7 @@ void actGruposAlimentos(){
         }
         else if(!showing_escoger_procesamiento and ((state_prev == STATE_groupA) or (state_prev == STATE_groupB))){   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
             tarado = false;        // Desactivar flag de haber 'tarado' 
-            printGrupoyEjemplos(); // Predeterminado 'true' como parámetro para mostrar el grupo
+            printGrupoyEjemplos(); // Predeterminado 'true' como parámetro de la función para mostrar el grupo
             showing_dash = false;
             showing_just_groups = true;
             showing_escoger_procesamiento = false;
@@ -654,6 +672,7 @@ void actGruposAlimentos(){
     // ----- ALTERNANCIA PANTALLAS -------------------------
     currentTime = millis();
     if(showing_dash or showing_just_groups){ // Se está mostrando dashboard estilo 2 (habiendolo modificado completo o solo Zona 1)
+        printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
         if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger crudo o cocinado
             previousTime = currentTime;
             pedirProcesamiento();
@@ -751,7 +770,7 @@ void actStateWeighted(){
             printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
             printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
         } 
-        else showDashboardStyle2();    // => Si se viene de cualquier otro estado, se actualiza la pantalla completa por si se viene de
+        else showDashboardStyle2();    // => Si se viene de cualquier otro estado, se actualiza la pantalla completa (dashboard estilo 2) por si se viene de
                                        //   error, cancelación o aviso.
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no

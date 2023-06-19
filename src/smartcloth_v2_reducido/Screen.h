@@ -348,17 +348,15 @@ void Welcome(){
                     show_group - bool   -->   true (default): mostrar grupo   false: mensaje "Falta grupo"
 ----------------------------------------------------------------------------------------------------------*/
 void printGrupoyEjemplos(bool show_group){    
-    // ---------- GRÁFICOS -------------------
-    // Recuadro grupo y ejemplos
-    tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
-    // ---------- FIN GRÁFICOS ---------------
-
     // -------- TEXTO ------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
     tft.setTextForegroundColor(WHITE); 
 
     if(show_group){
+        // Recuadro grupo y ejemplos
+        tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
         // Título
         tft.setCursor(40,30);
         tft.print("Grupo Actual: ");  // 16x32 escale x1
@@ -375,10 +373,50 @@ void printGrupoyEjemplos(bool show_group){
         // -------- FIN TEXTO --------------------
     }
     else{
-        // Mensaje
-        tft.setCursor(50,50);
-        //tft.print("No se ha seleccionado ning\xFA""n grupo de alimentos");  // 16x32 escale x1
-        tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
+        // Tiempos utilizados para alternar el resaltado del recuadro de los grupos:
+        static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
+        const unsigned long interval = 1000;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no
+
+        unsigned long currentTime = millis();
+
+        static bool resaltar_cuadro_grupos = false;
+
+        static bool write_msg = true;
+
+        // Recuadro grupo y ejemplos
+        //tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
+
+        // ----- ALTERNANCIA RESALTADO -------------------------
+        if(!resaltar_cuadro_grupos){
+          if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+
+                // Recuadro grupo y ejemplos
+                tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
+                // Mensaje
+                tft.setCursor(50,50);
+                tft.setTextForegroundColor(WHITE);
+                tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
+
+                resaltar_cuadro_grupos = true;
+            }
+        }
+        else{
+            if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+                
+                // Resaltar zona de grupos para recordar que no se han escogido
+                tft.drawRoundRect(30,20,932,135,20,RED); // Resaltado x1
+                tft.drawRoundRect(31,21,931,134,20,RED); // Resaltado x2
+                tft.drawRoundRect(32,22,930,133,20,RED); // Resaltado x3
+
+                resaltar_cuadro_grupos = false;
+            }
+        }
+        // ----- FIN ALTERNANCIA RESALTADO ---------------------
+
     }
     
 }
@@ -386,10 +424,53 @@ void printGrupoyEjemplos(bool show_group){
 
 /*---------------------------------------------------------------------------------------------------------
    printProcesamiento(): Zona 2 => Muestra el símbolo de 'crudo' o 'cocinado' según el procesamiento activo
+                                  Si no hay ningún procesamiento activo (SIN_PROCESAMIENTO), se muestran los
+                                  recuadros parpadeando.
 ----------------------------------------------------------------------------------------------------------*/
 void printProcesamiento(){ 
-    if(procesamiento == SIN_PROCESAMIENTO){
-        // ZONA PARPADEANDO PARA INDICAR QUE NO SE HA ESCOGIDO AÚN
+    if(procesamiento == SIN_PROCESAMIENTO){ // Mostrar "parpadenado" los recuadros de crudo y cocinado para recordar que
+                                            //  no se ha escogido aún.
+        // Tiempos utilizados para alternar el resaltado entre los recuadros de crudo y cocinado aún sin escoger:
+        static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
+        const unsigned long interval = 1000;        // Intervalo de tiempo para alternar entre resaltar un recuadro u otro
+
+        unsigned long currentTime = millis();
+
+        static bool resaltar_cuadro_cocinado = true;
+        static bool resaltar_cuadro_crudo;       
+
+        // ----- ALTERNANCIA RESALTADO -------------------------
+        if(resaltar_cuadro_cocinado){
+            if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+
+                tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // Dibujar cuadro cocinado
+                tft.drawRoundRect(937,20,994,74,10,RED); // Resaltado x1 en cuadro cocinado
+                tft.drawRoundRect(938,21,993,73,10,RED); // Resaltado x2 en cuadro cocinado
+                tft.drawRoundRect(939,22,992,72,10,RED); // Resaltado x3 en cuadro cocinado
+                
+                tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // Redibujar cuadro crudo -> eliminar resaltado
+
+                resaltar_cuadro_cocinado = false;
+                resaltar_cuadro_crudo = true;
+            }
+        }
+        else if(resaltar_cuadro_crudo){
+            if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+
+                tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // Redibujar cuadro cocinado -> eliminar resaltado
+
+                tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // Dibujar cuadro crudo
+                tft.drawRoundRect(937,79,994,133,10,RED); // Resaltado x1 en cuadro crudo
+                tft.drawRoundRect(938,80,993,132,10,RED); // Resaltado x2 en cuadro crudo
+                tft.drawRoundRect(939,81,992,131,10,RED); // Resaltado x3 en cuadro crudo
+
+                resaltar_cuadro_cocinado = true; 
+                resaltar_cuadro_crudo = false; 
+            }
+        }
+        // ----- FIN ALTERNANCIA RESALTADO ---------------------
     }
     else{
         // Recuadro cocinado pequeño 
@@ -414,7 +495,6 @@ void printProcesamiento(){
         }
     }
 }
-
 
 
 
@@ -1124,7 +1204,9 @@ void showDashboardStyle1(){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     printGrupoyEjemplos(false);             // Zona 1 - Grupo y ejemplos (siempre 'false' para mostrar "Falta grupo")
-    printProcesamiento();                   // Zona 2 - Procesamiento crudo o cocinado (modo siempre SIN_PROCESAMIENTO)
+
+    // La zona 2 se ha separado para permitir el "parpadeo" de los recuadros indicando que no se ha escogido aún crudo o cocinado
+
     printZona3(SHOW_COMIDA_ACTUAL_ZONA3);   // Zona 3 - Valores comida copiada tras guardar. Al inicio están a 0.
     printZona4(SHOW_ACUMULADO_HOY_ZONA4);   // Zona 4 - Valores Acumulado hoy
 }
@@ -1141,7 +1223,7 @@ void showDashboardStyle2(){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     printGrupoyEjemplos();                  // Zona 1 - Grupo y ejemplos (siempre 'true', que es default, para mostrar grupo escogido)
-    printProcesamiento();                   // Zona 2 - Procesamiento crudo o cocinado (según modo: SIN_PROCESAMIENTO, ALIMENTO_CRUDO o ALIMENTO_COCINADO)
+    printProcesamiento();                   // Zona 2 - Procesamiento crudo o cocinado (según modo: ALIMENTO_CRUDO o ALIMENTO_COCINADO)
     printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
     printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
 }
