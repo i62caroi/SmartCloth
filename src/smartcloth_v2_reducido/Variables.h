@@ -1,3 +1,17 @@
+/** 
+ * @file Variables.h
+ * @brief Contiene algunas variables y declaraciones utilizadas en la máquina de estados.
+ *
+ * @author Irene Casares Rodríguez
+ * @date 14/06/23
+ * @version 1.0
+ *
+ *  Este archivo contiene las definiciones de los estados y eventos, además de las funciones
+ *  realizadas en cada estado y para el funcionamiento de la máquina de estados, incluyendo el
+ *  manejo de errores y avisos.
+ *  
+ */
+
 #ifndef VARIABLES_H
 #define VARIABLES_H
 
@@ -18,11 +32,13 @@ volatile int  buttonMain = 0;
 bool  flagEvent;                   /* Para evitar que marque evento para cada interrupción, ya que
                                      lo marcaría cada medio segundo por la interrupción de la báscula.
                                      Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento) */
+bool  flagError;                   // Aunque ERROR sea un evento, es de diferente naturaleza porque es ficticio, por eso
+                                   // se utiliza una flag diferente para cuando ocurra.
 
 
 
 /*  -----   BÁSCULA  ----- */
-volatile float  weight = 0.0;         // Peso real tomado por ISR
+volatile float  weight = 0.0;         ///< Peso real tomado por ISR
 volatile bool   pesado = false;       // Flag de haber pesado por ISR
 float           pesoBascula = 0.0;    // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
 float           diffWeight = 0.0;     // Diferencia entre peso actual (weight) y peso anterior para ver cambios
@@ -32,7 +48,16 @@ float           pesoARetirar;         // Peso que se debe retirar para liberar l
 HX711           scale;                // Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
 bool            tarado;
+
+/**
+ * \brief Obtiene el peso de la báscula.
+ * \return El peso actual de la báscula.
+ */
 float           weighScale(){ return scale.get_units(1); }
+
+/**
+ * \brief Realiza la tara de la báscula y actualiza el peso base.
+ */
 void            tareScale(){ 
                     scale.tare(1);  //1 toma de valor
                     pesoBascula = weighScale();;
@@ -62,7 +87,7 @@ Diario    diaActual; // Acumulado Hoy
 // Los 8 caracteres no incluyen el path hasta el fichero
 
 // --- FICHERO GUARDAR INFO ---
-char    fileCSV[30] = "data/data-SC.csv"; //dd-mm-yy podría servir
+char    fileCSV[30] = "data/data-SC.csv"; ///< Nombre del archivo para guardar las comidas realizadas
 
 // --- IMAGENES RELOJ ARENA ---
 char    fileReloj1[30]    = "bin/carga/cuarto/reloj1.bin";
@@ -97,8 +122,9 @@ char    fileGrupo1[30]  = "bin/grupo/grupo1.bin";
 char    fileGrupo2[30]  = "bin/grupo/grupo2.bin";
 char    fileGrupo3[30]  = "bin/grupo/grupo3.bin";
 char    fileGrupo4[30]  = "bin/grupo/grupo4.bin";
+char    fileManoR[30]   = "bin/grupo/manoR.bin";
 //char    fileHandW[30]   = "bin/grupo/handW.bin";
-char    fileManoW[30]   = "bin/grupo/manoW.bin";
+//char    fileManoW[30]   = "bin/grupo/manoW.bin";
 
 // --- IMAGENES BOTONES ---
 char    fileBotonAnadir[30]     = "bin/botones/anadir.bin";
@@ -110,11 +136,14 @@ char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
 // --- IMAGENES DASHBOARD ---
 char    fileCocinadoPeq[30]     = "bin/dash/cociPeq.bin";
 char    fileCrudoPeq[30]        = "bin/dash/crudoPeq.bin";
-char    fileKcal[30]            = "bin/dash/kcal.bin";
+//char    fileKcal[30]            = "bin/dash/kcal.bin";
+char    fileKcal20[30]          = "bin/dash/kcal_20.bin";
 
-// --- IMAGENES AVISO/ERROR ---
-char    fileCruz[30]    = "bin/error/cruz.bin";
-//char    fileCruzAll[30] = "bin/error/cruzAll.bin";
+// --- IMAGENES ERROR Y AVISO ---
+char    fileCruz[30]              = "bin/error/cruz.bin";
+char    fileAvisoRed[30]          = "bin/aviso/aviso2R.bin";
+char    fileAvisoDarkOrange[30]   = "bin/aviso/aviso2O.bin";
+
 
 
 /* ------- RTC ------- */

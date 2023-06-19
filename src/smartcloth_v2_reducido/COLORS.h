@@ -3,7 +3,7 @@
  * @brief Librería para definir colores en formato RGB 5:6:5 de 16 bpp (2 bytes/pixel)
  *
  * @author Irene Casares Rodríguez
- * @date 13/06/2023
+ * @date 14/06/2023
  * @version 1.0
  * 
  * Este archivo contiene la definición de varios colores en formato RGB 5:6:5 de 16 bpp.
@@ -71,10 +71,12 @@
 
 // ROJO
 #define   RED           0xF800 // Wireframes añadir, eliminar, guardar, recipiente, grupos, crudo-cocinado
+#define   RED_BUTTON    0xB8C3 // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar...
 #define   LIGHTRED      0xFC10
 #define   DARKRED       0x8000
   // NARANJA
 #define   ORANGE        0xFC80
+#define   DARKORANGE    0xCB20 // 0xC86406 en RGB-8:8:8
 
 // VERDE
 #define   GREEN         0x07E0

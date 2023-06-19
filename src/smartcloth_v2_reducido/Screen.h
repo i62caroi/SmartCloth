@@ -3,7 +3,7 @@
  * @brief Módulo Tarjeta SD
  * 
  * @author Irene Casares Rodríguez
- * @date 13/06/23
+ * @date 16/06/23
  * @version 1.0
  *
  * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
@@ -209,15 +209,16 @@ void    printGrupoyEjemplos();               // Zona 1 => Mostrar nombre de grup
 void    printProcesamiento();                // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo (comienza en crudo) => STATE_raw y STATE_cooked
 void    printPlatoActual(bool definitivo);   // Zona 3 => Mostrar valores del "Plato actual"   =>   true: valores reales  ->  false: valores temporales
 void    printAcumuladoHoy();                 // Zona 4 => Mostrar valores del "Acumulado hoy"
-void    showFullDashboard();                 // Mostrar dashboard completo (zonas 1-4)  =>  STATE_GroupA, STATE_GroupB y STATE_weighted
+void    showFullDashboard(bool definitivo);  // Mostrar dashboard completo (zonas 1-4)  =>  STATE_GroupA, STATE_GroupB y STATE_weighted. 'definitivo' para pasarlo a printPlatoActual()
 // --- pantallas transitorias ---
 void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Empty
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
-void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check, STATE_delete_check y STATE_save_check
-void    showAccionConfirmada(int option); // Mensaje general de confirmación   =>  STATE_add_check, STATE_delete_check y STATE_save_check
+void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
+void    showAccionConfirmada(int option); // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showAccionCancelada();            // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
 // --- Errores o avisos ---
-void    printEventError(String msg);
-void    printEmptyObjectWarning(String msg);
+void    showError(int option);            // Pantalla de error con mensaje según estado (del 1 al 13)
+void    showWarning(int option);          // Warning de acción inncesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // --- Carga de imágenes ---
 void    loadPicturesShowHourglass();   // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloje de arena (hourglass)
 void    putReloj1();
@@ -337,7 +338,7 @@ void printGrupoyEjemplos(){
     tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
 
     // Recuadros procesamiento
-    printProcesamiento(); // imagen de 'crudo' o 'cocinado' según procesamiento activo (comienza en crudo)
+    //printProcesamiento(); // imagen de 'crudo' o 'cocinado' según procesamiento activo (comienza en crudo)
     // ---------- FIN GRÁFICOS ---------------
 
 
@@ -397,8 +398,9 @@ void printProcesamiento(){
    printPlatoActual(): Zona 3 => Muestra los valores nutricionales del "Plato actual"
 ----------------------------------------------------------------------------------------------------------*/
 void printPlatoActual(bool definitivo){ // true --> valores reales    false --> valores temporales
-    // ------------- PLATO ACTUAL  -------------------------------------------
-    // ---------- GRÁFICOS -------------------
+    float raciones;
+
+    // ---------- GRÁFICOS ---------------------------------------------------------------------------------------- 
     // Recuadro "Plato actual"
     tft.fillRoundRect(30,145,504,580,20,GRIS_CUADROS); // 474 x 425
     tft.drawRoundRect(30,145,504,580,20,AZUL_BORDE_CUADRO); // Borde => 474 x 425
@@ -413,12 +415,14 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
     // Recuadro Raciones Grasas
     tft.fillRoundRect(401,442,479,499,10,GRIS_CUADROS_VALORES); // 78 x 57
 
-     // Dibujo kcal
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
-    // ---------- FIN GRÁFICOS ---------------
+    // Dibujo kcal
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,127,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
+    // ---------- FIN GRÁFICOS ------------------------------------------------------------------------------------ 
 
 
-    // -------- TEXTO ------------------------
+
+    // -------- TEXTO --------------------------------------------------------------------------------------------- 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  // 12x24 escale x2
     tft.setTextForegroundColor(WHITE); 
@@ -428,14 +432,13 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
     tft.print("Plato actual");  // 12x24 escale x2
 
     // Peso
-    tft.setCursor(50,220);
-    tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); 
+    tft.setCursor(50,220); 
     tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("Peso: "); tft.print(pesoBascula); tft.print("g"); // 12x24 escale x2 solo altura
+    tft.print("PESO: "); tft.print(pesoBascula,1); tft.print("g"); // 12x24 escale x2 
 
 
-    // ------ VALORES A MOSTRAR -----------------
+
+    // ------ VALORES A MOSTRAR -----------------------------------------------------------------
     // Se mostrarán los valores de la comida actual real o de la temporal con los valores no definitivos del alimento pesado
     ValoresNutricionales valores; // Valores a mostrar
     if(definitivo){ // Valores reales y definitivos de la comida actual
@@ -449,80 +452,120 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
         float kcal = AlimentoAux.getValoresAlimento().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
         valores.setValores(carb, lip, prot, kcal); // Calcula raciones automáticamente a partir de los valores
     }
-    // --------------------------------------------
+    // -------------------------------------------------------------------------------------------
 
 
-    // ---- VALORES --------- 
+
+    // ---- VALORES ------------------------------------------------------------------------------ 
     tft.selectInternalFont(RA8876_FONT_SIZE_32); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
-    // Carbohidratos
-    tft.setCursor(50,293);
+    // ------------ Carbohidratos ------------
+    tft.setCursor(50,303);
     tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("Carbohidratos: "); tft.print(valores.getCarbValores()); tft.print("g");  // 16x32 escale x1
+    tft.print("CARBOHIDRATOS: "); tft.print(valores.getCarbValores(),1); tft.print("g");  // 16x32 escale x1
     
-    // Proteinas
-    tft.setCursor(50,370);
+    // ------------ Proteinas ------------
+    tft.setCursor(50,380);
     tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("Prote\xED""nas: "); tft.print(valores.getProtValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("PROTE\xCD""NAS: "); tft.print(valores.getProtValores(),1); tft.print("g"); // 16x32 escale x1
     
-    // Grasas
-    tft.setCursor(50,447);
+    // ------------ Grasas ------------
+    tft.setCursor(50,457);
     tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("Grasas: "); tft.print(valores.getLipValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("GRASAS: "); tft.print(valores.getLipValores(),1); tft.print("g"); // 16x32 escale x1
     
-    // Kcal
-    tft.setCursor(207,516);
+    // ------------ Kcal ------------
+    tft.setCursor(197,516);
     tft.setTextForegroundColor(ROJO_KCAL); 
-    tft.print(valores.getKcalValores()); tft.print(" Kcal"); // 16x32 escale X1
-    // ----- FIN VALORES ----
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.print(valores.getKcalValores(),0); tft.print(" Kcal"); // 12x24 escale X2
+    // ----- FIN VALORES ------------------------------------------------------------------------- 
 
 
-    // ---- RACIONES ------ 
+
+    // ---- RACIONES ----------------------------------------------------------------------------- 
     // Texto "Raciones"
-    tft.setCursor(370,243);
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
     tft.setTextForegroundColor(WHITE);
+    tft.setCursor(370,243);
     tft.print("Raciones"); // 16x32 escale x1
+
 
     // Cambiamos el tamaño de texto para los valores de Raciones. A continuación se cambia la escala según el caso.
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
 
-    // Raciones de Carbohidratos
-    tft.setCursor(416,293);
-    if (fmod(valores.getCarbRaciones(), 1.0) == 0){
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-        tft.print(valores.getCarbRaciones(),0); // Si termina en .0 no lo mostramos. 12x24 escale x2
+
+    // ------------ Raciones de Carbohidratos ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    raciones = valores.getCarbRaciones();
+    if (fmod(raciones, 1.0) == 0){ // Termina en .0
+        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(426,293); // Una cifra entera
+        else tft.setCursor(416,293); // 2 cifras enteras
+        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     }  
-    else{
-          tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); 
-          tft.print(valores.getCarbRaciones(),1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    else{ // Termina en .5
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(406,293);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(416,293); 
+        }          
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
 
     } 
 
-    // Raciones de Proteinas
-    tft.setCursor(416,370);
-    if (fmod(valores.getProtRaciones(), 1.0) == 0){
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(valores.getProtRaciones(),0); // Si termina en .0 no lo mostramos. 12x24 escale x2
+
+    // ------------ Raciones de Proteinas ------------ 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    raciones = valores.getProtRaciones();
+    if (fmod(raciones, 1.0) == 0){ // Termina en .0
+        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(426,370); // Una cifra entera
+        else tft.setCursor(416,370); // 2 cifras enteras
+        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     } 
-    else{
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
-        tft.print(valores.getProtRaciones(),1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    else{ // Termina en .5
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(406,370);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(416,370); 
+        } 
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
 
-    // Raciones de Grasas
-    tft.setCursor(416,447);
-    if (fmod(valores.getLipRaciones(), 1.0) == 0){
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(valores.getLipRaciones(),0); // Si termina en .0 no lo mostramos. 12x24 escale x2
+
+    // ---------- Raciones de Grasas ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    raciones = valores.getLipRaciones();
+    if (fmod(raciones, 1.0) == 0){ // Termina en .0
+        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(426,447); // Una cifra entera
+        else tft.setCursor(416,447); // 2 cifras enteras
+        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
 
     } 
-    else{
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(valores.getLipRaciones(),1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    else{ // Termina en .5
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(406,447);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(416,447); 
+        }   
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
-    // ---- FIN RACIONES ----
-    // -------- FIN TEXTO --------------------
+    // ---- FIN RACIONES ------------------------------------------------------------------------- 
+    // -------- FIN TEXTO ------------------------------------------------------------------------
 
 }
 
@@ -531,8 +574,9 @@ void printPlatoActual(bool definitivo){ // true --> valores reales    false --> 
    printAcumuladoHoy(): Zona 4 => Muestra los valores nutricionales del "Acumulado hoy"
 ----------------------------------------------------------------------------------------------------------*/
 void printAcumuladoHoy(){   
-    // ------------- ACUMULADO HOY  -------------------------------------------
-    // ---------- GRÁFICOS -------------------
+    float raciones;
+
+    // ---------- GRÁFICOS --------------------------------------------------------------------------------------
     // Recuadro "Acumulado hoy"
     tft.fillRoundRect(520,145,994,580,20,GRIS_CUADROS); // 474 x 425
 
@@ -546,10 +590,12 @@ void printAcumuladoHoy(){
     tft.fillRoundRect(891,442,969,499,10,GRIS_CUADROS_VALORES); // 78 x 57
 
     // kcal
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
-    // ---------- FIN GRÁFICOS ---------------
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,617,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
+    // ---------- FIN GRÁFICOS ----------------------------------------------------------------------------------
 
-    // -------- TEXTO ------------------------
+
+    // -------- TEXTO -------------------------------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
     tft.setTextForegroundColor(WHITE); 
@@ -560,82 +606,120 @@ void printAcumuladoHoy(){
 
     // Peso
     tft.setCursor(540,220);
-    tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);
     tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("Peso: "); tft.print(diaActual.getPesoDiario()); tft.print("g"); // 12x24 escale x2
+    tft.print("PESO: "); tft.print(diaActual.getPesoDiario(),1); tft.print("g"); // 12x24 escale x2
 
 
-    // ---- VALORES --------- 
+
+    // ---- VALORES ----------------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_32); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
-    // Carbohidratos
-    tft.setCursor(540,293);
+    // ------------ Carbohidratos ------------
+    tft.setCursor(540,303);
     tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("Carbohidratos: "); tft.print(diaActual.getValoresDiario().getCarbValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("CARBOHIDRATOS: "); tft.print(diaActual.getValoresDiario().getCarbValores(),1); tft.print("g"); // 16x32 escale x1
     
-    // Proteinas
-    tft.setCursor(540,370);
+    // ------------ Proteinas ------------
+    tft.setCursor(540,380);
     tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("Prote\xED""nas: "); tft.print(diaActual.getValoresDiario().getProtValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("PROTE\xCD""NAS: "); tft.print(diaActual.getValoresDiario().getProtValores(),1); tft.print("g"); // 16x32 escale x1
     
-    // Grasas
-    tft.setCursor(540,447);
+    // ------------ Grasas ------------
+    tft.setCursor(540,457);
     tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("Grasas: "); tft.print(diaActual.getValoresDiario().getLipValores()); tft.print("g"); // 16x32 escale x1
+    tft.print("GRASAS: "); tft.print(diaActual.getValoresDiario().getLipValores(),1); tft.print("g"); // 16x32 escale x1
     
-    // Kcal
+    // ------------ Kcal ------------
     tft.setCursor(697,516);
     tft.setTextForegroundColor(ROJO_KCAL); 
-    tft.print(diaActual.getValoresDiario().getKcalValores()); tft.print(" Kcal"); // 16x32 escale X1
-    // ----- FIN VALORES ----
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+    tft.print(diaActual.getValoresDiario().getKcalValores(),0); tft.print(" Kcal"); // 12x24 escale X2
+    // ----- FIN VALORES -----------------------------------------------------------------------
 
 
-    // ---- RACIONES ------ 
+
+    // ---- RACIONES ---------------------------------------------------------------------------
     // Texto "Raciones"
-    tft.setCursor(860,243);
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
     tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(860,243);
     tft.print("Raciones"); // 16x32 escale x1
+
 
     // Cambiamos el tamaño de texto para los valores de Raciones. A continuación se cambia la escala según el caso.
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
 
-    // Raciones de Carbohidratos
-    tft.setCursor(906,293);
-    if (fmod(diaActual.getValoresDiario().getCarbRaciones(), 1.0) == 0) {
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(diaActual.getValoresDiario().getCarbRaciones(),0); // Si termina en .0 no lo mostramos. 12x24 escale x2
+
+    // ------------ Raciones de Carbohidratos ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    raciones = diaActual.getValoresDiario().getCarbRaciones();
+    if (fmod(raciones, 1.0) == 0){ // Termina en .0
+        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,293); // Una cifra entera
+        else tft.setCursor(906,293); // 2 cifras enteras
+        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     }
-    else{
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(diaActual.getValoresDiario().getCarbRaciones(),1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    else{ // Termina en .5
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(896,293);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(906,293); 
+        }          
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
 
-    // Raciones de Proteinas
-    tft.setCursor(906,370);
-    if (fmod(diaActual.getValoresDiario().getProtRaciones(), 1.0) == 0){
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(diaActual.getValoresDiario().getProtRaciones(),0); // Si termina en .0 no lo mostramos. 12x24 escale x2
+
+    // ------------ Raciones de Proteinas ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    raciones = diaActual.getValoresDiario().getProtRaciones();
+    if (fmod(raciones, 1.0) == 0){ // Termina en .0
+        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,370); // Una cifra entera
+        else tft.setCursor(906,370); // 2 cifras enteras
+        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     } 
-    else{
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(diaActual.getValoresDiario().getProtRaciones(),1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    else{ // Termina en .5
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(896,370);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(906,370); 
+        } 
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
 
-    // Raciones de Grasas
-    tft.setCursor(906,447);
-    if (fmod(diaActual.getValoresDiario().getLipRaciones(), 1.0) == 0){
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(diaActual.getValoresDiario().getLipRaciones(),0); // Si termina en .0 no lo mostramos. 12x24 escale x2
+
+    // ------------ Raciones de Grasas ------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    raciones = diaActual.getValoresDiario().getLipRaciones();
+    if (fmod(raciones, 1.0) == 0){ // Termina en .0
+        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,447); // Una cifra entera
+        else tft.setCursor(906,447); // 2 cifras enteras
+        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
     } 
-    else{
-      tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2);  
-      tft.print(diaActual.getValoresDiario().getLipRaciones(),1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    else{ // Termina en .5
+        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+            tft.setCursor(896,447);
+        } 
+        else{ // 2 cifras enteras
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
+            tft.setCursor(906,447); 
+        }   
+        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    
     }
-    // ---- FIN RACIONES ----
-    // -------- FIN TEXTO --------------------
-    // -------------- FIN ACUMULADO HOY ---------------------------------------
+    // ---- FIN RACIONES -----------------------------------------------------------------------
+    // -------- FIN TEXTO ---------------------------------------------------------------------------------------
 }
 
 
@@ -643,12 +727,13 @@ void printAcumuladoHoy(){
    showFullDashboard(): Muestra grupo de alimentos y sus ejemplos, valores nutricionales y raciones de la 
                         comida actual ("Plato actual") y del día ("Acumulado hoy")
 ----------------------------------------------------------------------------------------------------------*/
-void showFullDashboard(){
+void showFullDashboard(bool definitivo){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
-    printGrupoyEjemplos();        // 1 - Grupo y ejemplos. Incluye printProcesamiento() -> crudo/cocinado
-    printPlatoActual(true);       // 2 - Valores Plato actual ('true' para mostrar valores reales del plato, no temporales)
-    printAcumuladoHoy();          // 3 - Valores Acumulado hoy
+    printGrupoyEjemplos();        // Zona 1 - Grupo y ejemplos
+    printProcesamiento();         // Zona 2 - Procesamiento crudo o cocinado
+    printPlatoActual(definitivo); // Zona 3 - Valores Plato actual ('true' para mostrar valores reales del plato, 'false' para temporales según peso actual)
+    printAcumuladoHoy();          // Zona 4 - Valores Acumulado hoy
 }
 
 
@@ -731,6 +816,9 @@ void pedirGrupoAlimentos(){
     // ------ LINEA ---------
     tft.fillRoundRect(252,200,764,208,3,WHITE);
     // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
     tft.setCursor(170, 258);
     tft.println("RECIPIENTE COLOCADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
     // ------ LINEA ---------
@@ -775,28 +863,44 @@ void pedirGrupoAlimentos(){
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
     delay(400);
     // ----------------------------------------------------------------------------------------------------
-
+/*
     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-    tft.drawRoundRect(556,288,680,413,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(555,287,681,414,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(554,286,682,415,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(553,285,683,416,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(552,284,684,417,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(551,283,685,418,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(550,282,686,419,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(549,281,687,420,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(548,280,688,421,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(547,279,689,422,20,YELLOW); // Alrededor de grupo3
-    tft.drawRoundRect(546,278,690,423,20,YELLOW); // Alrededor de grupo3
+    tft.drawRoundRect(556,288,680,413,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(555,287,681,414,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(554,286,682,415,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(553,285,683,416,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(552,284,684,417,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(551,283,685,418,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(550,282,686,419,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(549,281,687,420,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(548,280,688,421,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(547,279,689,422,20,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRoundRect(546,278,690,423,20,RED_BUTTON); // Alrededor de grupo3
+    // ----------------------------------------------------------------------------------------------------
+    */
+
+    // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    tft.drawRect(556,288,680,413,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(555,287,681,414,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(554,286,682,415,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(553,285,683,416,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(552,284,684,417,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(551,283,685,418,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(550,282,686,419,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(549,281,687,420,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(548,280,688,421,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(547,279,689,422,RED_BUTTON); // Alrededor de grupo3
+    tft.drawRect(546,278,690,423,RED_BUTTON); // Alrededor de grupo3
     // ----------------------------------------------------------------------------------------------------
 
 
     // ------------ MANO (120x129) -----------------------------------------------------------------------------------
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,RED); // manoR (120x129)
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,GREEN_HAND); // manoG (120x129)
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,370,120,127,RED); // manoR (120x129)
     // ----------------------------------------------------------------------------------------------------
 }
 
@@ -865,44 +969,76 @@ void pedirConfirmacion(int option){
     }
     delay(800);
     // ----------------------------------------------------------------------------------------------------
-
+/*
     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
     if(option == 3){ // Guardar
-        tft.drawRoundRect(425,453,590,575,20,YELLOW); // Alrededor de botón guardar
-        tft.drawRoundRect(424,452,591,576,20,YELLOW); 
-        tft.drawRoundRect(423,451,592,577,20,YELLOW); 
-        tft.drawRoundRect(422,450,593,578,20,YELLOW); 
-        tft.drawRoundRect(421,449,594,579,20,YELLOW); 
-        tft.drawRoundRect(420,448,595,580,20,YELLOW); 
-        tft.drawRoundRect(419,447,596,581,20,YELLOW); 
-        tft.drawRoundRect(418,446,597,582,20,YELLOW); 
-        tft.drawRoundRect(417,445,598,583,20,YELLOW); 
-        tft.drawRoundRect(416,444,599,584,20,YELLOW); 
-        tft.drawRoundRect(415,443,600,585,20,YELLOW); 
+        tft.drawRoundRect(425,453,590,575,20,RED_BUTTON); // Alrededor de botón guardar
+        tft.drawRoundRect(424,452,591,576,20,RED_BUTTON); 
+        tft.drawRoundRect(423,451,592,577,20,RED_BUTTON); 
+        tft.drawRoundRect(422,450,593,578,20,RED_BUTTON); 
+        tft.drawRoundRect(421,449,594,579,20,RED_BUTTON); 
+        tft.drawRoundRect(420,448,595,580,20,RED_BUTTON); 
+        tft.drawRoundRect(419,447,596,581,20,RED_BUTTON); 
+        tft.drawRoundRect(418,446,597,582,20,RED_BUTTON); 
+        tft.drawRoundRect(417,445,598,583,20,RED_BUTTON); 
+        tft.drawRoundRect(416,444,599,584,20,RED_BUTTON); 
+        tft.drawRoundRect(415,443,600,585,20,RED_BUTTON); 
     }
     else{ // Añadir y eliminar
-        tft.drawRoundRect(425,413,590,535,20,YELLOW); // Alrededor de botón añadir o eliminar
-        tft.drawRoundRect(424,412,591,536,20,YELLOW); 
-        tft.drawRoundRect(423,411,592,537,20,YELLOW); 
-        tft.drawRoundRect(422,410,593,538,20,YELLOW); 
-        tft.drawRoundRect(421,409,594,539,20,YELLOW); 
-        tft.drawRoundRect(420,408,595,540,20,YELLOW); 
-        tft.drawRoundRect(419,407,596,541,20,YELLOW); 
-        tft.drawRoundRect(418,406,597,542,20,YELLOW); 
-        tft.drawRoundRect(417,405,598,543,20,YELLOW); 
-        tft.drawRoundRect(416,404,599,544,20,YELLOW); 
-        tft.drawRoundRect(415,403,600,545,20,YELLOW); 
+        tft.drawRoundRect(425,413,590,535,20,RED_BUTTON); // Alrededor de botón añadir o eliminar
+        tft.drawRoundRect(424,412,591,536,20,RED_BUTTON); 
+        tft.drawRoundRect(423,411,592,537,20,RED_BUTTON); 
+        tft.drawRoundRect(422,410,593,538,20,RED_BUTTON); 
+        tft.drawRoundRect(421,409,594,539,20,RED_BUTTON); 
+        tft.drawRoundRect(420,408,595,540,20,RED_BUTTON); 
+        tft.drawRoundRect(419,407,596,541,20,RED_BUTTON); 
+        tft.drawRoundRect(418,406,597,542,20,RED_BUTTON); 
+        tft.drawRoundRect(417,405,598,543,20,RED_BUTTON); 
+        tft.drawRoundRect(416,404,599,544,20,RED_BUTTON); 
+        tft.drawRoundRect(415,403,600,545,20,RED_BUTTON); 
+    }
+    // ----------------------------------------------------------------------------------------------------
+    */
+
+    // ------------ CUADRADO ESQUINADO (PULSACION) -------------------------------------------------------
+    tft.canvasImageStartAddress(PAGE1_START_ADDR);
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    if(option == 3){ // Guardar
+        tft.drawRect(425,453,590,575,RED_BUTTON); // Alrededor de botón guardar
+        tft.drawRect(424,452,591,576,RED_BUTTON); 
+        tft.drawRect(423,451,592,577,RED_BUTTON); 
+        tft.drawRect(422,450,593,578,RED_BUTTON); 
+        tft.drawRect(421,449,594,579,RED_BUTTON); 
+        tft.drawRect(420,448,595,580,RED_BUTTON); 
+        tft.drawRect(419,447,596,581,RED_BUTTON); 
+        tft.drawRect(418,446,597,582,RED_BUTTON); 
+        tft.drawRect(417,445,598,583,RED_BUTTON); 
+        tft.drawRect(416,444,599,584,RED_BUTTON); 
+        tft.drawRect(415,443,600,585,RED_BUTTON); 
+    }
+    else{ // Añadir y eliminar
+        tft.drawRect(425,413,590,535,RED_BUTTON); // Alrededor de botón añadir o eliminar
+        tft.drawRect(424,412,591,536,RED_BUTTON); 
+        tft.drawRect(423,411,592,537,RED_BUTTON); 
+        tft.drawRect(422,410,593,538,RED_BUTTON); 
+        tft.drawRect(421,409,594,539,RED_BUTTON); 
+        tft.drawRect(420,408,595,540,RED_BUTTON); 
+        tft.drawRect(419,407,596,541,RED_BUTTON); 
+        tft.drawRect(418,406,597,542,RED_BUTTON); 
+        tft.drawRect(417,405,598,543,RED_BUTTON); 
+        tft.drawRect(416,404,599,544,RED_BUTTON); 
+        tft.drawRect(415,403,600,545,RED_BUTTON); 
     }
     // ----------------------------------------------------------------------------------------------------
 
 
     // ------------ MANO -----------------------------------------------------------------------------------
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); // manoR (120x129)
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); // manoG (120x129)
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,1,PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,127,RED); // manoR (120x129)
     // ----------------------------------------------------------------------------------------------------
 
 }
@@ -923,6 +1059,7 @@ void showAccionConfirmada(int option){
     // ----- TEXTO (ACCION REALIZADA) ---------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
 
     switch (option){
       case 1: tft.setCursor(170, 208); tft.println("NUEVO PLATO A\xD1""ADIDO"); break; // PLATO AÑADIDO
@@ -970,6 +1107,25 @@ void showAccionConfirmada(int option){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   showAccionCancelada(): Indica que se ha cancelado la acción de añadir, eliminar o guardar.
+                          Puede ser indicado por el usuario o por time-out de 10 segundos.
+----------------------------------------------------------------------------------------------------------*/
+void showAccionCancelada(){
+    // ----- TEXTO (ACCION CANCELADA) -----------------------------------
+    tft.clearScreen(RED);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,200,764,208,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(220, 258);
+    tft.println("ACCI\xD3""N CANCELADA"); // 12x24 escalado x3
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,380,764,388,3,WHITE);
+    // -------------------------------------------------------------------
+}
 
 
 
@@ -979,61 +1135,183 @@ void showAccionConfirmada(int option){
 /*-------------------------------------- ERRORES POR ESTADO ---------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
 
-/*---------------------------------------------------------------------------------------------------------
-   printEventError(): Información de error según estado
-          Parámetros:
-                msg - String => mensaje mostrado según el estado
-----------------------------------------------------------------------------------------------------------*/
-void printEventError(String msg){    
-    cad = "\xA1""ACCI\xD3N INCORRECTA\x21""";
-    
-    //tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest,color) ==> Limpiar zona superior de Ejemplos y Grupo
-    
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(300, 50);                            // Posicion inicio texto
-    tft.setTextColor(RED);                        // Color texto
-    tft.setTextScale(1);        
-    tft.print(cad);                                  // Imprimir texto
 
-    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    //tft.setTextScale(0);        
-    tft.setCursor(MARGEN_IZQ, 120);                             
-    tft.setTextColor(CYAN);                                
-    tft.print(msg);           
+/*---------------------------------------------------------------------------------------------------------
+   showError(): Pantalla genérica de error que indica una acción incorrecta. Según la opción indicada como
+                parámetro, dependiente del estado actual, se muestra un mensaje diferente de acción posible.
+          Parámetros:
+                option - int -> 1: Empty        2: Plato          3: grupoA       4: grupoB   5: Crudo    
+                                6: Cocinado     7: Pesado         8: add_check    9: Added    10: delete_check     
+                                11: Deleted     12: save_check    13: Saved
+----------------------------------------------------------------------------------------------------------*/
+void showError(int option){ 
+    // cruz
+    tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+    tft.sdCardDraw16bppBIN256bits(0,292,114,127,fileCruz); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+
+    // ----- TEXTO (ERROR) --------------------------------------------------------------------------------
+    tft.clearScreen(RED); // Fondo rojo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(170, 100);
+    tft.println("\xA1""ACCI\xD3""N INCORRECTA\x21""");
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ CRUZ --------------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127); // Mostrar cruz (114x127) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    // Por encima de la imagen de cruz para no tener que cuadrarla con la línea de la imagen
+    tft.fillRoundRect(252,290,764,298,3,WHITE);
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (SUGERENCIA SEGÚN ESTADO ACTUAL) ------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    switch (option){
+      case 1: // Empty
+              tft.setCursor(160, 420);                                     tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
+              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); 
+              break;
+
+      case 2: // Plato
+              tft.setCursor(160, 420);                                     tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
+              tft.setCursor(120, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE ESCOGER COCINADO O CRUDO"); 
+              break;
+
+      case 3: // grupoA
+              tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
+              tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
+              break;
+
+      case 4: // grupoB
+              tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
+              tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
+              break;
+
+      case 5: // Crudo
+              tft.setCursor(100, 450);                                     tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA");  
+              break;
+
+      case 6: // Cocinado
+              tft.setCursor(100, 450);                                     tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA"); 
+              break;
+
+      case 7: // Pesado
+              tft.setCursor(140, 420);                                     tft.println("ESCOJA GRUPO PARA OTRO ALIMENTO,"); 
+              tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());   tft.print("A\xD1""ADA OTRO PLATO O GUARDE LA COMIDA"); 
+              break;
+
+      case 8: // add_check
+              tft.setCursor(70, 420);                                     tft.println("PULSE \"A\xD1""ADIR\" DE NUEVO PARA CONFIRMAR"); 
+              tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
+              break;
+      
+      case 9: // Added
+              tft.setCursor(50, 450);                                        tft.println("RETIRE EL PLATO PARA COMENZAR UNO NUEVO");  
+              break;
+
+      case 10: // delete_check
+              tft.setCursor(60, 420);                                     tft.println("PULSE \"BORRAR\" DE NUEVO PARA CONFIRMAR"); 
+              tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
+              break;
+
+      case 11: // Deleted
+              tft.setCursor(130, 450);                                    tft.println("RETIRE EL PLATO QUE HA ELIMINADO"); 
+              break;
+
+      case 12: // save_check
+              tft.setCursor(50, 420);                                     tft.println("PULSE \"GUARDAR\" DE NUEVO PARA CONFIRMAR"); 
+              tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());   tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
+              break;
+
+      case 13: // Saved
+              tft.setCursor(155, 450);                                        tft.println("RETIRE EL PLATO PARA CONTINUAR");  
+              break;
+    }
+    // ----------------------------------------------------------------------------------------------------  
+
 }
 
 
 
+
 /*---------------------------------------------------------------------------------------------------------
-   printEmptyObjectWarning(): Información de aviso por intentar guardar/borrar plato o comida estando vacíos
-          Parámetros:
-                msg - String => mensaje mostrado según el estado
+   showWarning(): Pantalla genérica para avisar de que no se ha realizado la acción porque 
+                  no era necesaria. Solo para casos de añadir, eliminar o guardar. 
+        Parámetros: 
+            option  - int -> 1: añadir   2: eliminar   3: guardar
 ----------------------------------------------------------------------------------------------------------*/
-void printEmptyObjectWarning(String msg){    
-    cad = "\xA1""\xA1""AVISO\x21""\x21""";
-    
-    //tft.clearScreen(0);                                // Limpiar
-    tft.clearArea(0,0,tft.getWidth(),195,0); //(xOrig, yOrig, xDest, yDest,color) ==> Limpiar zona superior de Ejemplos y Grupo
-    
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);       // Tamaño texto
-    tft.setCursor(350, 50);                            // Posicion inicio texto
-    tft.setTextColor(YELLOW);                        // Color texto
-    tft.setTextScale(1);        
-    tft.print(cad);                                  // Imprimir texto
+void showWarning(int option){
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
 
-    //tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.selectInternalFont(RA8876_FONT_SIZE_16);
-    //tft.setTextScale(0);        
-    tft.setCursor(MARGEN_IZQ, 120);                             
-    //tft.setTextColor(CIAN);                                
-    tft.print(msg);           
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+
+    tft.setCursor(384, 100);
+    tft.println("\xA1""AVISO\x21""");
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,286,764,294,3,WHITE); // Cruza la imagen de aviso por detrás
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+
+    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
+    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
+    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
+    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
+    // al modificar el punto de inicio de la imagen en PAGE3. 
+
+    // aviso2 
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,230,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    switch (option){
+      case 1: // AÑADIR
+              tft.setCursor(150, 410);                                      tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
+              break;
+
+      case 2: // ELIMINAR
+              tft.setCursor(180, 410);                                      tft.println("NO SE HA ELIMINADO EL PLATO"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
+              break;
+
+      case 3: // BOTÓN GUARDAR
+              tft.setCursor(190, 410);                                      tft.println("NO SE HA GUARDADO LA COMIDA"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
+              break;
+    }
+    // ----------------------------------------------------------------------------------------------------  
+
+
+    
 }
-
-
-
-
 
 
 
@@ -1232,10 +1510,11 @@ void loadPicturesShowHourglass(){
       // Esta otra imagen con la mano roja y el fondo blanco se filtra mejor. Aunque queden residuos de
       // blanco en el borde de la figura, no queda mal.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
 
-      // Otra imagen de mano roja con fondo blanco
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoW);    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileHandW);    // Cargar handW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoW);    // Cargar manoW (120x129) en PAGE3   =>  x  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      
+      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoR);    // Cargar manoR (120x129) en PAGE3  =>  x  =  <manoR  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
       
       putRelojGirado3(); // Mostrar relGir3 en PAGE1 
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
@@ -1275,34 +1554,48 @@ void loadPicturesShowHourglass(){
     // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
 
 
-    // --------- ERRORES ---------------------------------------------------------------------------------
-       // cruz
+    
+    // --------- ERROR / AVISO ---------------------------------------------------------------------------
+      // error
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(0,292,118,126,fileCruz); // Cargar cruz (118x126) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
-      //tft.sdCardDraw16bppBIN256bits(0,292,512,126,fileCruzAll); // Cargar cruzAll (512x126) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
+      tft.sdCardDraw16bppBIN256bits(0,292,114,127,fileCruz); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
 
       putReloj3(); // Mostrar reloj3 en PAGE1
-    // --------- FIN ERRORES -----------------------------------------------------------------------------
+
+      // aviso
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      // Imagen aviso2 con fondo rojo
+      //tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAvisoRed); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+      // Imagen aviso2 con fondo naranja oscuro
+      tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAvisoDarkOrange); // Cargar aviso2 (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
+
+      putReloj4(); // Mostrar reloj4 en PAGE1
+    // --------- FIN ERROR / AVISO -----------------------------------------------------------------------
 
 
     // --------- DASHBOARD -------------------------------------------------------------------------------
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-
       // cociPeq
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
-
-      putReloj4(); // Mostrar reloj4 en PAGE1
-
-      // crudoPeq
-      tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
 
       putRelojGirado1(); // Mostrar relGir1 en PAGE1 
 
+      // crudoPeq
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
+
+      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+
       // kcal
-      tft.sdCardDraw16bppBIN256bits(529,174,80,87,fileKcal); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      //tft.sdCardDraw16bppBIN256bits(529,174,80,87,fileKcal); // Cargar kcal (80x87) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+      tft.sdCardDraw16bppBIN256bits(529,174,60,65,fileKcal20); // Cargar kcal_20 (60x65) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
+
+      putRelojGirado3(); // Mostrar relGir3 en PAGE1 
 
       // Recuadro azul utilizado para la transparencia de crudo/cocinado
       // Tiene el mismo tamaño que las imágenes para evitar posibles problemas
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.fillRect(610,174,657,216,GRIS_CUADROS); // Cargar cuadro (47x42) en PAGE3 => x = <kcal(529) + kcal(80) + 1 = 610    ->  y = <kcal = 174
     // --------- FIN DASHBOARD ---------------------------------------------------------------------------
 
