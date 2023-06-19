@@ -481,8 +481,8 @@ void actStateEmpty(){
     // ----- ALTERNANCIA PANTALLAS -------------------------
     currentTime = millis();
     if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
-        printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
         printGrupoyEjemplos(false); // SIN GRUPO --> alternar resaltado de recuadro
+        printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
         if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir recipiente
             previousTime = currentTime;
             pedirRecipiente();
@@ -573,8 +573,8 @@ void actStatePlato(){
     }
     else{ // Ya no se muestra "Recipiente colocado"
         if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
-            printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
             printGrupoyEjemplos(false); // SIN GRUPO --> alternar resaltado de recuadro
+            printProcesamiento(); // SIN_PROCESAMIENTO --> alternar resaltado de recuadros
             if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger grupo
                 previousTime = currentTime;
                 pedirGrupoAlimentos();

@@ -215,11 +215,10 @@ void    setupScreen();                 // Inicializar pantalla
 void    Welcome();                     // Cargar imágenes (loadPicturesShowHourglass()) y mostrar wireframe de Arranque (logo SmartCloth)
 // --- DASHBOARD ---
 void    printGrupoyEjemplos(bool show_group = true);  // Zona 1 => Mostrar nombre de grupo escogido y ejemplos (true: mostrar grupo   false: mensaje "Falta grupo")
-void    printProcesamiento();                // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo (comienza en crudo) => STATE_raw y STATE_cooked
-void    printZona3(int show_objeto);           // Mostrar comida actual copiada (show_objeto = 0) o alimento actual (show_objeto = 1)
-void    printZona4(int show_objeto);           // Mostrar comida actual real (show_objeto = 0) o acumulado hoy (show_objeto = 1)
-//void    printComidaActual(bool real, bool definitivo);  // Zona 3 en STATE_Empty para dashboard estilo 1, pero Zona 4 en estados con dashboard estilo 2.
-//void    printAcumuladoHoy();                 // Zona 4 => Mostrar valores del "Acumulado hoy"
+void    printProcesamiento();             // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo => STATE_raw y STATE_cooked
+                                          //        => Mostrar alternancia de resaltado si no hay ningún procesamiento activo => STATE_Empty, STATE_Plato y STATE_groupA/B
+void    printZona3(int show_objeto);      // Mostrar comida actual copiada (show_objeto = SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (show_objeto = SHOW_ALIMENTO_ACTUAL_ZONA3)
+void    printZona4(int show_objeto);      // Mostrar comida actual real (show_objeto = SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (show_objeto = SHOW_ACUMULADO_HOY_ZONA4)
 void    showDashboardStyle1();            // Mostrar dashboard estilo 1 (zonas 1-2 vacías, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Empty y STATE_Plato
 void    showDashboardStyle2();            // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
 // --- pantallas transitorias ---
@@ -351,7 +350,6 @@ void printGrupoyEjemplos(bool show_group){
     // -------- TEXTO ------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    tft.setTextForegroundColor(WHITE); 
 
     if(show_group){
         // Recuadro grupo y ejemplos
@@ -359,6 +357,7 @@ void printGrupoyEjemplos(bool show_group){
 
         // Título
         tft.setCursor(40,30);
+        tft.setTextForegroundColor(WHITE); 
         tft.print("Grupo Actual: ");  // 16x32 escale x1
 
         // Nombre grupo
@@ -379,17 +378,31 @@ void printGrupoyEjemplos(bool show_group){
 
         unsigned long currentTime = millis();
 
-        static bool resaltar_cuadro_grupos = false;
-
-        static bool write_msg = true;
-
-        // Recuadro grupo y ejemplos
-        //tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
-
+        static bool resaltar_cuadro_grupos = true;
 
         // ----- ALTERNANCIA RESALTADO -------------------------
-        if(!resaltar_cuadro_grupos){
-          if (currentTime - previousTime >= interval) {
+        if(resaltar_cuadro_grupos){
+            if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+
+                // Recuadro grupo y ejemplos
+                tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
+                // Mensaje
+                tft.setCursor(50,50);
+                tft.setTextForegroundColor(WHITE);
+                tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
+                
+                // Resaltar zona de grupos para recordar que no se han escogido
+                tft.drawRoundRect(30,20,932,135,20,RED); // Resaltado x1
+                tft.drawRoundRect(31,21,931,134,20,RED); // Resaltado x2
+                tft.drawRoundRect(32,22,930,133,20,RED); // Resaltado x3
+
+                resaltar_cuadro_grupos = false;
+            }
+        }
+        else{   
+            if (currentTime - previousTime >= interval) {
                 previousTime = currentTime;
 
                 // Recuadro grupo y ejemplos
@@ -401,18 +414,6 @@ void printGrupoyEjemplos(bool show_group){
                 tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
 
                 resaltar_cuadro_grupos = true;
-            }
-        }
-        else{
-            if (currentTime - previousTime >= interval) {
-                previousTime = currentTime;
-                
-                // Resaltar zona de grupos para recordar que no se han escogido
-                tft.drawRoundRect(30,20,932,135,20,RED); // Resaltado x1
-                tft.drawRoundRect(31,21,931,134,20,RED); // Resaltado x2
-                tft.drawRoundRect(32,22,930,133,20,RED); // Resaltado x3
-
-                resaltar_cuadro_grupos = false;
             }
         }
         // ----- FIN ALTERNANCIA RESALTADO ---------------------
@@ -436,10 +437,12 @@ void printProcesamiento(){
 
         unsigned long currentTime = millis();
 
-        static bool resaltar_cuadro_cocinado = true;
-        static bool resaltar_cuadro_crudo;       
+       /*      
 
-        // ----- ALTERNANCIA RESALTADO -------------------------
+        // ----- ALTERNANCIA RESALTADO CUADROS -------------------------
+        static bool resaltar_cuadro_cocinado = true;
+        static bool resaltar_cuadro_crudo;  
+
         if(resaltar_cuadro_cocinado){
             if (currentTime - previousTime >= interval) {
                 previousTime = currentTime;
@@ -470,8 +473,49 @@ void printProcesamiento(){
                 resaltar_cuadro_crudo = false; 
             }
         }
-        // ----- FIN ALTERNANCIA RESALTADO ---------------------
-    }
+        // ----- FIN ALTERNANCIA RESALTADO CUADROS ---------------------*/
+
+
+        // ----- ALTERNANCIA RESALTADO JUNTOS -------------------------
+        // Para resaltar a la vez los tres cuadros: grupos, crudo y cocinado
+        static bool resaltar_cuadros = true;
+
+        if(resaltar_cuadros){
+            if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+
+                // Dibujar cuadro cocinado
+                tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); 
+                // Resaltado en cuadro cocinado
+                tft.drawRoundRect(937,20,994,74,10,RED); // Resaltado x1 en cuadro cocinado
+                tft.drawRoundRect(938,21,993,73,10,RED); // Resaltado x2 en cuadro cocinado
+                tft.drawRoundRect(939,22,992,72,10,RED); // Resaltado x3 en cuadro cocinado
+
+                // Dibujar cuadro crudo
+                tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); 
+                // Resaltado x1 en cuadro crudo
+                tft.drawRoundRect(937,79,994,133,10,RED); // Resaltado x1 en cuadro crudo
+                tft.drawRoundRect(938,80,993,132,10,RED); // Resaltado x2 en cuadro crudo
+                tft.drawRoundRect(939,81,992,131,10,RED); // Resaltado x3 en cuadro crudo
+
+                resaltar_cuadros = false; 
+            }
+        }
+        else{
+            if (currentTime - previousTime >= interval) {
+                previousTime = currentTime;
+
+                // Dibujar cuadro cocinado
+                tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); 
+                // Dibujar cuadro crudo
+                tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); 
+
+                resaltar_cuadros = true;
+            }
+        }
+        // ----- FIN ALTERNANCIA RESALTADO JUNTOS ---------------------
+
+    } // FIN SIN_PROCESAMIENTO
     else{
         // Recuadro cocinado pequeño 
         tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
@@ -859,342 +903,6 @@ void printZona4(int show_objeto){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   printComidaActual(): Zona 3 => Muestra los valores nutricionales de la "Comida actual".
-          Parámetros:
-                        real - bool -> true: objeto 'ComidaActual'   false: objeto 'ComidaActualCopia'
-                                      Solo se usa 'false' en STATE_Empty
-                        definitivo - bool ->  true: valores reales de la 'ComidaActual'   false: valores temporales de 'ComidaActual' con último alimento pesado
-----------------------------------------------------------------------------------------------------------*/
-void printComidaActual(bool real, bool definitivo){ 
-    float raciones;
-
-    // ---------- GRÁFICOS ---------------------------------------------------------------------------------------- 
-    // Recuadro "Comida actual"
-    tft.fillRoundRect(30,145,504,580,20,GRIS_CUADROS); // 474 x 425
-    tft.drawRoundRect(30,145,504,580,20,AZUL_BORDE_CUADRO); // Borde => 474 x 425
-    tft.drawRoundRect(31,146,503,579,20,AZUL_BORDE_CUADRO); // Borde => 473 x 424
-
-    // Recuadro Raciones Carbohidratos
-    tft.fillRoundRect(401,288,479,345,10,GRIS_CUADROS_VALORES); // 78 x 57
-
-    // Recuadro Raciones Proteinas
-    tft.fillRoundRect(401,365,479,422,10,GRIS_CUADROS_VALORES); // 78 x 57
-
-    // Recuadro Raciones Grasas
-    tft.fillRoundRect(401,442,479,499,10,GRIS_CUADROS_VALORES); // 78 x 57
-
-    // Dibujo kcal
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,127,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
-    // ---------- FIN GRÁFICOS ------------------------------------------------------------------------------------ 
-
-
-
-    // -------- TEXTO --------------------------------------------------------------------------------------------- 
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);  // 12x24 escale x2
-    tft.setTextForegroundColor(WHITE); 
-
-    // Título
-    tft.setCursor(120,155);
-    tft.print("Comida actual");  // 12x24 escale x2
-
-    // Peso
-    tft.setCursor(50,220); 
-    tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("PESO: "); tft.print(pesoBascula,1); tft.print("g"); // 12x24 escale x2 
-
-
-
-    // ------ VALORES A MOSTRAR -----------------------------------------------------------------
-    // Se mostrarán los valores de la comida actual real o de la temporal con los valores no definitivos del alimento pesado
-    ValoresNutricionales valores; // Valores a mostrar
-    if(definitivo){ // Valores reales y definitivos de la comida actual
-        valores.setValores(comidaActual.getValoresComida());
-    }
-    else{ // Valores temporales calculados a partir del peso, que puede variar
-        Alimento AlimentoAux(grupoEscogido, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
-        float carb = AlimentoAux.getValoresAlimento().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
-        float lip = AlimentoAux.getValoresAlimento().getLipValores() + comidaActual.getValoresComida().getLipValores();
-        float prot = AlimentoAux.getValoresAlimento().getProtValores() + comidaActual.getValoresComida().getProtValores();
-        float kcal = AlimentoAux.getValoresAlimento().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
-        valores.setValores(carb, lip, prot, kcal); // Calcula raciones automáticamente a partir de los valores
-    }
-    // -------------------------------------------------------------------------------------------
-
-
-
-    // ---- VALORES ------------------------------------------------------------------------------ 
-    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-
-    // ------------ Carbohidratos ------------
-    tft.setCursor(50,303);
-    tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("CARBOHIDRATOS: "); tft.print(valores.getCarbValores(),1); tft.print("g");  // 16x32 escale x1
-    
-    // ------------ Proteinas ------------
-    tft.setCursor(50,380);
-    tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("PROTE\xCD""NAS: "); tft.print(valores.getProtValores(),1); tft.print("g"); // 16x32 escale x1
-    
-    // ------------ Grasas ------------
-    tft.setCursor(50,457);
-    tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("GRASAS: "); tft.print(valores.getLipValores(),1); tft.print("g"); // 16x32 escale x1
-    
-    // ------------ Kcal ------------
-    tft.setCursor(197,516);
-    tft.setTextForegroundColor(ROJO_KCAL); 
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    tft.print(valores.getKcalValores(),0); tft.print(" Kcal"); // 12x24 escale X2
-    // ----- FIN VALORES ------------------------------------------------------------------------- 
-
-
-
-    // ---- RACIONES ----------------------------------------------------------------------------- 
-    // Texto "Raciones"
-    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    tft.setTextForegroundColor(WHITE);
-    tft.setCursor(370,243);
-    tft.print("Raciones"); // 16x32 escale x1
-
-
-    // Cambiamos el tamaño de texto para los valores de Raciones. A continuación se cambia la escala según el caso.
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-
-
-    // ------------ Raciones de Carbohidratos ------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    raciones = valores.getCarbRaciones();
-    if (fmod(raciones, 1.0) == 0){ // Termina en .0
-        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(426,293); // Una cifra entera
-        else tft.setCursor(416,293); // 2 cifras enteras
-        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
-    }  
-    else{ // Termina en .5
-        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
-            tft.setCursor(406,293);
-        } 
-        else{ // 2 cifras enteras
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
-            tft.setCursor(416,293); 
-        }          
-        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
-
-    } 
-
-
-    // ------------ Raciones de Proteinas ------------ 
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    raciones = valores.getProtRaciones();
-    if (fmod(raciones, 1.0) == 0){ // Termina en .0
-        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(426,370); // Una cifra entera
-        else tft.setCursor(416,370); // 2 cifras enteras
-        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
-    } 
-    else{ // Termina en .5
-        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
-            tft.setCursor(406,370);
-        } 
-        else{ // 2 cifras enteras
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
-            tft.setCursor(416,370); 
-        } 
-        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
-    } 
-
-
-    // ---------- Raciones de Grasas ------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    raciones = valores.getLipRaciones();
-    if (fmod(raciones, 1.0) == 0){ // Termina en .0
-        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(426,447); // Una cifra entera
-        else tft.setCursor(416,447); // 2 cifras enteras
-        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
-
-    } 
-    else{ // Termina en .5
-        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
-            tft.setCursor(406,447);
-        } 
-        else{ // 2 cifras enteras
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
-            tft.setCursor(416,447); 
-        }   
-        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
-    } 
-    // ---- FIN RACIONES ------------------------------------------------------------------------- 
-    // -------- FIN TEXTO ------------------------------------------------------------------------
-
-}
-
-
-/*---------------------------------------------------------------------------------------------------------
-   printAcumuladoHoy(): Zona 4 => Muestra los valores nutricionales del "Acumulado hoy"
-----------------------------------------------------------------------------------------------------------*/
-/*void printAcumuladoHoy(){   
-    float raciones;
-
-    // ---------- GRÁFICOS --------------------------------------------------------------------------------------
-    // Recuadro "Acumulado hoy"
-    tft.fillRoundRect(520,145,994,580,20,GRIS_CUADROS); // 474 x 425
-
-    // Recuadro Carbohidratos
-    tft.fillRoundRect(891,288,969,345,10,GRIS_CUADROS_VALORES); // 78 x 57
-
-    // Recuadro Proteinas
-    tft.fillRoundRect(891,365,969,422,10,GRIS_CUADROS_VALORES); // 78 x 57
-
-    // Recuadro Grasas
-    tft.fillRoundRect(891,442,969,499,10,GRIS_CUADROS_VALORES); // 78 x 57
-
-    // kcal
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,617,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
-    // ---------- FIN GRÁFICOS ----------------------------------------------------------------------------------
-
-
-    // -------- TEXTO -------------------------------------------------------------------------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    tft.setTextForegroundColor(WHITE); 
-
-    // Título
-    tft.setCursor(590, 155);
-    tft.print("Acumulado hoy");  // 12x24 escale x2
-
-    // Peso
-    tft.setCursor(540,220);
-    tft.setTextForegroundColor(ROJO_PESO); 
-    tft.print("PESO: "); tft.print(diaActual.getPesoDiario(),1); tft.print("g"); // 12x24 escale x2
-
-
-
-    // ---- VALORES ----------------------------------------------------------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-
-    // ------------ Carbohidratos ------------
-    tft.setCursor(540,303);
-    tft.setTextForegroundColor(AZUL_CARB); 
-    tft.print("CARBOHIDRATOS: "); tft.print(diaActual.getValoresDiario().getCarbValores(),1); tft.print("g"); // 16x32 escale x1
-    
-    // ------------ Proteinas ------------
-    tft.setCursor(540,380);
-    tft.setTextForegroundColor(NARANJA_PROT); 
-    tft.print("PROTE\xCD""NAS: "); tft.print(diaActual.getValoresDiario().getProtValores(),1); tft.print("g"); // 16x32 escale x1
-    
-    // ------------ Grasas ------------
-    tft.setCursor(540,457);
-    tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.print("GRASAS: "); tft.print(diaActual.getValoresDiario().getLipValores(),1); tft.print("g"); // 16x32 escale x1
-    
-    // ------------ Kcal ------------
-    tft.setCursor(697,516);
-    tft.setTextForegroundColor(ROJO_KCAL); 
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
-    tft.print(diaActual.getValoresDiario().getKcalValores(),0); tft.print(" Kcal"); // 12x24 escale X2
-    // ----- FIN VALORES -----------------------------------------------------------------------
-
-
-
-    // ---- RACIONES ---------------------------------------------------------------------------
-    // Texto "Raciones"
-    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(860,243);
-    tft.print("Raciones"); // 16x32 escale x1
-
-
-    // Cambiamos el tamaño de texto para los valores de Raciones. A continuación se cambia la escala según el caso.
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-
-
-    // ------------ Raciones de Carbohidratos ------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    raciones = diaActual.getValoresDiario().getCarbRaciones();
-    if (fmod(raciones, 1.0) == 0){ // Termina en .0
-        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,293); // Una cifra entera
-        else tft.setCursor(906,293); // 2 cifras enteras
-        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
-    }
-    else{ // Termina en .5
-        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
-            tft.setCursor(896,293);
-        } 
-        else{ // 2 cifras enteras
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
-            tft.setCursor(906,293); 
-        }          
-        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
-    } 
-
-
-    // ------------ Raciones de Proteinas ------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    raciones = diaActual.getValoresDiario().getProtRaciones();
-    if (fmod(raciones, 1.0) == 0){ // Termina en .0
-        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,370); // Una cifra entera
-        else tft.setCursor(906,370); // 2 cifras enteras
-        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
-    } 
-    else{ // Termina en .5
-        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
-            tft.setCursor(896,370);
-        } 
-        else{ // 2 cifras enteras
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
-            tft.setCursor(906,370); 
-        } 
-        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
-    } 
-
-
-    // ------------ Raciones de Grasas ------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    raciones = diaActual.getValoresDiario().getLipRaciones();
-    if (fmod(raciones, 1.0) == 0){ // Termina en .0
-        // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)) tft.setCursor(916,447); // Una cifra entera
-        else tft.setCursor(906,447); // 2 cifras enteras
-        tft.print(raciones,0); // Si termina en .0 no lo mostramos. 12x24 escale x2
-    } 
-    else{ // Termina en .5
-        // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
-            tft.setCursor(896,447);
-        } 
-        else{ // 2 cifras enteras
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); // Estrechar
-            tft.setCursor(906,447); 
-        }   
-        tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
-    
-    }
-    // ---- FIN RACIONES -----------------------------------------------------------------------
-    // -------- FIN TEXTO ---------------------------------------------------------------------------------------
-}
-*/
-
-
-
-
-/*---------------------------------------------------------------------------------------------------------
    showDashboardStyle1(): Muestra el dashboard de estilo 1 con Zona 1 (grupo), Zona 2 (procesamiento), 
                           Zona 3 (Comida Actual copiada) y Zona 4 (Acumulado Hoy).
 
@@ -1204,9 +912,7 @@ void showDashboardStyle1(){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     printGrupoyEjemplos(false);             // Zona 1 - Grupo y ejemplos (siempre 'false' para mostrar "Falta grupo")
-
-    // La zona 2 se ha separado para permitir el "parpadeo" de los recuadros indicando que no se ha escogido aún crudo o cocinado
-
+    printProcesamiento();                   // Zona 2 - SIN_PROCESAMIENTO --> alternar resaltado de recuadros
     printZona3(SHOW_COMIDA_ACTUAL_ZONA3);   // Zona 3 - Valores comida copiada tras guardar. Al inicio están a 0.
     printZona4(SHOW_ACUMULADO_HOY_ZONA4);   // Zona 4 - Valores Acumulado hoy
 }
