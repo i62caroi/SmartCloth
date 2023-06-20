@@ -29,9 +29,10 @@ volatile int  buttonMain = 0;
 
 
 /* --------- EVENTOS ----------------- */
-bool  flagEvent;                   /* Para evitar que marque evento para cada interrupción, ya que
-                                     lo marcaría cada medio segundo por la interrupción de la báscula.
-                                     Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento) */
+bool  flagEvent;                   // Para evitar que marque evento para cada interrupción, ya que
+                                   // lo marcaría cada medio segundo por la interrupción de la báscula.
+                                   // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento)
+
 bool  flagError;                   // Aunque ERROR sea un evento, es de diferente naturaleza porque es ficticio, por eso
                                    // se utiliza una flag diferente para cuando ocurra.
 
@@ -43,7 +44,7 @@ volatile bool   pesado = false;       // Flag de haber pesado por ISR
 float           pesoBascula = 0.0;    // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
 float           diffWeight = 0.0;     // Diferencia entre peso actual (weight) y peso anterior para ver cambios
 
-float           pesoARetirar;         // Peso que se debe retirar para liberar la báscula
+float           pesoARetirar;         // Peso que se debe retirar para liberar la báscula (recipiente + alimentos)
 
 HX711           scale;                // Si se declara en Scale.h no se puede acceder desde State_Machine.h por inclusiones múltiples (?)
 
@@ -53,16 +54,16 @@ bool            tarado;
  * \brief Obtiene el peso de la báscula.
  * \return El peso actual de la báscula.
  */
-float           weighScale(){ return scale.get_units(1); }
+float   weighScale(){ return scale.get_units(1); }
 
 /**
  * \brief Realiza la tara de la báscula y actualiza el peso base.
  */
-void            tareScale(){ 
-                    scale.tare(1);  //1 toma de valor
-                    pesoBascula = weighScale();;
-                    if(pesoBascula < 1.0) pesoBascula = 0.0; //fixPesoBascula
-                    tarado = true;
+void    tareScale(){ 
+            scale.tare(1);  // 1 toma de valor
+            pesoBascula = weighScale();;
+            if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
+            tarado = true;
 };
 
 

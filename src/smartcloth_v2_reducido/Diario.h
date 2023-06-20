@@ -23,7 +23,7 @@
 
 #include "Comida.h"
 
-#define NUM_COMIDAS 5
+#define NUM_COMIDAS 10
 
 /**
  * @brief Clase que representa un diario de comidas.
