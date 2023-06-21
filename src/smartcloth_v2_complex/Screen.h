@@ -174,8 +174,6 @@
 
 #include "RA8876_v2.h" // COLORS.h
 #include "State_Machine.h"
-#include "Variables.h"
-//#include "icons.h"  // iconos de 'crudo', 'cocinado' y 'smartcloth_icono' como bitmap
 
 
 /* Screen circuit wiring */
@@ -193,8 +191,6 @@ RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 
 int SCREEN_WIDTH; // X (1024)
 int SCREEN_HEIGHT; // Y (600)
-
-String cad;
 
 
 
@@ -377,14 +373,14 @@ void printProcesamiento(){
     tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
 
 
-    if(procesado){ // COCINADO activo
+    if(procesamiento == ALIMENTO_COCINADO){ // COCINADO activo
         // Mostrar cociPeq normal
         tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
 
         // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
         tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
     }
-    else{ // CRUDO activo
+    else if(procesamiento == ALIMENTO_CRUDO){ // CRUDO activo
         // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
         tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
 

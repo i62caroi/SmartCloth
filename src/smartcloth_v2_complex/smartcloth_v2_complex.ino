@@ -6,7 +6,7 @@
  * @date 14/06/2023
  * @version 1.0
  * 
- * @note Esta versión da mayor libertad al usuario para usar SmartCloth de varias formas, alterando el orden de algunos pasos.
+ * @note Esta versión reducida limita las acciones para que deban ser en un orden específico.
  * @note Versión con interfaz a partir de diseño wireframe
  * 
  */
@@ -18,22 +18,20 @@
                                 => ISR.h 
                                       => Scale.h
                                           => HX711.h
-                                          => State_Machine.h
-                                => State_Machine.h
+                                          => State_Machine.h (eventos)
+                                => State_Machine.h (eventos)
                                       => SD_functions.h
                                           => RTC.h
+                                          => Files.h
+                                          => Diario.h 
+                                               => Comida.h 
+                                                  => Plato.h 
+                                                       => Alimento.h
+                                                          => Valores_Nutricionales.h
+                                                          => Grupos.h
                                       => Screen.h 
                                           => RA8876_v2.h
-                                          => icons.h
-                                          => State_Machine.h
-                                          => Variables.h 
-                                                => Scale.h
-                                                => Diario.h 
-                                                      => Comida.h 
-                                                            => Plato.h 
-                                                                  => Alimento.h
-                                                                        => Valores_Nutricionales.h
-                                                                        => Grupos.h
+                                                
                                                                       
                             */
 
@@ -118,34 +116,34 @@ void loop() {
     if (millis() - prevMillis > period){
         prevMillis = millis();
         
+        
         doStateActions();   // Actividades del estado actual. Comienza en STATE_Empty 
+
 
         /*--------------------------------------------------------------*/
         /* ---------------    CHECK INTERRUPCIONES   ------------------ */
         /*--------------------------------------------------------------*/
         checkAllButtons();  // Comprueba interrupción de botoneras
         checkBascula();     // Comprueba interrupción de báscula
+        
 
 
         /*------------------------------------------------------------*/
         /* ---------------    MOTOR DE INFERENCIA   ----------------- */
         /*------------------------------------------------------------*/
 
-        if(flagEvent or flagError){     // Para evitar que marque evento para cada interrupción, ya que
-                                        // lo marcaría cada medio segundo por la interrupción de la báscula.
-                                        // Con esta flag 'flagEvent' solo se da aviso de un evento real 
-                                        // (pulsación, incremento o decremento).
+        if(flagEvent or flagError){     // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada
+                                        // medio segundo por la interrupción de la báscula, se utiliza la flag 'flagEvent'.
+                                        // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento).
 
                                         // Se incluye 'flagError' en la condición para que también compruebe las reglas
                                         // de transición en el caso de error y pase al STATE_ERROR.
                                         // Esta flag se activa en actEventError() y se desactiva tras los 3 segundos para
                                         // mostrar la pantalla de error en actStateERROR().
 
-                                        // Si solo se usaba 'flagEvent', tras activarla en actEventError(), se desactivaba
-                                        // al salir del if(checkStateConditions()), por lo que no se podía chequear el buffer
-                                        // de eventos para ver el evento de ERROR incluido en actEventError().
-                                        // Esto no ocurre con los eventos de cancelación de acción
-            
+                                        // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
+                                        // sino que si ha ocurrido algo que no es evento, se considera error. 
+
             if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
@@ -162,7 +160,7 @@ void loop() {
             }
             flagEvent = false;
 
-            Serial.println(F("***********************************"));
+            if(flagEvent) Serial.println(F("***********************************"));
        }
 
         

@@ -60,6 +60,8 @@ int buttons[countRows][countColumns] = {{1,2,3,4,5},
 
 //String buttonsMainKeyboard[countButtons] = {"AMARILLO", "BLANCO","VERDE","ROJO","NEGRO"};
 
+int  buttonGrande;                  //Botón pulsado en la botonera grande (checkAllButtons())
+
 
 /*-----------------------------------------------------------------------------
                           DEFINICIONES FUNCIONES
@@ -125,8 +127,10 @@ void  checkAllButtons();       // Asignación de eventos según botón pulsado e
                 case 4:   eventoMain = DELETE_PLATO;    break;  // ROJO 
                 case 5:   eventoMain = GUARDAR;         break;  // NEGRO 
             }
-            addEventToBuffer(eventoMain);
             
+            addEventToBuffer(eventoMain);
+            flagEvent = true;
+
             buttonMain = 0;
         }
 
@@ -146,7 +150,9 @@ void  checkAllButtons();       // Asignación de eventos según botón pulsado e
                    (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] >=19)){
                        eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
             }
+
             addEventToBuffer(eventoGrande);
+            flagEvent = true;
 
             /*----- Grupo alimentos ---- */
             setGrupoAlimentos(buttonGrande);

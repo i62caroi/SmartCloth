@@ -27,8 +27,9 @@
  */
 #define RULES 125 // 134 con las comentadas
 
+void    tareScale();
 
-#include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Alimento.h -> Valores_Nutricionales.h)
+
 #include "SD_functions.h"
 
 
@@ -342,6 +343,33 @@ event_t eventoMain;         // Evento ocurrido en botonera Main
 event_t eventoGrande;       // Evento ocurrido en botonera grande
 event_t eventoBascula;      // Evento ocurrido en báscula
 
+bool  flagEvent = false;    // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada medio segundo
+                            // por la interrupción de la báscula.
+                            // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento)
+
+bool  flagError = false;    // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
+                            // sino que si ha ocurrido algo que no es evento, se considera error. Por eso se utiliza
+                            // otra flag.
+
+/* ----- CRUDO/COCINADO ----- */
+/**
+ * @enum procesamiento
+ * @brief Enumeración de los diferentes valores del procesamiento del alimento.
+ */
+typedef enum {
+              SIN_PROCESAMIENTO   =   (0),   /**< Alimento sin procesamiento indicado  */
+              ALIMENTO_CRUDO      =   (1),   /**< Alimento crudo  */
+              ALIMENTO_COCINADO   =   (2)    /**< Alimento cocinado  */
+} procesado_t;
+procesado_t procesamiento;
+
+float     pesoRecipiente = 0.0; 
+float     pesoPlato = 0.0;
+float     pesoLastAlimento = 0.0;
+
+#include "Screen.h"   // Debajo de las variables para que estén disponibles en su ámbito
+
+
 /*----------------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------------------------------------------*/
 
@@ -431,6 +459,8 @@ void actStateEmpty(){
             pesoPlato = 0.0;                // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
             pesoLastAlimento = 0.0;         // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
                                             // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
+
+            procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
             
             pedirRecipiente();              // Pedir recipiente
         }
@@ -505,6 +535,7 @@ void actGruposAlimentos(){
                 pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
                 
         }
+        procesamiento = SIN_PROCESAMIENTO;   // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
         // ----- FIN ACCIONES --------------------------
 
 
@@ -554,7 +585,7 @@ void actStateRaw(){
         if(state_prev != STATE_raw){
             Serial.println(F("\nAlimento crudo...")); 
             
-            procesado = false;
+            procesamiento == ALIMENTO_CRUDO;
             
             if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
@@ -584,7 +615,7 @@ void actStateCooked(){
         if(state_prev != STATE_cooked){
             Serial.println(F("\nAlimento cocinado...")); 
             
-            procesado = true;
+            procesamiento == ALIMENTO_COCINADO;
             
             if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 

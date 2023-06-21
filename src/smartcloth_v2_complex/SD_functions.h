@@ -64,7 +64,8 @@
 
 #include <SD.h>
 #include "RTC.h"
-//#include "Variables.h"
+#include "Diario.h" // incluye Comida.h
+#include "Files.h"
 
 #define SD_CARD_SCS  4
 

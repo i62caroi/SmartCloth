@@ -133,5 +133,7 @@ void Plato::restorePlato(){
 }
 
 
+Plato     platoActual;
+
 
 #endif
