@@ -132,4 +132,6 @@ void Diario::updateValoresDiario(ValoresNutricionales val){
   _valoresDiario.setValores(valAux);
 }
 
+Diario    diaActual; // Acumulado Hoy
+
 #endif

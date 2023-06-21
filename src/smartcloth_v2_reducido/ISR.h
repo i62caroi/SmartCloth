@@ -3,7 +3,7 @@
  * @brief Definiciones de las Rutinas de Servicio de Interrupción (ISR)
  *
  * @author Irene Casares Rodríguez
- * @date 06/06/23
+ * @date 21/06/23
  * @version 1.0
  *
  * Este archivo contiene las definiciones de las funciones utilizadas para la 
@@ -33,9 +33,6 @@
 #include "SAMDUETimerInterrupt.h"
 #include "SAMDUE_ISR_Timer.h"
 
-#include "Scale.h"
-
-
 #define HW_TIMER_INTERVAL_MS     10
 #define TIMER_INTERVAL_5MS       500L
 
@@ -54,6 +51,15 @@ const byte intPinGuardar      = 25;   // Morado
 /*  -----   GRANDE  ----- */
 const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande
 volatile bool pulsandoGrande  = false;    // Flag de estar pulsando algo en Grande
+volatile int  buttonMain = 0;
+
+
+/*  -----  BÁSCULA ------ */
+volatile float  weight = 0.0;         ///< Peso real tomado por ISR
+volatile bool   pesado = false;       // Flag de haber pesado por ISR
+
+
+#include "Scale.h" // Debajo de las variables para que estén disponibles en su ámbito
 
 
 /*-----------------------------------------------------------------------------
@@ -68,6 +74,8 @@ void ISR_pulsandoButtonsGrande();         // ISR de botonera de grupos de alimen
 void TimerHandler();                      // Activar timer de interrupción de la báscula
 void ISR_pesarBascula();                  // Activar báscula para pesar cuando salte timer de interrupción
 uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName);     // Adjuntar interrupción al timer
+
+bool interruptionOccurred();              // Devuelve true si se ha activado alguna interrupción en botoneras o evento en báscula
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 
@@ -81,10 +89,7 @@ uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const c
 void ISR_crudo(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) {
-        buttonMain = 1;
-        flagEvent = true;
-    }
+    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 1;
     last_interrupt_time = interrupt_time;
 }
 
@@ -98,10 +103,7 @@ void ISR_crudo(){
 void ISR_cocinado(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) {
-        buttonMain = 2;
-        flagEvent = true;
-    }
+    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 2;
     last_interrupt_time = interrupt_time;
 }
 
@@ -115,10 +117,7 @@ void ISR_cocinado(){
 void ISR_addPlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) {
-        buttonMain = 3;
-        flagEvent = true;
-    }
+    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 3;
     last_interrupt_time = interrupt_time;
 }
 
@@ -132,10 +131,7 @@ void ISR_addPlato(){
 void ISR_deletePlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) {
-        buttonMain = 4;
-        flagEvent = true;
-    }
+    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 4;
     last_interrupt_time = interrupt_time;
 }
 
@@ -149,10 +145,7 @@ void ISR_deletePlato(){
 void ISR_guardar(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) {
-        buttonMain = 5;
-        flagEvent = true;
-    }
+    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 5;
     last_interrupt_time = interrupt_time;
 }
 
@@ -170,10 +163,7 @@ void ISR_guardar(){
 void ISR_pulsandoButtonsGrande(){
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) {
-        pulsandoGrande = true;
-        flagEvent = true;
-    }
+    if ((interrupt_time - last_interrupt_time) > 200) pulsandoGrande = true;
     last_interrupt_time = interrupt_time;
 }
 
@@ -222,6 +212,22 @@ void TimerHandler() { ISR_Timer.run(); }
     Serial.print(TimerName); Serial.print(F(" attached to Timer(")); Serial.print(timerNumber); Serial.println(F(")"));
     return timerNumber;
 }
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de interrupción general
+ * @return 'true' si ha ocurrido alguna interrupción en botoneras o evento en báscula
+ */
+ /*-----------------------------------------------------------------------------*/
+ bool interruptionOccurred(){
+    if((buttonMain != 0) or (pulsandoGrande) or (scaleEventOccurred)) return true;
+    else return false;
+ }
 
 
 #endif

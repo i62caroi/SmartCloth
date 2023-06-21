@@ -3,7 +3,7 @@
  * @brief Máquina de Estados (State Machine) de SmartCloth
  *
  * @author Irene Casares Rodríguez
- * @date 19/06/23
+ * @date 21/06/23
  * @version 1.0
  *
  *  Este archivo contiene las definiciones de los estados y eventos, además de las funciones
@@ -35,8 +35,9 @@
 #define  CONFIRMATION_DELETE  2
 #define  CONFIRMATION_SAVE    3  
 
+void    tareScale();
 
-#include "Screen.h"   // Incluye Variables.h (Diario.h -> Comida.h -> Plato.h -> Alimento.h -> Valores_Nutricionales.h)
+
 #include "SD_functions.h"
 
 
@@ -353,6 +354,34 @@ event_t lastEvent;          // Último evento ocurrido
 event_t eventoMain;         // Evento ocurrido en botonera Main
 event_t eventoGrande;       // Evento ocurrido en botonera grande
 event_t eventoBascula;      // Evento ocurrido en báscula
+
+
+bool  flagEvent = false;    // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada medio segundo
+                            // por la interrupción de la báscula.
+                            // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento)
+
+bool  flagError = false;    // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
+                            // sino que si ha ocurrido algo que no es evento, se considera error. Por eso se utiliza
+                            // otra flag.
+
+/* ----- CRUDO/COCINADO ----- */
+/**
+ * @enum procesamiento
+ * @brief Enumeración de los diferentes valores del procesamiento del alimento.
+ */
+typedef enum {
+              SIN_PROCESAMIENTO   =   (0),   /**< Alimento sin procesamiento indicado  */
+              ALIMENTO_CRUDO      =   (1),   /**< Alimento crudo  */
+              ALIMENTO_COCINADO   =   (2)    /**< Alimento cocinado  */
+} procesado_t;
+procesado_t procesamiento;
+
+float     pesoRecipiente = 0.0; 
+float     pesoPlato = 0.0;
+float     pesoLastAlimento = 0.0;
+
+
+#include "Screen.h"   // Debajo de las variables para que estén disponibles en su ámbito
 
 /*----------------------------------------------------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------------------------------------------------*/
@@ -807,12 +836,15 @@ void actStateAddCheck(){
         Serial.println(F("\n¿Seguro que quiere añadir un plato?")); 
         
         pedirConfirmacion(ASK_CONFIRMATION_ADD);                            // Mostrar pregunta de confirmación para añadir plato
+        //temporalScreenDone = false;
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                                                             // las acciones.
     }
+
+    //if(!temporalScreenDone) Serial.println(F("Print previo")); pedirConfirmacion(ASK_CONFIRMATION_ADD); 
 
     // --- CANCELACIÓN AUTOMÁTICA ---
     if ((millis() - previousTimeCancel) > 10000) {    // Tras 10 segundos de inactividad, se cancela automáticamente la acción añadir plato
@@ -965,12 +997,15 @@ void actStateDeleteCheck(){
         Serial.println(F("\n¿Seguro que quiere eliminar el plato?")); 
         
         pedirConfirmacion(ASK_CONFIRMATION_DELETE);                         // Mostrar pregunta de confirmación para eliminar plato
+        //temporalScreenDone = false;
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                                                             // las acciones.
     }
+
+    //if(!temporalScreenDone) Serial.println(F("Print previo")); pedirConfirmacion(ASK_CONFIRMATION_DELETE); 
 
     // --- CANCELACIÓN AUTOMÁTICA ---
     if ((millis() - previousTimeCancel) > 10000) {    // Tras 10 segundos de inactividad, se cancela automáticamente la acción eliminar plato
@@ -1104,12 +1139,15 @@ void actStateSaveCheck(){
         Serial.println(F("\n¿Seguro que quiere guardar la comida?")); 
         
         pedirConfirmacion(ASK_CONFIRMATION_SAVE);                           // Mostrar pregunta de confirmación para guardar comida
+        //temporalScreenDone = false;
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
                                                                             // las acciones.
     }
+
+    //if(!temporalScreenDone) Serial.println(F("Print previo")); pedirConfirmacion(ASK_CONFIRMATION_SAVE); 
 
 
     // --- CANCELACIÓN AUTOMÁTICA ---

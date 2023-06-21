@@ -3,7 +3,7 @@
  * @brief Funciones de la célula de carga (báscula)
  *
  * @author Irene Casares Rodríguez
- * @date 06/06/23
+ * @date 21/06/23
  * @version 1.0
  */
 
@@ -28,15 +28,24 @@
 #ifndef SCALE_H
 #define SCALE_H
 
+#include "ISR.h" 
 #include "HX711.h"
-#include "State_Machine.h"
 
+
+HX711 scale;
 
 
 // HX711 circuit wiring
 const int LOADCELL_DOUT_PIN = 3;
 const int LOADCELL_SCK_PIN = 2;
 
+
+bool      scaleEventOccurred = false;
+bool      tarado = false;
+float     pesoARetirar = 0.0;         // Peso que se debe retirar para liberar la báscula (recipiente + alimentos)
+float     pesoBascula = 0.0;          // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
+
+#include "State_Machine.h" // Debajo de las variables para que estén disponibles en su ámbito
 
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
@@ -49,6 +58,7 @@ const int LOADCELL_SCK_PIN = 2;
 /*-----------------------------------------------------------------------------*/
 
 float   weighScale();
+void    tareScale();
 void    setupScale();
 void    checkBascula();
 /*-----------------------------------------------------------------------------*/
@@ -64,10 +74,23 @@ void    checkBascula();
  * @return El peso medido por la báscula.
  */
 /*-----------------------------------------------------------------------------*/
-/*float weighScale(){
+float weighScale(){
     return scale.get_units(1);
 }
-*/
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * \brief Realiza la tara de la báscula y actualiza el peso base.
+ */
+ /*-----------------------------------------------------------------------------*/
+void  tareScale(){ 
+    scale.tare(1);  // 1 toma de valor
+    pesoBascula = weighScale();;
+    if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
+    tarado = true;
+};
+
 
 
 /*-----------------------------------------------------------------------------*/
@@ -93,6 +116,7 @@ void setupScale(){
 void checkBascula(){
     static float newWeight = 0.0;
     static float lastWeight = 0.0;
+    static float diffWeight = 0.0; 
     
     if (pesado){
 
@@ -103,6 +127,7 @@ void checkBascula(){
         diffWeight = abs(lastWeight - newWeight);
 
         if (diffWeight > 2.0){ // Cambio no causado por "interferencias" de la báscula
+            scaleEventOccurred = true;
             
             /* 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
                Este valor es el que se usará como peso de los alimentos.
@@ -167,6 +192,8 @@ void checkBascula(){
             addEventToBuffer(eventoBascula);
             flagEvent = true;
         }
+        else scaleEventOccurred = false; // No ha habido evento
+
         pesado = false;
     }
 

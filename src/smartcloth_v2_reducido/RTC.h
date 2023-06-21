@@ -40,7 +40,6 @@
 #define RTC_H
 
 #include <DS3231.h>
-#include "Variables.h"
 
 
 // RTC object 

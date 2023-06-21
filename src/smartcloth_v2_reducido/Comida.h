@@ -22,7 +22,6 @@
 #define COMIDA_H
 
 #include "Plato.h"
-//#include "Variables.h" //platoActual
 
 #define NUM_PLATOS 10
 
@@ -255,5 +254,9 @@ String Comida::getComidaAllValues(){
     return dataString;
 }
 
+
+
+Comida    comidaActual;       // Comida actual real, actualizada en tiempo real
+Comida    comidaActualCopia;  // Comida copiada de la actual real, solamente para mostrar sus valores tras guardarla en el acumulado y limpiar el objeto 'comidaActual'.
 
 #endif
