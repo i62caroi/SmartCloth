@@ -147,6 +147,8 @@ void loop() {
             if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
+                
+                state_prev_prev_prev = state_prev_prev;
                 state_prev_prev = state_prev;
                 state_prev = state_actual;
                 state_actual = state_new;
@@ -159,8 +161,6 @@ void loop() {
                 actEventError();       // Mensaje de error por evento erróneo según el estado actual
             }
             flagEvent = false;
-
-            if(flagEvent) Serial.println(F("***********************************"));
        }
 
         

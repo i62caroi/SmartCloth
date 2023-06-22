@@ -9,7 +9,7 @@
  */
 
 #ifndef FILES_H
-#define FiLES_H
+#define FILES_H
 
 
 /*  ------ SD ------ */

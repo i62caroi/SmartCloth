@@ -3,7 +3,7 @@
  * @brief Definiciones de las Rutinas de Servicio de Interrupción (ISR)
  *
  * @author Irene Casares Rodríguez
- * @date 21/06/23
+ * @date 06/06/23
  * @version 1.0
  *
  * Este archivo contiene las definiciones de las funciones utilizadas para la 
@@ -76,6 +76,8 @@ void ISR_pesarBascula();                  // Activar báscula para pesar cuando 
 uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName);     // Adjuntar interrupción al timer
 
 bool interruptionOccurred();              // Devuelve true si se ha activado alguna interrupción en botoneras o evento en báscula
+//bool buttonInterruptOccurred();           // Devuelve true si se ha activado alguna interrupción en botoneras 
+//bool hasScaleEventOccurred();             // Devuelve true si se ha activado algún evento en báscula
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 
@@ -228,6 +230,30 @@ void TimerHandler() { ISR_Timer.run(); }
     if((buttonMain != 0) or (pulsandoGrande) or (scaleEventOccurred)) return true;
     else return false;
  }
+
+
+ /*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de interrupción en botoneras 
+ * @return 'true' si ha ocurrido alguna interrupción en botoneras 
+ */
+ /*-----------------------------------------------------------------------------*/
+ /*bool buttonInterruptOccurred(){
+    if((buttonMain != 0) or (pulsandoGrande)) return true;
+    else return false;
+ }
+*/
+
+ /*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de evento en báscula
+ * @return 'true' si ha ocurrido algún evento en báscula
+ */
+ /*-----------------------------------------------------------------------------*/
+ /*bool hasScaleEventOccurred(){
+    if(scaleEventOccurred) return true;
+    else return false;
+ }*/
 
 
 #endif
