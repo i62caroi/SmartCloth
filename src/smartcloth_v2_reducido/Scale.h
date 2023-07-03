@@ -130,20 +130,18 @@ void checkBascula(){
             scaleEventOccurred = true;
             
             /* 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
-               Este valor es el que se usará como peso de los alimentos.
-               Hasta ahora se usaba 'weight' directamente, pero al añadir un nuevo alimento
-               al plato se tomaba el último valor de 'weight', que podría haber variado algo 
-               respecto a lo que se mostraba por sucesivas medidas de la báscula. */
+               Este valor es el que se usará como peso de los alimentos. */
                
             pesoBascula = newWeight;
             if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
 
 
-            //if(diffWeight >= 10.0){   // Siempre que haya un cambio no causado por "interferencias" de la báscula (diff > 2),
+            //if(diffWeight >= 5.0){   // Siempre que haya un cambio no causado por "interferencias" de la báscula (diff > 2),
                                       // se toma el valor del peso (pesoBascula = newWeight).
-                                      // Sin embargo, solo cuando ese cambio supera los 10 gramos, se se considera un evento de peso.
+                                      // Sin embargo, solo cuando ese cambio supera los 5 gramos, se se considera un evento de peso.
+                //scaleEventOccurred = true;
 
-                if(lastWeight < newWeight){ //INCREMENTO con diferencia de 10 gr
+                if(lastWeight < newWeight){ //INCREMENTO con diferencia de 5 gr
                     Serial.println(F("\nIncremento..."));
                     if(lastWeight > -1.0){ //Incremento en positivo (salvando valores cercanos a 0)
                         Serial.print(F("\nINCREMENTO"));
@@ -154,7 +152,7 @@ void checkBascula(){
                         eventoBascula = TARAR;
                     }
                 }
-                else { //DECREMENTO con diferencia de 10 gr
+                else { //DECREMENTO con diferencia de 5 gr
                     Serial.println(F("\nDecremento..."));
                     if(newWeight >= 1.0){ //Se ha quitado algo pero no todo (sigue positivo)
                         Serial.print(F("\nDECREMENTO"));

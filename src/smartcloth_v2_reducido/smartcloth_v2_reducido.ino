@@ -155,9 +155,9 @@ void loop() {
                 Serial.print(F("\nEstado anterior: ")); Serial.println(state_prev);
                 Serial.print(F("\nNuevo estado: "));    Serial.println(state_new);
             }
-            else if(state_actual != STATE_ERROR){       // Para evitar seguir marcando error durante los 3 segundos que no se cumple
-                                                        // ninguna regla de transición porque se está en el estado de error.
-                Serial.println(F("\nERROR DE EVENTO"));
+            else if(state_actual != STATE_ERROR){// and (state_actual != STATE_CANCEL)){    // Para evitar seguir marcando error durante los 3 segundos que no se cumple
+                                                                                          // ninguna regla de transición porque se está en el estado de error o de cancelación.
+                //Serial.println(F("\nERROR DE EVENTO"));
                 actEventError();       // Mensaje de error por evento erróneo según el estado actual
             }
             flagEvent = false;

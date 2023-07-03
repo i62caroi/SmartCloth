@@ -371,73 +371,24 @@ void printGrupoyEjemplos(){
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
-    //if(show_group){
-        // Recuadro grupo y ejemplos
-        tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+    // Recuadro grupo y ejemplos
+    tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
 
-        // Título
-        tft.setCursor(40,30);
-        tft.setTextForegroundColor(WHITE); 
-        tft.print("Grupo Actual: ");  // 16x32 escale x1
+    // Título
+    tft.setCursor(40,30);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("Grupo Actual: ");  // 16x32 escale x1
 
-        // Nombre grupo
-        tft.setTextForegroundColor(grupoEscogido.color_grupo); // 'color_grupo'' como atributo de struct 'Grupo'
-        tft.setCursor(tft.getCursorX(),tft.getCursorY());
-        tft.print(grupoEscogido.Nombre_grupo); // Nombre grupo // 16x32 escale x1
+    // Nombre grupo
+    tft.setTextForegroundColor(grupoEscogido.color_grupo); // 'color_grupo'' como atributo de struct 'Grupo'
+    tft.setCursor(tft.getCursorX(),tft.getCursorY());
+    tft.print(grupoEscogido.Nombre_grupo); // Nombre grupo // 16x32 escale x1
 
-        // Ejemplos grupo
-        tft.selectInternalFont(RA8876_FONT_SIZE_24); 
-        tft.setCursor(40,68);
-        tft.print(grupoEscogido.Ejemplos_grupo); // 12x24 escale x1
-        // -------- FIN TEXTO --------------------
-    //}
-    /*else{
-        // Tiempos utilizados para alternar el resaltado del recuadro de los grupos:
-        static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
-        const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no
-
-        unsigned long currentTime = millis();
-
-        static bool resaltar_cuadro_grupos = true;
-
-        static bool msg_written = false;
-
-        if(!msg_written){ // Solo escribir el mensaje una vez, pero ir alternando el resaltado del borde
-            // Recuadro grupo y ejemplos
-            tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
-
-            // Mensaje
-            tft.setCursor(50,50);
-            tft.setTextForegroundColor(WHITE);
-            tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
-            msg_written = true;
-        }
-
-        // ----- ALTERNANCIA RESALTADO -------------------------
-        if(resaltar_cuadro_grupos){
-            if (currentTime - previousTime >= interval) {
-                previousTime = currentTime;
-
-                // Resaltar zona de grupos para recordar que no se han escogido
-                tft.drawRoundRect(30,20,932,135,20,RED); // Resaltado x1
-                tft.drawRoundRect(31,21,931,134,20,RED); // Resaltado x2
-                tft.drawRoundRect(32,22,930,133,20,RED); // Resaltado x3
-                resaltar_cuadro_grupos = false;
-            }
-        }
-        else{   
-            if (currentTime - previousTime >= interval) {
-                previousTime = currentTime;
-
-                tft.drawRoundRect(30,20,932,135,20,GRIS_CUADROS); // Resaltado x1
-                tft.drawRoundRect(31,21,931,134,20,GRIS_CUADROS); // Resaltado x2
-                tft.drawRoundRect(32,22,930,133,20,GRIS_CUADROS); // Resaltado x3
-                resaltar_cuadro_grupos = true;
-            }
-        }
-        // ----- FIN ALTERNANCIA RESALTADO ---------------------
-
-    }*/
+    // Ejemplos grupo
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setCursor(40,68);
+    tft.print(grupoEscogido.Ejemplos_grupo); // 12x24 escale x1
+    // -------- FIN TEXTO --------------------
     
 }
 
@@ -482,7 +433,7 @@ void printProcesamiento(){
                     ambas_zonas - bool  -->   true: parpadear ambas zonas      false: parpadear solo zona 2
 ----------------------------------------------------------------------------------------------------------*/
 void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
-    // Tiempos utilizados para alternar el resaltado del recuadro de los grupos:
+    // Tiempos utilizados para alternar el resaltado de los recuadros:
     static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
     const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no
 
@@ -886,9 +837,9 @@ void showRaciones(ValoresNutricionales &valores, int zona){
 void showDashboardStyle1(int msg_option){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
-    blinkGrupoyProcesamiento(msg_option, BLINK_AMBAS_ZONAS); // Zonas 1 y 2 - Parpadeando y mensaje de falta grupo
-    printZona3(SHOW_COMIDA_ACTUAL_ZONA3);   // Zona 3 - Valores comida copiada tras guardar. Al inicio están a 0.
-    printZona4(SHOW_ACUMULADO_HOY_ZONA4);   // Zona 4 - Valores Acumulado hoy
+    blinkGrupoyProcesamiento(msg_option, BLINK_AMBAS_ZONAS);  // Zonas 1 y 2 - Parpadeando y mensaje de falta recipiente o grupo
+    printZona3(SHOW_COMIDA_ACTUAL_ZONA3);                     // Zona 3 - Valores comida copiada tras guardar. Al inicio están a 0.
+    printZona4(SHOW_ACUMULADO_HOY_ZONA4);                     // Zona 4 - Valores Acumulado hoy
 }
 
 
@@ -1407,7 +1358,7 @@ void showError(int option){
     tft.println("\xA1""ACCI\xD3""N INCORRECTA\x21""");
     // ----------------------------------------------------------------------------------------------------
 
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    //if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------------ CRUZ --------------------------------------------------------------------------------
     // Copiar de PAGE3 a PAGE1
@@ -1419,7 +1370,7 @@ void showError(int option){
     tft.fillRoundRect(252,290,764,298,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    //if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
 
     // ----- TEXTO (SUGERENCIA SEGÚN ESTADO ACTUAL) ------------------------------------------------------
@@ -1438,13 +1389,23 @@ void showError(int option){
               break;
 
       case 3: // grupoA
-              tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
+              /*tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
               tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
+              */
+              tft.setCursor(10, 420); tft.println("SELECCIONE COCINADO O CRUDO ANTES DE PESAR");  
+              tft.selectInternalFont(RA8876_FONT_SIZE_32);
+              tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+              tft.setCursor(200,tft.getCursorY() + tft.getTextSizeY()); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
               break;
 
       case 4: // grupoB
-              tft.setCursor(190, 420);                                      tft.println("SELECCIONE COCINADO O CRUDO"); 
+              /*tft.setCursor(190, 420);                                      tft.println("SELECCIONE COCINADO O CRUDO"); 
               tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());    tft.print("ANTES DE PESAR EL ALIMENTO"); 
+              */
+              tft.setCursor(10, 420); tft.println("SELECCIONE COCINADO O CRUDO ANTES DE PESAR");  
+              tft.selectInternalFont(RA8876_FONT_SIZE_32);
+              tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+              tft.setCursor(200,tft.getCursorY() + tft.getTextSizeY()); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
               break;
 
       case 5: // Crudo
