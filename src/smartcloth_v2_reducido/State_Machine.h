@@ -33,24 +33,27 @@
 #define  ASK_CONFIRMATION_SAVE    3  
 
 // --- ACCIÓN CONFIRMADA ---
-#define  CONFIRMATION_ADD     1
-#define  CONFIRMATION_DELETE  2
-#define  CONFIRMATION_SAVE    3  
+#define  ADD_EXECUTED     1
+#define  DELETE_EXECUTED  2
+#define  SAVE_EXECUTED    3  
+
+// --- MENSAJE DE AVISO ---
+#define  WARNING_NOT_ADDED      1
+#define  WARNING_NOT_DELETED    2
+#define  WARNING_NOT_SAVED      3
 
 // --- MENSAJE DE ERROR ----
 #define  ERROR_STATE_EMPTY           1
 #define  ERROR_STATE_PLATO           2
-#define  ERROR_STATE_GROUP_A         3
-#define  ERROR_STATE_GROUP_B         4
-#define  ERROR_STATE_RAW             5
-#define  ERROR_STATE_COOKED          6
-#define  ERROR_STATE_WEIGHTED        7
-#define  ERROR_STATE_ADD_CHECK       8
-#define  ERROR_STATE_ADDED           9
-#define  ERROR_STATE_DELETE_CHECK    10
-#define  ERROR_STATE_DELETED         11
-#define  ERROR_STATE_SAVE_CHECK      12
-#define  ERROR_STATE_SAVED           13
+#define  ERROR_STATE_GROUPS          3  // groupA o groupB
+#define  ERROR_STATE_PROCESAMIENTO   4  // raw o cooked
+#define  ERROR_STATE_WEIGHTED        5
+#define  ERROR_STATE_ADD_CHECK       6
+#define  ERROR_STATE_ADDED           7
+#define  ERROR_STATE_DELETE_CHECK    8
+#define  ERROR_STATE_DELETED         9
+#define  ERROR_STATE_SAVE_CHECK      10
+#define  ERROR_STATE_SAVED           11
 
 // --- PARPADEO DE ZONAS 1 Y 2 CUANDO NO ESCOGIDO ---
 #define  BLINK_AMBAS_ZONAS true
@@ -101,6 +104,7 @@ typedef enum {
               STATE_saved         =   (13),   // comida guardada
               STATE_ERROR         =   (14),   // Estado ficticio de error (acción incorrecta)
               STATE_CANCEL        =   (15)    // Estado ficticio de Cancelación
+              //STATE_AVISO     =   (16)    // Estado ficticio de Aviso. Se separa como estado para gestionar bien los errores ocurridos durante avisos
 } states_t;
 
 
@@ -129,20 +133,21 @@ typedef enum {
               LIBERAR               =   (12),   // Báscula vacía real
               ERROR                 =   (13),   // Error (acción incorrecta)
               CANCELAR              =   (14),   // Cancelar acción de añadir, eliminar o guardar
-              GO_TO_EMPTY           =   (15),   // Evento ficticio para volver a STATE_Empty porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_PLATO           =   (16),   // Evento ficticio para volver a STATE_Plato porque saltó un error 
-              GO_TO_GROUP_A         =   (17),   // Evento ficticio para volver a STATE_groupA porque saltó un error 
-              GO_TO_GROUP_B         =   (18),   // Evento ficticio para volver a STATE_groupB porque saltó un error
-              GO_TO_RAW             =   (19),   // Evento ficticio para volver a STATE_raw porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_COOKED          =   (20),   // Evento ficticio para volver a STATE_cooked porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_WEIGHTED        =   (21),   // Evento ficticio para volver a STATE_weighted porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_ADD_CHECK       =   (22),   // Evento ficticio para volver a STATE_add_check porque saltó un error 
-              GO_TO_ADDED           =   (23),   // Evento ficticio para volver a STATE_added porque saltó un error 
-              GO_TO_DELETE_CHECK    =   (24),   // Evento ficticio para volver a STATE_delete_check porque saltó un error 
-              GO_TO_DELETED         =   (25),   // Evento ficticio para volver a STATE_deleted porque saltó un error
-              GO_TO_SAVE_CHECK      =   (26),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
-              GO_TO_SAVED           =   (27),   // Evento ficticio para volver a STATE_saved porque saltó un error 
-              GO_TO_CANCEL          =   (28)    // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
+              //AVISO               =   (15),   // Aviso de plato o comida vacía
+              GO_TO_EMPTY           =   (16),   // Evento ficticio para volver a STATE_Empty porque saltó un error, aviso o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_PLATO           =   (17),   // Evento ficticio para volver a STATE_Plato porque saltó un error 
+              GO_TO_GROUP_A         =   (18),   // Evento ficticio para volver a STATE_groupA porque saltó un error o aviso
+              GO_TO_GROUP_B         =   (19),   // Evento ficticio para volver a STATE_groupB porque saltó un error o aviso
+              GO_TO_RAW             =   (20),   // Evento ficticio para volver a STATE_raw porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_COOKED          =   (21),   // Evento ficticio para volver a STATE_cooked porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_WEIGHTED        =   (22),   // Evento ficticio para volver a STATE_weighted porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_ADD_CHECK       =   (23),   // Evento ficticio para volver a STATE_add_check porque saltó un error 
+              GO_TO_ADDED           =   (24),   // Evento ficticio para volver a STATE_added porque saltó un error 
+              GO_TO_DELETE_CHECK    =   (25),   // Evento ficticio para volver a STATE_delete_check porque saltó un error 
+              GO_TO_DELETED         =   (26),   // Evento ficticio para volver a STATE_deleted porque saltó un error
+              GO_TO_SAVE_CHECK      =   (27),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
+              GO_TO_SAVED           =   (28),   // Evento ficticio para volver a STATE_saved porque saltó un error 
+              GO_TO_CANCEL          =   (29)    // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
 } event_t;
 
 
@@ -289,6 +294,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         //{STATE_added,STATE_saved,GUARDAR},               // Guardar la comida tras decir que se quiere añadir plato, aunque no se haga. Es posible que 
                                                                                          // el usuario trate el "Añadir plato" como un "Guardar plato".
                                         {STATE_added,STATE_ERROR,ERROR},                 // Acción incorrecta
+                                        //{STATE_added,STATE_AVISO,AVISO},               // No se ha añadido un plato porque el actual está vacío
                                         // ---------------------
 
                                         // --- Check eliminar plato ---
@@ -314,6 +320,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_deleted,STATE_groupB,GO_TO_GROUP_B},      // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         //{STATE_deleted,STATE_saved,GUARDAR},             // Guardar la comida tras borrar el plato actual. Solo se incluirían los platos anteriores.
                                         {STATE_deleted,STATE_ERROR,ERROR},               // Acción incorrecta
+                                        //{STATE_deleted,STATE_AVISO,AVISO},             // No se ha eliminado el plato porque está vacío
                                         // -----------------------
 
                                         // --- Check guardar comida ---
@@ -339,6 +346,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_saved,STATE_groupB,GO_TO_GROUP_B},        // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
                                         {STATE_saved,STATE_Empty,GO_TO_EMPTY},           // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
                                         {STATE_saved,STATE_ERROR,ERROR},                 // Acción incorrecta
+                                        //{STATE_saved,STATE_AVISO,AVISO},               // No se ha guardado la comida porque está vacía
                                         // -----------------------
 
 
@@ -369,9 +377,17 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_CANCEL,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar add/delete/save iniciada desde STATE_cooked
                                         {STATE_CANCEL,STATE_weighted,GO_TO_WEIGHTED},    // Regresar a STATE_weighted tras cancelar add/delete/save iniciada desde STATE_weighted
                                        // {STATE_CANCEL,STATE_ERROR,ERROR}               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría e
-                                                                                        // en bucle marcando error.
-                                        //{STATE_CANCEL,STATE_Empty,LIBERAR}
-                                                                                          
+                                                                                        // en bucle marcando error.                                                                                          
+                                        // -----------------------
+
+
+                                        // --- AVISO -------------
+                                        /*
+                                        {STATE_AVISO,STATE_groupA,GO_TO_GROUP_A},     // Regresar a groupA tras 3 segundos de warning
+                                        {STATE_AVISO,STATE_groupB,GO_TO_GROUP_B},     // Regresar a groupB tras 3 segundos de warning
+                                        {STATE_AVISO,STATE_Empty,GO_TO_EMPTY},        // Regresar a Empty tras 3 segundos de warning
+                                        {STATE_AVISO,STATE_ERROR,ERROR}               // Acción incorrecta durante aviso. Cualquier cosa es acción incorrecta. Igual que en Cancelar.
+                                        */
                                         // -----------------------
                                       };
 
@@ -385,24 +401,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 states_t state_actual;          // Estado actual
 states_t state_new;             // Nuevo estado al que se va a pasar
 states_t state_prev;            // Estado anterior
-states_t state_prev_prev;       // Estado anterior al anterior
-states_t state_prev_prev_prev;  // Estado anterior al anterior del anterior
-
-// Si se hace este orden:   1 - STATE_Empty
-//                          2 - STATE_ERROR
-//                          3 - STATE_save_check (pulsar guardar mientras se estaba en error)
-//                          4 - STATE_saved (se ha confirmado)
-//
-// Entonces los estados son:    state_actual = STATE_saved
-//                              state_prev = STATE_save_check
-//                              state_prev_prev = STATE_ERROR
-//                              state_prev_prev_prev = STATE_Empty
-//
-// Hace falta saber el "estado anterior al anterior del anterior" para muy pocos casos, pero uno de ellos es cuando se está en STATE_Empty, se comete un error (STATE_ERROR) y
-// mientras se está en error se pulsa guardar comida, lo cual lleva a STATE_save_check y, si se confirma, a STATE_saved. Una vez se está en STATE_saved, tras
-// unos segundos para indicar que se ha guardado, se tiene que regresar al estado desde donde se quiso guardar, es decir, desde donde se pasó a STATE_save_check.
-// El problema es que, en este caso, ese estado es STATE_ERROR y no debería regresar a ese, sino a su anterior (STATE_Empty). Para eso es necesario saber state_prev_prev_prev.
-//
+//states_t state_prev_prev;       // Estado anterior al anterior                ==> no hace falta con lastValidState 
+//states_t state_prev_prev_prev;  // Estado anterior al anterior del anterior   ==> no hace falta con lastValidState 
+states_t lastValidState;         // Último estado válido (Empty, Plato, groupA, groupB, raw, cooked, weighted)
 // ------ FIN VARIABLES DE ESTADOS ----------------------------------------------------
 
 
@@ -423,6 +424,8 @@ bool  flagError = false;    // El error es una acción de diferente naturaleza. 
 bool keepErrorScreen = false; // Mantener pantalla de error cometido por colocar alimento cuando no toca (desde Grupos).
                               // En este caso no se retira la pantalla tras 3 segundos, sino que se mantiene hasta que
                               // se retire el plato para comenzar de nuevo.
+
+bool flagComidaSaved = false;
 // ------ FIN VARIABLES DE EVENTOS ----------------------------------------------------
 
 
@@ -581,8 +584,7 @@ void actStateEmpty(){
 
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                            // las acciones.
+                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
 
@@ -615,7 +617,7 @@ void actStateEmpty(){
    actStatePlato(): Acciones del STATE_Plato
 ----------------------------------------------------------------------------------------------------------*/
 void actStatePlato(){ 
-    // Tiempos utilizados para alternar entre dashboard y pantalla de escoger grupo:
+    // Tiempos utilizados para alternar entre recipiente colocado, dashboard y pantalla de escoger grupo:
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
     const unsigned long recipienteColocadoInterval  = 1000; // Intervalo de tiempo para mostrar "Recipiente colocado" (1 segundo)
     const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
@@ -627,30 +629,38 @@ void actStatePlato(){
     static bool showing_dash;      
     static bool showing_escoger_grupo;
 
+    // El peso definitivo del recipiente no se guarda hasta que se escoja grupo de alimentos.
+    // Por eso, 'pesoRecipiente' y 'pesoARetirar' son iguales a 0.0 en este estado. Esto no impide que se
+    // realice LIBERAR, ya que ese evento ocurre cuando el peso de la báscula es igual a 'pesoARetirar'. 
+    // Así, se puede detectar que se ha quitado el recipiente (bascula = 0.0) y se vuelve al estado STATE_Empty.   
+
     if(!doneState){
         if(state_prev != STATE_Plato){
             Serial.println(F("\nPlato colocado")); 
 
-            if((state_prev == STATE_Empty) or ((state_prev_prev == STATE_Empty) and (state_prev == STATE_ERROR))){  
-                  // ==> Si se viene de STATE_Empty, donde se ha tarado.
-                  // ==> O si estando en STATE_Empty, donde ya se había tarado, ocurrió un error y durante el error se colocó el plato
+            // ----- REINICIAR COPIA DE COMIDA GUARDADA -------------------------
+            // Si se acaba de guardar la comida, ya se ha mostrado la copia de su info en STATE_Empty. Entonces, si la comida real
+            // está vacía porque se ha reiniciado tras guardarla, al colocar recipiente se entiende que va a comenzar una nueva,
+            // por lo que se debe reiniciar también la copia.
+            // De esta forma, si se retira el plato y se regresa a Empty, ya no vuelve a aparecer la info de la comida guardada antes, 
+            // sino qye ya se está haciendo la nueva comida, que aún está a 0.
+            // 
+            if((comidaActual.isComidaEmpty() == true) and (comidaActualCopia.isComidaEmpty() == false)) comidaActualCopia.restoreComida();   
+            if(flagComidaSaved) flagComidaSaved = false;  // Si se había guardado comida, se muestra "Comida guardada" en lugar de "Comida actual" en printZona3()
+            // ----- FIN REINICIAR COPIA DE COMIDA GUARDADA ----------------------
+
+            if(lastValidState == STATE_Empty){ // Si se viene directo de Empty o a través de un error
+                      // ==> Si se viene de STATE_Empty, donde se ha tarado.
+                      // ==> O si estando en STATE_Empty, donde ya se había tarado, ocurrió un error y durante el error se colocó el plato
                 tarado = false;                  // Desactivar flag de haber 'tarado' 
-            }
-                                            // El peso definitivo del recipiente no se guarda hasta que se escoja grupo de alimentos.
-                                            // Por eso, 'pesoRecipiente' y 'pesoARetirar' son iguales a 0.0 en este estado. Esto no impide que se
-                                            // realice LIBERAR, ya que ese evento ocurre cuando el peso de la báscula es igual a 'pesoARetirar'. 
-                                            // Así, se puede detectar que se ha quitado el recipiente (bascula = 0.0) y se vuelve al estado STATE_Empty.            
-        
+
             // ----- INFO INICIAL DE PANTALLA -------------------------
-            if((state_prev == STATE_Empty) or ((state_prev_prev == STATE_Empty) and (state_prev == STATE_ERROR))){
-                  // ==> Si se viene directo de STATE_Empty (se ha colocado el recipiente sin errores)
-                  // ==> O si se cometió error en STATE_Empty y se colocó el recipiente durante el error
                 recipienteColocado();                 // Mostrar "Recipiente colocado" una vez al inicio. No volverlo a mostrar si se comete error en STATE_Plato.
                 showing_recipiente_colocado = true;   // Se está mostrando "Recipiente colocado"
                 showing_dash = false;      
                 showing_escoger_grupo = false;
             }
-            else{ // ==> Si se ha cometido error, mostrar dashboard completo
+            else{ // ==> Si se ha cometido error desde STATE_Plato, mostrar dashboard completo
                 showDashboardStyle1(MSG_SIN_GRUPO);   // Mostrar dashboard con mensaje de sin grupo
                 showing_recipiente_colocado = false;                
                 showing_dash = true;                  // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
@@ -666,8 +676,7 @@ void actStatePlato(){
 
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                            // las acciones.
+                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
 
@@ -726,10 +735,8 @@ void actGruposAlimentos(){
     if(!doneState){        
         
         // ----- ACCIONES ------------------------------
-        if((state_prev == STATE_Plato) or ((state_prev_prev == STATE_Plato) and (state_prev == STATE_ERROR))){ 
-            // ==> Si se viene de STATE_Plato porque se acaba de colocar el recipiente.
+        if(lastValidState == STATE_Plato){ // Si se viene directo de plato o a través de un error
             pesoRecipiente = pesoBascula;                                   // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
-            //tareScale();                                                    // Tarar para tomar peso real del alimento que se va a colocar.
         }
         else if((state_prev != STATE_ERROR) and (pesoBascula != 0.0)){ 
                 Serial.println(F("Añadiendo alimento al plato..."));
@@ -753,8 +760,8 @@ void actGruposAlimentos(){
 
         // ----- INFO PANTALLA -------------------------
         if(showing_escoger_procesamiento or ((state_prev != STATE_groupA) and (state_prev != STATE_groupB))){ // ==> Si es la primera vez que se escoge grupo, se muestra todo (ejemplos, alimento y comida actual)
-            if(state_prev != STATE_ERROR) tareScale();            // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos.
-                                    // Esta tara DEBE hacerse antes de showDashboardStyle2() para que muestre el peso a 0.      
+            if(state_prev != STATE_ERROR) tareScale();      // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos, porque es innecesario.
+                                                            // Esta tara DEBE hacerse antes de showDashboardStyle2() para que muestre el peso a 0.      
             showDashboardStyle2();  // Mostrar dashboard al inicio
             showing_dash = true;    // Mostrando dashboard estilo 2 (Alimento | Comida)
             showing_just_groups = false;
@@ -774,8 +781,7 @@ void actGruposAlimentos(){
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
 
@@ -830,8 +836,7 @@ void actStateRaw(){
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 }
 
@@ -859,8 +864,7 @@ void actStateCooked(){
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 }
 
@@ -885,8 +889,7 @@ void actStateWeighted(){
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 }
 
@@ -906,8 +909,7 @@ void actStateAddCheck(){
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
     //if(!temporalScreenDone) Serial.println(F("Print previo")); pedirConfirmacion(ASK_CONFIRMATION_ADD); 
@@ -946,8 +948,8 @@ void actStateAdded(){
             Serial.println(F("Añadiendo plato a la comida..."));
 
             /* ----- ACTUALIZAR PLATO  ----- */
-            if(pesoBascula != 0.0){                       // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado,
-                                                          //     debe incluirse en el plato. 
+            if(pesoBascula != 0.0){   // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado,
+                                                                        //     debe incluirse en el plato. 
                                                                     // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
                                                                     // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar el plato, pues no se habría modificado.
@@ -978,29 +980,55 @@ void actStateAdded(){
                                                             // en el dashboard estilo 1 (STATE_Empty y STATE_Plato) la comida actual junto con el acumulado.
                                                             // Se muestra esta copia en lugar de la original 'comidaActual' porque esa se borra tras guardarla.
             }
-            else{   // PLATO VACÍO ==> NO SE CREA OTRO
-                errorPlatoWasEmpty = true;
+            else{   // PLATO VACÍO ==> NO SE CREA OTRO  // --> SIN STATE_AVISO
+            // ----- CON STATE_AVISO --------
+            //else if(state_prev != STATE_ERROR){   // PLATO VACÍO ==> NO SE CREA OTRO 
+            // ----- FIN CON STATE_AVISO ----
+                                                            // Se chequea no venir de error para no marcar un falso aviso. Un aviso real habría saltado
+                                                            // al entrar a este estado STATE_added, antes de cometer error. Si no hubiera saltado, se habría
+                                                            // añadido un plato y limpiado el actual, por lo que tras un posible error en este estado,
+                                                            // siempre se marcaría aviso de plato vacío, porque se acaba de limpiar. Por eso se comprueba no venir
+                                                            // de error, para no marcar aviso.
+                errorPlatoWasEmpty = true; // --> CON O SIN STATE_AVISO
+                // ----- CON STATE_AVISO --------
+                // addEventToBuffer(AVISO); 
+                // flagEvent = true;
+                // ----- FIN CON STATE_AVISO ----
             }
             /* --------------------------------------- */
 
 
             /* -----  INFORMACIÓN MOSTRADA  ---------------------------------- */
-            if((state_prev == STATE_ERROR)) showAccionConfirmada(CONFIRMATION_ADD);   // Mostrar mensaje de plato añadido porque es lo único que ha podido ocurrir 
+            // ----- CON STATE_AVISO --------
+            // Hacer esto en lugar del siguiente if-else de SIN STATE_AVISO:
+            // if(!errorPlatoWasEmpty) showAccionRealizada(ADD_EXECUTED); // Se muestra si no ha habido aviso.
+                                        // Solo habrá aviso si el plato está vacío y si no se viene de error, por eso no hace falta chequear aquí
+                                        // si se viene de error. En cualquiera de los dos casos que no marcan aviso (se ha añadido plato o se 
+                                        // ha cometido error) se muestra el mensaje de confirmación (accion realizada) para que pida retirar el plato.
+                                        // Si saltara aviso, se pasaría al STATE_AVISO y luego se regresaría a grupos, por lo que no es posible
+                                        // cometer un error en este STATE_added si ha saltado aviso. Solo se puede cometer error si se ha añadido plato
+                                        // y se está esperando retirarlo.
+                                        // ==> Un error en este estado sería pulsar cualquier botón. Lo único que se debe hacer es retirar el plato.
+            // ----- FIN CON STATE_AVISO ----
+
+            // ----- SIN STATE_AVISO --------
+            if((state_prev == STATE_ERROR)) showAccionRealizada(ADD_EXECUTED);   // Mostrar mensaje de plato añadido porque es lo único que ha podido ocurrir 
                                                                                       // previo a un error en este estado. De esta forma, se sigue pidiendo que se retire el plato.
-            else{
+            else{ // ---- STATE_AVISO ==> este else no hace falta.
                 if(!errorPlatoWasEmpty){  // ==> Si el plato no estaba vacío y se ha guardado/creado otro
-                    showAccionConfirmada(CONFIRMATION_ADD);            // Mostrar mensaje de plato añadido
+                    showAccionRealizada(ADD_EXECUTED);            // Mostrar mensaje de plato añadido
                 }
                 else{   // ==> Si el plato está vacío, no se crea otro. Si se viene de error tras guardar, saltaría aviso de comida vacía.????????
-                    showWarning(1); // Mostrar aviso de plato vacío y no se crea otro
+                    showWarning(WARNING_NOT_ADDED); // Mostrar aviso de plato vacío y no se crea otro
                     Serial.println(F("No se ha creado otro plato porque el actual está vacío"));
                     previousTimeWarning = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
                 }
             }
+            // ----- FIN SIN STATE_AVISO ----
             /* ----- FIN INFO MOSTRADA ---------------------------------------- */
 
 
-        } // FIN if(state_prev != STATE_added)
+        } // FIN state_prev != STATE_added
         else if(tarado){           // ==> Si se viene del propio STATE_added, donde se puede haber tarado.
             tarado = false;              // Desactivar flag de haber 'tarado'.          
         }
@@ -1008,12 +1036,12 @@ void actStateAdded(){
         
         doneState = true;                                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                     // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                    // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                    // las acciones.
+                                                                    // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
 
-
+    // Hacer lo siguiente en el STATE_AVISO
+    // -- SIN STATE_AVISO -----------------------------------------------
     // ----- TIEMPO DE ESPERA ------------------------------
     if((state_prev != STATE_ERROR) and errorPlatoWasEmpty){     // Si no ha ocurrido un error y no se ha creado otro plato porque el plato actual está vacío, se regresa
         currentTime = millis();
@@ -1027,6 +1055,7 @@ void actStateAdded(){
         }
     }
     // ----- FIN TIEMPO DE ESPERA --------------------------
+    // -- FIN SIN STATE_AVISO -------------------------------------------
 
 }
 
@@ -1046,8 +1075,7 @@ void actStateDeleteCheck(){
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
     //if(!temporalScreenDone) Serial.println(F("Print previo")); pedirConfirmacion(ASK_CONFIRMATION_DELETE); 
@@ -1120,25 +1148,49 @@ void actStateDeleted(){
                                                       // último alimento (solo su peso) y el objeto Plato está realmente vacío.
                     pesoPlato = pesoLastAlimento;     // Incluir último alimento en el 'pesoPlato' para saber 'pesoARetirar'.
                 }
-                else{   // PLATO VACÍO Y NO HAY ÚLTIMO ALIMENTO ==> NADA QUE RETIRAR 
-                    errorPlatoWasEmpty = true;
+                else{   // PLATO VACÍO Y NO HAY ÚLTIMO ALIMENTO ==> NADA QUE BORRAR NI RETIRAR 
+                //else if(state_prev != STATE_ERROR){   // PLATO VACÍO Y NO HAY ÚLTIMO ALIMENTO ==> NADA QUE BORRAR NI RETIRAR 
+                                                            // Se chequea no venir de error para no marcar un falso aviso. Un aviso real habría saltado
+                                                            // al entrar a este estado STATE_deleted, antes de cometer error. Si no hubiera saltado, se habría
+                                                            // eliminado y limpiado el plato actual, por lo que tras un posible error en este estado,
+                                                            // siempre se marcaría aviso de plato vacío, porque se acaba de limpiar. Por eso se comprueba no venir
+                                                            // de error, para no marcar aviso.
+                    errorPlatoWasEmpty = true; // CON O SIN STATE_AVISO
+                    // ----- CON STATE_AVISO --------
+                    // addEventToBuffer(AVISO); 
+                    // flagEvent = true;
+                    // ----- FIN CON STATE_AVISO ----
                 }
             }
 
 
             /* -----  INFORMACIÓN MOSTRADA  ---------------------------------- */
-            if((state_prev == STATE_ERROR)) showAccionConfirmada(CONFIRMATION_DELETE);   // Mostrar mensaje de plato eliminado porque es lo único que ha podido ocurrir 
+            // ----- CON STATE_AVISO --------
+            // Hacer esto en lugar del siguiente if-else de SIN STATE_AVISO:
+            // if(!errorPlatoWasEmpty) showAccionRealizada(DELETE_EXECUTED); // Se muestra si no ha habido aviso.
+                                        // Solo habrá aviso si el plato está vacío y si no se viene de error, por eso no hace falta chequear aquí
+                                        // si se viene de error. En cualquiera de los dos casos que no marcan aviso (se ha eliminado plato o se 
+                                        // ha cometido error) se muestra el mensaje de confirmación (acción realizada) para que pida retirar el plato.
+                                        // Si saltara aviso, se pasaría al STATE_AVISO y luego se regresaría a grupos, por lo que no es posible
+                                        // cometer un error en este STATE_deleted si ha saltado aviso. Solo se puede cometer error si se ha eliminado el plato
+                                        // // y se está esperando retirarlo.
+                                        // ==> Un error en este estado sería pulsar cualquier botón. Lo único que se debe hacer es retirar el plato.
+            // ----- FIN CON STATE_AVISO ----
+
+            // ----- SIN STATE_AVISO --------
+            if((state_prev == STATE_ERROR)) showAccionRealizada(DELETE_EXECUTED);   // Mostrar mensaje de plato eliminado porque es lo único que ha podido ocurrir 
                                                                                          // previo a un error en este estado. De esta forma, se sigue pidiendo que se retire el plato.
             else{
                 if(!errorPlatoWasEmpty){   // ==> Si la comida no estaba vacía (incluyendo último alimento) y se ha borrado 
-                    showAccionConfirmada(CONFIRMATION_DELETE);     // Mostrar confirmacion de haber eliminado el plato
+                    showAccionRealizada(DELETE_EXECUTED);     // Mostrar confirmacion de haber eliminado el plato
                 }
                 else{     // ==> Si el plato está vacío, no se borra
-                    showWarning(2); // Mostrar aviso de plato vacío y no se borra
+                    showWarning(WARNING_NOT_DELETED); // Mostrar aviso de plato vacío y no se borra
                     Serial.println(F("No se ha borrado el plato porque está vacío"));
                     previousTime = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO borrar, regresar a STATE_groupA / B, según el último grupo escogido.
                 }
             }
+            // ----- FIN SIN STATE_AVISO ----
             /* ----- FIN INFO MOSTRADA ---------------------------------------- */
 
 
@@ -1150,10 +1202,12 @@ void actStateDeleted(){
 
             doneState = true;                                       // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                     // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                    // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                    // las acciones.
+                                                                    // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
+
+    // Hacer lo siguiente en el STATE_AVISO
+    // -- SIN STATE_AVISO -----------------------------------------------
     // ----- TIEMPO DE ESPERA ------------------------------
     if((state_prev != STATE_ERROR) and errorPlatoWasEmpty){     // Si no ha ocurrido un error y no se ha borrado nada porque el plato está vacío , se regresa
         currentTime = millis();
@@ -1167,6 +1221,7 @@ void actStateDeleted(){
         }
     }
     // ----- FIN TIEMPO DE ESPERA --------------------------
+    // -- FIN SIN STATE_AVISO -------------------------------------------
 
 
 }
@@ -1187,8 +1242,7 @@ void actStateSaveCheck(){
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                            // las acciones.
+                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
     //if(!temporalScreenDone) Serial.println(F("Print previo")); pedirConfirmacion(ASK_CONFIRMATION_SAVE); 
@@ -1272,41 +1326,77 @@ void actStateSaved(){
                 errorComidaWasEmpty = false;
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
                 saveComidaSD();                             // Comida ==> fichero CSV en SD
+
                 comidaActualCopia.copyComida(comidaActual); // Copiar nº platos, peso y valores de la comida actual a la copia. Este objeto 'Comida' solo sirve para mostrar
                                                             // en el dashboard estilo 1 (STATE_Empty y STATE_Plato) la comida guardada junto con el acumulado, pues tras guardarla
                                                             // se limpia (siguiente línea). Por eso se copia antes, para poderla ver al regresar a STATE_Empty.
                 comidaActual.restoreComida();               // "Reiniciar" comidaActual para usarla de nuevo.
-            }
+
+                flagComidaSaved = true;                     // Se indica que se ha guardado la comida para que el dashboard estilo 1 en STATE_Empty se muestre
+                                                            // "Comida guardada" en lugar de "Comida actual". De este forma se entiende que los valores que se
+                                                            // muestran son de la comida que se acaba de guardar. En cuanto se coloque recipiente, se entenderá
+                                                            // que se ha comenzado otra comida, pasando ya a "Comida actual".
+            }   
             else{   // COMIDA VACÍA ==> NO HAY QUE GUARDAR
-                errorComidaWasEmpty = true;
+            // ----- CON STATE_AVISO --------
+            //else if(state_prev != STATE_ERROR){   // PLATO VACÍO ==> NO SE CREA OTRO 
+            // ----- FIN CON STATE_AVISO ----
+                                                            // Se chequea no venir de error para no marcar un falso aviso. Un aviso real habría saltado
+                                                            // al entrar a este estado STATE_saved, antes de cometer error. Si no hubiera saltado, se habría
+                                                            // guardado y limpiado la comida, por lo que tras un posible error en este estado, siempre se
+                                                            // marcaría aviso de comida vacía, porque se acaba de limpiar. Por eso se comprueba no venir
+                                                            // de error, para no marcar aviso.
+                errorComidaWasEmpty = true;  // CON O SIN STATE_AVISO
+                // ----- CON STATE_AVISO --------
+                // addEventToBuffer(AVISO); 
+                // flagEvent = true;
+                // ----- FIN CON STATE_AVISO ----
             }
             /* ----- FIN GUARDAR COMIDA EN DIARIO ------------------------- */
 
 
             /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */
-            if(state_prev == STATE_ERROR) showAccionConfirmada(CONFIRMATION_SAVE); 
+            // ----- CON STATE_AVISO --------
+            // Hacer esto en lugar del siguiente if-else de SIN STATE_AVISO:
+            /* 
+            if(!errorComidaWasEmpty){ 
+                showAccionRealizada(SAVE_EXECUTED); // Se muestra si no ha habido aviso.
+                if(lastValidState == STATE_Empty) previousTimeComidaSaved = millis(); // Comida guardada desde Empty
+
+            */
+                                        // Solo habrá aviso si la comida está vacía y si no se viene de error, por eso no hace falta chequear aquí
+                                        // si se viene de error. En cualquiera de los dos casos que no marcan aviso (se ha guardado la comida o se 
+                                        // ha cometido error) se muestra el mensaje de confirmación (accion realizada) para que pida retirar el plato.
+                                        // Si saltara aviso, se pasaría al STATE_AVISO y luego se regresaría a grupos, por lo que no es posible
+                                        // cometer un error en este STATE_saved si ha saltado aviso. Solo se puede cometer error si se ha guardado la comida
+                                        // y se está esperando retirar el plato.
+                                        // ==> Un error en este estado sería pulsar cualquier botón. Lo único que se debe hacer es retirar el plato.
+            // ----- FIN CON STATE_AVISO ----
+
+            // ----- SIN STATE_AVISO --------
+            if(state_prev == STATE_ERROR) showAccionRealizada(SAVE_EXECUTED); 
                       // ==> Si ha ocurrido un error, pero no se ha quitado el plato durante la pantalla de error
                       //      Mostrar mensaje de comida guardada porque es lo último que ocurrió previo al error.
                       //      De esta forma, se sigue pidiendo que se retire el plato.
             else{
                 if(!errorComidaWasEmpty){     // ==> Si la comida no estaba vacía y se ha guardado 
-                    showAccionConfirmada(CONFIRMATION_SAVE);          //  Mostrar confirmación de haber guardado la comida
+                    showAccionRealizada(SAVE_EXECUTED);          //  Mostrar confirmación de haber guardado la comida
                     Serial.println(F("COMIDA GUARDADA"));
-                    //if((pesoRecipiente + pesoPlato) == 0.0) previousTimeComidaSaved = millis();     //  Reiniciar "temporizador" de 3 segundos para, tras guardar, regresar a STATE_Empty.
-                    if((state_prev_prev == STATE_Empty) or ((state_prev_prev_prev == STATE_Empty) and (state_prev_prev == STATE_ERROR))) previousTimeComidaSaved = millis(); 
+                    if(lastValidState == STATE_Empty) previousTimeComidaSaved = millis();  // Si se viene directo de Empty (pasando por save_check) o a través de un error
                                   // ==> Si se ha guardado desde Empty, se regresa a Empty
                                   // ==> O si se ha guardado durante error producido desde Empty, se regresa a Empty
                                   //  Reiniciar "temporizador" de 3 segundos para, tras guardar, regresar a STATE_Empty.  
-                    // else -> Si hay algo que retirar (pesoARetirar != 0.0), lo dirá el mensaje de confirmación
+                    //  -> Si hay algo que retirar (pesoARetirar != 0.0), lo dirá el mensaje de confirmación
 
                 }
                 else{     // ==> Si la comida estaba vacía y no se ha guardado, se regresa a Grupos o Empty tras aviso
-                    showWarning(3); // Mostrar aviso de comida vacía y no se guarda
+                    showWarning(WARNING_NOT_SAVED); // Mostrar aviso de comida vacía y no se guarda
                     Serial.println(F("No se ha guardado la comida porque está vacía"));
                     previousTimeComidaEmpty = millis();   // Reiniciar "temporizador" de 3 segundos para, tras NO guardar, regresar a STATE_groupA / B, según el último grupo escogido,
                                                           // o STATE_Empty si se intentó guardar desde Empty
                 }
             }
+            // ----- FIN SIN STATE_AVISO ----
             /* ----- FIN INFO MOSTRADA ------------------------------------ */
         
 
@@ -1318,8 +1408,7 @@ void actStateSaved(){
         
         doneState = true;                                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                     // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                    // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                                                    // las acciones.
+                                                                    // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
 
@@ -1330,16 +1419,16 @@ void actStateSaved(){
     // Si la comida no estuviera vacía y se hubiera guardado desde otro sitio, no se haría regreso automático,
     // sino que pediría retirar plato. Por eso solo chequea tiempo para el caso de Empty.
     if(!errorComidaWasEmpty){  // COMIDA CON COSAS --> se guardó
-      if((state_prev_prev == STATE_Empty) or ((state_prev_prev_prev == STATE_Empty) and (state_prev_prev == STATE_ERROR))){     
+      if(lastValidState == STATE_Empty){ // Si se viene directo de Empty (pasando por save_check) o a través de un error
               // ==> Si se ha guardado la comida desde el STATE_Empty, tras añadir o eliminar. 
               // ==> O si se ha guardado durante error producido desde Empty
               //          Si se ha guardado desde cualquier otro estado, con algo sobre la báscula, la pantalla
               //          de confirmación de acción pedirá retirar el plato.
-              //          Este chequeo de tiempo solo es para regresar a STATE_Empty si se ha guardado tras
-              //          venir de añadir o eliminar y teniendo algo en la comida.
+              //          Este chequeo de tiempo solo es para regresar a STATE_Empty si se ha guardado la comida,
+              //          que no estaba vacía.
             currentTime = millis();
             if ((currentTime - previousTimeComidaSaved) > 3000) {    // Tras 3 segundos mostrando confirmación de haber guardado...
-                Serial.print(F("\nGO_TO_GROUP_EMPTY forzada. Regreso a INI..."));
+                Serial.print(F("\nGO_TO_EMPTY forzada. Regreso a INI..."));
                 addEventToBuffer(GO_TO_EMPTY);
                 flagEvent = true;
             }
@@ -1351,24 +1440,17 @@ void actStateSaved(){
     else if(state_prev != STATE_ERROR){     // COMIDA VACÍA ==> Y si no ha ocurrido un error desde STATE_saved
         currentTime = millis();
         if ((currentTime - previousTimeComidaEmpty) > 3000) {    // Tras 3 segundos mostrando warning...
-            if((state_prev_prev == STATE_Empty) or ((state_prev_prev_prev == STATE_Empty) and (state_prev_prev == STATE_ERROR))){
-
-            //if((eventoGrande != TIPO_A) and (eventoGrande != TIPO_B)){  // ==> Si se ha querido guardar desde STATE_Empty pero no había nada que guardar
-                        //  Puede que se haya querido dar a guardar nada más encender, en cuyo caso 'eventoGrande' aún no tiene ningún
-                        //  valor como para regresar a alguno de los estados de grupos de alimentos.
-                        //  Ese este caso, se regresa al STATE_Empty, que es en realidad desde donde se ha querido guardar.
-                        //  Este es un caso muy poco probable, pero si surgiera, el programa se quedaría atascado, puesto que
-                        //  espera la liberación forzada para regresar.
+            if(lastValidState == STATE_Empty){ // Si se viene directo de Empty (pasando por save_check) o a través de un error
                 Serial.print(F("\nGO_TO_EMPTY forzada. Regreso a INI..."));
                 addEventToBuffer(GO_TO_EMPTY);
-                flagEvent = true;
+                //flagEvent = true;
             }
             else{ // ==> Si se ha querido guardar desde crudo/cocinado, pero la comida estaba vacía, se regresa al momento en que se escogió el
                   //     último grupo, reseteando el procesamiento (crudo/cocinado). Al regresar a STATE_groupA / B, según el grupo, se mantiene
                   //     el peso del recipiente.
                 Serial.print(F("\nTIPO_A o TIPO_B forzada. Regreso a GRUPOS..."));
-                //addEventToBuffer(eventoGrande);   // Se regresa a STATE_groupA o STATE_groupB, según el último grupo escogido. 
-                                                  // Allí se resetea procesamiento. Se mantiene peso del recipiente.
+                  // Se regresa a STATE_groupA o STATE_groupB, según el último grupo escogido. 
+                  // Allí se resetea procesamiento, manteniendo el peso del recipiente.
                 if(eventoGrande == TIPO_A) addEventToBuffer(GO_TO_GROUP_A);  
                 else if(eventoGrande == TIPO_B) addEventToBuffer(GO_TO_GROUP_B);
             }
@@ -1398,42 +1480,37 @@ void actStateERROR(){
         Serial.println(F("Mensaje de error")); 
         // Mensaje de error según estado en el que se ha cometido el error (state_prev)
         switch (state_prev){
-          case 1:     showError(ERROR_STATE_EMPTY);         break;  // Empty
-          case 2:     showError(ERROR_STATE_PLATO);         break;  // Plato
+          case STATE_Empty:         showError(ERROR_STATE_EMPTY);           break;  // Empty
+          case STATE_Plato:         showError(ERROR_STATE_PLATO);           break;  // Plato
 
-          case 3:     // grupoA 
-                      showError(ERROR_STATE_GROUP_A);     
-                      if(hasScaleEventOccurred() and (eventoBascula == INCREMENTO)){ // Se ha colocado alimento antes de escoger crudo/cocinado
-                        keepErrorScreen = true; // Para mantener la pantalla de error hasta que se retire el plato para comenzar de nuevo.
-                                                      // Este error no se trata como los demás (mostrando solo durante 3 seg) porque no es simplemente
-                                                      // que no se pueda hacer, como pulsar un botón, sino que se debe corregir la acción. Es decir,
-                                                      // retirar lo colocado.
-                      } 
-                      break;  
+          case STATE_groupA: case STATE_groupB:    
+                                    if(hasScaleEventOccurred() and (eventoBascula == INCREMENTO)){ // El error ha sido colocar alimento antes de escoger crudo/cocinado
+                                      keepErrorScreen = true; // Para mantener la pantalla de error hasta que se retire el plato para comenzar de nuevo.
+                                                                    // Este error no se trata como los demás (mostrando solo durante 3 seg) porque no es simplemente
+                                                                    // que no se pueda hacer, como pulsar un botón, sino que se debe corregir la acción. Es decir,
+                                                                    // retirar lo colocado.
+                                    } 
+                                    showError(ERROR_STATE_GROUPS);          break;  // grupoA o groupB
 
-          case 4:     // grupoB
-                      showError(ERROR_STATE_GROUP_B);     
-                      if(hasScaleEventOccurred() and (eventoBascula == INCREMENTO)){ // Se ha colocado alimento antes de escoger crudo/cocinado
-                        keepErrorScreen = true; // Para mantener la pantalla de error hasta que se retire el plato para comenzar de nuevo.
-                      }  
-                      break;  
+          case STATE_raw: case STATE_cooked:  
+                                    showError(ERROR_STATE_PROCESAMIENTO);   break;  // Crudo o Cocinado
 
-          case 5:     showError(ERROR_STATE_RAW);           break;  // Crudo
-          case 6:     showError(ERROR_STATE_COOKED);        break;  // Cocinado
-          case 7:     showError(ERROR_STATE_WEIGHTED);      break;  // Pesado
-          case 8:     showError(ERROR_STATE_ADD_CHECK);     break;  // add_check
-          case 9:     showError(ERROR_STATE_ADDED);         break;  // Added
-          case 10:    showError(ERROR_STATE_DELETE_CHECK);  break;  // delete_check
-          case 11:    showError(ERROR_STATE_DELETED);       break;  // Deleted
-          case 12:    showError(ERROR_STATE_SAVE_CHECK);    break;  // save_check
-          case 13:    showError(ERROR_STATE_SAVED);         break;  // Saved
-          default:                                          break;  
+          case STATE_weighted:      showError(ERROR_STATE_WEIGHTED);        break;  // Pesado
+
+          // En los siguientes casos no se chequea si el error ha sido colocar alimento porque se entiende que es improbable que eso ocurra. Sin embargo, si ocurriera,
+          // se marcaría error pero no se gestionaría esperando corregir la acción (quitar el peso), como en el caso de los grupos ==> Posible mejora
+          case STATE_add_check:     showError(ERROR_STATE_ADD_CHECK);       break;  // add_check
+          case STATE_added:         showError(ERROR_STATE_ADDED);           break;  // Added
+          case STATE_delete_check:  showError(ERROR_STATE_DELETE_CHECK);    break;  // delete_check
+          case STATE_deleted:       showError(ERROR_STATE_DELETED);         break;  // Deleted
+          case STATE_save_check:    showError(ERROR_STATE_SAVE_CHECK);      break;  // save_check
+          case STATE_saved:         showError(ERROR_STATE_SAVED);           break;  // Saved
+          default:   break;  
         }
         
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.
-                                            // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                            // las acciones.
+                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
     // ----- FIN INFO MOSTRADA ------------------------------------ 
 
@@ -1447,20 +1524,20 @@ void actStateERROR(){
         if ((currentTime - previousTimeError) > 3000) {    // Tras 3 segundos mostrando error...
             // Regresar al estado anterior desde donde se cometió el error
             switch (state_prev){ 
-              case 1:   Serial.print(F("\nRegreso a Empty tras ERROR..."));         addEventToBuffer(GO_TO_EMPTY);         flagEvent = true;   break;  // Empty
-              case 2:   Serial.print(F("\nRegreso a Plato tras ERROR..."));         addEventToBuffer(GO_TO_PLATO);         flagEvent = true;   break;  // Plato
-              case 3:   Serial.print(F("\nRegreso a groupA tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_A);       flagEvent = true;   break;  // grupoA 
-              case 4:   Serial.print(F("\nRegreso a groupB tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_B);       flagEvent = true;   break;  // grupoB
-              case 5:   Serial.print(F("\nRegreso a raw tras ERROR..."));           addEventToBuffer(GO_TO_RAW);           flagEvent = true;   break;  // Crudo
-              case 6:   Serial.print(F("\nRegreso a cooked tras ERROR..."));        addEventToBuffer(GO_TO_COOKED);        flagEvent = true;   break;  // Cocinado
-              case 7:   Serial.print(F("\nRegreso a weighted tras ERROR..."));      addEventToBuffer(GO_TO_WEIGHTED);      flagEvent = true;   break;  // Pesado
-              case 8:   Serial.print(F("\nRegreso a add_check tras ERROR..."));     addEventToBuffer(GO_TO_ADD_CHECK);     flagEvent = true;   break;  // add_check
-              case 9:   Serial.print(F("\nRegreso a added tras ERROR..."));         addEventToBuffer(GO_TO_ADDED);         flagEvent = true;   break;  // Added
-              case 10:  Serial.print(F("\nRegreso a delete_check tras ERROR..."));  addEventToBuffer(GO_TO_DELETE_CHECK);  flagEvent = true;   break;  // delete_check
-              case 11:  Serial.print(F("\nRegreso a deleted tras ERROR..."));       addEventToBuffer(GO_TO_DELETED);       flagEvent = true;   break;  // Deleted
-              case 12:  Serial.print(F("\nRegreso a save_check tras ERROR..."));    addEventToBuffer(GO_TO_SAVE_CHECK);    flagEvent = true;   break;  // save_check
-              case 13:  Serial.print(F("\nRegreso a saved tras ERROR..."));         addEventToBuffer(GO_TO_SAVED);         flagEvent = true;   break;  // Saved
-              default:                                                                                                                         break;  
+              case STATE_Empty:         Serial.print(F("\nRegreso a Empty tras ERROR..."));         addEventToBuffer(GO_TO_EMPTY);         flagEvent = true;   break;  // Empty
+              case STATE_Plato:         Serial.print(F("\nRegreso a Plato tras ERROR..."));         addEventToBuffer(GO_TO_PLATO);         flagEvent = true;   break;  // Plato
+              case STATE_groupA:        Serial.print(F("\nRegreso a groupA tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_A);       flagEvent = true;   break;  // grupoA 
+              case STATE_groupB:        Serial.print(F("\nRegreso a groupB tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_B);       flagEvent = true;   break;  // grupoB
+              case STATE_raw:           Serial.print(F("\nRegreso a raw tras ERROR..."));           addEventToBuffer(GO_TO_RAW);           flagEvent = true;   break;  // Crudo
+              case STATE_cooked:        Serial.print(F("\nRegreso a cooked tras ERROR..."));        addEventToBuffer(GO_TO_COOKED);        flagEvent = true;   break;  // Cocinado
+              case STATE_weighted:      Serial.print(F("\nRegreso a weighted tras ERROR..."));      addEventToBuffer(GO_TO_WEIGHTED);      flagEvent = true;   break;  // Pesado
+              case STATE_add_check:     Serial.print(F("\nRegreso a add_check tras ERROR..."));     addEventToBuffer(GO_TO_ADD_CHECK);     flagEvent = true;   break;  // add_check
+              case STATE_added:         Serial.print(F("\nRegreso a added tras ERROR..."));         addEventToBuffer(GO_TO_ADDED);         flagEvent = true;   break;  // Added
+              case STATE_delete_check:  Serial.print(F("\nRegreso a delete_check tras ERROR..."));  addEventToBuffer(GO_TO_DELETE_CHECK);  flagEvent = true;   break;  // delete_check
+              case STATE_deleted:       Serial.print(F("\nRegreso a deleted tras ERROR..."));       addEventToBuffer(GO_TO_DELETED);       flagEvent = true;   break;  // Deleted
+              case STATE_save_check:    Serial.print(F("\nRegreso a save_check tras ERROR..."));    addEventToBuffer(GO_TO_SAVE_CHECK);    flagEvent = true;   break;  // save_check
+              case STATE_saved:         Serial.print(F("\nRegreso a saved tras ERROR..."));         addEventToBuffer(GO_TO_SAVED);         flagEvent = true;   break;  // Saved
+              default:   break;  
             }
 
             flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
@@ -1476,7 +1553,7 @@ void actStateERROR(){
             // Realizar lo que pide el evento ocurrido durante error, según el estado desde donde se cometió el error.
             switch (state_prev){ 
 
-              case 1:   // STATE_Empty             
+              case STATE_Empty:   // STATE_Empty             
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if(eventoBascula == INCREMENTO){ // Se ha colocado el recipiente mientras se estaba en error
                                 Serial.print(F("\nRecipiente colocado durante ERROR en STATE_Empty..."));            addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
@@ -1504,7 +1581,7 @@ void actStateERROR(){
                         break;  
 
 
-              case 2:   // STATE_Plato
+              case STATE_Plato:   // STATE_Plato
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){
                                 Serial.print(F("\nRecolocando recipiente durante ERROR en STATE_Plato..."));          addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
@@ -1525,7 +1602,7 @@ void actStateERROR(){
                         break;  
 
 
-              case 3:   // STATE_grupoA 
+              case STATE_groupA:   // STATE_grupoA 
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
                                 Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoA..."));             addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
@@ -1552,7 +1629,7 @@ void actStateERROR(){
                         break;  
             
             
-              case 4:   // STATE_grupoB
+              case STATE_groupB:   // STATE_grupoB
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
                                 Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoB..."));             addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
@@ -1579,78 +1656,43 @@ void actStateERROR(){
                         break;
 
 
-              case 5:   // STATE_raw
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if(eventoBascula == INCREMENTO){
-                                Serial.print(F("\nColocando alimento durante ERROR en STATE_raw..."));                addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_raw..."));                    addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoGrande == TIPO_A){ 
-                                Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_raw..."));             addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoGrande == TIPO_B){ 
-                                Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_raw..."));             addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                            else if(eventoMain == CRUDO){ 
-                                Serial.print(F("\nCRUDO escogido durante ERROR en STATE_raw..."));                    addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
-                            }
-                            else if(eventoMain == COCINADO){ 
-                                Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_raw..."));                 addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
-                            }
-                            else if(eventoMain == ADD_PLATO){ 
-                                Serial.print(F("\nAñadir plato durante ERROR en STATE_raw..."));                      addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
-                            }
-                            else if(eventoMain == DELETE_PLATO){
-                                Serial.print(F("\nBorrar plato durante ERROR en STATE_raw..."));                      addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
-                            }
-                            else if(eventoMain == GUARDAR){
-                                Serial.print(F("\nGuardar comida durante ERROR en STATE_raw..."));                    addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
-                            }
-                        }
-                        break;
+              case STATE_raw:  case STATE_cooked:   // STATE_raw o STATE_cooked
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if(eventoBascula == INCREMENTO){
+                          Serial.print(F("\nColocando alimento durante ERROR en STATE_raw o STATE_cooked..."));       addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_raw o STATE_cooked..."));           addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
+                      }
+                  }
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado
+                      if(eventoGrande == TIPO_A){ 
+                          Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_raw o STATE_cooked..."));    addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                      }
+                      else if(eventoGrande == TIPO_B){ 
+                          Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_raw o STATE_cooked..."));    addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                      }
+                      else if(eventoMain == CRUDO){ 
+                          Serial.print(F("\nCRUDO escogido durante ERROR en STATE_raw o STATE_cooked..."));           addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                      }
+                      else if(eventoMain == COCINADO){ 
+                          Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_raw o STATE_cooked..."));        addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                      }
+                      else if(eventoMain == ADD_PLATO){ 
+                          Serial.print(F("\nAñadir plato durante ERROR en STATE_raw o STATE_cooked..."));             addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
+                      }
+                      else if(eventoMain == DELETE_PLATO){
+                          Serial.print(F("\nBorrar plato durante ERROR en STATE_raw o STATE_cooked..."));             addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
+                      }
+                      else if(eventoMain == GUARDAR){
+                          Serial.print(F("\nGuardar comida durante ERROR en STATE_raw o STATE_cooked..."));           addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
+                      }
+                  }
+                  break;
 
 
-              case 6:   // STATE_cooked
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if(eventoBascula == INCREMENTO){
-                                Serial.print(F("\nColocando alimento durante ERROR en STATE_cooked..."));             addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_cooked..."));                 addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoGrande == TIPO_A){ 
-                                Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_cooked..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoGrande == TIPO_B){ 
-                                Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_cooked..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                            else if(eventoMain == CRUDO){ 
-                                Serial.print(F("\nCRUDO escogido durante ERROR en STATE_cooked..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
-                            }
-                            else if(eventoMain == COCINADO){ 
-                                Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_cooked..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
-                            }
-                            else if(eventoMain == ADD_PLATO){ 
-                                Serial.print(F("\nAñadir plato durante ERROR en STATE_cooked..."));                   addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
-                            }
-                            else if(eventoMain == DELETE_PLATO){
-                                Serial.print(F("\nBorrar plato durante ERROR en STATE_cooked..."));                   addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
-                            }
-                            else if(eventoMain == GUARDAR){
-                                Serial.print(F("\nGuardar comida durante ERROR en STATE_cooked..."));                 addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
-                            }
-                        }
-                        break;
-
-              case 7:   // STATE_weighted
+              case STATE_weighted:   // STATE_weighted
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
                                 Serial.print(F("\nColocando/retirando alimento durante ERROR en STATE_weighted...")); addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
@@ -1686,7 +1728,7 @@ void actStateERROR(){
                         break;
 
 
-              case 8:   // STATE_add_check
+              case STATE_add_check:   // STATE_add_check
                         // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
                         if(buttonInterruptOccurred()){ // Ha habido pulsación
                             checkAllButtons(); // Qué botón se ha pulsado 
@@ -1702,7 +1744,7 @@ void actStateERROR(){
                         break;
 
               
-              case 9:   // STATE_added
+              case STATE_added:   // STATE_added
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
                                 Serial.print(F("\nRetirando alimento durante ERROR en STATE_added..."));              addEventToBuffer(GO_TO_ADDED);   flagEvent = true;  break;
@@ -1714,7 +1756,7 @@ void actStateERROR(){
                         // No se chequean botones porque si se pulsan, se deben ignorar
                         break;
               
-              case 10:  // STATE_delete_check
+              case STATE_delete_check:  // STATE_delete_check
                         // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
                         if(buttonInterruptOccurred()){ // Ha habido pulsación
                             checkAllButtons(); // Qué botón se ha pulsado
@@ -1730,7 +1772,7 @@ void actStateERROR(){
                         break;
 
               
-              case 11:  // STATE_deleted
+              case STATE_deleted:  // STATE_deleted
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
                                 Serial.print(F("\nRetirando alimento durante ERROR en STATE_deleted..."));            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
@@ -1742,7 +1784,7 @@ void actStateERROR(){
                         // No se chequean botones porque si se pulsan, se deben ignorar
                         break;
               
-              case 12:  // STATE_save_check
+              case STATE_save_check:  // STATE_save_check
                         // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
                         if(buttonInterruptOccurred()){ // Ha habido pulsación
                             checkAllButtons(); // Qué botón se ha pulsado
@@ -1758,7 +1800,7 @@ void actStateERROR(){
                         break;
 
               
-              case 13:  // STATE_saved
+              case STATE_saved:  // STATE_saved
                         if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                             if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
                                 Serial.print(F("\nRetirando alimento durante ERROR en STATE_saved..."));             addEventToBuffer(GO_TO_SAVED);     flagEvent = true;  break;
@@ -1812,12 +1854,9 @@ void actStateCANCEL(){
 
         showAccionCancelada();        // Mostrar info de acción cancelada
 
-        //flagError = false; // Por si no se ha deshabilitado, que no siga marcando error
-
         doneState = true;             // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                       // cada vez que se entre a esta función debido al loop de Arduino.
-                                      // Así, debe ocurrir una nueva transición que lleve a este evento para que se "repitan"
-                                      // las acciones.
+                                      // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
 
     }
     // ----- FIN INFORMACIÓN MOSTRADA -----------------------
@@ -1827,37 +1866,16 @@ void actStateCANCEL(){
     currentTime = millis();
     if ((currentTime - previousTimeCancel) > 1000) {    // Tras 3 segundos mostrando acción cancelada...
         // Regreso al estado desde donde se inició la acción ahora cancelada.
-        
-        // Se hace esto en lugar de chequear el estado previo a state_prev porque si se comete un error desde add_check/delete_check/save_check
-        // y luego se cancela la acción, el estado previo a state_prev ya no será raw, cooked, weighted ni Empty, por lo que se quedaría atascado
-        // en "Acción cancelada".
 
-        Serial.print("Peso bascula = "); Serial.println(pesoBascula);
-
-        if(pesoBascula == 0.0){ // No se ha pesado nada. Puede haber recipiente (raw/cooked) o no (Empty)
-            if(pesoRecipiente == 0.0){ // Empty 
-                Serial.print(F("\nRegreso a Empty tras CANCELACION..."));       addEventToBuffer(GO_TO_EMPTY); flagEvent = true;
-            }
-            else{ //
-                switch(procesamiento){ 
-                    case 1:   Serial.print(F("\nRegreso a raw tras CANCELACION..."));         addEventToBuffer(GO_TO_RAW);     flagEvent = true;    break;  // Crudo
-                    case 2:   Serial.print(F("\nRegreso a cooked tras CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);  flagEvent = true;    break;  // Cocinado
-                    default:  break;
-                }
-            }
-        }
-        else{ // Pesado
-            Serial.print(F("\nRegreso a weighted tras CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;
-        }
-
-        // Es previo al último estado real (add_check, delete_check o save_check), por eso es 'state_prev_prev'
-        /*switch (state_prev_prev){
-          case 1:   Serial.print(F("\nRegreso a Empty tras CANCELACION..."));       addEventToBuffer(GO_TO_EMPTY);       break;  // Empty
-          case 5:   Serial.print(F("\nRegreso a raw tras CANCELACION..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
-          case 6:   Serial.print(F("\nRegreso a cooked tras CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
-          case 7:   Serial.print(F("\nRegreso a weighted tras CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+        // Ultimo estado válido puede ser Empty, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
+        // cancelable (add/delete/save).
+        switch (lastValidState){
+          case STATE_Empty:     Serial.print(F("\nRegreso a Empty tras CANCELACION..."));       addEventToBuffer(GO_TO_EMPTY);       break;  // Empty
+          case STATE_raw:       Serial.print(F("\nRegreso a raw tras CANCELACION..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+          case STATE_cooked:    Serial.print(F("\nRegreso a cooked tras CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+          case STATE_weighted:  Serial.print(F("\nRegreso a weighted tras CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
           default:  break;  
-        }*/
+        }
 
         flagEvent = true; 
                   
@@ -1866,27 +1884,71 @@ void actStateCANCEL(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   actStateAVISO(): Acciones del STATE_AVISO
+----------------------------------------------------------------------------------------------------------*/
+/*void actStateAVISO(){ 
+    static unsigned long previousTimeWarning;  // Para regresar al estado necesario
+    unsigned long currentTime;                 // Tiempo actual  
+
+    // -----  INFORMACIÓN MOSTRADA  ------------------------
+    if(!doneState){ 
+        previousTimeWarning = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de aviso, regresar al estado anterior.
+
+        switch(lastValidState){
+            case STATE_added:     showWarning(WARNING_NOT_ADDED);     Serial.println(F("No se ha creado otro plato porque el actual está vacío"));  break;  // added                    
+            case STATE_deleted:   showWarning(WARNING_NOT_DELETED);  Serial.println(F("No se ha borrado el plato porque está vacío"));             break;  // deleted
+            case STATE_saved:     showWarning(WARNING_NOT_SAVED);    Serial.println(F("No se ha guardado la comida porque está vacía"));           break;  // saved
+        }
+
+        doneState = true;             // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                      // cada vez que se entre a esta función debido al loop de Arduino.
+                                      // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
+
+    }
+    // ----- FIN INFORMACIÓN MOSTRADA -----------------------
+
+
+    // ----- TIEMPO DE ESPERA -------------------------------
+    currentTime = millis();
+    if ((currentTime - previousTimeWarning) > 3000) {    // Tras 3 segundos mostrando warning...
+        // Ultimo estado válido puede ser Empty, groupA o groupB. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
+        // que pueda marcar aviso (add/delete/save).
+        switch (lastValidState){
+          case STATE_Empty:    Serial.print(F("\nGO_TO_EMPTY forzada. Regreso a INI..."));    addEventToBuffer(GO_TO_EMPTY);       break;  // Empty
+          case STATE_groupA:   Serial.print(F("\nTIPO_A forzada. Regreso a GRUPOS..."));      addEventToBuffer(GO_TO_GROUP_A);     break;  // groupA
+          case STATE_groupB:   Serial.print(F("\nTIPO_A forzada. Regreso a GRUPOS..."));      addEventToBuffer(GO_TO_GROUP_B);     break;  // groupB
+          default:  break;  
+        }
+        flagEvent = true;
+    }
+    // ----- FIN TIEMPO DE ESPERA ---------------------------
+}
+*/
+
 
 /*---------------------------------------------------------------------------------------------------------
    doStateActions(): Acciones a realizar según el estado actual
 ----------------------------------------------------------------------------------------------------------*/
 void doStateActions(){
     switch (state_actual){
-      case 1:   actStateEmpty();        break;
-      case 2:   actStatePlato();        break;
-      case 3:   actGruposAlimentos();   break;
-      case 4:   actGruposAlimentos();   break;
-      case 5:   actStateRaw();          break;
-      case 6:   actStateCooked();       break;
-      case 7:   actStateWeighted();     break;
-      case 8:   actStateAddCheck();     break;
-      case 9:   actStateAdded();        break;
-      case 10:  actStateDeleteCheck();  break;
-      case 11:  actStateDeleted();      break;
-      case 12:  actStateSaveCheck();    break;
-      case 13:  actStateSaved();        break;
-      case 14:  actStateERROR();        break;
-      case 15:  actStateCANCEL();       break;
+      case STATE_Empty:         actStateEmpty();        break;  // Empty
+      case STATE_Plato:         actStatePlato();        break;  // Plato
+      case STATE_groupA:                                   // groupA   =>  Misma función para groupA y groupB
+      case STATE_groupB:        actGruposAlimentos();   break;  // groupB
+      case STATE_raw:           actStateRaw();          break;  // raw
+      case STATE_cooked:        actStateCooked();       break;  // cooked
+      case STATE_weighted:      actStateWeighted();     break;  // weighted
+      case STATE_add_check:     actStateAddCheck();     break;  // add_check
+      case STATE_added:         actStateAdded();        break;  // added
+      case STATE_delete_check:  actStateDeleteCheck();  break;  // delete_check
+      case STATE_deleted:       actStateDeleted();      break;  // deleted
+      case STATE_save_check:    actStateSaveCheck();    break;  // save_check
+      case STATE_saved:         actStateSaved();        break;  // saved
+      case STATE_ERROR:         actStateERROR();        break;  // ERROR
+      case STATE_CANCEL:        actStateCANCEL();       break;  // CANCEL
+      //case STATE_AVISO:         actStateAVISO();       break; // AVISO
+      default: break;
     }
 }
 

@@ -62,7 +62,7 @@ class ValoresNutricionales{
     /**
      * @brief Calcula las raciones de carbohidratos a partir del valor establecido.
      */
-    void setCarbRaciones();
+    void computeCarbRaciones();
 
     /**
      * @brief Obtiene el valor de carbohidratos.
@@ -88,7 +88,7 @@ class ValoresNutricionales{
     /**
      * @brief Calcula las raciones de lípidos a partir del valor establecido.
      */
-    void setLipRaciones();
+    void computeLipRaciones();
 
     /**
      * @brief Obtiene el valor de lípidos.
@@ -114,7 +114,7 @@ class ValoresNutricionales{
     /**
      * @brief Calcula las raciones de proteínas a partir del valor establecido.
      */
-    void setProtRaciones();
+    void computeProtRaciones();
 
     /**
      * @brief Obtiene el valor de proteínas.
@@ -173,6 +173,7 @@ ValoresNutricionales::ValoresNutricionales(){
   this->setLipValores(0.0);
   this->setProtValores(0.0);
   this->setKcalValores(0.0);
+  //this->setValores(0.0,0.0,0.0,0.0);
 }
 
 /*---------------------------------------------------------------------------------------------------------
@@ -186,35 +187,36 @@ ValoresNutricionales::ValoresNutricionales(float carb, float lip, float prot, fl
   this->setLipValores(lip);
   this->setProtValores(prot);
   this->setKcalValores(kcal);
+  //this->setValores(carb,lip,prot,kcal);
 }
 
 
 void ValoresNutricionales::setCarbValores(float carb){
   _carb = carb;
-  this->setCarbRaciones();
+  this->computeCarbRaciones();
 }
 
-void ValoresNutricionales::setCarbRaciones(){
+void ValoresNutricionales::computeCarbRaciones(){
   _carb_R = round(2.0*(this->getCarbValores()/10));   // 0.3 <= raciones <= 0.7   ------->  raciones = 0.5
   _carb_R = _carb_R/2;
 }
 
 void ValoresNutricionales::setLipValores(float lip){
   _lip = lip;
-  this->setLipRaciones();
+  this->computeLipRaciones();
 }
 
-void ValoresNutricionales::setLipRaciones(){
+void ValoresNutricionales::computeLipRaciones(){
   _lip_R = round(2.0*(this->getLipValores()/10));   // 0.3 <= raciones <= 0.7   ------->  raciones = 0.5
   _lip_R = _lip_R/2;
 }
 
 void ValoresNutricionales::setProtValores(float prot){
   _prot = prot;
-  this->setProtRaciones();
+  this->computeProtRaciones();
 }
 
-void ValoresNutricionales::setProtRaciones(){
+void ValoresNutricionales::computeProtRaciones(){
   _prot_R = round(2.0*(this->getProtValores()/10));   // 0.3 <= raciones <= 0.7   ------->  raciones = 0.5
   _prot_R = _prot_R/2;
 }
@@ -225,6 +227,7 @@ void ValoresNutricionales::setValores(ValoresNutricionales val){
   this->setLipValores(val.getLipValores());
   this->setProtValores(val.getProtValores());
   this->setKcalValores(val.getKcalValores());
+  //this->setValores(val.getCarbValores(), val.getLipValores(), val.getProtValores(), val.getKcalValores());
 }
 
 void ValoresNutricionales::setValores(float carb, float lip, float prot, float kcal){

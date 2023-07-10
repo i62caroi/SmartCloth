@@ -148,15 +148,25 @@ void loop() {
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
                 
-                state_prev_prev_prev = state_prev_prev;
-                state_prev_prev = state_prev;
+               // state_prev_prev_prev = state_prev_prev;  // ==> no hace falta con lastValidState 
+                //state_prev_prev = state_prev;            // ==> no hace falta con lastValidState 
                 state_prev = state_actual;
                 state_actual = state_new;
-                Serial.print(F("\nEstado anterior: ")); Serial.println(state_prev);
-                Serial.print(F("\nNuevo estado: "));    Serial.println(state_new);
+                
+                if(state_prev != lastValidState){
+                    switch(state_prev){ // Último estado válido 
+                        case STATE_Empty: case STATE_Plato: case STATE_groupA: case STATE_groupB: case STATE_raw: case STATE_cooked: case STATE_weighted:
+                            lastValidState = state_prev;
+                            break;
+                        default: break;
+                    }
+                }
+                Serial.print(F("\nEstado anterior: "));         Serial.println(state_prev);
+                Serial.print(F("\nNuevo estado: "));            Serial.println(state_new);
+                Serial.print(F("\nÚltimo estado válido: "));    Serial.println(lastValidState);
             }
-            else if(state_actual != STATE_ERROR){// and (state_actual != STATE_CANCEL)){    // Para evitar seguir marcando error durante los 3 segundos que no se cumple
-                                                                                          // ninguna regla de transición porque se está en el estado de error o de cancelación.
+            else if(state_actual != STATE_ERROR){ // Para evitar seguir marcando error durante los 3 segundos que no se cumple
+                                                   // ninguna regla de transición porque se está en el estado de error.
                 //Serial.println(F("\nERROR DE EVENTO"));
                 actEventError();       // Mensaje de error por evento erróneo según el estado actual
             }
