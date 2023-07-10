@@ -898,24 +898,31 @@ void pedirRecipiente(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
-    tft.setCursor(130, 90);
-    tft.println("COLOQUE UN RECIPIENTE"); // 12x24 escalado x3
-    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-10);
-    tft.print("EN LA ZONA DE PESADA"); // 12x24 escalado x3
 
+    if(comidaActual.isComidaEmpty()){ // Si no hay nada que se pueda guardar (comida vacía), solo se pide recipiente
+        tft.setCursor(130, 90);                                         tft.println("COLOQUE UN RECIPIENTE"); // 12x24 escalado x3
+        tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-10);   tft.print("EN LA ZONA DE PESADA"); // 12x24 escalado x3
+    }
+    else{ // Si se puede guardar comida, también se da esa opción
+        tft.setCursor(130, 90);                                         tft.println("COLOQUE UN RECIPIENTE"); 
+        tft.setCursor(190, tft.getCursorY() + tft.getTextSizeY()-10);   tft.print("O GUARDE LA COMIDA"); 
+    }
+
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)        
 
     // -------- CIRCULO ---------------
     tft.fillCircle(512,380,65,WHITE); // 65 pixeles de diametro
     
     delay(300);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
 
     // ------- CUADRADO REDONDEADO ----
     tft.fillRoundRect(447,315,577,445,10,WHITE); // x = 512 +/- 65 = 447   ->   y = 380 +/- 65 = 315
     
     delay(300);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
 
     // ----------- PALITOS ----------------------------------------------------------------------------------
@@ -938,6 +945,7 @@ void pedirRecipiente(){
     tft.fillRect(522, 445, 530, 462, WHITE); // Derecha (8x17)
     
     delay(300);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
     // ------------------------------------------------------------------------------------------------------
 
@@ -946,6 +954,7 @@ void pedirRecipiente(){
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,170,PAGE1_START_ADDR,SCREEN_WIDTH,450,325,120,108); // Mostrar brain1 en PAGE1
     
     delay(300);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
 
     // BRAIN2 (120x108) (rojo)
@@ -968,8 +977,7 @@ void recipienteColocado(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(170, 258);
-    tft.println("RECIPIENTE COLOCADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    tft.setCursor(170, 258);  tft.println("RECIPIENTE COLOCADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
@@ -985,12 +993,11 @@ void pedirGrupoAlimentos(){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(130, 50);
-    tft.println("SELECCIONE UN GRUPO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
-    tft.setCursor(255, tft.getCursorY() + tft.getTextSizeY()-10);
-    tft.print("DE ALIMENTOS"); 
+    tft.setCursor(130, 50);                                           tft.println("SELECCIONE UN GRUPO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    tft.setCursor(255, tft.getCursorY() + tft.getTextSizeY()-10);     tft.print("DE ALIMENTOS"); 
 
     delay(250);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
 
@@ -999,6 +1006,7 @@ void pedirGrupoAlimentos(){
     tft.fillRoundRect(0,450,512,458,3,WHITE);
 
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
 
@@ -1010,24 +1018,28 @@ void pedirGrupoAlimentos(){
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
 
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------ Grupo 2 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
 
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------ Grupo 3 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
 
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------ Grupo 4 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
 
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
 
@@ -1085,12 +1097,11 @@ void pedirProcesamiento(){
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(100, 30);
-    tft.println("\xBF""EL ALIMENTO EST\xC1""");
-    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
-    tft.print("COCINADO O CRUDO\x3F"""); 
+    tft.setCursor(100, 30);                                           tft.println("\xBF""EL ALIMENTO EST\xC1""");
+    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);     tft.print("COCINADO O CRUDO\x3F"""); 
     
     delay(500);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
 
@@ -1105,6 +1116,7 @@ void pedirProcesamiento(){
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
     
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------------ CRUDO 1 ----------------
@@ -1114,6 +1126,7 @@ void pedirProcesamiento(){
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
     
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------------ COCINADO 2 -------------
@@ -1123,6 +1136,7 @@ void pedirProcesamiento(){
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
     
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     // ------------ CRUDO 2 ----------------
@@ -1131,6 +1145,7 @@ void pedirProcesamiento(){
     // Escribir imagen crudo en page1
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
 
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
 
@@ -1155,26 +1170,27 @@ void pedirConfirmacion(int option){
     else tft.setCursor(30, 30); // Añadir y eliminar
     tft.println("\xBF""EST\xC1"" SEGURO DE QUE QUIERE");
 
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
     switch (option){
       case ASK_CONFIRMATION_ADD:    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30); tft.print("A\xD1""ADIR UN NUEVO PLATO\x3F"""); break; // BOTÓN AÑADIR
       case ASK_CONFIRMATION_DELETE: tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30); tft.print("BORRAR EL PLATO ACTUAL\x3F""");     break; // BOTÓN ELIMINAR
       case ASK_CONFIRMATION_SAVE: // BOTÓN GUARDAR
-              tft.setCursor(80, tft.getCursorY() + tft.getTextSizeY()-30); 
-              tft.print("GUARDAR LA COMIDA ACTUAL\x3F""");
+              tft.setCursor(80, tft.getCursorY() + tft.getTextSizeY()-30);  tft.print("GUARDAR LA COMIDA ACTUAL\x3F""");
               delay(500);
+              // -------- INT -------------------
               if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
               // ----- TEXTO (COMENTARIO) ---------
               tft.selectInternalFont(RA8876_FONT_SIZE_32);
               tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-              tft.setCursor(100, 200);
-              tft.println("LOS VALORES NUTRICIONALES PASAR\xC1""N AL ACUMULADO DE HOY");
+              tft.setCursor(100, 200);  tft.println("LOS VALORES NUTRICIONALES PASAR\xC1""N AL ACUMULADO DE HOY");
               // -----------------------------------
               break;
     }
 
     delay(1000);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
 
@@ -1190,10 +1206,10 @@ void pedirConfirmacion(int option){
     if(option == 3) tft.setCursor(150, 300); // Guardar
     else tft.setCursor(150, 270); // Añadir y eliminar
     tft.println("PARA CONFIRMAR, PULSE DE NUEVO");
-    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()+10);
-    tft.print("EL BOT\xD3""N"); 
+    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()+10);   tft.print("EL BOT\xD3""N"); 
     // ----------------------------------------------------------------------------------------------------
 
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
 
@@ -1206,6 +1222,7 @@ void pedirConfirmacion(int option){
               
     }
     delay(800);
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ----------------------------------------------------------------------------------------------------
     
@@ -1248,6 +1265,7 @@ void pedirConfirmacion(int option){
     tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,1,PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,127,RED); // manoR (120x129)
     // ----------------------------------------------------------------------------------------------------
 
+    // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
 
 }
@@ -1287,19 +1305,14 @@ void showAccionRealizada(int option){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
      switch (option){
-      case ADD_EXECUTED: // AÑADIDO
-              tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");
-              //tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("O GUARDE LA COMIDA");   // ==> se ha eliminado la opción de guardar tras añadir sin retirar                              
-              break; 
+      case ADD_EXECUTED:    tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");                 break; // AÑADIDO
 
-      case DELETE_EXECUTED: // ELIMINADO
-              tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");            
-              //tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("O GUARDE LA COMIDA");  // ==> se ha eliminado la opción de guardar tras eliminar sin retirar       
-              break; 
+      case DELETE_EXECUTED: tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break; // ELIMINADO
               
       case SAVE_EXECUTED: // GUARDADA
               // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
-              if((pesoRecipiente + pesoPlato) == 0.0){
+              //if((pesoRecipiente + pesoPlato) == 0.0){
+              if(lastValidState == STATE_Empty){
                   // Puede ser que se quiera guardar desde el STATE_Empty, tras añadir o borrar. Si es así,
                   // la báscula estará vacía (pesoARetirar = 0).
                   tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
@@ -1331,8 +1344,7 @@ void showAccionCancelada(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(220, 258);
-    tft.println("ACCI\xD3""N CANCELADA"); // 12x24 escalado x3
+    tft.setCursor(220, 258);  tft.println("ACCI\xD3""N CANCELADA"); // 12x24 escalado x3
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // -------------------------------------------------------------------
@@ -1450,10 +1462,10 @@ void showError(int option){
               tft.setCursor(90, 450);                                      tft.println("ESPERE A QUE TERMINE LA CANCELACI\xD3""N");  
               break;
 
-      /*case ERROR_STATE_AVISO: // Aviso
+      case ERROR_STATE_AVISO: // Aviso
               tft.setCursor(155, 450);                                      tft.println("ESPERE A QUE TERMINE EL AVISO");  
               break;
-*/
+
       default: break;
     }
     // ---------------------------------------------------------------------------------------------------- 

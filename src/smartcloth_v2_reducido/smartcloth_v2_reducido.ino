@@ -160,11 +160,11 @@ void loop() {
                         default: break;
                     }
                 }
-                Serial.print(F("\nEstado anterior: "));         Serial.println(state_prev);
-                Serial.print(F("\nNuevo estado: "));            Serial.println(state_new);
-                Serial.print(F("\nÚltimo estado válido: "));    Serial.println(lastValidState);
+                Serial.print(F("\n\nEstado anterior: "));         Serial.println(state_prev);
+                Serial.print(F("Nuevo estado: "));            Serial.println(state_new);
+                Serial.print(F("Último estado válido: "));    Serial.println(lastValidState);
             }
-            else if(state_actual != STATE_ERROR){ // Para evitar seguir marcando error durante los 3 segundos que no se cumple
+            else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ // Para evitar seguir marcando error durante los 3 segundos que no se cumple
                                                    // ninguna regla de transición porque se está en el estado de error.
                 //Serial.println(F("\nERROR DE EVENTO"));
                 actEventError();       // Mensaje de error por evento erróneo según el estado actual
