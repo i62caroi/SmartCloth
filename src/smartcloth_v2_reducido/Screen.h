@@ -1445,7 +1445,15 @@ void showError(int option){
       case ERROR_STATE_SAVED: // Saved
               tft.setCursor(155, 450);                                      tft.println("RETIRE EL PLATO PARA CONTINUAR");  
               break;
+      
+      case ERROR_STATE_CANCEL: // Cancelado
+              tft.setCursor(90, 450);                                      tft.println("ESPERE A QUE TERMINE LA CANCELACI\xD3""N");  
+              break;
 
+      /*case ERROR_STATE_AVISO: // Aviso
+              tft.setCursor(155, 450);                                      tft.println("ESPERE A QUE TERMINE EL AVISO");  
+              break;
+*/
       default: break;
     }
     // ---------------------------------------------------------------------------------------------------- 

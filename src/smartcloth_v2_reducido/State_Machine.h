@@ -25,7 +25,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 132
+#define RULES 133
 
 // --- PEDIR CONFIRMACIÓN ---
 #define  ASK_CONFIRMATION_ADD     1
@@ -54,6 +54,7 @@
 #define  ERROR_STATE_DELETED         9
 #define  ERROR_STATE_SAVE_CHECK      10
 #define  ERROR_STATE_SAVED           11
+#define  ERROR_STATE_CANCEL          12
 
 // --- PARPADEO DE ZONAS 1 Y 2 CUANDO NO ESCOGIDO ---
 #define  BLINK_AMBAS_ZONAS true
@@ -376,7 +377,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_CANCEL,STATE_raw,GO_TO_RAW},             // Regresar a STATE_raw tras cancelar add/delete/save iniciada desde STATE_raw   
                                         {STATE_CANCEL,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar add/delete/save iniciada desde STATE_cooked
                                         {STATE_CANCEL,STATE_weighted,GO_TO_WEIGHTED},    // Regresar a STATE_weighted tras cancelar add/delete/save iniciada desde STATE_weighted
-                                       // {STATE_CANCEL,STATE_ERROR,ERROR}               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría e
+                                        {STATE_CANCEL,STATE_ERROR,ERROR}               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría e
                                                                                         // en bucle marcando error.                                                                                          
                                         // -----------------------
 
@@ -401,8 +402,6 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 states_t state_actual;          // Estado actual
 states_t state_new;             // Nuevo estado al que se va a pasar
 states_t state_prev;            // Estado anterior
-//states_t state_prev_prev;       // Estado anterior al anterior                ==> no hace falta con lastValidState 
-//states_t state_prev_prev_prev;  // Estado anterior al anterior del anterior   ==> no hace falta con lastValidState 
 states_t lastValidState;         // Último estado válido (Empty, Plato, groupA, groupB, raw, cooked, weighted)
 // ------ FIN VARIABLES DE ESTADOS ----------------------------------------------------
 
@@ -1499,12 +1498,18 @@ void actStateERROR(){
 
           // En los siguientes casos no se chequea si el error ha sido colocar alimento porque se entiende que es improbable que eso ocurra. Sin embargo, si ocurriera,
           // se marcaría error pero no se gestionaría esperando corregir la acción (quitar el peso), como en el caso de los grupos ==> Posible mejora
+          //
+          // Solo se gestiona el fallo de colocar peso directamente desde groupA/B porque es bastante probable 
+          // que lo hagan los usuarios mientras se acostumbran al funcionamiento.
+          //
           case STATE_add_check:     showError(ERROR_STATE_ADD_CHECK);       break;  // add_check
           case STATE_added:         showError(ERROR_STATE_ADDED);           break;  // Added
           case STATE_delete_check:  showError(ERROR_STATE_DELETE_CHECK);    break;  // delete_check
           case STATE_deleted:       showError(ERROR_STATE_DELETED);         break;  // Deleted
           case STATE_save_check:    showError(ERROR_STATE_SAVE_CHECK);      break;  // save_check
           case STATE_saved:         showError(ERROR_STATE_SAVED);           break;  // Saved
+          case STATE_CANCEL:        showError(ERROR_STATE_CANCEL);          break;  // Cancelar
+          //case STATE_AVISO;         showError(ERROR_STATE_AVISO);           break;  // Aviso                          
           default:   break;  
         }
         
@@ -1519,33 +1524,57 @@ void actStateERROR(){
         // ----- TIEMPO DE ESPERA -------------------------------------
         // Solo para regresar si el error cometido ha sido pulsar un botón.
         // Si el error ha sido colocar algo en la báscula cuando no tocaba (p. ej. desde Grupos),
-        // se mantiene la pantalla de error hasta que se retire. 
+        // se mantiene la pantalla de error (keepErrorScreen = true) hasta que se retire. 
         currentTime = millis();
         if ((currentTime - previousTimeError) > 3000) {    // Tras 3 segundos mostrando error...
             // Regresar al estado anterior desde donde se cometió el error
             switch (state_prev){ 
-              case STATE_Empty:         Serial.print(F("\nRegreso a Empty tras ERROR..."));         addEventToBuffer(GO_TO_EMPTY);         flagEvent = true;   break;  // Empty
-              case STATE_Plato:         Serial.print(F("\nRegreso a Plato tras ERROR..."));         addEventToBuffer(GO_TO_PLATO);         flagEvent = true;   break;  // Plato
-              case STATE_groupA:        Serial.print(F("\nRegreso a groupA tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_A);       flagEvent = true;   break;  // grupoA 
-              case STATE_groupB:        Serial.print(F("\nRegreso a groupB tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_B);       flagEvent = true;   break;  // grupoB
-              case STATE_raw:           Serial.print(F("\nRegreso a raw tras ERROR..."));           addEventToBuffer(GO_TO_RAW);           flagEvent = true;   break;  // Crudo
-              case STATE_cooked:        Serial.print(F("\nRegreso a cooked tras ERROR..."));        addEventToBuffer(GO_TO_COOKED);        flagEvent = true;   break;  // Cocinado
-              case STATE_weighted:      Serial.print(F("\nRegreso a weighted tras ERROR..."));      addEventToBuffer(GO_TO_WEIGHTED);      flagEvent = true;   break;  // Pesado
-              case STATE_add_check:     Serial.print(F("\nRegreso a add_check tras ERROR..."));     addEventToBuffer(GO_TO_ADD_CHECK);     flagEvent = true;   break;  // add_check
-              case STATE_added:         Serial.print(F("\nRegreso a added tras ERROR..."));         addEventToBuffer(GO_TO_ADDED);         flagEvent = true;   break;  // Added
-              case STATE_delete_check:  Serial.print(F("\nRegreso a delete_check tras ERROR..."));  addEventToBuffer(GO_TO_DELETE_CHECK);  flagEvent = true;   break;  // delete_check
-              case STATE_deleted:       Serial.print(F("\nRegreso a deleted tras ERROR..."));       addEventToBuffer(GO_TO_DELETED);       flagEvent = true;   break;  // Deleted
-              case STATE_save_check:    Serial.print(F("\nRegreso a save_check tras ERROR..."));    addEventToBuffer(GO_TO_SAVE_CHECK);    flagEvent = true;   break;  // save_check
-              case STATE_saved:         Serial.print(F("\nRegreso a saved tras ERROR..."));         addEventToBuffer(GO_TO_SAVED);         flagEvent = true;   break;  // Saved
+              case STATE_Empty:         Serial.print(F("\nRegreso a Empty tras ERROR..."));         addEventToBuffer(GO_TO_EMPTY);            break;  // Empty
+              case STATE_Plato:         Serial.print(F("\nRegreso a Plato tras ERROR..."));         addEventToBuffer(GO_TO_PLATO);            break;  // Plato
+              case STATE_groupA:        Serial.print(F("\nRegreso a groupA tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_A);          break;  // grupoA 
+              case STATE_groupB:        Serial.print(F("\nRegreso a groupB tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_B);          break;  // grupoB
+              case STATE_raw:           Serial.print(F("\nRegreso a raw tras ERROR..."));           addEventToBuffer(GO_TO_RAW);              break;  // Crudo
+              case STATE_cooked:        Serial.print(F("\nRegreso a cooked tras ERROR..."));        addEventToBuffer(GO_TO_COOKED);           break;  // Cocinado
+              case STATE_weighted:      Serial.print(F("\nRegreso a weighted tras ERROR..."));      addEventToBuffer(GO_TO_WEIGHTED);         break;  // Pesado
+              case STATE_add_check:     Serial.print(F("\nRegreso a add_check tras ERROR..."));     addEventToBuffer(GO_TO_ADD_CHECK);        break;  // add_check
+              case STATE_added:         Serial.print(F("\nRegreso a added tras ERROR..."));         addEventToBuffer(GO_TO_ADDED);            break;  // Added
+              case STATE_delete_check:  Serial.print(F("\nRegreso a delete_check tras ERROR..."));  addEventToBuffer(GO_TO_DELETE_CHECK);     break;  // delete_check
+              case STATE_deleted:       Serial.print(F("\nRegreso a deleted tras ERROR..."));       addEventToBuffer(GO_TO_DELETED);          break;  // Deleted
+              case STATE_save_check:    Serial.print(F("\nRegreso a save_check tras ERROR..."));    addEventToBuffer(GO_TO_SAVE_CHECK);       break;  // save_check
+              case STATE_saved:         Serial.print(F("\nRegreso a saved tras ERROR..."));         addEventToBuffer(GO_TO_SAVED);            break;  // Saved
+              
+              case STATE_CANCEL:   // No se regresa a STATE_CANCEL, sino al último estado válido desde donde se inició la acción que se ha cancelado previo al error.
+                  switch (lastValidState){
+                    case STATE_Empty:     Serial.print(F("\nRegreso a Empty tras ERROR durante CANCELACION..."));       addEventToBuffer(GO_TO_EMPTY);       break;  // Empty
+                    case STATE_raw:       Serial.print(F("\nRegreso a raw tras ERROR durante CANCELACION..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+                    case STATE_cooked:    Serial.print(F("\nRegreso a cooked tras ERROR durante CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+                    case STATE_weighted:  Serial.print(F("\nRegreso a weighted tras ERROR durante CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+                    default:  break;  
+                  }
+                  break;
+
+              /*case STATE_AVISO:   // No se regresa a STATE_AVISO, sino al último estado válido desde donde se inició la acción que se ha cancelado previo al error.
+                  switch (lastValidState){
+                    case STATE_Empty:     Serial.print(F("\nRegreso a Empty tras ERROR durante AVISO..."));       addEventToBuffer(GO_TO_EMPTY);       break;  // Empty
+                    case STATE_raw:       Serial.print(F("\nRegreso a raw tras ERROR durante AVISO..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+                    case STATE_cooked:    Serial.print(F("\nRegreso a cooked tras ERROR durante AVISO..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+                    case STATE_weighted:  Serial.print(F("\nRegreso a weighted tras ERROR durante AVISO..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+                    default:  break;  
+                  }
+                  break;*/
+
               default:   break;  
             }
 
+            flagEvent = true; // En todos los casos anteriores se marcará evento
             flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
                       
         }
         // ----- FIN TIEMPO DE ESPERA -------------------------------------
 
+        //
         // ----- EVENTOS OCURRIDOS DURANTE ERROR -------------------------------------
+        //
         // Si no han pasado los 3 segundos y, mientras estamos en estado de error, se hace algo (pulsar botón o modificar peso), 
         // se hace lo que marque el evento ocurrido, si no es otro error (muy improbable).
 
@@ -1553,107 +1582,107 @@ void actStateERROR(){
             // Realizar lo que pide el evento ocurrido durante error, según el estado desde donde se cometió el error.
             switch (state_prev){ 
 
-              case STATE_Empty:   // STATE_Empty             
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if(eventoBascula == INCREMENTO){ // Se ha colocado el recipiente mientras se estaba en error
-                                Serial.print(F("\nRecipiente colocado durante ERROR en STATE_Empty..."));            addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons();  // Qué botón se ha pulsado
-                                                // Comprueba qué botón se ha pulsado. Aunque en checkAllButtons() ya se añada un evento en el buffer con
-                                                // el botón pulsado, no lo utilizamos como transición directa desde este estado porque solo queremos que 
-                                                // atienda a los eventos si corresponde. Es decir, si se tiene que escoger grupo (eventoGrande = TIPO_A | TIPO_B), 
-                                                // pero se escoge procesamiento (eventoMain = CRUDO | COCINADO), no queremos que pase a ese estado, porque
-                                                // estando en STATE_Plato (que es donde se espera escoger grupo) no se permite escoger procesamiento.
-                                                //
-                                                // Solo se debe "forzar" la transición a estados a los que se pueda transicionar desde el estado desde donde
-                                                // se cometió el error, por eso se debe chequear qué botón se ha pulsado, para ver si hacer caso o ignorar.
-                                                //
-                                                // Entonces, aunque checkAllButtons() añada un evento al buffer, el 'lastEvent' con el que se compararán las
-                                                // reglas de transición será el último marcado aquí.
+              case STATE_Empty:              
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if(eventoBascula == INCREMENTO){ // Se ha colocado el recipiente mientras se estaba en error
+                          Serial.print(F("\nRecipiente colocado durante ERROR en STATE_Empty..."));            addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
+                      }
+                  }
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons();  // Qué botón se ha pulsado
+                                          // Comprueba qué botón se ha pulsado. Aunque en checkAllButtons() ya se añada un evento en el buffer con
+                                          // el botón pulsado, no lo utilizamos como transición directa desde este estado porque solo queremos que 
+                                          // atienda a los eventos si corresponde. Es decir, si se tiene que escoger grupo (eventoGrande = TIPO_A | TIPO_B), 
+                                          // pero se escoge procesamiento (eventoMain = CRUDO | COCINADO), no queremos que pase a ese estado, porque
+                                          // estando en STATE_Plato (que es donde se espera escoger grupo) no se permite escoger procesamiento.
+                                          //
+                                          // Solo se debe "forzar" la transición a estados a los que se pueda transicionar desde el estado desde donde
+                                          // se cometió el error, por eso se debe chequear qué botón se ha pulsado, para ver si hacer caso o ignorar.
+                                          //
+                                          // Entonces, aunque checkAllButtons() añada un evento al buffer, el 'lastEvent' con el que se compararán las
+                                          // reglas de transición será el último marcado aquí.
 
-                            if(eventoMain == GUARDAR){ // Se ha pulsado "Guardar comida" mientras se estaba en error. Se pasa a STATE_save_check para confirmar acción.
-                                Serial.print(F("\nGuardar comida durante ERROR en STATE_Empty..."));                  addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
-                            }
-                        }
-                      
-                        break;  
-
-
-              case STATE_Plato:   // STATE_Plato
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){
-                                Serial.print(F("\nRecolocando recipiente durante ERROR en STATE_Plato..."));          addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nRecipiente retirado durante ERROR en STATE_Plato..."));             addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoGrande == TIPO_A){ 
-                                Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_Plato..."));           addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoGrande == TIPO_B){ 
-                                Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_Plato..."));           addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                        }
-                        break;  
+                      if(eventoMain == GUARDAR){ // Se ha pulsado "Guardar comida" mientras se estaba en error. Se pasa a STATE_save_check para confirmar acción.
+                          Serial.print(F("\nGuardar comida durante ERROR en STATE_Empty..."));                  addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
+                      }
+                  }
+                
+                  break;  
 
 
-              case STATE_groupA:   // STATE_grupoA 
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
-                                Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoA..."));             addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_grupoA..."));                 addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoGrande == TIPO_A){
-                                Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoA..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoGrande == TIPO_B){ 
-                                Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoA..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                            else if(eventoMain == CRUDO){
-                                Serial.print(F("\nCRUDO escogido durante ERROR en STATE_grupoA..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
-                            }
-                            else if(eventoMain == COCINADO){ 
-                                Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoA..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
-                            }
-                        }
-                        break;  
+              case STATE_Plato:  
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){
+                          Serial.print(F("\nRecolocando recipiente durante ERROR en STATE_Plato..."));          addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nRecipiente retirado durante ERROR en STATE_Plato..."));             addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
+                      }
+                  }
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado
+                      if(eventoGrande == TIPO_A){ 
+                          Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_Plato..."));           addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                      }
+                      else if(eventoGrande == TIPO_B){ 
+                          Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_Plato..."));           addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                      }
+                  }
+                  break;  
+
+
+              case STATE_groupA:   
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
+                          Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoA..."));             addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_grupoA..."));                 addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
+                      }
+                  }
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado
+                      if(eventoGrande == TIPO_A){
+                          Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoA..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                      }
+                      else if(eventoGrande == TIPO_B){ 
+                          Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoA..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                      }
+                      else if(eventoMain == CRUDO){
+                          Serial.print(F("\nCRUDO escogido durante ERROR en STATE_grupoA..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                      }
+                      else if(eventoMain == COCINADO){ 
+                          Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoA..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                      }
+                  }
+                  break;  
             
             
-              case STATE_groupB:   // STATE_grupoB
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
-                                Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoB..."));             addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_grupoB..."));                 addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado => deshabilita flag de interrupcion
-                            if(eventoGrande == TIPO_A){ 
-                                Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoB..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoGrande == TIPO_B){ 
-                                Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoB..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                            else if(eventoMain == CRUDO){ 
-                                Serial.print(F("\nCRUDO escogido durante ERROR en STATE_grupoB..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
-                            }
-                            else if(eventoMain == COCINADO){ 
-                                Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoB..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
-                            }
-                        }
-                        break;
+              case STATE_groupB:  
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
+                          Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoB..."));             addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_grupoB..."));                 addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
+                      }
+                  }
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado => deshabilita flag de interrupcion
+                      if(eventoGrande == TIPO_A){ 
+                          Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoB..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                      }
+                      else if(eventoGrande == TIPO_B){ 
+                          Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoB..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                      }
+                      else if(eventoMain == CRUDO){ 
+                          Serial.print(F("\nCRUDO escogido durante ERROR en STATE_grupoB..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                      }
+                      else if(eventoMain == COCINADO){ 
+                          Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoB..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                      }
+                  }
+                  break;
 
 
               case STATE_raw:  case STATE_cooked:   // STATE_raw o STATE_cooked
@@ -1692,125 +1721,125 @@ void actStateERROR(){
                   break;
 
 
-              case STATE_weighted:   // STATE_weighted
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
-                                Serial.print(F("\nColocando/retirando alimento durante ERROR en STATE_weighted...")); addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
-                            }
-                        }
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoGrande == TIPO_A){ 
-                                Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_weighted..."));        addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
-                            }
-                            else if(eventoGrande == TIPO_B){ 
-                                Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_weighted..."));        addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
-                            }
-                            else if(eventoMain == CRUDO){ 
-                                Serial.print(F("\nCRUDO escogido durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
-                            }
-                            else if(eventoMain == COCINADO){ 
-                                Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_weighted..."));            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
-                            }
-                            else if(eventoMain == ADD_PLATO){ 
-                                Serial.print(F("\nAñadir plato durante ERROR en STATE_weighted..."));                 addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
-                            }
-                            else if(eventoMain == DELETE_PLATO){
-                                Serial.print(F("\nBorrar plato durante ERROR en STATE_weighted..."));                 addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
-                            }
-                            else if(eventoMain == GUARDAR){
-                                Serial.print(F("\nGuardar comida durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
-                            }
-                        }
-                        break;
+              case STATE_weighted:   
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
+                          Serial.print(F("\nColocando/retirando alimento durante ERROR en STATE_weighted...")); addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_EMPTY);        flagEvent = true;  break;
+                      }
+                  }
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado
+                      if(eventoGrande == TIPO_A){ 
+                          Serial.print(F("\nGrupo tipo A escogido durante ERROR en STATE_weighted..."));        addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                      }
+                      else if(eventoGrande == TIPO_B){ 
+                          Serial.print(F("\nGrupo tipo B escogido durante ERROR en STATE_weighted..."));        addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                      }
+                      else if(eventoMain == CRUDO){ 
+                          Serial.print(F("\nCRUDO escogido durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                      }
+                      else if(eventoMain == COCINADO){ 
+                          Serial.print(F("\nCOCINADO escogido durante ERROR en STATE_weighted..."));            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                      }
+                      else if(eventoMain == ADD_PLATO){ 
+                          Serial.print(F("\nAñadir plato durante ERROR en STATE_weighted..."));                 addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
+                      }
+                      else if(eventoMain == DELETE_PLATO){
+                          Serial.print(F("\nBorrar plato durante ERROR en STATE_weighted..."));                 addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
+                      }
+                      else if(eventoMain == GUARDAR){
+                          Serial.print(F("\nGuardar comida durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
+                      }
+                  }
+                  break;
 
 
-              case STATE_add_check:   // STATE_add_check
-                        // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado 
-                            if(eventoMain == ADD_PLATO){ 
-                                Serial.print(F("\nConfirmando añadir plato durante ERROR en STATE_add_check..."));    addEventToBuffer(GO_TO_ADDED);  flagEvent = true;  break;
-                            }
-                            else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == DELETE_PLATO) or(eventoMain == GUARDAR)){ 
-                                // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_add_check. Nunca va a ocurrir en STATE_ERROR, 
-                                // aunque se cometiera el error desde add_check, porque tras 3 segundos se regresaría a STATE_add_check y allí ya se comprobaría el time-out.
-                                Serial.print(F("\nCancelando añadir plato durante ERROR en STATE_add_check..."));     addEventToBuffer(GO_TO_CANCEL);  flagEvent = true;  break;
-                            }
-                        }
-                        break;
+              case STATE_add_check:  
+                  // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado 
+                      if(eventoMain == ADD_PLATO){ 
+                          Serial.print(F("\nConfirmando añadir plato durante ERROR en STATE_add_check..."));    addEventToBuffer(GO_TO_ADDED);  flagEvent = true;  break;
+                      }
+                      else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == DELETE_PLATO) or(eventoMain == GUARDAR)){ 
+                          // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_add_check. Nunca va a ocurrir en STATE_ERROR, 
+                          // aunque se cometiera el error desde add_check, porque tras 3 segundos se regresaría a STATE_add_check y allí ya se comprobaría el time-out.
+                          Serial.print(F("\nCancelando añadir plato durante ERROR en STATE_add_check..."));     addEventToBuffer(GO_TO_CANCEL);  flagEvent = true;  break;
+                      }
+                  }
+                  break;
 
               
-              case STATE_added:   // STATE_added
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
-                                Serial.print(F("\nRetirando alimento durante ERROR en STATE_added..."));              addEventToBuffer(GO_TO_ADDED);   flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_added..."));                  addEventToBuffer(GO_TO_EMPTY);   flagEvent = true;  break;
-                            }
-                        }
-                        // No se chequean botones porque si se pulsan, se deben ignorar
-                        break;
+              case STATE_added:   
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
+                          Serial.print(F("\nRetirando alimento durante ERROR en STATE_added..."));              addEventToBuffer(GO_TO_ADDED);   flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_added..."));                  addEventToBuffer(GO_TO_EMPTY);   flagEvent = true;  break;
+                      }
+                  }
+                  // No se chequean botones porque si se pulsan, se deben ignorar
+                  break;
               
-              case STATE_delete_check:  // STATE_delete_check
-                        // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoMain == DELETE_PLATO){ 
-                                Serial.print(F("\nConfirmando borrar plato durante ERROR en STATE_delete_check...")); addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
-                            }
-                            else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == ADD_PLATO) or(eventoMain == GUARDAR)){ 
-                                // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_delete_check. Nunca va a ocurrir en STATE_ERROR, 
-                                // aunque se cometiera el error desde delete_check, porque tras 3 segundos se regresaría a STATE_delete_check y allí ya se comprobaría el time-out.
-                                Serial.print(F("\nCancelando borrar plato durante ERROR en STATE_delete_check..."));  addEventToBuffer(GO_TO_CANCEL);   flagEvent = true;  break;
-                            }
-                        }
-                        break;
+              case STATE_delete_check:  
+                  // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado
+                      if(eventoMain == DELETE_PLATO){ 
+                          Serial.print(F("\nConfirmando borrar plato durante ERROR en STATE_delete_check...")); addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
+                      }
+                      else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == ADD_PLATO) or(eventoMain == GUARDAR)){ 
+                          // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_delete_check. Nunca va a ocurrir en STATE_ERROR, 
+                          // aunque se cometiera el error desde delete_check, porque tras 3 segundos se regresaría a STATE_delete_check y allí ya se comprobaría el time-out.
+                          Serial.print(F("\nCancelando borrar plato durante ERROR en STATE_delete_check..."));  addEventToBuffer(GO_TO_CANCEL);   flagEvent = true;  break;
+                      }
+                  }
+                  break;
 
               
-              case STATE_deleted:  // STATE_deleted
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
-                                Serial.print(F("\nRetirando alimento durante ERROR en STATE_deleted..."));            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_deleted..."));                addEventToBuffer(GO_TO_EMPTY);    flagEvent = true;  break;
-                            }
-                        }
-                        // No se chequean botones porque si se pulsan, se deben ignorar
-                        break;
+              case STATE_deleted:  
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
+                          Serial.print(F("\nRetirando alimento durante ERROR en STATE_deleted..."));            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_deleted..."));                addEventToBuffer(GO_TO_EMPTY);    flagEvent = true;  break;
+                      }
+                  }
+                  // No se chequean botones porque si se pulsan, se deben ignorar
+                  break;
               
-              case STATE_save_check:  // STATE_save_check
-                        // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
-                        if(buttonInterruptOccurred()){ // Ha habido pulsación
-                            checkAllButtons(); // Qué botón se ha pulsado
-                            if(eventoMain == GUARDAR){ 
-                                Serial.print(F("\nConfirmando guardar comida durante ERROR en STATE_save_check...")); addEventToBuffer(GO_TO_SAVED);    flagEvent = true;  break;
-                            }
-                            else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == ADD_PLATO) or(eventoMain == DELETE_PLATO)){ 
-                                // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_save_check. Nunca va a ocurrir en STATE_ERROR, 
-                                // aunque se cometiera el error desde save_check, porque tras 3 segundos se regresaría a STATE_save_check y allí ya se comprobaría el time-out.
-                                Serial.print(F("\nCancelando guardar comida durante ERROR en STATE_save_check...")); addEventToBuffer(GO_TO_CANCEL);    flagEvent = true;  break;
-                            }
-                        }
-                        break;
+              case STATE_save_check: 
+                  // No se chequea báscula porque sería provocar un error dentro de un error. Es improbable
+                  if(buttonInterruptOccurred()){ // Ha habido pulsación
+                      checkAllButtons(); // Qué botón se ha pulsado
+                      if(eventoMain == GUARDAR){ 
+                          Serial.print(F("\nConfirmando guardar comida durante ERROR en STATE_save_check...")); addEventToBuffer(GO_TO_SAVED);    flagEvent = true;  break;
+                      }
+                      else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == ADD_PLATO) or(eventoMain == DELETE_PLATO)){ 
+                          // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_save_check. Nunca va a ocurrir en STATE_ERROR, 
+                          // aunque se cometiera el error desde save_check, porque tras 3 segundos se regresaría a STATE_save_check y allí ya se comprobaría el time-out.
+                          Serial.print(F("\nCancelando guardar comida durante ERROR en STATE_save_check...")); addEventToBuffer(GO_TO_CANCEL);    flagEvent = true;  break;
+                      }
+                  }
+                  break;
 
               
-              case STATE_saved:  // STATE_saved
-                        if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                            if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
-                                Serial.print(F("\nRetirando alimento durante ERROR en STATE_saved..."));             addEventToBuffer(GO_TO_SAVED);     flagEvent = true;  break;
-                            }
-                            else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
-                                Serial.print(F("\nPlato retirado durante ERROR en STATE_saved..."));                 addEventToBuffer(GO_TO_EMPTY);     flagEvent = true;  break;
-                            }
-                        }
-                        // No se chequean botones porque si se pulsan, se deben ignorar
-                        break;
+              case STATE_saved:  
+                  if(hasScaleEventOccurred()){ // Ha habido evento en báscula
+                      if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
+                          Serial.print(F("\nRetirando alimento durante ERROR en STATE_saved..."));             addEventToBuffer(GO_TO_SAVED);     flagEvent = true;  break;
+                      }
+                      else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
+                          Serial.print(F("\nPlato retirado durante ERROR en STATE_saved..."));                 addEventToBuffer(GO_TO_EMPTY);     flagEvent = true;  break;
+                      }
+                  }
+                  // No se chequean botones porque si se pulsan, se deben ignorar
+                  break;
 
               
               default:  break;  
@@ -1820,7 +1849,7 @@ void actStateERROR(){
         }
         // ----- FIN EVENTOS OCURRIDOS DURANTE ERROR -------------------------------------
     }
-    else{ // Se está manteniendo la pantalla de error para obligar a rectificar la acción de haber colocado alimento
+    else{ // keepErrorScreen = true --> Se está manteniendo la pantalla de error para obligar a rectificar la acción de haber colocado alimento
           // cuando no tocaba (en Grupos).
 
           // Si se libera la báscula, se regresa a Empty. 
@@ -1895,8 +1924,8 @@ void actStateCANCEL(){
     if(!doneState){ 
         previousTimeWarning = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de aviso, regresar al estado anterior.
 
-        switch(lastValidState){
-            case STATE_added:     showWarning(WARNING_NOT_ADDED);     Serial.println(F("No se ha creado otro plato porque el actual está vacío"));  break;  // added                    
+        switch(state_prev){ // En este caso sí es el estado previo, pues solo se puede pasar a STATE_AVISO desde added/deleted/saved.
+            case STATE_added:     showWarning(WARNING_NOT_ADDED);    Serial.println(F("No se ha creado otro plato porque el actual está vacío"));  break;  // added                    
             case STATE_deleted:   showWarning(WARNING_NOT_DELETED);  Serial.println(F("No se ha borrado el plato porque está vacío"));             break;  // deleted
             case STATE_saved:     showWarning(WARNING_NOT_SAVED);    Serial.println(F("No se ha guardado la comida porque está vacía"));           break;  // saved
         }

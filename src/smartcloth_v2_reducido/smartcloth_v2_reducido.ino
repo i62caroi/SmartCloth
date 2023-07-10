@@ -148,8 +148,7 @@ void loop() {
                                             // inicial fuera el actual, se modifica el estado actual por
                                             // el próximo indicado en la regla.
                 
-               // state_prev_prev_prev = state_prev_prev;  // ==> no hace falta con lastValidState 
-                //state_prev_prev = state_prev;            // ==> no hace falta con lastValidState 
+
                 state_prev = state_actual;
                 state_actual = state_new;
                 
