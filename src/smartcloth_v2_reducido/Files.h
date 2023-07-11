@@ -71,7 +71,7 @@ char    fileKcal20[30]          = "bin/dash/kcal_20.bin";
 
 // --- IMAGENES ERROR Y AVISO ---
 char    fileCruz[30]              = "bin/error/cruz.bin";
-char    fileAvisoRed[30]          = "bin/aviso/aviso2R.bin";
+//char    fileAvisoRed[30]          = "bin/aviso/aviso2R.bin";
 char    fileAvisoDarkOrange[30]   = "bin/aviso/aviso2O.bin";
 
 

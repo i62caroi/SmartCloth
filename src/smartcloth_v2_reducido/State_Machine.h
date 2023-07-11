@@ -3,7 +3,7 @@
  * @brief Máquina de Estados (State Machine) de SmartCloth
  *
  * @author Irene Casares Rodríguez
- * @date 21/06/23
+ * @date 11/07/23
  * @version 1.0
  *
  *  Este archivo contiene las definiciones de los estados y eventos, además de las funciones
@@ -600,7 +600,8 @@ void actStateEmpty(){
     // ----- ALTERNANCIA PANTALLAS -------------------------
     currentTime = millis();
     if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
-        blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE, BLINK_AMBAS_ZONAS);
+        //blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE, BLINK_AMBAS_ZONAS);
+        blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE);
         if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir recipiente
             previousTime = currentTime;
             pedirRecipiente();
@@ -702,7 +703,8 @@ void actStatePlato(){
     }
     else{ // Ya no se muestra "Recipiente colocado"
         if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
-            blinkGrupoyProcesamiento(MSG_SIN_GRUPO, BLINK_AMBAS_ZONAS);
+            //blinkGrupoyProcesamiento(MSG_SIN_GRUPO, BLINK_AMBAS_ZONAS);
+            blinkGrupoyProcesamiento(MSG_SIN_GRUPO);
             if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger grupo
                 previousTime = currentTime;
                 pedirGrupoAlimentos();
@@ -797,7 +799,8 @@ void actGruposAlimentos(){
     // ----- ALTERNANCIA PANTALLAS -------------------------
     currentTime = millis();
     if(showing_dash or showing_just_groups){ // Se está mostrando dashboard estilo 2 (habiendolo modificado completo o solo Zona 1)
-        blinkGrupoyProcesamiento(NO_MSG, BLINK_SOLO_ZONA2);
+        blinkGrupoyProcesamiento(NO_MSG);
+        //blinkGrupoyProcesamiento(NO_MSG, BLINK_SOLO_ZONA2);
         if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger crudo o cocinado
             previousTime = currentTime;
             pedirProcesamiento();
@@ -1870,6 +1873,10 @@ void actStateERROR(){
           // de eventos durante estado de error. Además, así se puede deshabilitar la 'flagError', para que no continúe marcando error.
           // Si se gestionara esta liberación con una simple regla de transición a Empty con LIBERAR, no se podría deshabilitar
           // la 'flagError', lo que provocaría un falso mensaje de error al regresar a Empty.
+          
+          // La ISR de la Scale salta cada 0.5 seg, entonces se puede no hacer checkBascula() y continuar con la ejecución para que se
+          // haga el chequeo de eventos de báscula en el loop().
+          //checkBascula();     // Comprueba interrupción de báscula. Lo necesito para ver si hace falta marcar evento
 
           if(hasScaleEventOccurred() and (eventoBascula == LIBERAR)){
               addEventToBuffer(GO_TO_EMPTY);        

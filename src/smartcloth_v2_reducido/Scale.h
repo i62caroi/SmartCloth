@@ -129,54 +129,47 @@ void checkBascula(){
         if (diffWeight > 2.0){ // Cambio no causado por "interferencias" de la báscula
             scaleEventOccurred = true;
             
-            /* 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
-               Este valor es el que se usará como peso de los alimentos. */
+            // 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
+            //  Este valor es el que se usará como peso de los alimentos. 
                
             pesoBascula = newWeight;
             if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
 
-
-            //if(diffWeight >= 5.0){   // Siempre que haya un cambio no causado por "interferencias" de la báscula (diff > 2),
-                                      // se toma el valor del peso (pesoBascula = newWeight).
-                                      // Sin embargo, solo cuando ese cambio supera los 5 gramos, se se considera un evento de peso.
-                //scaleEventOccurred = true;
-
-                if(lastWeight < newWeight){ //INCREMENTO con diferencia de 5 gr
-                    Serial.println(F("\nIncremento..."));
-                    if(lastWeight > -1.0){ //Incremento en positivo (salvando valores cercanos a 0)
-                        Serial.print(F("\nINCREMENTO"));
-                        eventoBascula = INCREMENTO;
-                    }
-                    else if(lastWeight <= -1.0){ //Incremento por tara, viniendo de negativo
+            if(lastWeight < newWeight){ //INCREMENTO con diferencia de 5 gr
+                Serial.println(F("\nIncremento..."));
+                if(lastWeight > -1.0){ //Incremento en positivo (salvando valores cercanos a 0)
+                    Serial.print(F("\nINCREMENTO"));
+                    eventoBascula = INCREMENTO;
+                }
+                else if(lastWeight <= -1.0){ //Incremento por tara, viniendo de negativo
+                    Serial.print(F("\nTARADO"));
+                    eventoBascula = TARAR;
+                }
+            }
+            else { //DECREMENTO con diferencia de 5 gr
+                Serial.println(F("\nDecremento..."));
+                if(newWeight >= 1.0){ //Se ha quitado algo pero no todo (sigue positivo)
+                    Serial.print(F("\nDECREMENTO"));
+                    eventoBascula = DECREMENTO;
+                }
+                else if(newWeight < 1.0){ //peso negativo o cercano a 0.0
+                    if(tarado){ //Decremento debido a tara
                         Serial.print(F("\nTARADO"));
                         eventoBascula = TARAR;
                     }
-                }
-                else { //DECREMENTO con diferencia de 5 gr
-                    Serial.println(F("\nDecremento..."));
-                    if(newWeight >= 1.0){ //Se ha quitado algo pero no todo (sigue positivo)
-                        Serial.print(F("\nDECREMENTO"));
-                        eventoBascula = DECREMENTO;
-                    }
-                    else if(newWeight < 1.0){ //peso negativo o cercano a 0.0
-                        if(tarado){ //Decremento debido a tara
-                            Serial.print(F("\nTARADO"));
-                            eventoBascula = TARAR;
+                    else{ //Decremento por retirar objeto
+                        if(abs(abs(newWeight) - pesoARetirar) < 5.0){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
+                            // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
+                            Serial.print(F("\nLIBERADA"));
+                            eventoBascula = LIBERAR;
                         }
-                        else{ //Decremento por retirar objeto
-                            if(abs(abs(newWeight) - pesoARetirar) < 5.0){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
-                                // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
-                                Serial.print(F("\nLIBERADA"));
-                                eventoBascula = LIBERAR;
-                            }
-                            else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
-                                Serial.print(F("\nQUITANDO"));
-                                eventoBascula = QUITAR;
-                            }
+                        else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
+                            Serial.print(F("\nQUITANDO"));
+                            eventoBascula = QUITAR;
                         }
                     }
                 }
-            //}
+            }
 
             Serial.println(F("\n--------------------------------------"));
             Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 

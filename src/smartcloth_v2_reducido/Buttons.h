@@ -119,6 +119,22 @@ void  checkAllButtons();       // Asignación de eventos según botón pulsado e
         /*--------------------------------------------------------------*/
 
         /* ---------------    TECLADO MAIN   ----------------- */
+        //
+        // Si el grupo de alimentos seleccionado es de TIPO_A, necesita diferenciar entre crudo o cocinado porque sus valores
+        // nutricionales son diferentes según el caso. Para los de TIPO_B no importa si los cocinas o no. 
+        //
+        // Los IDs de los grupos van del 1 al 20 para los crudos y después van los de cocinado. Por ejemplo, el grupo 7 (Verduras y Hortalizas)
+        // es crudo, mientras que su correspondiente cocinado es el grupo 27. Por eso, si es un grupo de TIPO_A y se marca COCINADO, se cocinado se hace (buttonGrande+20),
+        // para acceder a los valores de ese grupo pero cocinado.
+        //
+        // Los grupos de TIPO_A son: 7 (27), 8 (28), 9 (29), 16 (36), 17 (37) y 18 (38)
+        // Los grupos de TIPO_B son: 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 19 y 20
+        //
+        // El usuario puede escoger crudo o cocinado independientemente del grupo seleccionado y así se mostrará en pantalla, pero solo afectará
+        // a los valores si el grupo es de TIPO_A. Esto se hace porque el usuario no tiene por qué saber para qué grupos cambian los valores según
+        // si el alimento está crudo o cocinado.
+        //
+
         if(buttonMain != 0){
             switch (buttonMain) {
                 case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // AMARILLO  Crudo -> opción predeterminada

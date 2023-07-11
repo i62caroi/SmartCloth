@@ -1,9 +1,9 @@
 /** 
- * @file Screen.h.h
+ * @file Screen.h
  * @brief Módulo Tarjeta SD
  * 
  * @author Irene Casares Rodríguez
- * @date 21/06/23
+ * @date 11/07/23
  * @version 1.0
  *
  * Modelo pantalla: ER-TFTM070-6 de BuyDisplay [1] (SPI 7"TFT LCD Dislay 1024x600 OPTL Capacitive Touch Screen)
@@ -114,8 +114,8 @@
   ------------------------------------------------------------------------------------------------------
 
   ------------- CONCLUSIÓN USO DE FUENTES INTERNAS/EXTERNAS --------------------------------------
-    	>> Interna -> Texto de 8x16/12x24/16x32, escalándolo hasta 4 veces.
-    	>> Externa -> Texto de 8x16/15x16, escalándolo hasta 4 veces.
+    	>> Interna -> Texto de 8x16/12x24/16x32, escalándolo hasta 4 veces. ==> MEJOR OPCIÓN
+    	>> Externa -> Texto de 8x16/15x16, escalándolo hasta 4 veces. ==> SE PIXELA DEMASIADO
   ------------------------------------------------------------------------------------------------
 
 
@@ -222,27 +222,27 @@ int SCREEN_HEIGHT; // Y (600)
 void    setupScreen();                    // Inicializar pantalla
 void    Welcome();                        // Cargar imágenes (loadPicturesShowHourglass()) y mostrar wireframe de Arranque (logo SmartCloth)
 // --- DASHBOARD ---
-void    blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas); // Mostrar zonas 1 y 2 parpadeando y mensaje de sin grupo o sin recipiente
-void    printGrupoyEjemplos();  // Zona 1 => Mostrar nombre de grupo escogido y ejemplos (true: mostrar grupo   false: mensaje "Falta grupo")
+//void    blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas); // Mostrar zonas 1 y 2 parpadeando y mensaje de sin grupo o sin recipiente
+void    blinkGrupoyProcesamiento(int msg_option); // Mostrar zonas 1 y 2 parpadeando (msg de sin grupo o recipiente) o solo zona 2 (sin msg)
+void    printGrupoyEjemplos();            // Zona 1 => Mostrar nombre de grupo escogido y ejemplos
 void    printProcesamiento();             // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo => STATE_raw y STATE_cooked
-                                          //        => Mostrar alternancia de resaltado si no hay ningún procesamiento activo => STATE_Empty, STATE_Plato y STATE_groupA/B
-void    printZona3(int show_objeto);      // Mostrar comida actual copiada (SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (SHOW_ALIMENTO_ACTUAL_ZONA3)
-void    printZona4(int show_objeto);      // Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
+void    printZona3(int show_objeto);      // Zona 3 => Mostrar comida actual copiada (SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (SHOW_ALIMENTO_ACTUAL_ZONA3)
+void    printZona4(int show_objeto);      // Zona 4 => Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
 void    showValores(ValoresNutricionales &valores, int zona);  // Mostrar valores en la 'zona' correspondiente (SHOW_VALORES_ZONA3 O SHOW_VALORES_ZONA4).
-void    showRaciones(ValoresNutricionales &valores, int zona); // Mostrar raciones con decimales mínimos y centradas en su recuadro según la 'zona' (SHOW_RACIONES_ZONA3 o SHOW_RACIONES_ZONA4).
-void    showDashboardStyle1(int msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Empty y STATE_Plato
-void    showDashboardStyle2();            // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
+void    showRaciones(ValoresNutricionales &valores, int zona); // Mostrar raciones con decimales mínimos y centradas según la 'zona' (SHOW_RACIONES_ZONA3 o SHOW_RACIONES_ZONA4).
+void    showDashboardStyle1(int msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Empty y STATE_Plato
+void    showDashboardStyle2();                // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
 // --- pantallas transitorias ---
 void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Empty
 void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
 void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
 void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
-void    showAccionRealizada(int option); // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showAccionRealizada(int option);  // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 void    showAccionCancelada();            // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
 // --- Errores o avisos ---
-void    showError(int option);            // Pantalla de error con mensaje según estado (del 1 al 13)
-void    showWarning(int option);          // Warning de acción inncesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showError(int option);            // Pantalla de error con mensaje según estado 
+void    showWarning(int option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // --- Carga de imágenes ---
 void    loadPicturesShowHourglass();      // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloj de arena (hourglass)
 void    putReloj1();
@@ -257,6 +257,7 @@ void    putRelojGirado4();
 void    putRelojGirado5();
 void    putRelojGirado6();
 /*-----------------------------------------------------------------------------*/
+// --- Interrupciones/Eventos ---
 bool    eventOccurred();                  // Comprobar si ha habido interrupciones de botoneras o eventos de báscula
 /*-----------------------------------------------------------------------------*/
 
@@ -361,82 +362,14 @@ void Welcome(){
 /*********************************************************************************************************/
 
 /*---------------------------------------------------------------------------------------------------------
-   printGrupoyEjemplos(): Zona 1 => Muestra ejemplos del grupo de alimentos seleccionado, así como si está
-                                    crudo o cocinado.
-            Parámetros:
-                    show_group - bool   -->   true (default): mostrar grupo   false: mensaje "Falta grupo"
-----------------------------------------------------------------------------------------------------------*/
-void printGrupoyEjemplos(){    
-    // -------- TEXTO ------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-
-    // Recuadro grupo y ejemplos
-    tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
-
-    // Título
-    tft.setCursor(40,30);
-    tft.setTextForegroundColor(WHITE); 
-    tft.print("Grupo Actual: ");  // 16x32 escale x1
-
-    // Nombre grupo
-    tft.setTextForegroundColor(grupoEscogido.color_grupo); // 'color_grupo'' como atributo de struct 'Grupo'
-    tft.setCursor(tft.getCursorX(),tft.getCursorY());
-    tft.print(grupoEscogido.Nombre_grupo); // Nombre grupo // 16x32 escale x1
-
-    // Ejemplos grupo
-    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
-    tft.setCursor(40,68);
-    tft.print(grupoEscogido.Ejemplos_grupo); // 12x24 escale x1
-    // -------- FIN TEXTO --------------------
-    
-}
-
-
-/*---------------------------------------------------------------------------------------------------------
-   printProcesamiento(): Zona 2 => Muestra el símbolo de 'crudo' o 'cocinado' según el procesamiento activo
-                                  Si no hay ningún procesamiento activo (SIN_PROCESAMIENTO), se muestran los
-                                  recuadros parpadeando.
-----------------------------------------------------------------------------------------------------------*/
-void printProcesamiento(){ 
-    // Recuadro cocinado pequeño 
-    tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
-
-    // Recuadro crudo pequeño
-    tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
-
-    switch(procesamiento){
-        case SIN_PROCESAMIENTO:
-            blinkGrupoyProcesamiento(NO_MSG, BLINK_SOLO_ZONA2); // Mostrar "parpadenado" los recuadros de crudo y cocinado 
-            break;
-
-        case ALIMENTO_CRUDO:  // CRUDO activo
-            // Mostrar crudoPeq normal
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
-            // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
-            tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
-            break;
-
-        case ALIMENTO_COCINADO: // COCINADO activo
-             // Mostrar cociPeq normal
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
-            // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
-            tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
-            break;
-
-        default: break;
-    }
-}
-
-/*---------------------------------------------------------------------------------------------------------
    blinkGrupoyProcesamiento(): Muestra un mensaje en la zona 1 (recipiente no colocado o grupo no escogido)
                                y la zona 2 vacía. El borde de ambas zonas parpadea, indicando que no se ha
                                escogido aún grupo ni procesamiento.
             Parámetros:
-                    msg_option - int   -->   0: mensaje "no hay recipiente"    1: mensaje "no hay grupo"
+                    msg_option - int   -->   0: sin mensaje    1:mensaje "no hay recipiente"    2: mensaje "no hay grupo"
                     ambas_zonas - bool  -->   true: parpadear ambas zonas      false: parpadear solo zona 2
 ----------------------------------------------------------------------------------------------------------*/
-void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
+/*void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
     // Tiempos utilizados para alternar el resaltado de los recuadros:
     static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
     const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no (0.5 seg)
@@ -452,7 +385,7 @@ void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
         if (currentTime - previousTime >= interval) {
             previousTime = currentTime;
 
-            if(ambas_zonas){
+            if(ambas_zonas){ // Si se quiere parpadear ambas zonas, nunca será NO_MSG 
                 // Recuadro grupo y ejemplos
                 tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
                 // Resaltar zona de grupos para recordar que no se han escogido
@@ -460,7 +393,7 @@ void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
                 tft.drawRoundRect(31,21,931,134,20,RED); // Resaltado x2
                 tft.drawRoundRect(32,22,930,133,20,RED); // Resaltado x3
 
-                if(msg_option != NO_MSG){
+                if(msg_option != NO_MSG){ // Si se quiere parpadear ambas zonas, nunca será NO_MSG ==> no hace falta esta comprobación??
                     // Mensaje
                     tft.selectInternalFont(RA8876_FONT_SIZE_32);
                     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
@@ -494,10 +427,10 @@ void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
         if (currentTime - previousTime >= interval) {
             previousTime = currentTime;
 
-            if(ambas_zonas){
+            if(ambas_zonas){ // Si se quiere parpadear ambas zonas, nunca será NO_MSG
                 // Recuadro grupo y ejemplos
                 tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
-                if(msg_option != NO_MSG){
+                if(msg_option != NO_MSG){ // Si se quiere parpadear ambas zonas, nunca será NO_MSG ==> no hace falta esta comprobación??
                     // Mensaje
                     tft.selectInternalFont(RA8876_FONT_SIZE_32);
                     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
@@ -521,6 +454,186 @@ void blinkGrupoyProcesamiento(int msg_option, bool ambas_zonas){
     // ----- FIN ALTERNANCIA RESALTADO ---------------------
 
 }
+*/
+
+
+/*---------------------------------------------------------------------------------------------------------
+   blinkGrupoyProcesamiento(): Muestra un mensaje en la zona 1 (recipiente no colocado o grupo no escogido)
+                               y la zona 2 vacía. El borde de ambas zonas parpadea si hay mensaje, indicando 
+                               que no se ha escogido aún grupo ni procesamiento.
+                               Si no hay mensaje porque se ha colocado recipiente y escogido grupo, solo 
+                               parpadea la zona 2 indicando que no se ha ecogido aún procesamiento.
+
+                               Haya mensaje o no, la zona 2 siempre parpadea mientras no se escoja crudo o
+                               cocinado.
+
+            Parámetros:
+                    msg_option - int   -->   0: sin mensaje     1: mensaje "no hay recipiente"    2: mensaje "no hay grupo"
+----------------------------------------------------------------------------------------------------------*/
+void blinkGrupoyProcesamiento(int msg_option){
+    // Tiempos utilizados para alternar el resaltado de los recuadros:
+    static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
+    const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no (0.5 seg)
+
+    unsigned long currentTime = millis();
+
+    static bool resaltar_cuadros = true;
+
+
+    // ----- ALTERNANCIA RESALTADO -------------------------
+    // --- RESALTAR --------------------
+    if(resaltar_cuadros){
+        if (currentTime - previousTime >= interval) {
+            previousTime = currentTime;
+
+            // ----- ZONA 1 -----------------------------------------
+            if(msg_option != NO_MSG){ // Hay mensaje porque no se ha colocado recipiente o escogido grupo
+                // Recuadro grupo y ejemplos
+                tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+                // Resaltar zona de grupos para recordar que no se han escogido
+                tft.drawRoundRect(30,20,932,135,20,RED); // Resaltado x1
+                tft.drawRoundRect(31,21,931,134,20,RED); // Resaltado x2
+                tft.drawRoundRect(32,22,930,133,20,RED); // Resaltado x3
+
+                // Mensaje
+                tft.selectInternalFont(RA8876_FONT_SIZE_32);
+                tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+                tft.setCursor(50,50);
+                tft.setTextForegroundColor(WHITE);
+                if(msg_option == MSG_SIN_RECIPIENTE) tft.print("NO SE HA COLOCADO NING\xDA""N RECIPIENTE");  // 16x32 escale x1
+                else if(msg_option == MSG_SIN_GRUPO) tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
+            }
+            // ----- FIN ZONA 1 -------------------------------------
+
+
+            // ----- ZONA 2 -----------------------------------------
+            // Haya mensaje o no, esta zona siempre parpadea mientras no se escoja procesamiento
+
+            // Dibujar cuadro cocinado
+            tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); 
+            // Resaltado en cuadro cocinado
+            tft.drawRoundRect(937,20,994,74,10,RED); // Resaltado x1 en cuadro cocinado
+            tft.drawRoundRect(938,21,993,73,10,RED); // Resaltado x2 en cuadro cocinado
+            tft.drawRoundRect(939,22,992,72,10,RED); // Resaltado x3 en cuadro cocinado
+
+            // Dibujar cuadro crudo
+            tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); 
+            // Resaltado en cuadro crudo
+            tft.drawRoundRect(937,79,994,133,10,RED); // Resaltado x1 en cuadro crudo
+            tft.drawRoundRect(938,80,993,132,10,RED); // Resaltado x2 en cuadro crudo
+            tft.drawRoundRect(939,81,992,131,10,RED); // Resaltado x3 en cuadro crudo
+            // ----- FIN ZONA 2 -------------------------------------
+
+            resaltar_cuadros = false;
+        }
+    }
+    // --- FIN RESALTAR --------------------
+    else{   // --- NO RESALTAR --------------------
+        if (currentTime - previousTime >= interval) {
+            previousTime = currentTime;
+
+            // ----- ZONA 1 -----------------------------------------
+            if(msg_option != NO_MSG){ // Hay mensaje porque no se ha colocado recipiente o escogido grupo
+                // Recuadro grupo y ejemplos
+                tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
+                // Mensaje
+                tft.selectInternalFont(RA8876_FONT_SIZE_32);
+                tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+                tft.setCursor(50,50);
+                tft.setTextForegroundColor(WHITE);
+                if(msg_option == MSG_SIN_RECIPIENTE) tft.print("NO SE HA COLOCADO NING\xDA""N RECIPIENTE");  // 16x32 escale x1
+                else if(msg_option == MSG_SIN_GRUPO) tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
+            }
+            // ----- FIN ZONA 1 -------------------------------------
+
+            // ----- ZONA 2 -----------------------------------------
+            // Haya mensaje o no, esta zona siempre parpadea mientras no se escoja procesamiento
+            // Dibujar cuadro cocinado
+            tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); 
+            // Dibujar cuadro crudo
+            tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); 
+            // ----- FIN ZONA 2 -------------------------------------
+
+
+            resaltar_cuadros = true;
+        }
+    }
+    // --- FIN NO RESALTAR --------------------
+    // ----- FIN ALTERNANCIA RESALTADO ---------------------
+
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printGrupoyEjemplos(): Zona 1 => Muestra ejemplos del grupo de alimentos seleccionado.
+----------------------------------------------------------------------------------------------------------*/
+void printGrupoyEjemplos(){    
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+
+    // Recuadro grupo y ejemplos
+    tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+
+    // Título
+    tft.setCursor(40,30);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("Grupo Actual: ");  // 16x32 escale x1
+
+    // Color grupo
+    tft.setTextForegroundColor(grupoEscogido.color_grupo); // 'color_grupo'' como atributo de struct 'Grupo'
+    
+    // Nombre grupo
+    tft.setCursor(tft.getCursorX(),tft.getCursorY());
+    tft.print(grupoEscogido.Nombre_grupo); // Nombre grupo -> 16x32 escale x1
+
+    // Ejemplos grupo
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setCursor(40,68);
+    tft.print(grupoEscogido.Ejemplos_grupo); // Ejemplos grupo -> 12x24 escale x1
+    // -------- FIN TEXTO --------------------
+    
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printProcesamiento(): Zona 2 => Muestra el símbolo de 'crudo' o 'cocinado' según el procesamiento activo
+                                  Si no hay ningún procesamiento activo (SIN_PROCESAMIENTO), se muestran los
+                                  recuadros parpadeando.
+----------------------------------------------------------------------------------------------------------*/
+void printProcesamiento(){ 
+    // Recuadro cocinado pequeño 
+    tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
+
+    // Recuadro crudo pequeño
+    tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
+
+    switch(procesamiento){
+        case SIN_PROCESAMIENTO:
+            blinkGrupoyProcesamiento(NO_MSG); // Solo parpadea zona 2 (procesamiento sin escoger)
+            //blinkGrupoyProcesamiento(BLINK_SOLO_ZONA2, NO_MSG); // Mostrar "parpadeando" los recuadros de crudo y cocinado 
+            break;
+
+        case ALIMENTO_CRUDO:  // CRUDO activo
+            // Mostrar crudoPeq normal
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
+            // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+            tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
+            break;
+
+        case ALIMENTO_COCINADO: // COCINADO activo
+             // Mostrar cociPeq normal
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
+            // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+            tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
+            break;
+
+        default: break;
+    }
+}
+
+
 
 /*---------------------------------------------------------------------------------------------------------
    printZona3(): Zona 3 => Muestra los valores nutricionales según el caso.
@@ -851,7 +964,8 @@ void showRaciones(ValoresNutricionales &valores, int zona){
 void showDashboardStyle1(int msg_option){
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
-    blinkGrupoyProcesamiento(msg_option, BLINK_AMBAS_ZONAS);  // Zonas 1 y 2 - Parpadeando y mensaje de falta recipiente o grupo
+    //blinkGrupoyProcesamiento(msg_option, BLINK_AMBAS_ZONAS);  // Zonas 1 y 2 - Parpadeando y mensaje de falta recipiente o grupo
+    blinkGrupoyProcesamiento(msg_option);
     printZona3(SHOW_COMIDA_ACTUAL_ZONA3);                     // Zona 3 - Valores comida copiada tras guardar. Al inicio están a 0.
     printZona4(SHOW_ACUMULADO_HOY_ZONA4);                     // Zona 4 - Valores Acumulado hoy
 }
@@ -1352,6 +1466,74 @@ void showAccionCancelada(){
 
 
 
+/*---------------------------------------------------------------------------------------------------------
+   showWarning(): Pantalla genérica para avisar de que no se ha realizado la acción porque 
+                  no era necesaria. Solo para casos de añadir, eliminar o guardar. 
+        Parámetros: 
+            option  - int -> 1: añadir   2: eliminar   3: guardar
+----------------------------------------------------------------------------------------------------------*/
+void showWarning(int option){
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+
+    tft.setCursor(384, 100);
+    tft.println("\xA1""AVISO\x21""");
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,286,764,294,3,WHITE); // Cruza la imagen de aviso por detrás
+    // ---------------------------------------------------------------------------------------------------
+
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+
+    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
+
+    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
+    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
+    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
+    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
+    // al modificar el punto de inicio de la imagen en PAGE3. 
+
+    // aviso2 
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,230,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    switch (option){
+      case WARNING_NOT_ADDED: // AÑADIR
+              tft.setCursor(150, 410);                                      tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
+              break;
+
+      case WARNING_NOT_DELETED: // ELIMINAR
+              tft.setCursor(180, 410);                                      tft.println("NO SE HA ELIMINADO EL PLATO"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
+              break;
+
+      case WARNING_NOT_SAVED: // GUARDAR
+              tft.setCursor(190, 410);                                      tft.println("NO SE HA GUARDADO LA COMIDA"); 
+              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
+              break;
+    }
+    // ----------------------------------------------------------------------------------------------------  
+
+
+    
+}
+
+
 
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1475,74 +1657,6 @@ void showError(int option){
 }
 
 
-
-
-/*---------------------------------------------------------------------------------------------------------
-   showWarning(): Pantalla genérica para avisar de que no se ha realizado la acción porque 
-                  no era necesaria. Solo para casos de añadir, eliminar o guardar. 
-        Parámetros: 
-            option  - int -> 1: añadir   2: eliminar   3: guardar
-----------------------------------------------------------------------------------------------------------*/
-void showWarning(int option){
-    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
-    tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
-
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(WHITE); 
-
-    tft.setCursor(384, 100);
-    tft.println("\xA1""AVISO\x21""");
-    // ---------------------------------------------------------------------------------------------------
-
-
-    // ------------ LINEA --------------------------------------------------------------------------------
-    tft.fillRoundRect(252,286,764,294,3,WHITE); // Cruza la imagen de aviso por detrás
-    // ---------------------------------------------------------------------------------------------------
-
-
-    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
-    // Copiar de PAGE3 a PAGE1
-
-    // Aumentar un poco el tamaño de la imagen de aviso no haría daño.
-
-    // Decimos que está en el (115,293) en lugar de (115,292) para eliminar la línea de arriba, que no sé por qué aparece.
-    // Eso hace que si se sigue indicando un tamaño de 135x113, ahora aparece justo debajo una línea de basura de la PAGE3.
-    // Por eso se dice que mide 135x112, para evitar que saque esa línea de basura.
-    // Ocurre lo mismo con la imagen de aviso3: se dice que mide 135x118 en lugar de 135x119 para eliminar esa línea que aparece
-    // al modificar el punto de inicio de la imagen en PAGE3. 
-
-    // aviso2 
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,230,135,112); // Mostrar aviso2 (135x113) en PAGE1
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ----- TEXTO (ACCION SIN EFECTO SEGÚN EL CASO) ------------------------------------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-
-    switch (option){
-      case WARNING_NOT_ADDED: // AÑADIR
-              tft.setCursor(150, 410);                                      tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
-              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
-              break;
-
-      case WARNING_NOT_DELETED: // ELIMINAR
-              tft.setCursor(180, 410);                                      tft.println("NO SE HA ELIMINADO EL PLATO"); 
-              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
-              break;
-
-      case WARNING_NOT_SAVED: // GUARDAR
-              tft.setCursor(190, 410);                                      tft.println("NO SE HA GUARDADO LA COMIDA"); 
-              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
-              break;
-    }
-    // ----------------------------------------------------------------------------------------------------  
-
-
-    
-}
 
 
 

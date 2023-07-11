@@ -123,8 +123,8 @@ void loop() {
         /*--------------------------------------------------------------*/
         /* ---------------    CHECK INTERRUPCIONES   ------------------ */
         /*--------------------------------------------------------------*/
-        checkAllButtons();  // Comprueba interrupción de botoneras
-        checkBascula();     // Comprueba interrupción de báscula
+        checkAllButtons();  // Comprueba interrupción de botoneras y marca evento
+        checkBascula();     // Comprueba interrupción de báscula y marca evento
         
 
 
