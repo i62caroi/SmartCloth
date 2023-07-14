@@ -71,7 +71,8 @@ void setup() {
     //pantalla_inicial(); // OK
     //select_Grupo(); // OK con movimiento de mano y 2º pulsación
 
-    //crudo_cocinado();
+    crudo_cocinado(); // OK con 3º alternancia
+
     //add_Plato();
 
 
@@ -240,6 +241,7 @@ void pantalla_inicial(){ // PAGE2 (OK) ==> HECHO
 
 }
 
+
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- ESCOGER GRUPO -------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -384,7 +386,7 @@ void desplazar_mano_Grupos(){
     tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,400,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
     delay(50);
     tft.clearArea(556,413,674,527,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo4
-    
+
     // En la función principal escoger_grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
 }
 
@@ -399,9 +401,6 @@ void sin_pulsacion_Grupos(bool borrar){
     // Mostrar mano
     tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
 }
-
-
-
 
 void pulsacion_Grupos(){
     // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
@@ -458,9 +457,91 @@ void pulsacion_Grupos(){
     tft.drawLine(618,375,628,355,RED_BUTTON);
     // ---------------------------------------------------
 }
+
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- FIN ESCOGER GRUPO ---------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- CRUDO/COCINADO ------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void crudo_cocinado(){ // Tb PAGE3, pero más a la derecha
+    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+    tft.setCursor(100, 30);
+    tft.println("\xBF""EL ALIMENTO EST\xC1""");
+    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
+    tft.print("COCINADO O CRUDO\x3F"""); 
+    delay(1000);
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEAS --------------------------------------------------------------------------------
+    tft.fillRoundRect(0,250,256,258,3,WHITE);
+    tft.fillRoundRect(768,517,1024,525,3,WHITE);
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ BOTONES -------------------------------------------------------------------------------
+    // ------------ COCINADO 1 -------------
+    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    delay(1000);
+
+    // ------------ CRUDO 1 ----------------
+    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    delay(1000);
+
+    // ------------ COCINADO 2 -------------
+    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    delay(1000);
+
+    // ------------ CRUDO 2 ----------------
+    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    delay(1000);
+
+    // ------------ COCINADO 3 -------------
+    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    delay(1000);
+
+    // ------------ CRUDO 3 ----------------
+    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    // ----------------------------------------------------------------------------------------------------
+
+}
+
+
+void mostrarOpcionProcesamiento(int option){
+    switch(option){
+        case 1: // Cocinado
+            // Borrar imagen crudo 1 de la page1. Se "borra" aunque no haya nada para simplificar función
+            tft.clearArea(500,280,724,480,VERDE_PEDIR); 
+            // Mostrar cociGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
+            break;
+
+        case 2: // Crudo
+            // Borrar imagen cocinado 1 de la page1
+            tft.clearArea(280,280,497,470,VERDE_PEDIR); 
+            // Mostrar crudoGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
+            break;
+
+        default: break;
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- FIN CRUDO/COCINADO --------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1552,58 +1633,7 @@ void save_Comida(){ // Tb PAGE3, pero más a la derecha
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-void crudo_cocinado(){ // Tb PAGE3, pero más a la derecha
-    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
-    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
 
-    tft.selectInternalFont(RA8876_FONT_SIZE_32);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(WHITE); 
-    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
-    tft.setCursor(100, 30);
-    tft.println("\xBF""EL ALIMENTO EST\xC1""");
-    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
-    tft.print("COCINADO O CRUDO\x3F"""); 
-    delay(1000);
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ------------ LINEAS --------------------------------------------------------------------------------
-    tft.fillRoundRect(0,250,256,258,3,WHITE);
-    tft.fillRoundRect(768,517,1024,525,3,WHITE);
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ------------ BOTONES -------------------------------------------------------------------------------
-    // ------------ COCINADO 1 -------------
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-    delay(1000);
-
-    // ------------ CRUDO 1 ----------------
-    // Borrar imagen cocinado 1 de la page1
-    tft.clearArea(280,280,497,470,VERDE_PEDIR); 
-    // Escribir imagen crudo en page1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
-    delay(1000);
-
-    // ------------ COCINADO 2 -------------
-    // Borrar imagen crudo 1 de la page1
-    tft.clearArea(500,280,724,480,VERDE_PEDIR); 
-    // Escribir imagen cocinado en page1    
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-    delay(1000);
-
-    // ------------ CRUDO 2 ----------------
-    // Borrar imagen cocinado 2 de la page1
-    tft.clearArea(280,280,497,470,VERDE_PEDIR); 
-    // Escribir imagen crudo en page1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
-    // ----------------------------------------------------------------------------------------------------
-
-
-
-}
 
 
 
