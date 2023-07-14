@@ -26,16 +26,38 @@
 #define COLORS_H
 
 
+// ---------------- COLORES GENERALES ---------
+#define   BLACK     0x0000  // Limpiar páginas antes de escribir o copiar imágenes
+#define   WHITE     0xFFFF  // Texto y wireframes de carga y arranque
+#define   YELLOW    0xFFE0  // Texto "Comida guardada" en STATE_Empty si se acaba de guardar la comida
+// -------------------------------------------------
+
+
+// ---------------- COLORES PANTALLAS TRANSITORIAS --------------
+#define   VERDE_PEDIR               0x6468  // Wireframes pedir recipiente, grupo y crudo-cocinado
+
+#define   AMARILLO_CONFIRM_AVISO    0xFEC4  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
+#define   ROJO_TEXTO_CONFIRM_AVISO  0x9883  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
+
+#define   DARKORANGE                0xCB20 // 0xC86406 en RGB-8:8:8 ==> aviso
+
+#define   RED                       0xF800  // Parpadeo dashboard y wireframes de error y cancelar
+
+#define   RED_BUTTON                0xB8C3  // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar y grupos
+
+// --------------------------------------------------------------
+
+
 // ---------------- COLORES DASHBOARD --------------
-#define   AZUL_FONDO            0x2126 //OK
-#define   GRIS_CUADROS          0x29A8 //OK
-#define   AZUL_BORDE_CUADRO     0xC6DE //OK
-#define   GRIS_CUADROS_VALORES  0x426C //OK
-#define   ROJO_PESO             0xF902 //OK
-#define   AZUL_CARB             0x059E //OK
-#define   NARANJA_PROT          0xEA85 //OK
-#define   AMARILLO_GRASAS       0xEEC5 //OK
-#define   ROJO_KCAL             0xF801 // NO LO TENGOOOOO
+#define   AZUL_FONDO            0x2126 
+#define   GRIS_CUADROS          0x29A8 
+#define   AZUL_BORDE_CUADRO     0xC6DE 
+#define   GRIS_CUADROS_VALORES  0x426C 
+#define   ROJO_PESO             0xF902 
+#define   AZUL_CARB             0x059E 
+#define   NARANJA_PROT          0xEA85 
+#define   AMARILLO_GRASAS       0xEEC5 
+#define   ROJO_KCAL             0xF801 
 
 #define   COLOR_G1              0xEB4C    // ROJO         
 #define   COLOR_G2              0x2DC7    // VERDE
@@ -61,22 +83,21 @@
 
 
 
+
+
+
+
+
 // ------------- COLORES EJEMPLO ----------------------
 
-// NEGRO
-#define   BLACK         0x0000
-
-// BLANCO
-#define   WHITE         0xFFFF // Wireframes arranque, carga
+/*
 
 // ROJO
-#define   RED           0xF800 // Wireframes añadir, eliminar, guardar, recipiente, grupos, crudo-cocinado
-#define   RED_BUTTON    0xB8C3 // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar...
 #define   LIGHTRED      0xFC10
 #define   DARKRED       0x8000
   // NARANJA
 #define   ORANGE        0xFC80
-#define   DARKORANGE    0xCB20 // 0xC86406 en RGB-8:8:8
+
 
 // VERDE
 #define   GREEN         0x07E0
@@ -104,11 +125,13 @@
 
 // ROSA
 #define   PINK          0xFA1F
-  // MAGENTA
+
+// MAGENTA
 #define   MAGENTA       0xF81F
 #define   LIGHTMAGENTA  0xFC1F
 #define   DARKMAGENTA   0x8010
-  // MORADO
+
+// MORADO
 #define   PURPLE        0x9112
 #define   DARKPURPLE    0x30C6
 
@@ -147,6 +170,8 @@
 #define   GRAYSCALE28   2113*28
 #define   GRAYSCALE29   2113*29
 #define   GRAYSCALE30   2113*30
+
+*/
 
 
 

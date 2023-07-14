@@ -218,7 +218,7 @@ void getAcumuladoHoyFromSD(){
 
                 while (token != NULL) {
 
-                    switch (fieldIndex){ // fieldIndex = 0 => fecha     fieldIndex = 1 => hora
+                    switch (fieldIndex){ // fieldIndex = 0 => fecha     fieldIndex = 1 => hora    fieldIndex = 2 => carb  ...
                         case 2:   valueFloat = atof(token);     sumCarb   += valueFloat;     break;    // Carbohidratos
                         case 3:   valueInt   = atoi(token);     sumCarb_R += valueInt;       break;    // Raciones de carbohidratos
                         case 4:   valueFloat = atof(token);     sumLip    += valueFloat;     break;    // Lípidos (Grasas)
@@ -227,6 +227,7 @@ void getAcumuladoHoyFromSD(){
                         case 7:   valueInt   = atoi(token);     sumProt_R += valueInt;       break;    // Raciones de proteínas
                         case 8:   valueFloat = atof(token);     sumKcal   += valueFloat;     break;    // Kilocalorías
                         case 9:   valueFloat = atof(token);     sumPeso   += valueFloat;     break;    // Peso
+                        default:  break;
                     }
 
                     // Obtener el siguiente campo
