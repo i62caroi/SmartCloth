@@ -545,6 +545,9 @@ bool checkStateConditions(){
 void actStateEmpty(){ 
     // Tiempos utilizados para alternar entre dashboard y pantalla de pedir recipiente:
 
+    // Se dejan 5 segundos para ver el dashboard y luego se muestra la ayuda. Si se acaba de guardar la comida, 
+    // se dejan 10 segundos para ver la info de la comida guardada.
+
     unsigned long dashboardInterval = 5000;   // Intervalo de tiempo para mostrar el dashboard (5 segundos) 
     //const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
     if(flagComidaSaved){ // ==> Si se acaba de guardar la comida, se deja más tiempo para ver la info antes de pedir recipiente
@@ -637,7 +640,7 @@ void actStatePlato(){
 
     const unsigned long recipienteColocadoInterval  = 1000; // Intervalo de tiempo para mostrar "Recipiente colocado" (1 segundo)
     //const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
-    const unsigned long dashboardInterval = 2000;  // Intervalo de tiempo para mostrar el dashboard (2 segundos) --> solo se esperan 2 seg para mostrar ayuda
+    const unsigned long dashboardInterval = 3000;  // Intervalo de tiempo para mostrar el dashboard (3 segundos) --> solo se esperan 3 seg para mostrar ayuda
     const unsigned long grupoInterval = 5000;       // Intervalo de tiempo para pedir escoger grupo (5 segundos)
 
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior

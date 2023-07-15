@@ -209,6 +209,10 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   NO_BORRAR_PULSACION_GRUPOS  0
 #define   BORRAR_PULSACION_GRUPOS     1
 
+// Mostrar imagen cocinado o crudo en pantalla de escoger procesamiento
+#define   SHOW_COCINADO_IMAGE   1
+#define   SHOW_CRUDO_IMAGE      2
+
 
 
 // Screen object 
@@ -241,11 +245,12 @@ void    pedirRecipiente();                // Pedir colocar recipiente          =
 void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
 // -- Grupo --------------
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
-void    desplazar_mano_Grupos();
-void    sin_pulsacion_Grupos(bool borrar);
-void    pulsacion_Grupos();
+void    desplazar_mano_Grupos();          // Desplazar imagen de "mano" por la pantalla hasta grupo3
+void    sin_pulsacion_Grupos(bool borrar);  // Mano sobre grupo3 sin pulsación ("borrar" cuando se quiera quitar pulsación previa)
+void    pulsacion_Grupos();               // Pulsación de mano en grupo3
 // -- Procesamiento ------
 void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
+void    mostrarOpcionProcesamiento(int option); // Mostrar imagen de cocinado (option = 1) o crudo (option = 2)
 // -- Confirmar acción ---
 void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 // -- Acción realizada ---
@@ -271,6 +276,8 @@ void    putRelojGirado6();
 // --- INTERRUPCIONES/EVENTOS ---
 bool    eventOccurred();                  // Comprobar si ha habido interrupciones de botoneras o eventos de báscula
 /*-----------------------------------------------------------------------------*/
+// --- ESPERA E INTERRUPCION ---
+bool    doubleDelayAndCheckInterrupt(unsigned long period);  // El tiempo especificado se divide a la mitad y se comprueba interrupción tras cada espera
 
 
 
@@ -278,16 +285,17 @@ bool    eventOccurred();                  // Comprobar si ha habido interrupcion
    setupScreen(): Inicializar pantalla
 ----------------------------------------------------------------------------------------------------------*/
 void setupScreen(){
-    // initialize the bus for a device on pin 10 ==> Extended SPI Library Usage with the Arduino Due
-                                                //   (https://docs.arduino.cc/tutorials/due/due-extended-spi)
-    //SPI.begin(RA8876_CS);
-
     pinMode(RA8876_BACKLIGHT, OUTPUT);  // Set backlight pin to OUTPUT mode
     digitalWrite(RA8876_BACKLIGHT, HIGH);  // Turn on backlight
+
     if (!tft.init()){
       Serial.println(F("Could not initialize RA8876"));
       while(1);
     }
+
+    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+    tft.clearScreen(BLACK); 
+
     SCREEN_WIDTH = tft.getWidth(); // X
     SCREEN_HEIGHT = tft.getHeight(); // Y
     Serial.println(F("Screen initialized"));
@@ -305,6 +313,31 @@ bool eventOccurred(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   doubleDelayAndCheckInterrupt(): Divide a la mitad el tiempo especificado y hace dos (double) delays según
+                                   esos valores. Tras cada espera, comprueba si ha habido interrupciones.
+          Parámetros:
+                - period --> período de tiempo que se quiere esperar pero "escuchando" a las interrupciones.
+          Return:
+                - true --> ha habido interrupcion durante algún delay
+                - false --> no ha habido interrupción durante ningún delay
+----------------------------------------------------------------------------------------------------------*/
+bool doubleDelayAndCheckInterrupt(unsigned long period){
+    unsigned long timeForDelay = period/2;
+
+    // ----- ESPERA ----
+    delay(timeForDelay);
+    // ----- INT -------------------
+    if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
+    // ----- ESPERA ----
+    delay(timeForDelay);
+    // -------- INT -------------------
+    if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+
+    return false;
+}
+
+
 /***************************************************************************************************/
 /*---------------------------- BIENVENIDA A SMARTCLOTH   ------------------------------------------*/
 /***************************************************************************************************/
@@ -314,8 +347,8 @@ bool eventOccurred(){
               de arena y después muestra el logo de SmartCloth (wireframe de arranque).
 ----------------------------------------------------------------------------------------------------------*/
 void Welcome(){
-    tft.canvasImageStartAddress(PAGE1_START_ADDR); 
-    tft.clearScreen(BLACK); 
+    //tft.canvasImageStartAddress(PAGE1_START_ADDR); 
+    //tft.clearScreen(BLACK); 
 
     // 1 -  Cargar imágenes mientras muestra reloj de arena
     loadPicturesShowHourglass();  
@@ -968,30 +1001,19 @@ void pedirRecipiente(){
     // ************ CÍRCULO *******************************************************************************
     tft.fillCircle(512,380,65,WHITE); // 65 pixeles de diametro
     // ****************************************************************************************************
-    
-    // ----- ESPERA E INTERRUPCION ----------------
+
     // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 600 ms de delay en partes para chequear interrupciones mientras
-    delay(300);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(300);
-    // --------------------------------------------
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(600)) return;
 
     // ************ CUADRADO REDONDEADO *******************************************************************
     tft.fillRoundRect(447,315,577,445,10,WHITE); // x = 512 +/- 65 = 447   ->   y = 380 +/- 65 = 315
     // ****************************************************************************************************
     
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 600 ms de delay en partes para chequear interrupciones mientras
-    delay(300);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(300);
-    // --------------------------------------------
+    if(doubleDelayAndCheckInterrupt(600)) return;
 
     // ************ PALITOS *******************************************************************************
     //PAG 5 ==> palitos alrededor cuadrado. 4 pixeles entre barra y barra
@@ -1014,14 +1036,7 @@ void pedirRecipiente(){
     // ****************************************************************************************************
     
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 800 ms de delay en partes para chequear interrupciones mientras
-    delay(400);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(400);
-    // --------------------------------------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
     // ------------------------------------------------------------------------------------------------------
 
     // *********** BRAINS (120X108) *************************************************************************
@@ -1031,14 +1046,7 @@ void pedirRecipiente(){
     // *********************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 800 ms de delay en partes para chequear interrupciones mientras
-    delay(400);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(400);
-    // --------------------------------------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
 
     // **** BRAIN 2 ********************************************
     // BRAIN2G (99x83) (verde)
@@ -1046,14 +1054,7 @@ void pedirRecipiente(){
     // *********************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 800 ms de delay en partes para chequear interrupciones mientras
-    delay(400);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(400);
-    // --------------------------------------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
     // ****************************************************************************************************
     
 }
@@ -1076,9 +1077,7 @@ void recipienteColocado(){
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 }
-/*-------------------------------------------------------------------------------------------------------*/
 /*------------------------------ FIN PEDIR RECIPIENTE ---------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------------------*/
 
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1109,9 +1108,8 @@ void pedirGrupoAlimentos(){
     tft.fillRoundRect(0,250,220,258,3,WHITE);
     tft.fillRoundRect(0,450,512,458,3,WHITE);
 
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
     // ****************************************************************************************************
 
     // ************ GRUPOS ********************************************************************************
@@ -1121,30 +1119,26 @@ void pedirGrupoAlimentos(){
     // ------ Grupo 1 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
 
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
 
     // ------ Grupo 2 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
 
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
 
     // ------ Grupo 3 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
 
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
 
     // ------ Grupo 4 (130x125) ---------
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
 
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
     // ****************************************************************************************************
 
 
@@ -1159,14 +1153,7 @@ void pedirGrupoAlimentos(){
     // ****************************************************************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 1 seg de delay en partes para chequear interrupciones mientras
-    delay(500);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(500);
-    // --------------------------------------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
 
 
     // ******** 1º PULSACIÓN ******************************************************************************
@@ -1174,14 +1161,7 @@ void pedirGrupoAlimentos(){
     // ****************************************************************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 1 seg de delay en partes para chequear interrupciones mientras
-    delay(500);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(500);
-    // --------------------------------------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
 
 
     // ******** SIN PULSACIÓN *****************************************************************************
@@ -1189,29 +1169,15 @@ void pedirGrupoAlimentos(){
     // ****************************************************************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 1 seg de delay en partes para chequear interrupciones mientras
-    delay(500);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(500);
-    // ---------------------------------------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
 
 
     // ******** 2º PULSACIÓN ******************************************************************************
     pulsacion_Grupos();
     // ****************************************************************************************************
 
-    // ----- ESPERA E INTERRUPCION ------------------------------------------------------------------------
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    // Dividir 1 seg de delay en partes para chequear interrupciones mientras
-    delay(500);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    delay(500);
-    // ----------------------------------------------------------------------------------------------------
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
 
 
     // ******** SIN PULSACIÓN *****************************************************************************
@@ -1220,6 +1186,10 @@ void pedirGrupoAlimentos(){
     
 
 }
+
+/*---------------------------------------------------------------------------------------------------------
+   desplazar_mano_Grupos(): Desplazar imagen de "mano" por la pantalla simulando movimiento hasta grupo3.
+----------------------------------------------------------------------------------------------------------*/
 
 void desplazar_mano_Grupos(){
     // MANO por el camino
@@ -1275,6 +1245,12 @@ void desplazar_mano_Grupos(){
     // En la función principal escoger_grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
 }
 
+/*---------------------------------------------------------------------------------------------------------
+   sin_pulsacion_Grupos(): Mostrar la "mano" sobre el grupo3 sin pulsación
+          Parámetros:
+                - borrar ->   true: borrar pulsación anterior    false: no borrar porque es la primera vez
+----------------------------------------------------------------------------------------------------------*/
+
 void sin_pulsacion_Grupos(bool borrar){
     if(borrar){
         // Borrar todo (grupo, mano y pulsación)
@@ -1286,6 +1262,10 @@ void sin_pulsacion_Grupos(bool borrar){
     // Mostrar mano
     tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
 }
+
+/*---------------------------------------------------------------------------------------------------------
+   pulsacion_Grupos(): Simular pulsación causada por la "mano" sobre grupo3.
+----------------------------------------------------------------------------------------------------------*/
 
 void pulsacion_Grupos(){
     // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
@@ -1342,19 +1322,23 @@ void pulsacion_Grupos(){
     tft.drawLine(618,375,628,355,RED_BUTTON);
     // ---------------------------------------------------
 }
-
-/*-------------------------------------------------------------------------------------------------------*/
 /*-------------------------------- FIN ESCOGER GRUPO ----------------------------------------------------*/
-/*-------------------------------------------------------------------------------------------------------*/
 
+
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*---------------------------- ESCOGER CRUDO/COCINADO ---------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------------------
    pedirProcesamiento(): Pide escoger crudo cocinado, tras haber escogido grupo (STATE_groupA/B)
 ----------------------------------------------------------------------------------------------------------*/
 void pedirProcesamiento(){ 
-    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
-    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    // ***** FONDO VERDE ***********
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
 
+    // ******* TEXTO (PREGUNTA) **************************************************************************
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
@@ -1364,55 +1348,85 @@ void pedirProcesamiento(){
     delay(500);
     // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
-    // ----------------------------------------------------------------------------------------------------
+    // ****************************************************************************************************
 
-    // ------------ LINEAS --------------------------------------------------------------------------------
+    // ******** LINEAS ************************************************************************************
     tft.fillRoundRect(0,250,256,258,3,WHITE);
     tft.fillRoundRect(768,517,1024,525,3,WHITE);
-    // ----------------------------------------------------------------------------------------------------
+    // ****************************************************************************************************
 
+    // ******** BOTONES ***********************************************************************************
+    // ******** COCINADO 1 ***************************************
+    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    // ***********************************************************
 
-    // ------------ BOTONES -------------------------------------------------------------------------------
-    // ------------ COCINADO 1 -------------
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
+
+    // ******** CRUDO 1 ******************************************
+    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    // ***********************************************************
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
+
+    // ******** COCINADO 2 ***************************************
+    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    // ***********************************************************
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
+
+    // ******** CRUDO 2 ******************************************
+    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    // ***********************************************************
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
+
+    // ******** COCINADO 3 ***************************************
+    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    // ***********************************************************
     
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return;
 
-    // ------------ CRUDO 1 ----------------
-    // Borrar imagen cocinado 1 de la page1
-    tft.clearArea(280,280,497,470,RED); 
-    // Escribir imagen crudo en page1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
-    
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
-
-    // ------------ COCINADO 2 -------------
-    // Borrar imagen crudo 1 de la page1
-    tft.clearArea(500,280,724,480,RED); 
-    // Escribir imagen cocinado en page1    
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-    
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
-
-    // ------------ CRUDO 2 ----------------
-    // Borrar imagen cocinado 2 de la page1
-    tft.clearArea(280,280,497,470,RED); 
-    // Escribir imagen crudo en page1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
+    // ******** CRUDO 3 ******************************************
+    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    // ***********************************************************
 
     // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
-    // ----------------------------------------------------------------------------------------------------
+    // ****************************************************************************************************
 
 }
 
+/*---------------------------------------------------------------------------------------------------------
+   mostrarOpcionProcesamiento(): Mostrar imagen de cocinado o crudo, según indicado.
+        Parámetros: 
+            - option -> 1: cocinado  2: crudo
+----------------------------------------------------------------------------------------------------------*/
+void mostrarOpcionProcesamiento(int option){
+    switch(option){
+        case 1: // Cocinado
+            // Borrar imagen crudo 1 de la page1. Se "borra" aunque no haya nada para simplificar función
+            tft.clearArea(500,280,724,480,VERDE_PEDIR); 
+            // Mostrar cociGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
+            break;
 
+        case 2: // Crudo
+            // Borrar imagen cocinado 1 de la page1
+            tft.clearArea(280,280,497,470,VERDE_PEDIR); 
+            // Mostrar crudoGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
+            break;
+
+        default: break;
+    }
+}
+
+/*------------------------- FIN ESCOGER CRUDO/COCINADO ---------------------------------------------------*/
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*--------------------------------- CONFIRMACIÓN DE ACCIONES --------------------------------------------*/
