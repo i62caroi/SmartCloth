@@ -70,8 +70,9 @@ void setup() {
     
     //pantalla_inicial(); // OK
     //select_Grupo(); // OK con movimiento de mano y 2º pulsación
+    //crudo_cocinado(); // OK con 3º alternancia
 
-    crudo_cocinado(); // OK con 3º alternancia
+    colocar_alimento();
 
     //add_Plato();
 
@@ -542,6 +543,144 @@ void mostrarOpcionProcesamiento(int option){
 //----------------------------- FIN CRUDO/COCINADO --------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- COLOCAR ALIMENTO ----------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void colocar_alimento(){ // PAGE3
+
+    // ----------- TEXTO ------------------------------------------------------------------------------------
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
+
+    // ----- INTERNAL FIXED 12x24 X3 --------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+    tft.setCursor(160, 90);
+    tft.println("COLOQUE UN ALIMENTO");
+    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-10);
+    tft.print("EN LA ZONA DE PESADA"); 
+
+    delay(1000);
+      
+    // ----------- SCALE (150x150)  ------------------------------------------------------------------------
+    // Scale 
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,440,345,150,149); // Mostrar scale (150x150) en PAGE1
+    delay(1000);
+
+}
+
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- AÑADIR PLATO --------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void add_Plato(){ // Tb PAGE3, pero más abajo ==> HECHO
+    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(AMARILLO_CONFIRM_AVISO); // Fondo verde en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_AVISO); 
+    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+    tft.setCursor(30, 30);
+    tft.println("\xBF""EST\xC1"" SEGURO DE QUE QUIERE");
+    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
+    tft.print("A\xD1""ADIR UN NUEVO PLATO\x3F"""); 
+    delay(1000);
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,220,764,228,3,ROJO_TEXTO_CONFIRM_AVISO);
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (CONFIRMACIÓN) -------------------------------------------------------------------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setCursor(150, 270);
+    tft.println("PARA CONFIRMAR, PULSE DE NUEVO");
+    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()+10);
+    tft.print("EL BOT\xD3""N"); 
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ BOTÓN AÑADIR --------------------------------------------------------------------------
+    // Copiar de PAGE3 a PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,410,172,130); // Mostrar añadir (172x130) en PAGE1
+    delay(800);
+    // ----------------------------------------------------------------------------------------------------
+
+    
+     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
+    tft.canvasImageStartAddress(PAGE1_START_ADDR);
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    tft.drawRoundRect(425,413,590,535,20,RED_BUTTON); // Alrededor de botón
+    tft.drawRoundRect(424,412,591,536,20,RED_BUTTON); 
+    tft.drawRoundRect(423,411,592,537,20,RED_BUTTON); 
+    tft.drawRoundRect(422,410,593,538,20,RED_BUTTON); 
+    tft.drawRoundRect(421,409,594,539,20,RED_BUTTON); 
+    tft.drawRoundRect(420,408,595,540,20,RED_BUTTON); 
+    tft.drawRoundRect(419,407,596,541,20,RED_BUTTON); 
+    tft.drawRoundRect(418,406,597,542,20,RED_BUTTON); 
+    tft.drawRoundRect(417,405,598,543,20,RED_BUTTON); 
+    tft.drawRoundRect(416,404,599,544,20,RED_BUTTON); 
+    tft.drawRoundRect(415,403,600,545,20,RED_BUTTON); 
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------------ MANO -----------------------------------------------------------------------------------
+    // Cambio colores
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,128,AMARILLO_CONFIRM_AVISO); // Mostrar manoY2 (120x128) en PAGE1
+    
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); // manoR (120x129)
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); // manoG (120x129)
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------------ RAYITAS (PULSACION) --------------------------------------------------------
+    // Línea izquierda
+    tft.drawLine(448,355,530,375,RED_BUTTON);
+    tft.drawLine(449,355,531,375,RED_BUTTON);
+    tft.drawLine(450,355,532,375,RED_BUTTON);
+    tft.drawLine(451,355,533,375,RED_BUTTON);
+    tft.drawLine(452,355,534,375,RED_BUTTON);
+
+    // Línea central
+    tft.drawLine(468,350,468,370,RED_BUTTON);
+    tft.drawLine(469,350,469,370,RED_BUTTON);
+    tft.drawLine(470,350,470,370,RED_BUTTON);   
+    tft.drawLine(471,350,471,370,RED_BUTTON);
+    tft.drawLine(472,350,472,370,RED_BUTTON);
+
+    // Línea derecha
+    tft.drawLine(478,375,488,355,RED_BUTTON);
+    tft.drawLine(479,375,489,355,RED_BUTTON);
+    tft.drawLine(480,375,490,355,RED_BUTTON);   
+    tft.drawLine(481,375,491,355,RED_BUTTON);
+    tft.drawLine(482,375,492,355,RED_BUTTON);
+    // ----------------------------------------------------------------------------------------------------
+
+    delay(2000);
+
+    // ----- TEXTO (PLATO AÑADIDO) -------------------------------------------------------------------------
+    tft.clearScreen(AMARILLO_CONFIRM_AVISO);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,200,764,208,3,ROJO_TEXTO_CONFIRM_AVISO);
+    // ------ TEXTO ---------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setCursor(170, 258);
+    tft.println("NUEVO PLATO A\xD1""ADIDO");
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,380,764,388,3,ROJO_TEXTO_CONFIRM_AVISO);
+    // ----------------------------------------------------------------------------------------------------
+}
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1343,111 +1482,6 @@ void arranque(){ // OK ==> HECHO
 
 
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void add_Plato(){ // Tb PAGE3, pero más abajo ==> HECHO
-    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
-    tft.clearScreen(AMARILLO_CONFIRM_AVISO); // Fondo verde en PAGE1
-
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_AVISO); 
-    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
-    tft.setCursor(30, 30);
-    tft.println("\xBF""EST\xC1"" SEGURO DE QUE QUIERE");
-    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
-    tft.print("A\xD1""ADIR UN NUEVO PLATO\x3F"""); 
-    delay(1000);
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ------------ LINEA --------------------------------------------------------------------------------
-    tft.fillRoundRect(252,220,764,228,3,ROJO_TEXTO_CONFIRM_AVISO);
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ----- TEXTO (CONFIRMACIÓN) -------------------------------------------------------------------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    tft.setCursor(150, 270);
-    tft.println("PARA CONFIRMAR, PULSE DE NUEVO");
-    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()+10);
-    tft.print("EL BOT\xD3""N"); 
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ------------ BOTÓN AÑADIR --------------------------------------------------------------------------
-    // Copiar de PAGE3 a PAGE1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,410,172,130); // Mostrar añadir (172x130) en PAGE1
-    delay(800);
-    // ----------------------------------------------------------------------------------------------------
-
-    
-     // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
-    // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-    tft.drawRoundRect(425,413,590,535,20,RED_BUTTON); // Alrededor de botón
-    tft.drawRoundRect(424,412,591,536,20,RED_BUTTON); 
-    tft.drawRoundRect(423,411,592,537,20,RED_BUTTON); 
-    tft.drawRoundRect(422,410,593,538,20,RED_BUTTON); 
-    tft.drawRoundRect(421,409,594,539,20,RED_BUTTON); 
-    tft.drawRoundRect(420,408,595,540,20,RED_BUTTON); 
-    tft.drawRoundRect(419,407,596,541,20,RED_BUTTON); 
-    tft.drawRoundRect(418,406,597,542,20,RED_BUTTON); 
-    tft.drawRoundRect(417,405,598,543,20,RED_BUTTON); 
-    tft.drawRoundRect(416,404,599,544,20,RED_BUTTON); 
-    tft.drawRoundRect(415,403,600,545,20,RED_BUTTON); 
-    // ----------------------------------------------------------------------------------------------------
-
-
-    // ------------ MANO -----------------------------------------------------------------------------------
-    // Cambio colores
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,128,AMARILLO_CONFIRM_AVISO); // Mostrar manoY2 (120x128) en PAGE1
-    
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); // manoR (120x129)
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); // manoG (120x129)
-    // ----------------------------------------------------------------------------------------------------
-
-    // ------------ RAYITAS (PULSACION) --------------------------------------------------------
-    // Línea izquierda
-    tft.drawLine(448,355,530,375,RED_BUTTON);
-    tft.drawLine(449,355,531,375,RED_BUTTON);
-    tft.drawLine(450,355,532,375,RED_BUTTON);
-    tft.drawLine(451,355,533,375,RED_BUTTON);
-    tft.drawLine(452,355,534,375,RED_BUTTON);
-
-    // Línea central
-    tft.drawLine(468,350,468,370,RED_BUTTON);
-    tft.drawLine(469,350,469,370,RED_BUTTON);
-    tft.drawLine(470,350,470,370,RED_BUTTON);   
-    tft.drawLine(471,350,471,370,RED_BUTTON);
-    tft.drawLine(472,350,472,370,RED_BUTTON);
-
-    // Línea derecha
-    tft.drawLine(478,375,488,355,RED_BUTTON);
-    tft.drawLine(479,375,489,355,RED_BUTTON);
-    tft.drawLine(480,375,490,355,RED_BUTTON);   
-    tft.drawLine(481,375,491,355,RED_BUTTON);
-    tft.drawLine(482,375,492,355,RED_BUTTON);
-    // ----------------------------------------------------------------------------------------------------
-
-    delay(2000);
-
-    // ----- TEXTO (PLATO AÑADIDO) -------------------------------------------------------------------------
-    tft.clearScreen(AMARILLO_CONFIRM_AVISO);
-    // ------ LINEA ---------
-    tft.fillRoundRect(252,200,764,208,3,ROJO_TEXTO_CONFIRM_AVISO);
-    // ------ TEXTO ---------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setCursor(170, 258);
-    tft.println("NUEVO PLATO A\xD1""ADIDO");
-    // ------ LINEA ---------
-    tft.fillRoundRect(252,380,764,388,3,ROJO_TEXTO_CONFIRM_AVISO);
-    // ----------------------------------------------------------------------------------------------------
-}
 
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1723,9 +1757,12 @@ void loadPicturesShowHourglass(){
         grupo1 -> (0,0)   grupo2 -> (131,0)   grupo3 -> (262,0)   grupo4 -> (393,0)   manoG -> (524,0)    anadir -> (645,0)    borrar -> (818,0)
         guardar -> (0,131)   cociGra -> (173,131)   crudoGra -> (351,131)    cociPeq -> (529,131)   crudoPeq -> (577,131)
                                                                              kcal -> (529,174)   cuadroGris -> (610,174)
-        cruz -> (0,292)   aviso -> (115,292)   manoY -> (251,292)
+        cruz -> (0,292)   aviso -> (115,292)   manoY -> (251,292)   scale -> (372,292)
     --------------------------------------------------------------------------------------------------------------------------------------------------------------
   */
+
+  // EN PRIMER LUGAR SE CARGAN LAS IMÁGENES DEL RELOJ, SEGUIDAS DE LAS LETRAS DEL LOGO DE ARRANQUE. A PARTIR DE AHÍ, LA CARGA DE HA ORDENADO SEGÚN
+  // EL PESO, DE MÁS PESADAS A MENOS, PARA QUE DÉ LA SENSACIÓN DE QUE CADA VEZ GIRA MÁS RÁPIDO EL RELOJ.
 
     // ----------------- CARGA INICIAL -------------------------------------------------------------------
       // -------- RELOJ1, RELOJ2, RELOJ3 Y RELOJ4 -------
@@ -1850,99 +1887,90 @@ void loadPicturesShowHourglass(){
     // -------------- FIN ARRANQUE -----------------------------------------------------------------------
 
 
-    // ----------------- PANTALLA INICIAL ----------------------------------------------------------------
-      // brain1
-      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
-      tft.sdCardDraw16bppBIN256bits(0,170,120,108,fileBrain1);    // Cargar brain1 (120x108) en PAGE2 => x = 0 ->   y = <Log(0) + Log(169) + 1 = 170  
+    // ----------------- AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO ----------------------------------------
+      // añadir
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.clearScreen(BLACK);
+      tft.sdCardDraw16bppBIN256bits(645,0,172,130,fileBotonAnadir);  // Cargar anadir (172x130) en PAGE3 =>  x  =  <manoR(524) + manoR(120) + 1 = 645      ->   y = 0  
       
-      putReloj1(); // Mostrar reloj1 en PAGE1 
+      putReloj1(); // Mostrar reloj1 en PAGE1 => borrar PAGE1
       
-      // brain2G
-      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
-      tft.sdCardDraw16bppBIN256bits(121,170,120,108,fileBrain2Green);  // Cargar brain2G (120x108) en PAGE2 => x = <brain1(0)  + brain1(120) + 1 = 121  ->  y = 170  
-
+      // borrar
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(818,0,172,130,fileBotonEliminar);  // Cargar borrar (172x130) en PAGE3 =>  x  = <anadir(645) + anadir(172) + 1 = 818    ->   y = 0  
+      
       putReloj2(); // Mostrar reloj2 en PAGE1 
-    // ------------- FIN PANTALLA INICIAL ----------------------------------------------------------------
+
+      // guardar
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(0,131,172,130,fileBotonGuardar); // Cargar guardar (172x130) en PAGE3 =>  x  =   0  ->   y = <borrar(0) + borrar(130) + 1 = 131 
+     
+      putReloj3(); // Mostrar reloj3 en PAGE1 
+     
+      // cociGra
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(173,131,177,160,fileCocinadoGrande); // Cargar cociGra (172x130) en PAGE3 =>  x  =  <guardar(0) + guardar(172) + 1 = 173    ->   y = 131  
+     
+      putReloj4(); // Mostrar reloj4 en PAGE1 
+     
+      // crudoGra
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(351,131,177,160,fileCrudoGrande); // Cargar crudoGra (172x130) en PAGE3 =>  x  =  <cociGra(131) + cociGra(177) + 1 = 351  ->   y = 131  
+     
+      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+
+    // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
+
+
+    // -------------- COLOCAR ALIMENTO -------------------------------------------------------------------
+      // scale
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(372,292,150,150,fileScale); // Cargar scale (150x150) en PAGE3 => x =  <manoY(251) + manoY(120) + 1 = 372   ->  y = 292
+
+      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+    // ----------- FIN COLOCAR ALIMENTO ------------------------------------------------------------------
 
 
     // ----------------- ESCOGER GRUPO -------------------------------------------------------------------
       // -------- GRUPOS  -------
       // grupo1
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Canvas inicia en PAGE3
-      tft.clearScreen(BLACK);
       tft.sdCardDraw16bppBIN256bits(0,0,130,125,fileGrupo1);     // Cargar grupo1 (130x125) en PAGE3  =>  x = 0   ->   y = 0 
       
-      putReloj3(); // Mostrar reloj3 en PAGE1 
+      putRelojGirado3(); // Mostrar relGir3 en PAGE1  
       
       // grupo2
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(131,0,130,125,fileGrupo2);   // Cargar grupo2 (130x125) en PAGE3  =>  x = <grupo1(0)   + grupo1(130) + 1 = 131   ->   y = 0 
       
-      putReloj4(); // Mostrar reloj4 en PAGE1 
+      putRelojGirado4(); // Mostrar relGir4 en PAGE1 
       
       // grupo3
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(262,0,130,125,fileGrupo3);   // Cargar grupo3 (130x125) en PAGE3  =>  x = <grupo2(131) + grupo2(130) + 1 = 262   ->   y = 0 
       
-      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+      putRelojGirado5(); // Mostrar relGir5 en PAGE1 
       
       // grupo4
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(393,0,130,125,fileGrupo4);   // Cargar grupo4 (130x125) en PAGE3  =>  x = <grupo3(262) + grupo3(130) + 1 = 393   ->   y = 0 
       
-      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+      putRelojGirado6(); // Mostrar relGir6 en PAGE1 
 
       // mano con fondo verde ==> usada en grupos
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoGreen);    // Cargar manoG (120x129) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
 
-      putRelojGirado3(); // Mostrar relGir3 en PAGE1 
+      putReloj1(); // Mostrar reloj1 en PAGE1 => borrar PAGE1
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
 
-
-    // ----------------- AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO ----------------------------------------
-      // añadir
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(645,0,172,130,fileBotonAnadir);  // Cargar anadir (172x130) en PAGE3 =>  x  =  <manoR(524) + manoR(120) + 1 = 645      ->   y = 0  
-      
-      putRelojGirado4(); // Mostrar relGir4 en PAGE1
-      
-      // borrar
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(818,0,172,130,fileBotonEliminar);  // Cargar borrar (172x130) en PAGE3 =>  x  = <anadir(645) + anadir(172) + 1 = 818    ->   y = 0  
-      
-      putRelojGirado5(); // Mostrar relGir5 en PAGE1
-
-      // guardar
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(0,131,172,130,fileBotonGuardar); // Cargar guardar (172x130) en PAGE3 =>  x  =   0  ->   y = <borrar(0) + borrar(130) + 1 = 131 
-     
-      putRelojGirado6(); // Mostrar relGir6 en PAGE1
-     
-      // cociGra
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(173,131,177,160,fileCocinadoGrande); // Cargar cociGra (172x130) en PAGE3 =>  x  =  <guardar(0) + guardar(172) + 1 = 173    ->   y = 131  
-     
-      putReloj1(); // Mostrar reloj1 en PAGE1
-     
-      // crudoGra
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(351,131,177,160,fileCrudoGrande); // Cargar crudoGra (172x130) en PAGE3 =>  x  =  <cociGra(131) + cociGra(177) + 1 = 351  ->   y = 131  
-     
-      putReloj2(); // Mostrar reloj2 en PAGE1
-
-    // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
-
-
-    // Se cargan antes las imágenes de error/aviso que las del dashboard porque son más pesadas y tardan más. 
-    // Así, al llegar a las del dashboard se ve cómo el reloj "gira" más rápido, porque esas se cargan más rápido.
     
     // --------- ERROR / AVISO ---------------------------------------------------------------------------
       // error
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(0,292,114,127,fileCruz); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
 
-      putReloj3(); // Mostrar reloj3 en PAGE1
+      putReloj2(); // Mostrar reloj2 en PAGE1
 
       // aviso
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
@@ -1951,16 +1979,31 @@ void loadPicturesShowHourglass(){
       // Imagen aviso con fondo amarillo
       tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAvisoYellow); // Cargar avisoY (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
       
-      putReloj4(); // Mostrar reloj4 en PAGE1
+      putReloj3(); // Mostrar reloj3 en PAGE1
 
       // mano con fondo amarillo ==> usada en botones add/delete/save
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
       //tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoYellow2);    // Cargar manoY2 (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
 
-      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+      putReloj4(); // Mostrar reloj4 en PAGE1
 
     // --------- FIN ERROR / AVISO -----------------------------------------------------------------------
+
+
+    // ----------------- PANTALLA INICIAL ----------------------------------------------------------------
+      // brain1
+      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
+      tft.sdCardDraw16bppBIN256bits(0,170,120,108,fileBrain1);    // Cargar brain1 (120x108) en PAGE2 => x = 0 ->   y = <Log(0) + Log(169) + 1 = 170  
+      
+      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+      
+      // brain2G
+      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
+      tft.sdCardDraw16bppBIN256bits(121,170,120,108,fileBrain2Green);  // Cargar brain2G (120x108) en PAGE2 => x = <brain1(0)  + brain1(120) + 1 = 121  ->  y = 170  
+
+      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+    // ------------- FIN PANTALLA INICIAL ----------------------------------------------------------------
 
 
     // --------- DASHBOARD -------------------------------------------------------------------------------
@@ -1968,19 +2011,19 @@ void loadPicturesShowHourglass(){
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
 
-      putRelojGirado2(); // Mostrar relGir1 en PAGE1 
+      putRelojGirado3(); // Mostrar relGir3 en PAGE1 
 
       // crudoPeq
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
 
-      putRelojGirado3(); // Mostrar relGir2 en PAGE1 
+      putRelojGirado4(); // Mostrar relGir4 en PAGE1 
 
       // kcal
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,174,60,65,fileKcal); // Cargar kcal (60x65) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
 
-      putRelojGirado4(); // Mostrar relGir3 en PAGE1 
+      putRelojGirado5(); // Mostrar relGir5 en PAGE1 
 
       // Recuadro azul utilizado para la transparencia de crudo/cocinado en dashboard. Tiene el mismo tamaño que esas imágenes.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
