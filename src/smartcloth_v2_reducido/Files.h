@@ -47,12 +47,16 @@ char    fileLogo[30]  = "bin/arranque/Log.bin";
 char    fileBrain1[30]      = "bin/inicial/brain1.bin";
 char    fileBrain2Green[30] = "bin/inicial/brain2G.bin";
 
+// --- IMAGENES MANOS ---
+char    fileManoWhiteIcon[30]   = "bin/manos/manoWppt.bin";
+char    fileManoGreenIcon[30]   = "bin/manos/manoGppt.bin";
+
 // --- IMAGENES GRUPOS Y MANO ---
 char    fileGrupo1[30]      = "bin/grupo/grupo1.bin";
 char    fileGrupo2[30]      = "bin/grupo/grupo2.bin";
 char    fileGrupo3[30]      = "bin/grupo/grupo3.bin";
 char    fileGrupo4[30]      = "bin/grupo/grupo4.bin";
-char    fileManoGreen[30]   = "bin/grupo/manoG.bin";
+//char    fileManoGreen[30]   = "bin/grupo/manoG.bin";
 
 // --- IMAGENES BOTONES ---
 char    fileBotonAnadir[30]     = "bin/botones/anadir.bin";
@@ -60,7 +64,7 @@ char    fileBotonEliminar[30]   = "bin/botones/borrar.bin";
 char    fileBotonGuardar[30]    = "bin/botones/guardar.bin";
 char    fileCocinadoGrande[30]  = "bin/botones/cociGra.bin";
 char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
-char    fileManoYellow[30]      = "bin/botones/manoY.bin";
+//char    fileManoYellow[30]      = "bin/botones/manoY.bin";
 
 // --- IMAGEN BASCULA ---
 char   fileScale[30]  = "bin/alimento/scale.bin";

@@ -205,12 +205,6 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   SHOW_RACIONES_ZONA3         0   // Ubicacion en zona 3 de las raciones en showRaciones()
 #define   SHOW_RACIONES_ZONA4         1   // Ubicacion en zona 4 de las raciones en showRaciones()
 
-// Pulsación en pantalla de escoger grupo
-#define   NO_BORRAR_PULSACION_GRUPOS  0
-#define   BORRAR_PULSACION_GRUPOS     1
-#define   NO_PULSACION   0
-#define   PULSACION      1
-
 // Lenta aparición de imágenes: 
 #define   SLOW_APPEAR_COCINADO   1
 #define   SLOW_APPEAR_SCALE      2
@@ -249,10 +243,11 @@ void    showDashboardStyle2();                // Mostrar dashboard estilo 2 (zon
 // -- Recipiente ---------
 void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Empty
 void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
+void    recipienteRetirado();             // Mostrar "Recipiente retirado"     =>  solo si se ha retirado (LIBERAR --> STATE_Empty)
 // -- Grupo --------------
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
-bool    desplazar_mano_Grupos();          // Desplazar imagen de "mano" por la pantalla hasta grupo3. Devuelve bool para poder salir de pedirGrupoAlimentos() si hay interrupción en esta.
-void    sin_pulsacion_Grupos(bool borrar);  // Mano sobre grupo3 sin pulsación ("borrar" cuando se quiera quitar pulsación previa)
+bool    desplazar_mano_Grupos();          // Desplazar imagen de "mano" por la pantalla hasta grupo3. Devuelve bool para poder salir de pedirGrupoAlimentos() si hay interrupción.
+void    sin_pulsacion_Grupos();           // Mano sobre grupo3 sin pulsación 
 void    pulsacion_Grupos();               // Pulsación de mano en grupo3
 // -- Procesamiento ------
 void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
@@ -1099,6 +1094,27 @@ void recipienteColocado(){
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 }
+
+/*---------------------------------------------------------------------------------------------------------
+   recipienteRetirado(): Muestra mensaje de recipiente retirado
+----------------------------------------------------------------------------------------------------------*/
+void recipienteRetirado(){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
+    // ----- TEXTO (PLATO RETIRADO) -----------------------------------------------------------------------
+    //tft.clearScreen(RED);
+    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,200,764,208,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(170, 258);  tft.println("RECIPIENTE RETIRADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,380,764,388,3,WHITE);
+    // ----------------------------------------------------------------------------------------------------
+}
 /*------------------------------ FIN PEDIR RECIPIENTE ---------------------------------------------------*/
 
 
@@ -1111,8 +1127,7 @@ void recipienteColocado(){
 ----------------------------------------------------------------------------------------------------------*/
 void pedirGrupoAlimentos(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
-    bool borrarZonaGrupo3 = NO_BORRAR_PULSACION_GRUPOS;
-    bool pulsacion = NO_PULSACION;
+    bool pulsacion = true;
 
     // ***** FONDO VERDE ***********
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
@@ -1126,9 +1141,13 @@ void pedirGrupoAlimentos(){
     tft.setCursor(130, 50);                                           tft.println("SELECCIONE UN GRUPO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
     tft.setCursor(255, tft.getCursorY() + tft.getTextSizeY()-10);     tft.print("DE ALIMENTOS"); 
 
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+/*
     delay(250);
     // -------- INT -------------------
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+  */
     // ****************************************************************************************************
 
 
@@ -1137,7 +1156,7 @@ void pedirGrupoAlimentos(){
     tft.fillRoundRect(0,450,512,458,3,WHITE);
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(1000)) return; // 800
     // ****************************************************************************************************
 
 
@@ -1173,24 +1192,23 @@ void pedirGrupoAlimentos(){
 
     // ************ DESPLAZAR MANO PARA SIMULAR MOVIMIENTO ************************************************
     // MANO por el camino
-    if(desplazar_mano_Grupos()) return; // Si ha ocurrido interrupción mientras se desplazaba la mano, 
-                                        // se sale de la función.
+    if(desplazar_mano_Grupos()) return; // Si ha ocurrido interrupción mientras se desplazaba la mano, se sale de la función.
     // ****************************************************************************************************
 
 
-    // ******** ALTERNANCIA PULSACIÓN *********************************************************************
-    for(int i = 0; i < 5; i++){
-        if(!pulsacion){
-          sin_pulsacion_Grupos(borrarZonaGrupo3); // false = no borrar. Solo está a false la primera vez.
-          if(!borrarZonaGrupo3) borrarZonaGrupo3 = BORRAR_PULSACION_GRUPOS;
-        }
-        else {
-          pulsacion_Grupos();
-        }
-        if(i < 4){ // No hacer el delay si es la última pulsación/no pulsación (debería ser no pulsación)
+    // ******** ALTERNANCIA 2 PULSACIONES *****************************************************************
+    // Tras trasladar la mano, no hay pulsación. Se van a hacer dos alternancias de pulsación,
+    // es decir: pulsacion - no pulsacion - pulsacion - no pulsacion
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
+    for(int i = 0; i < 4; i++){
+        if(pulsacion) pulsacion_Grupos();
+        else sin_pulsacion_Grupos();
+        //if(i < 3){ // No hacer el delay si es la última pulsación/no pulsación (debería ser no pulsación)
             // ----- ESPERA E INTERRUPCION ----------------
             if(doubleDelayAndCheckInterrupt(1000)) return;
-        }
+        //}
         pulsacion = !pulsacion;
     }
     // ****************************************************************************************************
@@ -1207,46 +1225,46 @@ bool desplazar_mano_Grupos(){
 
     // MANO por el camino
     while(posY >= 410){
-        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,posY,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Mostrar manoGppt (120x128) en PAGE1
         delay(50);
         if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del grupo3 que está debajo
-        tft.clearArea(556,posY,674,posY + alto,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
+        tft.clearArea(556,posY,690,posY + alto+5,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
         posY -= 10; // Subimos verticalmente la imagen 10 píxeles
         // -------- INT -------------------
         if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
     }
 
-    // ------ Grupo 3 (130x125) ---------
-    // Para superponerse a la última mano y que desaparezca para simular el movimiento
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
-    
-    // Movimiento final de la mano
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,400,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,413,674,527,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo4
-    
-    // -------- INT -------------------
-    if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
+    posY = 400;
+    while(posY >= 380){
+        // Mostrar grupo3 (130x125). Para superponerse a la mano, que aún se está "moviendo"
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
+        
+        // Mostrar mano (manoGppt)
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+        
+        delay(50);
+        // -------- INT -------------------
+        if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
 
-    // En la función principal escoger_grupos()->sin_pulsacion_Grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
+        if(posY == 400) tft.clearArea(556,413,690,528,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del botón. Solo se borra en la primera iteración del bucle
+        posY -= 20;
+    }
+
 }
 
 /*---------------------------------------------------------------------------------------------------------
    sin_pulsacion_Grupos(): Mostrar la "mano" sobre el grupo3 sin pulsación
-          Parámetros:
-                - borrar ->   true: borrar pulsación anterior    false: no borrar porque es la primera vez
 ----------------------------------------------------------------------------------------------------------*/
 
-void sin_pulsacion_Grupos(bool borrar){
-    if(borrar){
-        // Borrar todo (grupo, mano y pulsación)
-        tft.clearArea(546,278,690,527,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
-    }
+void sin_pulsacion_Grupos(){
+    // Borrar todo (grupo, mano y pulsación)
+    tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+
     // Mostrar grupo3 (130x125)
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
 
     // Mostrar mano
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Mostrar manoGppt (120x128) en PAGE1
 }
 
 /*---------------------------------------------------------------------------------------------------------
@@ -1256,9 +1274,8 @@ void sin_pulsacion_Grupos(bool borrar){
 void pulsacion_Grupos(){
     int x1, y1, x2, y2;
 
-    // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
     // 1 - Borrar todo (grupo, mano y pulsación)
-    tft.clearArea(546,278,690,527,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+    tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
     
     // 2 - Volver a mostrar grupo3 (130x125)
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
@@ -1277,7 +1294,7 @@ void pulsacion_Grupos(){
     // 4 - Mano
     // ------------ MANO (120x129) ------------------------------------------------------------------------
     // Mano final pulsando
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
     // ----------------------------------------------------------------------------------------------------
 
     // 5 - Rayitas pulsación
@@ -1468,9 +1485,8 @@ void pedirConfirmacion(int option){
               break;
     }
 
-    delay(1000);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return; 
     // ----------------------------------------------------------------------------------------------------
 
     // ------------ LINEA --------------------------------------------------------------------------------
@@ -1485,7 +1501,7 @@ void pedirConfirmacion(int option){
     if(option == 3) tft.setCursor(150, 300); // Guardar
     else tft.setCursor(150, 270); // Añadir y eliminar
     tft.println("PARA CONFIRMAR, PULSE DE NUEVO");
-    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()+10);   tft.print("EL BOT\xD3""N"); 
+    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY());   tft.print("EL BOT\xD3""N"); 
     // ----------------------------------------------------------------------------------------------------
 
     // -------- INT -------------------
@@ -1500,9 +1516,8 @@ void pedirConfirmacion(int option){
       case ASK_CONFIRMATION_SAVE:   tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,131,PAGE1_START_ADDR,SCREEN_WIDTH,420,450,172,130); break; // Mostrar BOTÓN GUARDAR (172x130) en PAGE1  
               
     }
-    delay(800);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(800)) return; 
     // ----------------------------------------------------------------------------------------------------
     
 
@@ -1953,10 +1968,10 @@ void loadPicturesShowHourglass(){
         reloj1 -> (0,279)   reloj2 -> (66,279)   reloj3 -> (132,279)   reloj4 -> (198,279)   relGir1 -> (264,279)    relGir2 -> (360,279)   relGir3 -> (473,279)    relGir4 -> (587,279)    relGir5 -> (688,279)    relGir6 -> (802,279)
         
     PAGE 3:
-        grupo1 -> (0,0)   grupo2 -> (131,0)   grupo3 -> (262,0)   grupo4 -> (393,0)   manoG -> (524,0)    anadir -> (645,0)    borrar -> (818,0)
+        grupo1 -> (0,0)   grupo2 -> (131,0)   grupo3 -> (262,0)   grupo4 -> (393,0)   manoGppt -> (524,0)    anadir -> (645,0)    borrar -> (818,0)
         guardar -> (0,131)   cociGra -> (173,131)   crudoGra -> (351,131)    cociPeq -> (529,131)   crudoPeq -> (577,131)
                                                                              kcal -> (529,174)   cuadroGris -> (610,174)
-        cruz -> (0,292)   aviso -> (115,292)   manoY -> (251,292)   scale -> (372,292)
+        cruz -> (0,292)   aviso -> (115,292)   manoWppt -> (251,292)   scale -> (372,292)
     --------------------------------------------------------------------------------------------------------------------------------------------------------------
   */
 
@@ -2158,7 +2173,8 @@ void loadPicturesShowHourglass(){
 
       // mano con fondo verde ==> usada en grupos
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoGreen);    // Cargar manoG (120x129) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      tft.sdCardDraw16bppBIN256bits(524,0,120,128,fileManoGreenIcon);    // Cargar manoGppt (120x128) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoGreen);    // Cargar manoG (120x129) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
 
       putReloj1(); // Mostrar reloj1 en PAGE1 => borrar PAGE1
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
@@ -2180,10 +2196,12 @@ void loadPicturesShowHourglass(){
       
       putReloj3(); // Mostrar reloj3 en PAGE1
 
-      // mano con fondo amarillo ==> usada en botones add/delete/save
+      // Mano con fondo blanco: usada en botones add/delete/save
+      //      La imagen de la mano no es blanco puro, por eso se puede filtrar el fondo blanco y que se siga viendo
+      //      la mano. Así no aparecen los píxeles de color, como sí ocurre con los píxeles amarillos de manoY.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
-      //tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoYellow2);    // Cargar manoY2 (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
+      tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoWhiteIcon);    // Cargar manoWppt (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
+      //tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
 
       putReloj4(); // Mostrar reloj4 en PAGE1
 

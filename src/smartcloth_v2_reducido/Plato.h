@@ -21,9 +21,6 @@
 
 #include "Alimento.h"
 
-#define NUM_ALIMENTOS 10
-
-
 
 /**
  * @brief Clase que representa un plato compuesto por varios alimentos.
@@ -34,13 +31,10 @@ class Plato{
   private:
     int _nAlimentos;                      /**< Número de alimentos en el plato */
     float _peso;                          /**< Peso total del plato */
-    Alimento _alimentos[NUM_ALIMENTOS];   /**< Array de alimentos del plato */
     ValoresNutricionales _valoresPlato;   /**< Valores nutricionales del plato */
 
     inline void _setNumAlimentos(int num){ _nAlimentos = num; };
     inline int _getNumAlimentos(){ return _nAlimentos; };
-    inline int _positionLastAlimento(){ return (this->_getNumAlimentos()-1); };
-    inline int _firstGapPlato(){ return this->_getNumAlimentos(); };           
 
   public:
     /**
@@ -107,7 +101,6 @@ Plato::Plato(){
 
 
 void Plato::addAlimentoPlato(Alimento alimento){
-    _alimentos[this->_firstGapPlato()] = alimento;                                // Añadir alimento
     this->_setNumAlimentos(this->_getNumAlimentos() + 1);                          // Incrementar num alimentos
     this->setPesoPlato(this->getPesoPlato() + alimento.getPesoAlimento());       // Incrementar peso del plato
     this->updateValoresPlato(alimento.getValoresAlimento());                     // Actualizar Valores Nutricionales
@@ -133,7 +126,7 @@ void Plato::restorePlato(){
 }
 
 
-Plato     platoActual;
+Plato     platoActual;  // Objeto de plato actual donde se van incluyendo los alimentos del plato en cuestión
 
 
 #endif

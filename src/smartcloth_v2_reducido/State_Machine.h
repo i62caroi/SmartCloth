@@ -168,7 +168,7 @@ static event_t event_buffer[MAX_EVENTS];       // Buffer de eventos al que se ir
    Para comprobar si se cumple alguna regla de transición se utiliza 'lastEvent', que 
    sería el último evento añadido al buffer.
    
-   Al final habría que eliminar el buffer para evitar ocupar memoria innecesariamente 
+   Se podría eliminar el buffer para evitar ocupar memoria innecesariamente.
 */
 
 
@@ -294,16 +294,14 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // --- Plato añadido ---
                                         {STATE_added,STATE_added,TARAR},                 // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
                                         {STATE_added,STATE_added,QUITAR},                // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-                                                                                         // No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, todo decremento
-                                                                                         // de peso se considera evento QUITAR.
+                                                                                         //     No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, 
+                                                                                         //     todo decremento de peso se considera evento QUITAR.
                                         {STATE_added,STATE_added,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_added,STATE_Empty,LIBERAR},               // Se ha retirado el plato completo (+ recipiente) tras añadir uno nuevo.
                                         {STATE_added,STATE_groupA,GO_TO_GROUP_A},        // No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         {STATE_added,STATE_groupB,GO_TO_GROUP_B},        // No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.
-                                        //{STATE_added,STATE_saved,GUARDAR},               // Guardar la comida tras decir que se quiere añadir plato, aunque no se haga. Es posible que 
-                                                                                         // el usuario trate el "Añadir plato" como un "Guardar plato".
                                         {STATE_added,STATE_ERROR,ERROR},                 // Acción incorrecta
-                                        {STATE_added,STATE_AVISO,AVISO},               // No se ha añadido un plato porque el actual está vacío
+                                        {STATE_added,STATE_AVISO,AVISO},                 // No se ha añadido un plato porque el actual está vacío
                                         // ---------------------
 
                                         // --- Check eliminar plato ---
@@ -321,15 +319,14 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // --- Plato eliminado ---
                                         {STATE_deleted,STATE_deleted,TARAR},             // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
                                         {STATE_deleted,STATE_deleted,QUITAR},            // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-                                                                                         // No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, todo decremento
-                                                                                         // de peso se considera evento QUITAR.
+                                                                                         //     No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, 
+                                                                                         //     todo decremento de peso se considera evento QUITAR.
                                         {STATE_deleted,STATE_deleted,INCREMENTO},        // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_deleted,STATE_Empty,LIBERAR},             // Se ha retirado el plato completo (+ recipiente) tras borrar. 
                                         {STATE_deleted,STATE_groupA,GO_TO_GROUP_A},      // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         {STATE_deleted,STATE_groupB,GO_TO_GROUP_B},      // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
-                                        //{STATE_deleted,STATE_saved,GUARDAR},             // Guardar la comida tras borrar el plato actual. Solo se incluirían los platos anteriores.
                                         {STATE_deleted,STATE_ERROR,ERROR},               // Acción incorrecta
-                                        {STATE_deleted,STATE_AVISO,AVISO},             // No se ha eliminado el plato porque está vacío
+                                        {STATE_deleted,STATE_AVISO,AVISO},               // No se ha eliminado el plato porque está vacío
                                         // -----------------------
 
                                         // --- Check guardar comida ---
@@ -347,8 +344,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // --- Comida guardada ---
                                         {STATE_saved,STATE_saved,TARAR},                 // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
                                         {STATE_saved,STATE_saved,QUITAR},                // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-                                                                                         // No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, todo decremento
-                                                                                         // de peso se considera evento QUITAR.
+                                                                                         //     No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, 
+                                                                                         //     todo decremento de peso se considera evento QUITAR.
                                         {STATE_saved,STATE_saved,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_saved,STATE_Empty,LIBERAR},               // Se ha retirado el plato completo (+ recipiente) tras guardar correctamente.  
                                         {STATE_saved,STATE_groupA,GO_TO_GROUP_A},        // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
@@ -547,20 +544,21 @@ bool checkStateConditions(){
 void actStateEmpty(){ 
     // Tiempos utilizados para alternar entre dashboard y pantalla de pedir recipiente:
 
-    // Se dejan 5 segundos para ver el dashboard y luego se muestra la ayuda. Si se acaba de guardar la comida, 
-    // se dejan 10 segundos para ver la info de la comida guardada.
+    const unsigned long recipienteRetiradoInterval  = 1000; // Intervalo de tiempo para mostrar "Recipiente retirado" (1 segundo)
+    unsigned long dashboardInterval = 5000;                 // Intervalo de tiempo para mostrar el dashboard (5 segundos) 
+    const unsigned long recipienteInterval = 5000;          // Intervalo de tiempo para pedir colocar recipiente (5 segundos)
+    //const unsigned long dashboardInterval = 10000;        // Intervalo de tiempo para mostrar el dashboard (10 segundos)
 
-    unsigned long dashboardInterval = 5000;   // Intervalo de tiempo para mostrar el dashboard (5 segundos) 
-    //const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
+    //    Se dejan 5 segundos para ver el dashboard y luego se muestra la ayuda. Si se acaba de guardar la comida, 
+    //    se dejan 10 segundos para ver la info de la comida guardada.
     if(flagComidaSaved){ // ==> Si se acaba de guardar la comida, se deja más tiempo para ver la info antes de pedir recipiente
-        dashboardInterval = 10000;   // Intervalo de tiempo para mostrar el dashboard (10 segundos) --> No esperar tanto para ayuda
+        dashboardInterval = 10000;   // Intervalo de tiempo para mostrar el dashboard (10 segundos) 
     }
-    
-    const unsigned long recipienteInterval = 5000;  // Intervalo de tiempo para pedir colocar recipiente (5 segundos)
 
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
     unsigned long currentTime;
 
+    static bool showing_recipiente_retirado;  
     static bool showing_dash;       
     static bool showing_pedir_recipiente;
 
@@ -579,6 +577,7 @@ void actStateEmpty(){
             procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
             keepErrorScreen = false;
 
+            // ----- BORRAR PLATO ------------------------------------
             if(!platoActual.isPlatoEmpty()){ // ==> Si se regresa a Empty con el plato aún con cosas, es porque no se ha borrado con "Eliminar plato" ni
                                             //    se ha restaurado con "Añadir plato" o "Guardar comida", sino que se ha retirado de repente en mitad del proceso.
                                             //    Si ocurre esa liberación tan repentina y cuando no toca (desde Grupos, raw, cooked, weighted...),
@@ -592,16 +591,28 @@ void actStateEmpty(){
                 comidaActual.deletePlato(platoActual);    // Borrar plato actual
                 platoActual.restorePlato();               // Restaurar plato
             }
+            // ----- FIN BORRAR PLATO ---------------------------------
+
+
+            // ----- INFO INICIAL DE PANTALLA -------------------------
+            if(lastEvent == LIBERAR){ 
+                recipienteRetirado();                 // Mostrar "Recipiente retirado" tras LIBERAR báscula
+                showing_recipiente_retirado = true;   // Se está mostrando "Recipiente retirado"
+                showing_dash = false;      
+                showing_pedir_recipiente = false;
+            }
+            else{ 
+                showDashboardStyle1(MSG_SIN_RECIPIENTE); // Mostrar dashboard al inicio con mensaje de que falta recipiente
+                showing_dash = true;                // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+                showing_pedir_recipiente = false;   
+                showing_recipiente_retirado = false;
+            }
+            // ----- FIN INFO INICIAL DE PANTALLA ---------------------
             
             
         }
 
-        // ----- INFO INICIAL DE PANTALLA -------------------------
-        showDashboardStyle1(MSG_SIN_RECIPIENTE); // Mostrar dashboard al inicio con mensaje de que falta recipiente
-        showing_dash = true;                // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
-        showing_pedir_recipiente = false;   
-        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
-        // ----- FIN INFO INICIAL DE PANTALLA ---------------------
+        previousTime = millis();                              // Inicializar 'previousTime' para la alternancia de pantallas
 
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -611,23 +622,34 @@ void actStateEmpty(){
 
     // ----- ALTERNANCIA PANTALLAS -------------------------
     currentTime = millis();
-    if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
-        blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE);
-        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 5 segundos, se cambia a pedir recipiente
-            previousTime = currentTime;
-            pedirRecipiente();
-            showing_dash = false;  
-            showing_pedir_recipiente = true;   // Mostrando pedir recipiente
-        }
-    }
-    else if(showing_pedir_recipiente){ // Se está mostrando pedir recipiente
-        if (currentTime - previousTime >= recipienteInterval) { // Si el pedir recipiente ha estado 5 segundos, se cambia a dashboard estilo 1
+    if(showing_recipiente_retirado){ // Mostrando "Recipiente retirado". Solo aparece tras LIBERAR báscula.
+        if (currentTime - previousTime >= recipienteRetiradoInterval) { // Si el "Recipiente retirado" ha estado 1 segundo, se cambia a dashboard estilo 1
             previousTime = currentTime;
             showDashboardStyle1(MSG_SIN_RECIPIENTE);
-            showing_dash = true;  // Mostrando dashboard estilo 1 (Comida | Acumulado)
-            showing_pedir_recipiente = false;   
+            showing_recipiente_retirado = false; // Dejar de mostrar "Recipiente retirado". Solo aparece tras LIBERAR báscula.
+            showing_dash = true;                  // Mostrando dashboard estilo 1 (Comida | Acumulado)
+            showing_pedir_recipiente = false;
         }
     }
+    else{ // Ya no se muestra "Recipiente retirado"
+        if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+            blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE);
+            if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a colocar recipiente
+                previousTime = currentTime;
+                pedirRecipiente();
+                showing_dash = false;  
+                showing_pedir_recipiente = true; // Mostrando colocar recipiente
+            }
+        }
+        else if(showing_pedir_recipiente){ // Se está mostrando colocar recipiente
+            if (currentTime - previousTime >= recipienteInterval) { // Si el colocar recipiente ha estado 5 segundos, se cambia a dashboard estilo 1
+                previousTime = currentTime;
+                showDashboardStyle1(MSG_SIN_RECIPIENTE);
+                showing_dash = true;  // Mostrando dashboard estilo 1 (Comida | Acumulado)
+                showing_pedir_recipiente = false;
+            }
+        }
+    }    
     // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 
 } 
@@ -640,12 +662,15 @@ void actStateEmpty(){
 void actStatePlato(){ 
     // Tiempos utilizados para alternar entre recipiente colocado, dashboard y pantalla de escoger grupo:
 
-    const unsigned long recipienteColocadoInterval  = 1000; // Intervalo de tiempo para mostrar "Recipiente colocado" (1 segundo)
-    //const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos)
-    const unsigned long dashboardInterval = 3000;  // Intervalo de tiempo para mostrar el dashboard (3 segundos) --> solo se esperan 3 seg para mostrar ayuda
-    const unsigned long grupoInterval = 5000;       // Intervalo de tiempo para pedir escoger grupo (5 segundos)
+    const unsigned long recipienteColocadoInterval  = 1000;   // Intervalo de tiempo para mostrar "Recipiente colocado" (1 segundo)
+    const unsigned long dashboardInterval = 3000;             // Intervalo de tiempo para mostrar el dashboard (3 segundos)
+    const unsigned long grupoInterval = 5000;                 // Intervalo de tiempo para pedir escoger grupo (5 segundos)
+                                                              //      En realidad este grupoInterval no afecta mientras se mantenga por debajo de lo que 
+                                                              //      tarda en completarse la pantalla de pedirGrupo. Esta pantalla tarda unos 12 seg,
+                                                              //      pero al regresar a actStatePlato() ya habrán pasado los 5 seg de este intervalo.
+    //const unsigned long dashboardInterval = 10000;          // Intervalo de tiempo para mostrar el dashboard (10 segundos)
 
-    static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
+    static unsigned long previousTime;                        // Variable estática para almacenar el tiempo anterior
     unsigned long currentTime;
 
     static bool showing_recipiente_colocado;  
@@ -672,12 +697,12 @@ void actStatePlato(){
             if(flagComidaSaved) flagComidaSaved = false;  // Si se había guardado comida, se muestra "Comida guardada" en lugar de "Comida actual" en printZona3()
             // ----- FIN REINICIAR COPIA DE COMIDA GUARDADA ----------------------
 
+            // ----- INFO INICIAL DE PANTALLA -------------------------
             if(lastValidState == STATE_Empty){ // Si se viene directo de Empty o a través de un error
                       // ==> Si se viene de STATE_Empty, donde se ha tarado.
                       // ==> O si estando en STATE_Empty, donde ya se había tarado, ocurrió un error y durante el error se colocó el plato
                 tarado = false;                  // Desactivar flag de haber 'tarado' 
 
-            // ----- INFO INICIAL DE PANTALLA -------------------------
                 recipienteColocado();                 // Mostrar "Recipiente colocado" una vez al inicio. No volverlo a mostrar si se comete error en STATE_Plato.
                 showing_recipiente_colocado = true;   // Se está mostrando "Recipiente colocado"
                 showing_dash = false;      
@@ -689,7 +714,6 @@ void actStatePlato(){
                 showing_dash = true;                  // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
                 showing_escoger_grupo = false;
             }
-            
             // ----- FIN INFO INICIAL DE PANTALLA ---------------------
         }
 
@@ -732,8 +756,7 @@ void actStatePlato(){
                 showing_escoger_grupo = false;
             }
         }
-    }
-    
+    }    
     // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 
 }
@@ -747,7 +770,7 @@ void actGruposAlimentos(){
     // Tiempos utilizados para alternar entre dashboard y pantalla de escoger crudo o cocinado:
 
     //const unsigned long dashboardInterval = 10000;      // Intervalo de tiempo para mostrar el dashboard (10 segundos)
-    const unsigned long dashboardInterval = 5000;      // Intervalo de tiempo para mostrar el dashboard (5 segundos) -> se deja algo más de tiempo para leer grupo
+    const unsigned long dashboardInterval = 5000;       // Intervalo de tiempo para mostrar el dashboard (5 segundos)
     const unsigned long procesamientoInterval = 4500;   // Intervalo de tiempo para pedir escoger crudo o cocinado (4.5 segundos)
 
     static unsigned long previousTime;                  // Variable estática para almacenar el tiempo anterior

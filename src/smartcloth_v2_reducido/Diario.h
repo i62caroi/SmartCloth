@@ -23,7 +23,6 @@
 
 #include "Comida.h"
 
-#define NUM_COMIDAS 10
 
 /**
  * @brief Clase que representa un diario de comidas.
@@ -32,7 +31,6 @@ class Diario{
   private:
     int                   _nComidas;        /**< Número de comidas en el diario. */
     float                 _peso;            /**< Peso total del diario. */
-    //Comida              _comidas[NUM_COMIDAS];
     ValoresNutricionales  _valoresDiario;   /**< Valores nutricionales totales del diario. */
 
     /**
@@ -132,6 +130,6 @@ void Diario::updateValoresDiario(ValoresNutricionales val){
   _valoresDiario.setValores(valAux);
 }
 
-Diario    diaActual; // Acumulado Hoy
+Diario    diaActual; // Objeto del acumulado de hoy
 
 #endif

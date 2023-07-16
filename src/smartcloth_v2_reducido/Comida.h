@@ -23,7 +23,6 @@
 
 #include "Plato.h"
 
-#define NUM_PLATOS 10
 
 /**
  * @brief Clase que representa una comida compuesta por varios platos.
@@ -32,7 +31,6 @@ class Comida{
   private:
     int                   _nPlatos;                 /**< Número de platos en la comida. */
     float                 _peso;                    /**< Peso total de la comida. */
-    Plato                 _platos[NUM_PLATOS];      /**< Array de platos de la comida. */
     ValoresNutricionales  _valoresComida;           /**< Valores nutricionales totales de la comida. */
 
     /**
@@ -172,7 +170,6 @@ void Comida::addPlato(Plato plato){
   // (valores nutricionales y peso de los alimentos) se han ido guardando uno a
   // uno. Solo haría falta aumentar el número de platos para indicar que se ha "guardado"
   // Posteriormente, al borrarlo, se restan sus valores nutricionales y peso
-    _platos[this->_firstGapComida()] = plato;                            // Añadir plato
     this->_setNumPlatos(this->_getNumPlatos() + 1);                       // Incrementar num platos
 }
 // --------------------------------------------------------------------
@@ -181,7 +178,7 @@ void Comida::addPlato(Plato plato){
 // --------------------- DELETE SOLO ACTUAL -----------------------------------
 void Comida::deletePlato(Plato &plato){
        // No hace falta decrementar nPlatos porque no se ha llegado a guardar 
-       // el plato ni, por tanto, incrementar el numero platos
+       // el plato ni, por tanto, incrementar el numero platos. 
     this->setPesoComida(this->getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
     this->updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
 }
@@ -228,8 +225,6 @@ void Comida::copyComida(Comida comida){
     this->_setNumPlatos(comida._getNumPlatos());                  // Nº platos 
     this->setPesoComida(comida.getPesoComida());                  // Peso
     this->_valoresComida.setValores(comida.getValoresComida());   // Valores 
-    // No hace falta copiar el array de platos porque esta función solo es para la comida
-    // copiada al guardar la 'comidaActual'
 }
 // --------------------------------------------------------------------
 
@@ -256,7 +251,7 @@ String Comida::getComidaAllValues(){
 
 
 
-Comida    comidaActual;       // Comida actual real, actualizada en tiempo real
-Comida    comidaActualCopia;  // Comida copiada de la actual real, solamente para mostrar sus valores tras guardarla en el acumulado y limpiar el objeto 'comidaActual'.
+Comida    comidaActual;       // Objeto de comida actual real, actualizada en tiempo real
+Comida    comidaActualCopia;  // Objeto de comida copiada de la actual real, solamente para mostrar sus valores tras guardarla en el acumulado y limpiar el objeto 'comidaActual'.
 
 #endif

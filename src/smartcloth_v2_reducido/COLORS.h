@@ -34,16 +34,16 @@
 
 
 // ---------------- COLORES PANTALLAS TRANSITORIAS --------------
-#define   VERDE_PEDIR               0x6468  // Wireframes pedir recipiente, grupo y crudo-cocinado
+#define   VERDE_PEDIR                 0x6468  // Wireframes pedir recipiente, grupo y crudo-cocinado
 
-#define   AMARILLO_CONFIRM_AVISO    0xFEC4  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
-#define   ROJO_TEXTO_CONFIRM_AVISO  0x9883  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
+#define   AMARILLO_CONFIRM_Y_AVISO    0xFEC4  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
+#define   ROJO_TEXTO_CONFIRM_Y_AVISO  0x9883  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
 
-#define   DARKORANGE                0xCB20 // 0xC86406 en RGB-8:8:8 ==> aviso
+#define   DARKORANGE                  0xCB20 // 0xC86406 en RGB-8:8:8 ==> aviso
 
-#define   RED                       0xF800  // Parpadeo dashboard y wireframes de error y cancelar
+#define   RED                         0xF800  // Parpadeo dashboard y wireframes de error y cancelar
 
-#define   RED_BUTTON                0xB8C3  // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar y grupos
+#define   RED_BUTTON                  0xB8C3  // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar y grupos
 
 // --------------------------------------------------------------
 
