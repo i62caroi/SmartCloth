@@ -209,9 +209,13 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   NO_BORRAR_PULSACION_GRUPOS  0
 #define   BORRAR_PULSACION_GRUPOS     1
 
-// Mostrar imagen cocinado o crudo en pantalla de escoger procesamiento
-#define   SHOW_COCINADO_IMAGE   1
-#define   SHOW_CRUDO_IMAGE      2
+// Lenta aparición de imágenes: 
+#define   SLOW_APPEAR_COCINADO   1
+#define   SLOW_APPEAR_SCALE      2
+
+// Lenta aparición/desaparición de imágenes:
+#define   SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO  1   // Desaparecer crudoGra y aparecer cociGra 
+#define   SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO  2   // Desaparecer cociGra y aparecer crudoGra
 
 
 
@@ -250,7 +254,8 @@ void    sin_pulsacion_Grupos(bool borrar);  // Mano sobre grupo3 sin pulsación 
 void    pulsacion_Grupos();               // Pulsación de mano en grupo3
 // -- Procesamiento ------
 void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
-void    mostrarOpcionProcesamiento(int option); // Mostrar imagen de cocinado (option = 1) o crudo (option = 2)
+// -- Colocar alimento ---
+void    pedirAlimento();                  // Pedir colocar alimento
 // -- Confirmar acción ---
 void    pedirConfirmacion(int option);    // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 // -- Acción realizada ---
@@ -260,6 +265,9 @@ void    showAccionCancelada();            // Mensaje general de acción cancelad
 // --- Errores o avisos ---
 void    showError(int option);            // Pantalla de error con mensaje según estado 
 void    showWarning(int option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+// -- Aparición/Desaparición imágenes --
+void    slowAppearanceImage(int option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
+void    slowAppearanceAndDisappareanceProcesamiento(int option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
 // --- CARGA DE IMÁGENES ---
 void    loadPicturesShowHourglass();      // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloj de arena (hourglass)
 void    putReloj1();
@@ -325,6 +333,8 @@ bool eventOccurred(){
 bool doubleDelayAndCheckInterrupt(unsigned long period){
     unsigned long timeForDelay = period/2;
 
+    // ----- INT -------------------
+    if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
     // ----- ESPERA ----
     delay(timeForDelay);
     // ----- INT -------------------
@@ -347,6 +357,8 @@ bool doubleDelayAndCheckInterrupt(unsigned long period){
               de arena y después muestra el logo de SmartCloth (wireframe de arranque).
 ----------------------------------------------------------------------------------------------------------*/
 void Welcome(){
+    showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
+
     //tft.canvasImageStartAddress(PAGE1_START_ADDR); 
     //tft.clearScreen(BLACK); 
 
@@ -931,6 +943,8 @@ void showRaciones(ValoresNutricionales &valores, int zona){
                     msg_option - int   -->   0: sin mensaje   1: "no hay recipiente"    2: "no hay grupo"
 ----------------------------------------------------------------------------------------------------------*/
 void showDashboardStyle1(int msg_option){
+    showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
+
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     blinkGrupoyProcesamiento(msg_option);     // Zonas 1 y 2 - Parpadeando y mensaje de falta recipiente o grupo
@@ -947,6 +961,8 @@ void showDashboardStyle1(int msg_option){
                           Este dashboard se muestra en STATE_groupA, STATE_groupB, STATE_raw, STATE_cooked y STATE_weighted.
 ----------------------------------------------------------------------------------------------------------*/
 void showDashboardStyle2(){
+    showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
+
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     printGrupoyEjemplos();                  // Zona 1 - Grupo y ejemplos 
@@ -978,6 +994,8 @@ void showDashboardStyle2(){
    pedirRecipiente(): Pide colocar un recipiente (STATE_Empty)
 ----------------------------------------------------------------------------------------------------------*/
 void pedirRecipiente(){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ************ TEXTO ********************************************************************************
     // ----- FONDO VERDE -----------
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
@@ -1063,6 +1081,8 @@ void pedirRecipiente(){
    recipienteColocado(): Muestra mensaje de recipiente colocado
 ----------------------------------------------------------------------------------------------------------*/
 void recipienteColocado(){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ----- TEXTO (RECIPIENTE COLOCADO) -------------------------------------------------------------------
     //tft.clearScreen(RED);
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
@@ -1088,6 +1108,8 @@ void recipienteColocado(){
    pedirGrupoAlimentos(): Pide escoger grupo de alimentos, tras haber colocado recipiente (STATE_Plato)
 ----------------------------------------------------------------------------------------------------------*/
 void pedirGrupoAlimentos(){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ***** FONDO VERDE ***********
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
@@ -1334,6 +1356,8 @@ void pulsacion_Grupos(){
    pedirProcesamiento(): Pide escoger crudo cocinado, tras haber escogido grupo (STATE_groupA/B)
 ----------------------------------------------------------------------------------------------------------*/
 void pedirProcesamiento(){ 
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ***** FONDO VERDE ***********
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
@@ -1343,11 +1367,10 @@ void pedirProcesamiento(){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
     tft.setCursor(100, 30);                                           tft.println("\xBF""EL ALIMENTO EST\xC1""");
-    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);     tft.print("COCINADO O CRUDO\x3F"""); 
+    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-50);     tft.print("COCINADO O CRUDO\x3F"""); 
     
-    delay(500);
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return; 
     // ****************************************************************************************************
 
     // ******** LINEAS ************************************************************************************
@@ -1355,78 +1378,93 @@ void pedirProcesamiento(){
     tft.fillRoundRect(768,517,1024,525,3,WHITE);
     // ****************************************************************************************************
 
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
     // ******** BOTONES ***********************************************************************************
-    // ******** COCINADO 1 ***************************************
-    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
-    // ***********************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
-
-    // ******** CRUDO 1 ******************************************
-    mostrarOpcionProcesamiento(2); // 2 = Crudo
-    // ***********************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
-
-    // ******** COCINADO 2 ***************************************
-    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
-    // ***********************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
-
-    // ******** CRUDO 2 ******************************************
-    mostrarOpcionProcesamiento(2); // 2 = Crudo
-    // ***********************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
-
-    // ******** COCINADO 3 ***************************************
-    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
-    // ***********************************************************
+    // ******** 1º ALTERNANCIA ***********************************
+    // Apareciendo imagen cocinado
+    slowAppearanceImage(SLOW_APPEAR_COCINADO); // Imagen cocinado apareciendo
+    // ----- INT -------------------
+    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+    // Mostrar COCINADO
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
     
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(1000)) return;
 
-    // ******** CRUDO 3 ******************************************
-    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    // Mostrar CRUDO
+    slowAppearanceAndDisappareanceProcesamiento(SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO); // Desaparecer COCINADO y aparecer CRUDO
+    
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
     // ***********************************************************
 
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
-    // ****************************************************************************************************
+
+    // ******** 2º Y 3º ALTERNANCIAS ***********************************
+    for(uint8_t i = 0; i < 2; i++){ // 2 alternancias más
+        for(uint8_t j = 1; j <= 2; j++){
+            slowAppearanceAndDisappareanceProcesamiento(j); // j = 1 --> Desaparecer CRUDO y aparecer COCINADO  |  j = 2 -->  Desaparecer COCINADO y aparecer CRUDO
+            // ----- ESPERA E INTERRUPCION ----------------
+            if(doubleDelayAndCheckInterrupt(1000)) return;
+        }
+    }
+    // ***********************************************************
 
 }
+/*------------------------- FIN ESCOGER CRUDO/COCINADO ---------------------------------------------------*/
+
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*---------------------------- COLOCAR ALIMENTO ---------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------------------
-   mostrarOpcionProcesamiento(): Mostrar imagen de cocinado o crudo, según indicado.
-        Parámetros: 
-            - option -> 1: cocinado  2: crudo
+   pedirAlimento(): Pide colocar alimento sobre la báscula, tras haber seleccionado crudo o cocinado.
 ----------------------------------------------------------------------------------------------------------*/
-void mostrarOpcionProcesamiento(int option){
-    switch(option){
-        case 1: // Cocinado
-            // Borrar imagen crudo 1 de la page1. Se "borra" aunque no haya nada para simplificar función
-            tft.clearArea(500,280,724,480,VERDE_PEDIR); 
-            // Mostrar cociGra
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-            break;
+void pedirAlimento(){ 
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
-        case 2: // Crudo
-            // Borrar imagen cocinado 1 de la page1
-            tft.clearArea(280,280,497,470,VERDE_PEDIR); 
-            // Mostrar crudoGra
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
-            break;
+    // ************ TEXTO ********************************************************************************
+    // ----- FONDO VERDE -----------
+    //tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
 
-        default: break;
-    }
+    // ----- INTERNAL FIXED 12x24 X3 --------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(160, 50);                                         tft.println("COLOQUE UN ALIMENTO");
+    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-20);   tft.print("EN LA ZONA DE PESADA"); 
+    // ****************************************************************************************************
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
+    // ************ LÍNEAS ********************************************************************************
+    tft.fillRoundRect(0,270,276,278,3,WHITE);
+    tft.fillRoundRect(748,517,1024,525,3,WHITE);
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+    // **************************************************************************************************** 
+    
+      
+    // ************ SCALE *********************************************************************************
+    // Imagen scale 
+    slowAppearanceImage(SLOW_APPEAR_SCALE); // Imagen de scale apareciendo
+    // ----- INT -------------------
+    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149); // Mostrar scale (150x150) en PAGE1
+    // **************************************************************************************************** 
+    
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
 }
 
-/*------------------------- FIN ESCOGER CRUDO/COCINADO ---------------------------------------------------*/
+
+/*------------------------- FIN COLOCAR ALIMENTO --------------------------------------------------------*/
+
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*--------------------------------- CONFIRMACIÓN DE ACCIONES --------------------------------------------*/
@@ -1438,6 +1476,8 @@ void mostrarOpcionProcesamiento(int option){
             - option -> 1: botón añadir   2: botón eliminar   3: botón guardar
 ----------------------------------------------------------------------------------------------------------*/
 void pedirConfirmacion(int option){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     tft.clearScreen(RED); // Fondo rojo en PAGE1
 
@@ -1561,6 +1601,8 @@ void pedirConfirmacion(int option){
             - option -> 1: botón añadir   2: botón eliminar   3: botón guardar
 ----------------------------------------------------------------------------------------------------------*/
 void showAccionRealizada(int option){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     tft.clearScreen(RED);
 
     // ------------ LINEA ---------------------------------------------------------------------------------
@@ -1626,6 +1668,8 @@ void showAccionRealizada(int option){
                           Puede ser indicado por el usuario o por time-out de 10 segundos.
 ----------------------------------------------------------------------------------------------------------*/
 void showAccionCancelada(){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ----- TEXTO (ACCION CANCELADA) -----------------------------------
     tft.clearScreen(RED);
     // ------ LINEA ---------
@@ -1655,6 +1699,8 @@ void showAccionCancelada(){
             option  - int -> 1: añadir   2: eliminar   3: guardar
 ----------------------------------------------------------------------------------------------------------*/
 void showWarning(int option){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
@@ -1732,6 +1778,8 @@ void showWarning(int option){
                                 11: Deleted     12: save_check    13: Saved
 ----------------------------------------------------------------------------------------------------------*/
 void showError(int option){ 
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
     // cruz
     tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
     tft.sdCardDraw16bppBIN256bits(0,292,114,127,fileCruz); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
@@ -1842,6 +1890,88 @@ void showError(int option){
 
 
 
+/*-------------------------------------------------------------------------------------------------------*/
+/*------------------------------ APARICIÓN/DESAPARICIÓN IMÁGENES ----------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------------------------------------
+   slowAppearanceImage(): Mostrar imagen de cocinado (escoger procesamiento) o de scale (colocar alimento)
+                          apareciendo poco a poco en pantalla cuando corresponda.
+        Parámetros: 
+            - option -> 1: cocinado  2: scale
+----------------------------------------------------------------------------------------------------------*/
+void slowAppearanceImage(int option){
+    uint8_t i;
+    switch(option){
+        case 1: // Cocinado
+            for(i = 30; i >= 4; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            }
+            break;
+
+        case 2: // Scale
+            for(i = 30; i >= 4; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar scale apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            }
+            break;
+
+        default: break;
+    }
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   slowAppearanceAndDisappareanceProcesamiento(): Mostrar imagen de crudo desapareciendo y cocinado apareciendo 
+                                                  o viceversa.
+        Parámetros: 
+            - option -> 1: desaparecer crudo y aparecer cocinado    2: desaparecer cocinado y aparecer crudo
+----------------------------------------------------------------------------------------------------------*/
+void slowAppearanceAndDisappareanceProcesamiento(int option){
+    uint8_t i,j;
+    switch(option){
+        case 1: // Desaparecer CRUDO y aparecer COCINADO 
+            for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
+                // Mostrar crudoGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
+                // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,j);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            }
+            tft.clearArea(500,280,724,480,VERDE_PEDIR); // Borrar crudoGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
+            // ----- INT -------------------
+            if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            break;
+
+        case 2: // Desaparecer COCINADO y aparecer CRUDO
+            for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
+                // Mostrar cociGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
+                // Mostrar crudoGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,j);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            }
+            tft.clearArea(280,280,497,470,VERDE_PEDIR); // Borrar cociGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
+            // ----- INT -------------------
+            if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            break;
+
+        default: break;
+    }
+}
 
 
 /*********************************************************************************************************/
@@ -1855,8 +1985,8 @@ void showError(int option){
                                 un reloj de arena indicando la carga.
 ----------------------------------------------------------------------------------------------------------*/
 void loadPicturesShowHourglass(){
-   /*
-    ------------------ POSICIONES DE IMAGENES EN LAS PAGINAS DE LA SDRAM -----------------------------------------------------------------------------------------
+  /*
+    ------------------ POSICIONES DE IMAGENES EN LAS PAGINAS ----------------------------------------------------------------------------------------------------
     PAGE 2:
         S -> (0,0)    M -> (96,0)   A -> (201,0)    R -> (306,0)    T -> (392,0)    C -> (497,0)    L -> (583,0)   O -> (669,0)   H  -> (775,0)   Log -> (841,0)
         brain1  ->  (0,170)   brain2G  ->  (121,170)   [[NO[[logFull ->  (242,170)]]NO]]
@@ -1866,9 +1996,12 @@ void loadPicturesShowHourglass(){
         grupo1 -> (0,0)   grupo2 -> (131,0)   grupo3 -> (262,0)   grupo4 -> (393,0)   manoG -> (524,0)    anadir -> (645,0)    borrar -> (818,0)
         guardar -> (0,131)   cociGra -> (173,131)   crudoGra -> (351,131)    cociPeq -> (529,131)   crudoPeq -> (577,131)
                                                                              kcal -> (529,174)   cuadroGris -> (610,174)
-        cruz -> (0,292)   aviso -> (115,292)   manoY -> (251,292)
+        cruz -> (0,292)   aviso -> (115,292)   manoY -> (251,292)   scale -> (372,292)
     --------------------------------------------------------------------------------------------------------------------------------------------------------------
   */
+
+  // EN PRIMER LUGAR SE CARGAN LAS IMÁGENES DEL RELOJ, SEGUIDAS DE LAS LETRAS DEL LOGO DE ARRANQUE. A PARTIR DE AHÍ, LA CARGA DE HA ORDENADO SEGÚN
+  // EL PESO, DE MÁS PESADAS A MENOS, PARA QUE DÉ LA SENSACIÓN DE QUE CADA VEZ GIRA MÁS RÁPIDO EL RELOJ.
 
     // ----------------- CARGA INICIAL -------------------------------------------------------------------
       // -------- RELOJ1, RELOJ2, RELOJ3 Y RELOJ4 -------
@@ -1993,99 +2126,90 @@ void loadPicturesShowHourglass(){
     // -------------- FIN ARRANQUE -----------------------------------------------------------------------
 
 
-    // ----------------- PANTALLA INICIAL ----------------------------------------------------------------
-      // brain1
-      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
-      tft.sdCardDraw16bppBIN256bits(0,170,120,108,fileBrain1);    // Cargar brain1 (120x108) en PAGE2 => x = 0 ->   y = <Log(0) + Log(169) + 1 = 170  
+    // ----------------- AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO ----------------------------------------
+      // añadir
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.clearScreen(BLACK);
+      tft.sdCardDraw16bppBIN256bits(645,0,172,130,fileBotonAnadir);  // Cargar anadir (172x130) en PAGE3 =>  x  =  <manoR(524) + manoR(120) + 1 = 645      ->   y = 0  
       
-      putReloj1(); // Mostrar reloj1 en PAGE1 
+      putReloj1(); // Mostrar reloj1 en PAGE1 => borrar PAGE1
       
-      // brain2G
-      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
-      tft.sdCardDraw16bppBIN256bits(121,170,120,108,fileBrain2Green);  // Cargar brain2G (120x108) en PAGE2 => x = <brain1(0)  + brain1(120) + 1 = 121  ->  y = 170  
-
+      // borrar
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(818,0,172,130,fileBotonEliminar);  // Cargar borrar (172x130) en PAGE3 =>  x  = <anadir(645) + anadir(172) + 1 = 818    ->   y = 0  
+      
       putReloj2(); // Mostrar reloj2 en PAGE1 
-    // ------------- FIN PANTALLA INICIAL ----------------------------------------------------------------
+
+      // guardar
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(0,131,172,130,fileBotonGuardar); // Cargar guardar (172x130) en PAGE3 =>  x  =   0  ->   y = <borrar(0) + borrar(130) + 1 = 131 
+     
+      putReloj3(); // Mostrar reloj3 en PAGE1 
+     
+      // cociGra
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(173,131,177,160,fileCocinadoGrande); // Cargar cociGra (172x130) en PAGE3 =>  x  =  <guardar(0) + guardar(172) + 1 = 173    ->   y = 131  
+     
+      putReloj4(); // Mostrar reloj4 en PAGE1 
+     
+      // crudoGra
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(351,131,177,160,fileCrudoGrande); // Cargar crudoGra (172x130) en PAGE3 =>  x  =  <cociGra(131) + cociGra(177) + 1 = 351  ->   y = 131  
+     
+      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+
+    // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
+
+
+    // -------------- COLOCAR ALIMENTO -------------------------------------------------------------------
+      // scale
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
+      tft.sdCardDraw16bppBIN256bits(372,292,150,150,fileScale); // Cargar scale (150x150) en PAGE3 => x =  <manoY(251) + manoY(120) + 1 = 372   ->  y = 292
+
+      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+    // ----------- FIN COLOCAR ALIMENTO ------------------------------------------------------------------
 
 
     // ----------------- ESCOGER GRUPO -------------------------------------------------------------------
       // -------- GRUPOS  -------
       // grupo1
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Canvas inicia en PAGE3
-      tft.clearScreen(BLACK);
       tft.sdCardDraw16bppBIN256bits(0,0,130,125,fileGrupo1);     // Cargar grupo1 (130x125) en PAGE3  =>  x = 0   ->   y = 0 
       
-      putReloj3(); // Mostrar reloj3 en PAGE1 
+      putRelojGirado3(); // Mostrar relGir3 en PAGE1  
       
       // grupo2
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(131,0,130,125,fileGrupo2);   // Cargar grupo2 (130x125) en PAGE3  =>  x = <grupo1(0)   + grupo1(130) + 1 = 131   ->   y = 0 
       
-      putReloj4(); // Mostrar reloj4 en PAGE1 
+      putRelojGirado4(); // Mostrar relGir4 en PAGE1 
       
       // grupo3
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(262,0,130,125,fileGrupo3);   // Cargar grupo3 (130x125) en PAGE3  =>  x = <grupo2(131) + grupo2(130) + 1 = 262   ->   y = 0 
       
-      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+      putRelojGirado5(); // Mostrar relGir5 en PAGE1 
       
       // grupo4
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(393,0,130,125,fileGrupo4);   // Cargar grupo4 (130x125) en PAGE3  =>  x = <grupo3(262) + grupo3(130) + 1 = 393   ->   y = 0 
       
-      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+      putRelojGirado6(); // Mostrar relGir6 en PAGE1 
 
       // mano con fondo verde ==> usada en grupos
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoGreen);    // Cargar manoG (120x129) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
 
-      putRelojGirado3(); // Mostrar relGir3 en PAGE1 
+      putReloj1(); // Mostrar reloj1 en PAGE1 => borrar PAGE1
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
 
-
-    // ----------------- AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO ----------------------------------------
-      // añadir
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(645,0,172,130,fileBotonAnadir);  // Cargar anadir (172x130) en PAGE3 =>  x  =  <manoR(524) + manoR(120) + 1 = 645      ->   y = 0  
-      
-      putRelojGirado4(); // Mostrar relGir4 en PAGE1
-      
-      // borrar
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(818,0,172,130,fileBotonEliminar);  // Cargar borrar (172x130) en PAGE3 =>  x  = <anadir(645) + anadir(172) + 1 = 818    ->   y = 0  
-      
-      putRelojGirado5(); // Mostrar relGir5 en PAGE1
-
-      // guardar
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(0,131,172,130,fileBotonGuardar); // Cargar guardar (172x130) en PAGE3 =>  x  =   0  ->   y = <borrar(0) + borrar(130) + 1 = 131 
-     
-      putRelojGirado6(); // Mostrar relGir6 en PAGE1
-     
-      // cociGra
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(173,131,177,160,fileCocinadoGrande); // Cargar cociGra (172x130) en PAGE3 =>  x  =  <guardar(0) + guardar(172) + 1 = 173    ->   y = 131  
-     
-      putReloj1(); // Mostrar reloj1 en PAGE1
-     
-      // crudoGra
-      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(351,131,177,160,fileCrudoGrande); // Cargar crudoGra (172x130) en PAGE3 =>  x  =  <cociGra(131) + cociGra(177) + 1 = 351  ->   y = 131  
-     
-      putReloj2(); // Mostrar reloj2 en PAGE1
-
-    // --------- FIN AÑADIR, BORRAR, GUARDAR Y CRUDO/COCINADO --------------------------------------------
-
-
-    // Se cargan antes las imágenes de error/aviso que las del dashboard porque son más pesadas y tardan más. 
-    // Así, al llegar a las del dashboard se ve cómo el reloj "gira" más rápido, porque esas se cargan más rápido.
     
     // --------- ERROR / AVISO ---------------------------------------------------------------------------
       // error
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(0,292,114,127,fileCruz); // Cargar cruz (114x127) en PAGE3 =>  x  =  0  ->   y = <crudoGra(131) + crudoGra(160) + 1 = 292
 
-      putReloj3(); // Mostrar reloj3 en PAGE1
+      putReloj2(); // Mostrar reloj2 en PAGE1
 
       // aviso
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
@@ -2094,15 +2218,31 @@ void loadPicturesShowHourglass(){
       // Imagen aviso con fondo amarillo
       tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAvisoYellow); // Cargar avisoY (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
       
-      putReloj4(); // Mostrar reloj4 en PAGE1
+      putReloj3(); // Mostrar reloj3 en PAGE1
 
       // mano con fondo amarillo ==> usada en botones add/delete/save
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
-      
-      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+      //tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoYellow2);    // Cargar manoY2 (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
+
+      putReloj4(); // Mostrar reloj4 en PAGE1
 
     // --------- FIN ERROR / AVISO -----------------------------------------------------------------------
+
+
+    // ----------------- PANTALLA INICIAL ----------------------------------------------------------------
+      // brain1
+      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
+      tft.sdCardDraw16bppBIN256bits(0,170,120,108,fileBrain1);    // Cargar brain1 (120x108) en PAGE2 => x = 0 ->   y = <Log(0) + Log(169) + 1 = 170  
+      
+      putRelojGirado1(); // Mostrar relGir1 en PAGE1 
+      
+      // brain2G
+      tft.canvasImageStartAddress(PAGE2_START_ADDR); // Regresar a PAGE2
+      tft.sdCardDraw16bppBIN256bits(121,170,120,108,fileBrain2Green);  // Cargar brain2G (120x108) en PAGE2 => x = <brain1(0)  + brain1(120) + 1 = 121  ->  y = 170  
+
+      putRelojGirado2(); // Mostrar relGir2 en PAGE1 
+    // ------------- FIN PANTALLA INICIAL ----------------------------------------------------------------
 
 
     // --------- DASHBOARD -------------------------------------------------------------------------------
@@ -2110,19 +2250,19 @@ void loadPicturesShowHourglass(){
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,fileCocinadoPeq); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
 
-      putRelojGirado2(); // Mostrar relGir1 en PAGE1 
+      putRelojGirado3(); // Mostrar relGir3 en PAGE1 
 
       // crudoPeq
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(577,131,47,42,fileCrudoPeq); // Cargar crudoPeq (47x42) en PAGE3 =>  x  =  <cociPeq(529) + crudoGra(47) + 1 = 577  ->   y = 131  
 
-      putRelojGirado3(); // Mostrar relGir2 en PAGE1 
+      putRelojGirado4(); // Mostrar relGir4 en PAGE1 
 
       // kcal
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,174,60,65,fileKcal); // Cargar kcal (60x65) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
 
-      putRelojGirado4(); // Mostrar relGir3 en PAGE1 
+      putRelojGirado5(); // Mostrar relGir5 en PAGE1 
 
       // Recuadro azul utilizado para la transparencia de crudo/cocinado en dashboard. Tiene el mismo tamaño que esas imágenes.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3

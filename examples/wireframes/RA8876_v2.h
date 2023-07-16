@@ -1,3 +1,5 @@
+//#include <DS3231.h>
+
 /*
 File Name : RA8876_v2.h                                   
 Author    : Irene Casares Rodríguez                          
@@ -36,11 +38,6 @@ Version   : v2.0
 typedef uint8_t FontFlags;
 #define RA8876_FONT_FLAG_XLAT_FULLWIDTH 0x01  // Translate ASCII to Unicode fullwidth forms
 
-//enum CanvasMode
-//{
-// RA8876_CANVAS_LINEAR,
-// RA8876_CANVAS_BLOCK
-//};
 
 // 1MHz. TODO: Figure out actual speed to use
 // Data sheet section 5.2 says maximum SPI clock is 50MHz.
@@ -85,22 +82,6 @@ typedef uint8_t FontFlags;
 #define PAGE8_START_ADDR  1024*600*2*7
 #define PAGE9_START_ADDR  1024*600*2*8
 #define PAGE10_START_ADDR 1024*600*2*9
-
-//#define PATTERN1_RAM_START_ADDR 1024*600*2*10
-//#define PATTERN2_RAM_START_ADDR (1024*600*2*10)+(16*16*2)
-//#define PATTERN3_RAM_START_ADDR (1024*600*2*10)+(16*16*2)+(16*16*2)
-
-/*DMA picture data start address*/ 
-// DMA se puede usar si se tiene memoria Flash. No es nuestro caso.
-/*
-#define WP1_ADDR  0
-#define WP2_ADDR  1024*600*2
-#define WP3_ADDR  1024*600*2*2
-#define WP4_ADDR  1024*600*2*3
-#define WP5_ADDR  1024*600*2*4
-#define WP6_ADDR  1024*600*2*5
-*/
-
 
 //------ STRING LINE ------- ¿PA QUÉ? NO SÉ
 #define STRING_LINE1    0
@@ -463,8 +444,8 @@ typedef uint8_t FontFlags;
 #define RA8876_BTE_CTRL0   0x90
 //-values RA8876_BTE_CTRL0-
 #define RA8876_BTE_ENABLE          1
-#define RA8876_PATTERN_FORMAT8X8   0
-#define RA8876_PATTERN_FORMAT16X16 1
+//#define RA8876_PATTERN_FORMAT8X8   0
+//#define RA8876_PATTERN_FORMAT16X16 1
 //-end values RA8876_BTE_CTRL0-
 
 #define RA8876_BTE_CTRL1  0x91
@@ -489,16 +470,17 @@ typedef uint8_t FontFlags;
 #define RA8876_BTE_ROP_BUS_WIDTH16  15
 //-end values RA8876_BTE_CTRL1-
 
-#define RA8876_BTE_MPU_WRITE_WITH_ROP                       0  
+
+//#define RA8876_BTE_MPU_WRITE_WITH_ROP                       0  // MPU Write es mucho más lento que memory copy porque tiene que intervenir el Arduino
 #define RA8876_BTE_MEMORY_COPY_WITH_ROP                     2
-#define RA8876_BTE_MPU_WRITE_WITH_CHROMA                    4
+//#define RA8876_BTE_MPU_WRITE_WITH_CHROMA                    4 
 #define RA8876_BTE_MEMORY_COPY_WITH_CHROMA                  5
-//#define RA8876_BTE_PATTERN_FILL_WITH_ROP                    6
+//#define RA8876_BTE_PATTERN_FILL_WITH_ROP                    6 // No usamos patrones, no hace falta
 //#define RA8876_BTE_PATTERN_FILL_WITH_CHROMA                 7
-#define RA8876_BTE_MPU_WRITE_COLOR_EXPANSION                8
-#define RA8876_BTE_MPU_WRITE_COLOR_EXPANSION_WITH_CHROMA    9
+//#define RA8876_BTE_MPU_WRITE_COLOR_EXPANSION                8
+//#define RA8876_BTE_MPU_WRITE_COLOR_EXPANSION_WITH_CHROMA    9
 #define RA8876_BTE_MEMORY_COPY_WITH_OPACITY                 10
-#define RA8876_BTE_MPU_WRITE_WITH_OPACITY                   11
+//#define RA8876_BTE_MPU_WRITE_WITH_OPACITY                   11
 #define RA8876_BTE_SOLID_FILL                               12
 #define RA8876_BTE_MEMORY_COPY_WITH_COLOR_EXPANSION         14
 #define RA8876_BTE_MEMORY_COPY_WITH_COLOR_EXPANSION_CHROMA  15
@@ -529,6 +511,7 @@ typedef uint8_t FontFlags;
 #define RA8876_S0_X1     0x9A
 #define RA8876_S0_Y0     0x9B
 #define RA8876_S0_Y1     0x9C
+
 #define RA8876_S1_STR0   0x9D
 #define RA8876_S1_STR1   0x9E
 #define RA8876_S1_STR2   0x9F
@@ -538,11 +521,11 @@ typedef uint8_t FontFlags;
 #define RA8876_S1_STR3   0xA0
 #define RA8876_S1_WTH0   0xA1
 #define RA8876_S1_WTH1   0xA2
-
 #define RA8876_S1_X0     0xA3
 #define RA8876_S1_X1     0xA4
 #define RA8876_S1_Y0     0xA5
 #define RA8876_S1_Y1     0xA6
+
 #define RA8876_DT_STR0   0xA7
 #define RA8876_DT_STR1   0xA8
 #define RA8876_DT_STR2   0xA9
@@ -553,11 +536,51 @@ typedef uint8_t FontFlags;
 #define RA8876_DT_X1     0xAE
 #define RA8876_DT_Y0     0xAF
 #define RA8876_DT_Y1     0xB0
+
 #define RA8876_BTE_WTH0  0xB1
 #define RA8876_BTE_WTH1  0xB2
 #define RA8876_BTE_HIG0  0xB3
 #define RA8876_BTE_HIG1  0xB4
-#define RA8876_APB_CTRL  0xB5
+
+#define RA8876_APB_CTRL  0xB5 // Alpha Blending
+//-values RA8876_APB_CTRL-
+// The value of alpha in the color code ranges from 1.0 down to 0.0, 
+// where 1.0 represents a fully opaque color, and 0.0 represents a fully transparent color.
+#define RA8876_ALPHA_OPACITY_0  0   // Fully transparent
+#define RA8876_ALPHA_OPACITY_1  1
+#define RA8876_ALPHA_OPACITY_2  2
+#define RA8876_ALPHA_OPACITY_3  3
+#define RA8876_ALPHA_OPACITY_4  4
+#define RA8876_ALPHA_OPACITY_5  5
+#define RA8876_ALPHA_OPACITY_6  6
+#define RA8876_ALPHA_OPACITY_7  7
+#define RA8876_ALPHA_OPACITY_8  8
+#define RA8876_ALPHA_OPACITY_9  9
+#define RA8876_ALPHA_OPACITY_10 10
+#define RA8876_ALPHA_OPACITY_11 11
+#define RA8876_ALPHA_OPACITY_12 12
+#define RA8876_ALPHA_OPACITY_13 13
+#define RA8876_ALPHA_OPACITY_14 14
+#define RA8876_ALPHA_OPACITY_15 15
+#define RA8876_ALPHA_OPACITY_16 16    // Half transparent/opaque
+#define RA8876_ALPHA_OPACITY_17 17
+#define RA8876_ALPHA_OPACITY_18 18
+#define RA8876_ALPHA_OPACITY_19 19
+#define RA8876_ALPHA_OPACITY_20 20
+#define RA8876_ALPHA_OPACITY_21 21
+#define RA8876_ALPHA_OPACITY_22 22
+#define RA8876_ALPHA_OPACITY_23 23
+#define RA8876_ALPHA_OPACITY_24 24
+#define RA8876_ALPHA_OPACITY_25 25
+#define RA8876_ALPHA_OPACITY_26 26
+#define RA8876_ALPHA_OPACITY_27 27
+#define RA8876_ALPHA_OPACITY_28 28
+#define RA8876_ALPHA_OPACITY_29 29
+#define RA8876_ALPHA_OPACITY_30 30
+#define RA8876_ALPHA_OPACITY_31 31
+#define RA8876_ALPHA_OPACITY_32 32    // Fully opaque
+//-end values RA8876_APB_CTRL-
+//------------- FIN BLOCK TRANSFER ENGINE (BTE) -------------
 //------------------------------------------------------------------
 
 
@@ -797,8 +820,8 @@ enum ExternalFontFamily{ // GTFNT_CR ==> Character width setting ==> Bit 1-0
 #define RA8876_SDRAM_ENABLE_WARNING       1
 #define RA8876_SDRAM_TIMING_PARA_DISABLE  0
 #define RA8876_SDRAM_TIMING_PARA_ENABLE   1
-#define RA8876_SDRAM_ENTER_POWER_SAVING   1 //0 to 1 transition will enter power saving mode
-#define RA8876_SDRAM_EXIT_POWER_SAVING    0  //1 to 0 transition will exit power saving mode
+#define RA8876_SDRAM_ENTER_POWER_SAVING   1  // 0 to 1 transition will enter power saving mode
+#define RA8876_SDRAM_EXIT_POWER_SAVING    0  // 1 to 0 transition will exit power saving mode
 #define RA8876_SDRAM_INITIALIZE           1  // An 0 to 1 transition will execute SDRAM initialization procedure.
 //-end values RA8876_REG_SDRCR-
 
@@ -834,26 +857,6 @@ enum ExternalFontFamily{ // GTFNT_CR ==> Character width setting ==> Bit 1-0
 #define RA8876_KSDR0    0xFD
 #define RA8876_KSDR1    0xFE
 #define RA8876_KSDR2    0xFF
-
-
-
-// --- COLORES ----
-// 8bpp (1 byte/pixel ) => RGB332
-// 16bpp (2 bytes/pixel) Colores en formato RGB565 ==> http://www.barth-dev.de/online/rgb565-color-picker/
-// 24bpp (3 bytes/pixel o 4 bytes/pixel) ==> RGB888
-/*
-#define NEGRO         0x0000
-#define BLANCO        0xFFFF
-#define ROJO          0xF800 //0xF920 | 0x8000 | 0xfc10 | 0xfa02
-#define NARANJA       0xFC80
-#define AMARILLO      0xFFC0
-#define VERDE         0x07C0
-#define CIAN          0x07FF
-#define AZUL          0x019F
-#define ROSA          0xFA1F
-#define MORADO        0x9112
-#define MARRON        0xABC8*/
-//-----------------------------
 
 
 #define BUFFPIXEL     40
@@ -946,10 +949,10 @@ private:
 
   uint16_t            _textForeColor;
   uint16_t            _textBackColor;
-  uint8_t             _textBackTrans; //0 (OFF) o 1 (ON)
+  uint8_t             _textBackTrans; // 0 (OFF) o 1 (ON)
 
-  //uint16_t            _cursorX;
-  //uint16_t            _cursorY;
+  uint16_t            _cursorX;
+  uint16_t            _cursorY;
 
   uint8_t             _textScaleX;
   uint8_t             _textScaleY;
@@ -971,8 +974,6 @@ private:
   void      _writeData16bits(uint16_t data);               // lcdDataWrite16bbp() en RA8876_Lite
   void      _writeData64bits(uint64_t data);     
   void      _writeData256bits(uint64_t *data);   
-  //void    _writeData1024bits(uint64_t *data); 
-  //void    _writeData4096bits(uint64_t *data);  
   uint8_t   _readData(void);                              // lcdDataRead()  en RA8876_Lite
   uint8_t   _readStatus(void);                            // lcdStatusRead() en RA8876_Lite
   void      _writeReg(uint8_t reg, uint8_t data);         // lcdRegDataWrite() en RA8876_Lite
@@ -984,13 +985,7 @@ private:
 
   // -------- STATUS -------------------------------------------- */
   void      _checkWriteFifoNotFull(void);
-  void      _checkWriteFifoEmpty(void);                 
-  //void    _checkReadFifoNotFull(void);
-  //void    _checkReadFifoFull(void);
-  //void    _checkReadFifoNotEmpty(void);
-  //void    _check2dBusy(void);
-  //bool    _checkSdramReady(void);
-  //bool    _checkIcReady(void);
+  void      _checkWriteFifoEmpty(void);  
  //----
   inline void _waitWriteFifo(void) { while (_readStatus() & 0x80); };           // checkWriteFifoNotFull() en RA8876_Lite, pero bloqueante
   inline void _waitTaskBusy(void) { while (_readStatus() & 0x08); };            // check2dBusy() en RA8876_Lite, pero bloqueante
@@ -1019,7 +1014,7 @@ private:
   void      _drawTwoPointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t reg, uint8_t cmd);                  // drawLine, drawRect, fillRect
   void      _drawThreePointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, uint8_t cmd);   // drawTriangle, fillTriangle
   void      _drawEllipseShape(uint16_t x, uint16_t y, uint16_t xrad, uint16_t yrad, uint16_t color, uint8_t cmd);                              // drawCircle, fillCircle
-  void      _drawRoundRectShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color, uint8_t cmd);             //drawRoundRect y fillRoundRect
+  void      _drawRoundRectShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color, uint8_t cmd);             // drawRoundRect y fillRoundRect
   // ------------------------------------------------------------ */
 
 
@@ -1045,11 +1040,11 @@ public:
   bool      setCanvasRegion(uint32_t address, uint16_t width = 0);                       // Parecido canvasImageStartAddress() en RA8876_Lite
   bool      setCanvasWindow(uint16_t x, uint16_t y, uint16_t width, uint16_t height);    // activeWindowXY() y activeWindowWH() en RA8876_Lite juntos
 
-  void      displayImageStartAddress(uint32_t addr);                   // Lite
-  void      displayImageWidth(uint16_t width);                         // Lite
-  void      displayWindowStartXY(uint16_t x0,uint16_t y0);             // Lite
-  void      canvasImageStartAddress(uint32_t addr);                    // Lite
-  void      canvasImageWidth(uint16_t width);                          // Lite
+  void      displayImageStartAddress(uint32_t addr);                  
+  void      displayImageWidth(uint16_t width);                         
+  void      displayWindowStartXY(uint16_t x0,uint16_t y0);             
+  void      canvasImageStartAddress(uint32_t addr);                   
+  void      canvasImageWidth(uint16_t width);                          
 
   // Display region
   bool      setDisplayRegion(uint32_t address, uint16_t width);
@@ -1079,15 +1074,13 @@ public:
   void            setTextScale(uint8_t X_scale, uint8_t Y_scale);
   inline uint8_t  getScaleX(void){ return _textScaleX; };
   inline uint8_t  getScaleY(void){ return _textScaleY; };
-  int             getTextSizeY(void);
+  inline uint8_t  getTextSizeY(void){ return ((_fontSize + 2) * 8) * _textScaleY; };
   void            restoreScale(void){ setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); };
 
   // TEXT CURSOR
-  void            setCursor(uint16_t x, uint16_t y);                 // setTextCursor() en RA8876_Lite
-  uint16_t        getCursorX(void); 
-  uint16_t        getCursorY(void);
-  //inline uint16_t getCursorX(void){ return _cursorX; };
-  //inline uint16_t getCursorY(void){ return _cursorY; };
+  void            setCursor(uint16_t x, uint16_t y);                                             // setTextCursor() en RA8876_Lite
+  inline uint16_t getCursorX(void){ return _cursorX; };
+  inline uint16_t getCursorY(void){ return _cursorY; };
   
   
   // TEXT COLOR (FOREGROUND/BACKGROUND)
@@ -1104,10 +1097,8 @@ public:
   void            putChars(const char *buffer, size_t size);
   inline void     putChar16(uint16_t c) { putChars16(&c, 1); };
   void            putChars16(const uint16_t *buffer, unsigned int count);
-  void            putString(uint16_t x0,uint16_t y0, char *str); // ESTE ES CLAVE // Lite
-  //void          putDec(uint16_t x0,uint16_t y0,signed long vaule,uint8_t len,const char *flag);
-  //void          putFloat(uint16_t x0,uint16_t y0,double vaule,uint8_t len,uint8_t precision, const char *flag);
-  //void          putHex(uint16_t x0,uint16_t y0,uint32_t vaule,uint8_t len,const char *flag); 
+  void            putString(uint16_t x0,uint16_t y0, char *str); 
+
   // Internal for Print class
   virtual size_t write(uint8_t c) { return write(&c, 1); };
   virtual size_t write(const uint8_t *buffer, size_t size);
@@ -1120,50 +1111,41 @@ public:
   
   // Drawing
   void            drawPixel(uint16_t x, uint16_t y, uint16_t color);
-        // putPixel_16bpp() en RA8876_Lite
-  inline void     drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, RA8876_DRAW_LINE); }; //0x80
-        // drawLine() en RA8876_Lite
-  inline void     drawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE); }; //0xA0
-        // drawSquare() en RA8876_Lite
-  inline void     fillRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE_FILL); }; //0xE0
-        // drawSquareFill() en RA8876_Lite
-  inline void     drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT); }; //0xB0
-        // drawCircleSquare() en RA8876_Lite
-  //void            drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color);
-  inline void     fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT_FILL); }; //0xF0
-        // drawCircleSquareFill() en RA8876_Lite
-  //void            fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color);
-  inline void     drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xA2); }; //RA8876_DRAW_TRIANGLE => 0x82
-        // drawTriangle() en RA8876_Lite
-  inline void     fillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xE2); }; //RA8876_DRAW_TRIANGLE_FILL => 0xA2
-        // drawTriangleFill() en RA8876_Lite
-  inline void     drawCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_CIRCLE); }; //0x80
-        // drawCircle() en RA8876_Lite  
-  inline void     fillCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_CIRCLE_FILL); }; //0xC0
-        // drawCircleFill() en RA8876_Lite
-  inline void     drawEllipse(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_ELLIPSE); }; //0x80
-        // drawEllipse() en RA8876_Lite  
-  inline void     fillEllipse(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_ELLIPSE_FILL); }; //0xC0
-        // drawEllipseFill() en RA8876_Lite
 
-  // Limpiar pantalla ==> dibujar rectángulo que ocupe todo
-  //inline void     clearScreen(uint16_t color) { setCursor(0, 0); fillRect(0, 0, _width, _height, color); };
+  inline void     drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, RA8876_DRAW_LINE); }; //0x80
+  
+  inline void     drawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE); }; //0xA0
+  inline void     fillRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE_FILL); }; //0xE0
+  
+  inline void     drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT); }; //0xB0
+  inline void     fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT_FILL); }; //0xF0
+  
+  inline void     drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xA2); }; //RA8876_DRAW_TRIANGLE => 0x82
+  inline void     fillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xE2); }; //RA8876_DRAW_TRIANGLE_FILL => 0xA2
+  
+  inline void     drawCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_CIRCLE); }; //0x80
+  inline void     fillCircle(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_CIRCLE_FILL); }; //0xC0
+  
+  inline void     drawEllipse(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_ELLIPSE); }; //0x80
+  inline void     fillEllipse(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_ELLIPSE_FILL); }; //0xC0
+
+  // Limpiar pantalla 
   inline void     clearScreen(uint16_t color) { fillRect(0, 0, _width, _height, color); };
   inline void     clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest, uint16_t color) { fillRect(xOrig, yOrig, xDest, yDest, color); }; 
 
 
 
   /* -------- BTE ------------------------------------------------ */
-  void    bte_Source0_MemoryStartAddr(uint32_t addr);              // Lite
-  void    bte_Source0_ImageWidth(uint16_t width);                  // Lite
-  void    bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0);      // Lite
-  void    bte_Source1_MemoryStartAddr(uint32_t addr);              // Lite
-  void    bte_Source1_ImageWidth(uint16_t width);                  // Lite
-  void    bte_Source1_WindowStartXY(uint16_t x0,uint16_t y0);      // Lite
-  void    bte_DestinationMemoryStartAddr(uint32_t addr);           // Lite
-  void    bte_DestinationImageWidth(uint16_t width);               // Lite
-  void    bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0);   // Lite
-  void    bte_WindowSize(uint16_t width, uint16_t height);         // Lite
+  void    bte_Source0_MemoryStartAddr(uint32_t addr);              
+  void    bte_Source0_ImageWidth(uint16_t width);                  
+  void    bte_Source0_WindowStartXY(uint16_t x0,uint16_t y0);      
+  void    bte_Source1_MemoryStartAddr(uint32_t addr);              
+  void    bte_Source1_ImageWidth(uint16_t width);                  
+  void    bte_Source1_WindowStartXY(uint16_t x0,uint16_t y0);      
+  void    bte_DestinationMemoryStartAddr(uint32_t addr);           
+  void    bte_DestinationImageWidth(uint16_t width);               
+  void    bte_DestinationWindowStartXY(uint16_t x0,uint16_t y0);   
+  void    bte_WindowSize(uint16_t width, uint16_t height);         
 
   // MEMORY COPY
   void    bteMemoryCopy(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t des_addr,uint16_t des_image_width, 
@@ -1174,32 +1156,11 @@ public:
   // MEMORY COPY - CHROMA
   void    bteMemoryCopyWithChromaKey(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,
                                 uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint16_t chromakey_color);
-
-  // MPU WRITE - ROP
-  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
-                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned short *data);
-  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
-                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code,const unsigned char *data);
-  void    bteMpuWriteWithROP(uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,uint32_t des_addr,uint16_t des_image_width,
-                         uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint8_t rop_code);                     
-
-  // MPU WRITE - CHROMA
-  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
-                              const unsigned short *data);
-  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x, uint16_t des_y, uint16_t width,uint16_t height,uint16_t chromakey_color,
-                              const unsigned char *data);
-  void    bteMpuWriteWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t chromakey_color);
-
-  // MPU WRITE - COLOR EXPANSION
-  void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
-  void    bteMpuWriteColorExpansion(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
-  
-  // MPU WRITE - COLOR EXPANSION - CHROMA
-  void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t width,uint16_t height,
-                                             uint16_t foreground_color,uint16_t background_color,const unsigned char *data);
-  void    bteMpuWriteColorExpansionWithChromaKey(uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,
-                                             uint16_t width,uint16_t height,uint16_t foreground_color,uint16_t background_color);
+  // MEMORY COPY - ALPHA LEVEL (transparency)
+  void    bteMemoryCopyWithOpacity(uint32_t s0_addr,uint16_t s0_image_width,uint16_t s0_x,uint16_t s0_y,uint32_t s1_addr,uint16_t s1_image_width,uint16_t s1_x,uint16_t s1_y,
+                            uint32_t des_addr,uint16_t des_image_width, uint16_t des_x,uint16_t des_y,uint16_t copy_width,uint16_t copy_height,uint8_t alpha_level);
   /* ------------------------------------------------------------ */
+  
   
   /* -------- IMAGENES ------------------------------------------ */
   // CODIGO CPP
@@ -1209,11 +1170,6 @@ public:
   void    sdCardDraw16bppBIN8bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename);
   void    sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
   void    sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
-  //void  sdCardDraw1024bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
-  //void  sdCardDraw4096bitsBIN(uint16_t x,uint16_t y,uint16_t width, uint16_t height,char *filename); 
-
-  // BMP (SD)
-  //void    sdCardDraw24bppBMP(char *filename, int x, int y);
  /* ------------------------------------------------------------ */
 
 

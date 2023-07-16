@@ -62,6 +62,9 @@ char    fileCocinadoGrande[30]  = "bin/botones/cociGra.bin";
 char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
 char    fileManoYellow[30]      = "bin/botones/manoY.bin";
 
+// --- IMAGEN BASCULA ---
+char   fileScale[30]  = "bin/alimento/scale.bin";
+
 
 // --- IMAGENES DASHBOARD ---
 char    fileCocinadoPeq[30]     = "bin/dash/cociPeq.bin";

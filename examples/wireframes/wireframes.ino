@@ -70,9 +70,8 @@ void setup() {
     
     //pantalla_inicial(); // OK
     //select_Grupo(); // OK con movimiento de mano y 2º pulsación
-    //crudo_cocinado(); // OK con 3º alternancia
-
-    colocar_alimento();
+    //crudo_cocinado(); // OK con 3º alternancia y aparición/desaparición paulatinas
+    colocar_alimento(); // OK con aparición paulatina
 
     //add_Plato();
 
@@ -479,7 +478,7 @@ void crudo_cocinado(){ // Tb PAGE3, pero más a la derecha
     //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
     tft.setCursor(100, 30);
     tft.println("\xBF""EL ALIMENTO EST\xC1""");
-    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
+    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-50);
     tft.print("COCINADO O CRUDO\x3F"""); 
     delay(1000);
     // ----------------------------------------------------------------------------------------------------
@@ -490,49 +489,75 @@ void crudo_cocinado(){ // Tb PAGE3, pero más a la derecha
     tft.fillRoundRect(768,517,1024,525,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 
+    delay(1000);
 
     // ------------ BOTONES -------------------------------------------------------------------------------
     // ------------ COCINADO 1 -------------
-    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    //mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    // Mostrar cociGra
+    slowAppearanceImage(1); // option = 1 --> imagen cocinado con 16/32 a 7/32 de opacidad
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
     delay(1000);
 
     // ------------ CRUDO 1 ----------------
-    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    //mostrarOpcionProcesamiento(2); // 2 = Crudo
+    slowAppearanceAndDisappareanceProcesamiento(2); // Desaparecer COCINADO y aparecer CRUDO
     delay(1000);
 
-    // ------------ COCINADO 2 -------------
-    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    // Otras 2 alternancias más
+    for(uint8_t i = 0; i < 2; i++){
+        for(uint8_t j = 1; j <= 2; j++){
+            slowAppearanceAndDisappareanceProcesamiento(j); // j = 1 --> Desaparecer CRUDO y aparecer COCINADO  |  j = 2 -->  Desaparecer COCINADO y aparecer CRUDO
+            delay(1000);
+        }
+    }
+   /* // ------------ COCINADO 2 -------------
+    //mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    slowAppearanceAndDisappareance(1); // Desaparecer CRUDO y aparecer COCINADO 
     delay(1000);
 
     // ------------ CRUDO 2 ----------------
-    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    //mostrarOpcionProcesamiento(2); // 2 = Crudo
+    slowAppearanceAndDisappareance(2); // Desaparecer COCINADO y aparecer CRUDO
     delay(1000);
 
     // ------------ COCINADO 3 -------------
-    mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    //mostrarOpcionProcesamiento(1); // 1 = Cocinado 
+    slowAppearanceAndDisappareance(1); // Desaparecer CRUDO y aparecer COCINADO 
     delay(1000);
 
     // ------------ CRUDO 3 ----------------
-    mostrarOpcionProcesamiento(2); // 2 = Crudo
+    //mostrarOpcionProcesamiento(2); // 2 = Crudo
+    slowAppearanceAndDisappareance(2); // Desaparecer COCINADO y aparecer CRUDO
     // ----------------------------------------------------------------------------------------------------
-
+*/
 }
 
 
 void mostrarOpcionProcesamiento(int option){
     switch(option){
         case 1: // Cocinado
+            /*
             // Borrar imagen crudo 1 de la page1. Se "borra" aunque no haya nada para simplificar función
+            slowDisappearance(2); // Desaparecer crudo
             tft.clearArea(500,280,724,480,VERDE_PEDIR); 
             // Mostrar cociGra
+            slowAppearance(1); // option = 1 --> imagen cocinado con 16/32 a 7/32 de opacidad
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
+            */
+            slowAppearanceAndDisappareance(1); // Desaparecer CRUDO y aparecer COCINADO 
             break;
 
         case 2: // Crudo
+            /*
             // Borrar imagen cocinado 1 de la page1
+            slowDisappearance(1); // Desaparecer cocinado
             tft.clearArea(280,280,497,470,VERDE_PEDIR); 
             // Mostrar crudoGra
+            slowAppearance(2); // option = 2 --> imagen crudo con 16/32 a 7/32 de opacidad
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
+            */
+            slowAppearanceAndDisappareance(2); // Desaparecer COCINADO y aparecer CRUDO
             break;
 
         default: break;
@@ -543,13 +568,102 @@ void mostrarOpcionProcesamiento(int option){
 //----------------------------- FIN CRUDO/COCINADO --------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+void slowDisappearance(int option){
+    uint8_t i;
+    switch(option){
+        case 1: // Cocinado
+            for(i = 4; i > 30; i++){
+                // Mostrar cociGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
+                delay(50);
+            }
+            break;
 
+        case 2: // Crudo
+            for(i = 4; i > 30; i++){
+                // Mostrar crudoGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
+                delay(50);
+            }
+            break;
+
+        default: break;
+    }
+    
+}
+
+void slowAppearanceAndDisappareanceProcesamiento(int option){
+    uint8_t i,j;
+    switch(option){
+        case 1: // Desaparecer CRUDO y aparecer COCINADO 
+            for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
+                // Mostrar crudoGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
+                // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,j);
+                delay(10);
+            }
+            tft.clearArea(500,280,724,480,VERDE_PEDIR); // Borrar crudoGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
+            break;
+
+        case 2: // Desaparecer COCINADO y aparecer CRUDO
+            for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
+                // Mostrar cociGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
+                // Mostrar crudoGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,j);
+                delay(10);
+            }
+            tft.clearArea(280,280,497,470,VERDE_PEDIR); // Borrar cociGra
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
+            break;
+
+        default: break;
+    }
+}
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- COLOCAR ALIMENTO ----------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void slowAppearanceImage(int option){
+    uint8_t i;
+    switch(option){
+        case 1: // Cocinado
+            for(i = 30; i >= 4; i--){
+                // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
+                delay(10);
+            }
+            break;
 
-void colocar_alimento(){ // PAGE3
+        /*case 2: // Crudo
+            for(i = 24; i > 3; i--){
+                // Mostrar crudoGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
+                delay(50);
+            }
+            break;*/
+
+        case 2: // Scale
+            for(i = 30; i >= 4; i--){
+                // Mostrar scale apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149,i);
+                delay(10);
+            }
+            break;
+
+        default: break;
+    }
+    
+}
+
+void colocar_alimento(){ // PAGE3 (OK)
 
     // ----------- TEXTO ------------------------------------------------------------------------------------
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
@@ -560,19 +674,30 @@ void colocar_alimento(){ // PAGE3
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
     //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
-    tft.setCursor(160, 90);
+    tft.setCursor(160, 50);
     tft.println("COLOQUE UN ALIMENTO");
-    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-10);
+    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()-20);
     tft.print("EN LA ZONA DE PESADA"); 
 
     delay(1000);
+
+    // ------------ LINEAS --------------------------------------------------------------------------------
+    tft.fillRoundRect(0,270,276,278,3,WHITE);
+    tft.fillRoundRect(748,517,1024,525,3,WHITE);
+    delay(1000);
+    // ----------------------------------------------------------------------------------------------------
       
     // ----------- SCALE (150x150)  ------------------------------------------------------------------------
+
+    slowAppearanceImage(2); // option = 2 --> imagen scale con 16/32 a 7/32 de opacidad
+
     // Scale 
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,440,345,150,149); // Mostrar scale (150x150) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149); // Mostrar scale (150x150) en PAGE1
     delay(1000);
 
 }
+
+
 
 
 

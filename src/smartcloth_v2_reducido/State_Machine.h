@@ -456,6 +456,8 @@ float     pesoPlato = 0.0;
 float     pesoLastAlimento = 0.0;
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
+bool      showingTemporalScreen = false;
+
 
 
 #include "Screen.h"   // Debajo de las variables para que estén disponibles en su ámbito
@@ -581,7 +583,7 @@ void actStateEmpty(){
                                             //    se ha restaurado con "Añadir plato" o "Guardar comida", sino que se ha retirado de repente en mitad del proceso.
                                             //    Si ocurre esa liberación tan repentina y cuando no toca (desde Grupos, raw, cooked, weighted...),
                                             //    entonces se borra. Lo entiendo como una eliminación forzada del plato. 
-                                            //    Si no se hiciera así, seguiría apareciendo su información en la comida desde el dashboard estilo 1, aunque 
+                                            //    Si no se hiciera así, seguiría apareciendo su información en la comida copiada en el dashboard estilo 1, aunque 
                                             //    no se hubiera guardado ni eliminado.
 
                                             //  ¡IMPORTANTE! ==> con este borrado se impide por completo el retirar el plato para colocar el alimento fuera
@@ -611,7 +613,7 @@ void actStateEmpty(){
     currentTime = millis();
     if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
         blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE);
-        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir recipiente
+        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 5 segundos, se cambia a pedir recipiente
             previousTime = currentTime;
             pedirRecipiente();
             showing_dash = false;  
@@ -840,7 +842,18 @@ void actGruposAlimentos(){
    actStateRaw(): Acciones del STATE_raw
 ----------------------------------------------------------------------------------------------------------*/
 void actStateRaw(){ 
+    // Tiempos utilizados para alternar entre dashboard y pantalla de colocar alimento:
+    const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos) -> se deja más tiempo para leer ejemplos
+    const unsigned long alimentoInterval = 5000;    // Intervalo de tiempo para pedir escoger crudo o cocinado (3.5 segundos)
+
+    static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
+    unsigned long currentTime;
+
+    static bool showing_dash;       
+    static bool showing_colocar_alimento;
+
     if(!doneState){
+        // ----- ACCIONES ------------------------------
         if(state_prev != STATE_raw){
             Serial.println(F("\nAlimento crudo...")); 
             
@@ -849,18 +862,44 @@ void actStateRaw(){
             if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
             }
-        
-            if(state_prev == STATE_cooked) printProcesamiento(); // => Si se viene de cooked (si viene de raw no se hace nada), se modifica solo zona 2.
-            else showDashboardStyle2();    // => Si se acaba de escoger grupo, el dashboard ya está en pantalla, pero puede ocurrir
-                                           //    que se escoja cocinado mientras se muestra la pantalla de escoger procesamiento.
-                                           //    Por eso, si se viene de cualquier otro estado, se actualiza la pantalla completa, por si ha ocurrido
-                                           //    error, cancelación, aviso o la pantalla temporal de pedir procesamiento.
         }
+        // ----- FIN ACCIONES --------------------------
+
+        // ----- INFO DE PANTALLA -------------------------
+        // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria. Si se estaba mostrando el dashboard,
+        // ya fuera con "crudo" o "cocinado" escogido, solo se modifica la zona 2 con la imagen de "crudo" activa.
+        if(showingTemporalScreen) showDashboardStyle2();  // Mostrar dashboard estilo 2 con el procesamiento "crudo"
+        else printProcesamiento();                        // Modificar solamente zona 2 con el procesamiento "crudo"
+        showing_dash = true;                // Se está mostrando dashboard estilo 2 (Alimento | Comida)
+        showing_colocar_alimento = false;   
+        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
+        // ----- FIN INFO DE PANTALLA ---------------------
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
+
+
+    // ----- ALTERNANCIA PANTALLAS -------------------------
+    currentTime = millis();
+    if(showing_dash){ // Se está mostrando dashboard estilo 2 (Alimento | Comida)
+        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir alimento
+            previousTime = currentTime;
+            pedirAlimento();
+            showing_dash = false;  
+            showing_colocar_alimento = true;   // Mostrando pedir alimento
+        }
+    }
+    else if(showing_colocar_alimento){ // Se está mostrando pedir alimento
+        if (currentTime - previousTime >= alimentoInterval) { // Si el pedir alimento ha estado 5 segundos, se cambia a dashboard estilo 2
+            previousTime = currentTime;
+            showDashboardStyle2();
+            showing_dash = true;  // Mostrando dashboard estilo 2 (Alimento | Comida)
+            showing_colocar_alimento = false;   
+        }
+    }
+    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 }
 
 
@@ -868,7 +907,18 @@ void actStateRaw(){
    actStateCooked(): Acciones del STATE_cooked
 ----------------------------------------------------------------------------------------------------------*/
 void actStateCooked(){ 
+    // Tiempos utilizados para alternar entre dashboard y pantalla de colocar alimento:
+    const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos) -> se deja más tiempo para leer ejemplos
+    const unsigned long alimentoInterval = 3500;    // Intervalo de tiempo para pedir escoger crudo o cocinado (3.5 segundos)
+
+    static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
+    unsigned long currentTime;
+
+    static bool showing_dash;       
+    static bool showing_colocar_alimento;
+
     if(!doneState){
+        // ----- ACCIONES ------------------------------
         if(state_prev != STATE_cooked){
             Serial.println(F("\nAlimento cocinado...")); 
             
@@ -877,18 +927,44 @@ void actStateCooked(){
             if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
                 tarado = false;                                                 // Desactivar flag de haber 'tarado' 
             }
-            
-            if(state_prev == STATE_raw) printProcesamiento(); // => Si se viene de raw (si viene de cooked no se hace nada), se modifica solo zona 2.
-            else showDashboardStyle2();    // => Si se acaba de escoger grupo, el dashboard ya está en pantalla, pero puede ocurrir
-                                           //    que se escoja cocinado mientras se muestra la pantalla de escoger procesamiento.
-                                           //    Por eso, si se viene de cualquier otro estado, se actualiza la pantalla completa, por si ha ocurrido
-                                           //    error, cancelación, aviso o la pantalla temporal de pedir procesamiento.
         }
+        // ----- FIN ACCIONES --------------------------
+
+        // ----- INFO DE PANTALLA -------------------------
+        // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria. Si se estaba mostrando el dashboard,
+        // ya fuera con "crudo" o "cocinado" escogido, solo se modifica la zona 2 con la imagen de "cocinado" activa.
+        if(showingTemporalScreen) showDashboardStyle2();  // Mostrar dashboard estilo 2 con el procesamiento "cocinado"
+        else printProcesamiento();                        // Modificar solamente zona 2 con el procesamiento "cocinado"
+        showing_dash = true;                // Se está mostrando dashboard estilo 2 (Alimento | Comida)
+        showing_colocar_alimento = false;   
+        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
+        // ----- FIN INFO DE PANTALLA ---------------------
 
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
+
+
+    // ----- ALTERNANCIA PANTALLAS -------------------------
+    currentTime = millis();
+    if(showing_dash){ // Se está mostrando dashboard estilo 2 (Alimento | Comida)
+        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a pedir alimento
+            previousTime = currentTime;
+            pedirAlimento();
+            showing_dash = false;  
+            showing_colocar_alimento = true;   // Mostrando pedir alimento
+        }
+    }
+    else if(showing_colocar_alimento){ // Se está mostrando pedir alimento
+        if (currentTime - previousTime >= alimentoInterval) { // Si el pedir alimento ha estado 5 segundos, se cambia a dashboard estilo 2
+            previousTime = currentTime;
+            showDashboardStyle2();
+            showing_dash = true;  // Mostrando dashboard estilo 2 (Alimento | Comida)
+            showing_colocar_alimento = false;   
+        }
+    }
+    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 }
 
 
