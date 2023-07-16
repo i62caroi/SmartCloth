@@ -69,11 +69,11 @@ void setup() {
     loadPicturesShowHourglass();
     
     //pantalla_inicial(); // OK
-    select_Grupo(); // OK con movimiento de mano y 2º pulsación
+    //select_Grupo(); // OK con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
     //crudo_cocinado(); // OK con 3º alternancia y aparición/desaparición paulatinas
     //colocar_alimento(); // OK con aparición paulatina
 
-    //add_Plato();
+    add_Plato(); // Ok con mano (icono) borde rojo y fondo blanco
 
 
     
@@ -298,20 +298,27 @@ void select_Grupo(){ // PAGE3 (OK) ==> HECHO
     desplazar_mano_Grupos();
     // ----------------------------------------------------------------------------------------------------
 
-    bool borrarZonaGrupo3 = false;
-    bool pulsacion = false;
 
-    for(int i = 0; i < 5; i++){
-        if(!pulsacion){
+    // ------------ ALTERNAR 2 PULSACIONES ------------------------------------------------------------------
+    // Ya se está en no pulsación, tras desplazar la mano.
+
+    // Dividir 1 seg de delay en partes para chequear interrupciones mientras
+    delay(500);
+    // checkinterrupt
+    delay(500);
+
+    bool pulsacion = true;
+
+    for(int i = 0; i < 4; i++){
+        if(pulsacion){
+            Serial.println("Pulsacion");
+            pulsacion_Grupos();
+        }
+        else{
           Serial.println("No pulsacion");
-          sin_pulsacion_Grupos(borrarZonaGrupo3); // false = no borrar. Solo está a false la primera vez.
-          if(!borrarZonaGrupo3) borrarZonaGrupo3 = true;
+          sin_pulsacion_Grupos(); 
         }
-        else {
-          Serial.println("Pulsacion");
-          pulsacion_Grupos();
-        }
-        if(i < 4){ // No hacer el delay si es la última pulsación/no pulsación (debería ser no pulsación)
+        if(i < 3){ // No hacer el delay si es la última pulsación/no pulsación (debería ser no pulsación)
             // Dividir 1 seg de delay en partes para chequear interrupciones mientras
             delay(500);
             // checkinterrupt
@@ -319,6 +326,8 @@ void select_Grupo(){ // PAGE3 (OK) ==> HECHO
         }
         pulsacion = !pulsacion;
     }
+    // ----------------------------------------------------------------------------------------------------
+
 
 /*
     // -------- SIN PULSACIÓN -----------------------------------------------------------------------------
@@ -373,42 +382,71 @@ void desplazar_mano_Grupos(){
 
     // MANO por el camino
     while(posY >= 410){
-        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,posY,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+        // manoGppt
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+        // manoWppt
+        //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,252,293,PAGE1_START_ADDR,SCREEN_WIDTH,556,posY,118,126,WHITE); // Transparencia manoWppt (120x128)
+        // manoG
+        //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,posY,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
         delay(50);
         if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del grupo3 que está debajo
-        tft.clearArea(556,posY,674,posY + alto,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
+        tft.clearArea(556,posY,690,posY + alto+5,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
+        //tft.clearArea(556,posY,674,posY + alto,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
         posY -= 10; // Subimos verticalmente la imagen 10 píxeles
     }
-
-    // ------ Grupo 3 (130x125) ---------
-    // Para superponerse a la última mano y que desaparezca para simular el movimiento
+    
+    posY = 400;
+    while(posY >= 380){
+        // Mostrar grupo3 (130x125). Para superponerse a la mano, que aún se está "moviendo"
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
+        // Mostrar mano (manoGppt)
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+        delay(50);
+        if(posY == 400) tft.clearArea(556,413,690,528,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del botón. Solo se borra en la primera iteración del bucle
+        posY -= 20;
+    }
+/*
+    // Mostrar grupo3 (130x125). Para superponerse a la mano, que aún se está "moviendo"
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
 
-    // Movimiento final de la mano
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,400,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+    // Penúltimo movimiento de la mano (manoGppt)
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,400,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+    // manoWppt
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,252,293,PAGE1_START_ADDR,SCREEN_WIDTH,566,400,118,126,WHITE); // Transparencia manoWppt (120x128)
+    // manoG
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,400,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
     delay(50);
-    tft.clearArea(556,413,674,527,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo3
+    tft.clearArea(556,413,690,528,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo3
 
-    // En la función principal escoger_grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
+    // Mostrar grupo3 (130x125). Para superponerse a la mano, que aún se está "moviendo"
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125);
+
+    // Movimiento final de la mano (manoGppt)
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR);
+*/
 }
 
-void sin_pulsacion_Grupos(bool borrar){
-    if(borrar){
-        // Borrar todo (grupo, mano y pulsación)
-        tft.clearArea(546,278,690,527,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
-    }
+void sin_pulsacion_Grupos(){
+    // Borrar todo (grupo, mano y pulsación)
+    tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+
     // Mostrar grupo3 (130x125)
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
 
     // Mostrar mano
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+    // manoGppt
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+    // manoWppt
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,252,293,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,118,126,WHITE); // Transparencia manoWppt (120x128)
+    // manoG
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
 }
 
 void pulsacion_Grupos(){
     int x1, y1, x2, y2;
     // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
     // 1 - Borrar todo (grupo, mano y pulsación)
-    tft.clearArea(546,278,690,527,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+    tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
     
     // 2 - Volver a mostrar grupo3 (130x125)
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
@@ -440,7 +478,12 @@ void pulsacion_Grupos(){
     // 4 - Mano
     // ------------ MANO (120x129) ------------------------------------------------------------------------
     // Mano final pulsando
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+    // manoGppt
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+    // manoWppt
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,252,293,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,118,126,WHITE); // Transparencia manoWppt (120x128)
+    // manoG
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,380,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
     // ----------------------------------------------------------------------------------------------------
 
     // 5 - Rayitas pulsación
@@ -485,6 +528,10 @@ void pulsacion_Grupos(){
     }
     // ---------------------------------------------------
 }
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- FIN ESCOGER GRUPO ---------------------------------------------------------------------------------------------------------------------------------------
@@ -694,49 +741,153 @@ void colocar_alimento(){ // PAGE3 (OK)
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- AÑADIR PLATO --------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+void desplazar_mano_Botones(){
+    int alto = 128;
+    int posY = 580;
+
+    // MANO por el camino
+    while(posY >= 510){
+        // manoWppt
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,430,posY,120,128,WHITE); // Transparencia manoWppt (120x128)
+        delay(50);
+        //if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del botón que está debajo
+        tft.clearArea(430,posY,567,posY + alto,AMARILLO_CONFIRM_Y_AVISO); // Desaparece de esa zona para aparecer en otra --> se mueve
+        posY -= 10; // Subimos verticalmente la imagen 10 píxeles
+    }
+
+    // ------ Botón añadir (172x130) ---------
+    // Para superponerse a la última mano y que desaparezca para simular el movimiento
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,380,172,130); // Mostrar añadir (172x130) 
+
+    // Movimiento final de la mano (manoWppt)
+    // manoWppt
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,430,472,120,128,WHITE); // Transparencia manoWppt (120x128)
+    delay(50);
+    //tft.clearArea(420,510,690,528,AMARILLO_CONFIRM_Y_AVISO); // Se borra desde y = 413 para no borrar parte del botón añadir
+    
+}
+/*
+void sin_pulsacion_Botones(bool borrar){
+    if(borrar){
+        // Borrar todo (botón, mano y pulsación)
+        tft.clearArea(410,370,266,620,AMARILLO_CONFIRM_Y_AVISO); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+    }
+    // Mostrar botón añadir (172x130)
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,380,172,130); // Mostrar añadir (172x130) 
+
+    // Mostrar mano (manoWppt)
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,430,472,120,128,WHITE); // Transparencia manoWppt (120x128)
+}
+
+void pulsacion_Botones(){
+    int x1, y1, x2, y2;
+    // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
+    // 1 - Borrar todo (grupo, mano y pulsación)
+    tft.clearArea(410,370,266,620,AMARILLO_CONFIRM_Y_AVISO); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+
+    // 2 - Volver a mostrar botón añadir (172x130)
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,380,172,130); // Mostrar añadir (172x130) en PAGE1
+    
+    // 3 - Pulsación
+    // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
+    // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+    // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+    for (int i = 0; i <= 10; i++) {
+        x1 = 425 - i;   y1 = 383 - i;   
+        x2 = 590 + i;   y2 = 505 + i;
+        tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de añadir
+    }
+    // ----------------------------------------------------------------------------------------------------
+
+    // 4 - Mano
+    // ------------ MANO (120x129) ------------------------------------------------------------------------
+    // Mano (manoWppt) final pulsando
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,430,472,120,128,WHITE); // Transparencia manoWppt (120x128)
+    // ----------------------------------------------------------------------------------------------------
+
+    // 5 - Rayitas pulsación
+    // ------------ RAYITAS (PULSACION) ------------------
+    // Línea izquierda
+    for (int i = 0; i <= 4; i++) {
+        x1 = 448 + i;   y1 = 447;   
+        x2 = 458 + i;   y2 = 467;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
+
+    // Línea central
+    for (int i = 0; i <= 4; i++) {
+        x1 = 468 + i;   y1 = 442;   
+        x2 = 468 + i;   y2 = 462;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
+
+    // Línea derecha
+    for (int i = 0; i <= 4; i++) {
+        x1 = 478 + i;   y1 = 467;   
+        x2 = 488 + i;   y2 = 447;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
+    // ---------------------------------------------------
+}
+*/
+
+
 void add_Plato(){ // Tb PAGE3, pero más abajo ==> HECHO
+    int x1, y1, x2, y2;
+
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
-    tft.clearScreen(AMARILLO_CONFIRM_AVISO); // Fondo verde en PAGE1
+    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_AVISO); 
+    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
     //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
     tft.setCursor(30, 30);
     tft.println("\xBF""EST\xC1"" SEGURO DE QUE QUIERE");
-    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
+    tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-40);
+    //tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-30);
     tft.print("A\xD1""ADIR UN NUEVO PLATO\x3F"""); 
     delay(1000);
     // ----------------------------------------------------------------------------------------------------
 
 
     // ------------ LINEA --------------------------------------------------------------------------------
-    tft.fillRoundRect(252,220,764,228,3,ROJO_TEXTO_CONFIRM_AVISO);
+    tft.fillRoundRect(252,205,764,213,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
+    //tft.fillRoundRect(252,220,764,228,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
     // ----------------------------------------------------------------------------------------------------
+    delay(500);
 
 
     // ----- TEXTO (CONFIRMACIÓN) -------------------------------------------------------------------------
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    tft.setCursor(150, 270);
+    tft.setCursor(150, 245);
+    //tft.setCursor(150, 270);
     tft.println("PARA CONFIRMAR, PULSE DE NUEVO");
-    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()+10);
+    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()-10); // + 10
     tft.print("EL BOT\xD3""N"); 
     // ----------------------------------------------------------------------------------------------------
-
+    delay(500);
 
     // ------------ BOTÓN AÑADIR --------------------------------------------------------------------------
     // Copiar de PAGE3 a PAGE1
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,410,172,130); // Mostrar añadir (172x130) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,380,172,130); // Mostrar añadir (172x130) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,645,0,PAGE1_START_ADDR,SCREEN_WIDTH,420,410,172,130); // Mostrar añadir (172x130) en PAGE1
     delay(800);
     // ----------------------------------------------------------------------------------------------------
 
+    // ------------ DESPLAZAR MANO PARA SIMULAR MOVIMIENTO ------------------------------------------------
+    // MANO por el camino
+    desplazar_mano_Botones();
+    // ----------------------------------------------------------------------------------------------------
     
      // ------------ CUADRADO REDONDEADO (PULSACION) -------------------------------------------------------
+    
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
+    
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados redondeados, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-    tft.drawRoundRect(425,413,590,535,20,RED_BUTTON); // Alrededor de botón
+   /* tft.drawRoundRect(425,413,590,535,20,RED_BUTTON); // Alrededor de botón
     tft.drawRoundRect(424,412,591,536,20,RED_BUTTON); 
     tft.drawRoundRect(423,411,592,537,20,RED_BUTTON); 
     tft.drawRoundRect(422,410,593,538,20,RED_BUTTON); 
@@ -747,54 +898,102 @@ void add_Plato(){ // Tb PAGE3, pero más abajo ==> HECHO
     tft.drawRoundRect(417,405,598,543,20,RED_BUTTON); 
     tft.drawRoundRect(416,404,599,544,20,RED_BUTTON); 
     tft.drawRoundRect(415,403,600,545,20,RED_BUTTON); 
+   */ 
+   for (int i = 0; i <= 10; i++) { // Subido
+        x1 = 425 - i;   y1 = 383 - i;   
+        x2 = 590 + i;   y2 = 505 + i;
+        tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
+    }
+    /*for (int i = 0; i <= 10; i++) {
+        x1 = 425 - i;   y1 = 413 - i;   
+        x2 = 590 + i;   y2 = 535 + i;
+        tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
+    }*/
     // ----------------------------------------------------------------------------------------------------
 
 
-    // ------------ MANO -----------------------------------------------------------------------------------
-    // Cambio colores
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,128,AMARILLO_CONFIRM_AVISO); // Mostrar manoY2 (120x128) en PAGE1
+    // ------------ MANO (120x128) ------------------------------------------------------------------------
+    // Mano con fondo blanco:
+    //      La imagen de la mano no es blanco puro, por eso se puede filtrar el fondo blanco y que se siga viendo
+    //      la mano. Así no aparecen los píxeles de color que se veían en los casos de tener el fondo con color (rojo, verde, amarillo, etc.).
     
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,WHITE); // Mostrar handW (120x129) en PAGE1
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,RED); // manoR (120x129)
-    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,524,0, PAGE1_START_ADDR,SCREEN_WIDTH,420,492,120,129,GREEN_HAND); // manoG (120x129)
+    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,430,472,120,128,WHITE); // Transparencia manoWppt
+    
+    //tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,251,292,PAGE1_START_ADDR,SCREEN_WIDTH,420,472,120,128,WHITE); // Transparencia manoW
     // ----------------------------------------------------------------------------------------------------
+    
 
     // ------------ RAYITAS (PULSACION) --------------------------------------------------------
     // Línea izquierda
-    tft.drawLine(448,355,530,375,RED_BUTTON);
-    tft.drawLine(449,355,531,375,RED_BUTTON);
-    tft.drawLine(450,355,532,375,RED_BUTTON);
-    tft.drawLine(451,355,533,375,RED_BUTTON);
-    tft.drawLine(452,355,534,375,RED_BUTTON);
+    /*tft.drawLine(448,467,458,487,RED_BUTTON);
+    tft.drawLine(449,467,459,487,RED_BUTTON);
+    tft.drawLine(450,467,460,487,RED_BUTTON);
+    tft.drawLine(451,467,461,487,RED_BUTTON);
+    tft.drawLine(452,467,462,487,RED_BUTTON);
+    */
+    for (int i = 0; i <= 4; i++) { // subido
+        x1 = 448 + i;   y1 = 447;   
+        x2 = 458 + i;   y2 = 467;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
+    /*for (int i = 0; i <= 4; i++) {
+        x1 = 448 + i;   y1 = 467;   
+        x2 = 458 + i;   y2 = 487;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }*/
 
     // Línea central
-    tft.drawLine(468,350,468,370,RED_BUTTON);
-    tft.drawLine(469,350,469,370,RED_BUTTON);
-    tft.drawLine(470,350,470,370,RED_BUTTON);   
-    tft.drawLine(471,350,471,370,RED_BUTTON);
-    tft.drawLine(472,350,472,370,RED_BUTTON);
+    /*tft.drawLine(468,462,468,482,RED_BUTTON);
+    tft.drawLine(469,462,469,482,RED_BUTTON);
+    tft.drawLine(470,462,470,482,RED_BUTTON);   
+    tft.drawLine(471,462,471,482,RED_BUTTON);
+    tft.drawLine(472,462,472,482,RED_BUTTON);
+    */
+    for (int i = 0; i <= 4; i++) { // subido
+        x1 = 468 + i;   y1 = 442;   
+        x2 = 468 + i;   y2 = 462;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
+    /*for (int i = 0; i <= 4; i++) {
+        x1 = 468 + i;   y1 = 462;   
+        x2 = 468 + i;   y2 = 482;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }*/
 
     // Línea derecha
-    tft.drawLine(478,375,488,355,RED_BUTTON);
-    tft.drawLine(479,375,489,355,RED_BUTTON);
-    tft.drawLine(480,375,490,355,RED_BUTTON);   
-    tft.drawLine(481,375,491,355,RED_BUTTON);
-    tft.drawLine(482,375,492,355,RED_BUTTON);
+    /*tft.drawLine(478,487,488,467,RED_BUTTON);
+    tft.drawLine(479,487,489,467,RED_BUTTON);
+    tft.drawLine(480,487,490,467,RED_BUTTON);   
+    tft.drawLine(481,487,491,467,RED_BUTTON);
+    tft.drawLine(482,487,492,467,RED_BUTTON);
+    */
+    for (int i = 0; i <= 4; i++) { // subido
+        x1 = 478 + i;   y1 = 467;   
+        x2 = 488 + i;   y2 = 447;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
+    /*for (int i = 0; i <= 4; i++) {
+        x1 = 478 + i;   y1 = 487;   
+        x2 = 488 + i;   y2 = 467;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }*/
     // ----------------------------------------------------------------------------------------------------
-
+/*
     delay(2000);
 
     // ----- TEXTO (PLATO AÑADIDO) -------------------------------------------------------------------------
-    tft.clearScreen(AMARILLO_CONFIRM_AVISO);
+    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO);
     // ------ LINEA ---------
-    tft.fillRoundRect(252,200,764,208,3,ROJO_TEXTO_CONFIRM_AVISO);
+    tft.fillRoundRect(252,200,764,208,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
     // ------ TEXTO ---------
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setCursor(170, 258);
     tft.println("NUEVO PLATO A\xD1""ADIDO");
     // ------ LINEA ---------
-    tft.fillRoundRect(252,380,764,388,3,ROJO_TEXTO_CONFIRM_AVISO);
+    tft.fillRoundRect(252,380,764,388,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
     // ----------------------------------------------------------------------------------------------------
+
+    */
 }
 
 
@@ -2074,7 +2273,8 @@ void loadPicturesShowHourglass(){
 
       // mano con fondo verde ==> usada en grupos
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoGreen);    // Cargar manoG (120x129) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      tft.sdCardDraw16bppBIN256bits(524,0,120,128,fileManoGreenIcon);    // Cargar manoGppt (120x128) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
+      //tft.sdCardDraw16bppBIN256bits(524,0,120,129,fileManoGreen);    // Cargar manoG (120x129) en PAGE3  =>  x  =  <manoG  =  <grupo4(393) + grupo4(130) + 1 = 524   ->   y = 0  
 
       putReloj1(); // Mostrar reloj1 en PAGE1 => borrar PAGE1
     // --------------- FIN ESCOGER GRUPO -----------------------------------------------------------------
@@ -2096,10 +2296,13 @@ void loadPicturesShowHourglass(){
       
       putReloj3(); // Mostrar reloj3 en PAGE1
 
-      // mano con fondo amarillo ==> usada en botones add/delete/save
+      // Mano con fondo blanco: usada en botones add/delete/save
+      //      La imagen de la mano no es blanco puro, por eso se puede filtrar el fondo blanco y que se siga viendo
+      //      la mano. Así no aparecen los píxeles de color, como sí ocurre con los píxeles amarillos de manoY.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
-      //tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoYellow2);    // Cargar manoY2 (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
+      tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoWhiteIcon);    // Cargar manoWppt (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
+      //tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoWhite);    // Cargar manoW (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
+      //tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
 
       putReloj4(); // Mostrar reloj4 en PAGE1
 
