@@ -844,7 +844,7 @@ void actGruposAlimentos(){
 void actStateRaw(){ 
     // Tiempos utilizados para alternar entre dashboard y pantalla de colocar alimento:
     const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos) -> se deja más tiempo para leer ejemplos
-    const unsigned long alimentoInterval = 5000;    // Intervalo de tiempo para pedir escoger crudo o cocinado (3.5 segundos)
+    const unsigned long alimentoInterval = 5000;    // Intervalo de tiempo para pedir colocar alimento (5 segundos)
 
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
     unsigned long currentTime;
@@ -909,7 +909,7 @@ void actStateRaw(){
 void actStateCooked(){ 
     // Tiempos utilizados para alternar entre dashboard y pantalla de colocar alimento:
     const unsigned long dashboardInterval = 10000;  // Intervalo de tiempo para mostrar el dashboard (10 segundos) -> se deja más tiempo para leer ejemplos
-    const unsigned long alimentoInterval = 3500;    // Intervalo de tiempo para pedir escoger crudo o cocinado (3.5 segundos)
+    const unsigned long alimentoInterval = 5000;    // Intervalo de tiempo para pedir colocar alimento (5 segundos)
 
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
     unsigned long currentTime;
@@ -975,20 +975,19 @@ void actStateWeighted(){
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
 
-        if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // ==> Si se viene de STATE_groupA o STATE_groupB, donde se ha tarado.
-            tarado = false;                                                 // Desactivar flag de haber 'tarado' 
-        }
-
-        if(state_prev == STATE_weighted){ // Si se está modificando el peso, solo se modifican Zona 3 (alimento actual) y Zona 4 (Comida actual).
+        // ----- INFO DE PANTALLA -------------------------
+        // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria (p. ej. pedir alimento). 
+        // Si se estaba mostrando el dashboard, solo se modifican las zonas 3 y 4 con los valores correspondientes.
+        if(showingTemporalScreen) showDashboardStyle2();  
+        else{
             printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
             printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
-        } 
-        else showDashboardStyle2();    // => Si se viene de cualquier otro estado, se actualiza la pantalla completa (dashboard estilo 2) por si se viene de
-                                       //   error, cancelación o aviso.
+        }
+        // ----- FIN INFO DE PANTALLA ---------------------
 
-        doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
-                                                                            // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
+        doneState = true;                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                                    // cada vez que se entre a esta función debido al loop de Arduino.
+                                                    // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 }
 

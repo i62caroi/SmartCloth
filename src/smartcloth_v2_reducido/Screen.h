@@ -208,6 +208,8 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 // Pulsación en pantalla de escoger grupo
 #define   NO_BORRAR_PULSACION_GRUPOS  0
 #define   BORRAR_PULSACION_GRUPOS     1
+#define   NO_PULSACION   0
+#define   PULSACION      1
 
 // Lenta aparición de imágenes: 
 #define   SLOW_APPEAR_COCINADO   1
@@ -249,7 +251,7 @@ void    pedirRecipiente();                // Pedir colocar recipiente          =
 void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
 // -- Grupo --------------
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
-void    desplazar_mano_Grupos();          // Desplazar imagen de "mano" por la pantalla hasta grupo3
+bool    desplazar_mano_Grupos();          // Desplazar imagen de "mano" por la pantalla hasta grupo3. Devuelve bool para poder salir de pedirGrupoAlimentos() si hay interrupción en esta.
 void    sin_pulsacion_Grupos(bool borrar);  // Mano sobre grupo3 sin pulsación ("borrar" cuando se quiera quitar pulsación previa)
 void    pulsacion_Grupos();               // Pulsación de mano en grupo3
 // -- Procesamiento ------
@@ -1109,10 +1111,13 @@ void recipienteColocado(){
 ----------------------------------------------------------------------------------------------------------*/
 void pedirGrupoAlimentos(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+    bool borrarZonaGrupo3 = NO_BORRAR_PULSACION_GRUPOS;
+    bool pulsacion = NO_PULSACION;
 
     // ***** FONDO VERDE ***********
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
+
 
     // ******* TEXTO (INTERNAL FIXED 12x24 X3) ***********************************************************
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
@@ -1126,6 +1131,7 @@ void pedirGrupoAlimentos(){
     if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
     // ****************************************************************************************************
 
+
     // ************ LINEAS ********************************************************************************
     tft.fillRoundRect(0,250,220,258,3,WHITE);
     tft.fillRoundRect(0,450,512,458,3,WHITE);
@@ -1133,6 +1139,7 @@ void pedirGrupoAlimentos(){
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(800)) return;
     // ****************************************************************************************************
+
 
     // ************ GRUPOS ********************************************************************************
     // 30 pixeles entre cuadro y cuadro
@@ -1166,46 +1173,27 @@ void pedirGrupoAlimentos(){
 
     // ************ DESPLAZAR MANO PARA SIMULAR MOVIMIENTO ************************************************
     // MANO por el camino
-    desplazar_mano_Grupos();
+    if(desplazar_mano_Grupos()) return; // Si ha ocurrido interrupción mientras se desplazaba la mano, 
+                                        // se sale de la función.
     // ****************************************************************************************************
 
 
-    // ******** SIN PULSACIÓN *****************************************************************************
-    sin_pulsacion_Grupos(NO_BORRAR_PULSACION_GRUPOS); // false = no borrar
+    // ******** ALTERNANCIA PULSACIÓN *********************************************************************
+    for(int i = 0; i < 5; i++){
+        if(!pulsacion){
+          sin_pulsacion_Grupos(borrarZonaGrupo3); // false = no borrar. Solo está a false la primera vez.
+          if(!borrarZonaGrupo3) borrarZonaGrupo3 = BORRAR_PULSACION_GRUPOS;
+        }
+        else {
+          pulsacion_Grupos();
+        }
+        if(i < 4){ // No hacer el delay si es la última pulsación/no pulsación (debería ser no pulsación)
+            // ----- ESPERA E INTERRUPCION ----------------
+            if(doubleDelayAndCheckInterrupt(1000)) return;
+        }
+        pulsacion = !pulsacion;
+    }
     // ****************************************************************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
-
-
-    // ******** 1º PULSACIÓN ******************************************************************************
-    pulsacion_Grupos();
-    // ****************************************************************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
-
-
-    // ******** SIN PULSACIÓN *****************************************************************************
-    sin_pulsacion_Grupos(BORRAR_PULSACION_GRUPOS); 
-    // ****************************************************************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
-
-
-    // ******** 2º PULSACIÓN ******************************************************************************
-    pulsacion_Grupos();
-    // ****************************************************************************************************
-
-    // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
-
-
-    // ******** SIN PULSACIÓN *****************************************************************************
-    sin_pulsacion_Grupos(BORRAR_PULSACION_GRUPOS); 
-    // ****************************************************************************************************
-    
 
 }
 
@@ -1213,58 +1201,34 @@ void pedirGrupoAlimentos(){
    desplazar_mano_Grupos(): Desplazar imagen de "mano" por la pantalla simulando movimiento hasta grupo3.
 ----------------------------------------------------------------------------------------------------------*/
 
-void desplazar_mano_Grupos(){
+bool desplazar_mano_Grupos(){
+    int alto = 127;
+    int posY = 480;
+
     // MANO por el camino
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,480,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,480,674,607,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,470,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,470,674,597,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,460,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,460,674,587,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,450,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,450,674,577,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,440,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,440,674,567,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,430,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,430,674,557,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,420,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,420,674,547,VERDE_PEDIR); 
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,410,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,413,674,537,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo4
-    //
-    // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
-    //
+    while(posY >= 410){
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,posY,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+        delay(50);
+        if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del grupo3 que está debajo
+        tft.clearArea(556,posY,674,posY + alto,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
+        posY -= 10; // Subimos verticalmente la imagen 10 píxeles
+        // -------- INT -------------------
+        if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
+    }
+
     // ------ Grupo 3 (130x125) ---------
     // Para superponerse a la última mano y que desaparezca para simular el movimiento
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
-    //
+    
+    // Movimiento final de la mano
     tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,400,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
     delay(50);
     tft.clearArea(556,413,674,527,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo4
-    //
+    
     // -------- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
+    if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
 
-    // En la función principal escoger_grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
+    // En la función principal escoger_grupos()->sin_pulsacion_Grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
 }
 
 /*---------------------------------------------------------------------------------------------------------
@@ -1290,6 +1254,8 @@ void sin_pulsacion_Grupos(bool borrar){
 ----------------------------------------------------------------------------------------------------------*/
 
 void pulsacion_Grupos(){
+    int x1, y1, x2, y2;
+
     // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
     // 1 - Borrar todo (grupo, mano y pulsación)
     tft.clearArea(546,278,690,527,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
@@ -1301,17 +1267,11 @@ void pulsacion_Grupos(){
     // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-    tft.drawRect(556,288,680,413,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(555,287,681,414,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(554,286,682,415,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(553,285,683,416,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(552,284,684,417,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(551,283,685,418,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(550,282,686,419,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(549,281,687,420,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(548,280,688,421,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(547,279,689,422,RED_BUTTON); // Alrededor de grupo3
-    tft.drawRect(546,278,690,423,RED_BUTTON); // Alrededor de grupo3
+    for (int i = 0; i <= 10; i++) {
+        x1 = 556 - i;   y1 = 288 - i;   
+        x2 = 680 + i;   y2 = 413 + i;
+        tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
+    }
     // ----------------------------------------------------------------------------------------------------
 
     // 4 - Mano
@@ -1323,25 +1283,25 @@ void pulsacion_Grupos(){
     // 5 - Rayitas pulsación
     // ------------ RAYITAS (PULSACION) ------------------
     // Línea izquierda
-    tft.drawLine(584,355,594,375,RED_BUTTON);
-    tft.drawLine(585,355,595,375,RED_BUTTON);
-    tft.drawLine(586,355,596,375,RED_BUTTON);
-    tft.drawLine(587,355,597,375,RED_BUTTON);
-    tft.drawLine(588,355,598,375,RED_BUTTON);
+    for (int i = 0; i <= 4; i++) {
+        x1 = 584 + i;   y1 = 355;   
+        x2 = 594 + i;   y2 = 375;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
 
     // Línea central
-    tft.drawLine(604,350,604,370,RED_BUTTON);
-    tft.drawLine(605,350,605,370,RED_BUTTON);
-    tft.drawLine(606,350,606,370,RED_BUTTON);
-    tft.drawLine(607,350,607,370,RED_BUTTON);
-    tft.drawLine(608,350,608,370,RED_BUTTON);
+    for (int i = 0; i <= 4; i++) {
+        x1 = 604 + i;   y1 = 350;   
+        x2 = 604 + i;   y2 = 370;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
 
     // Línea derecha
-    tft.drawLine(614,375,624,355,RED_BUTTON);
-    tft.drawLine(615,375,625,355,RED_BUTTON);
-    tft.drawLine(616,375,626,355,RED_BUTTON);
-    tft.drawLine(617,375,627,355,RED_BUTTON);
-    tft.drawLine(618,375,628,355,RED_BUTTON);
+    for (int i = 0; i <= 4; i++) {
+        x1 = 614 + i;   y1 = 375;   
+        x2 = 624 + i;   y2 = 355;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
     // ---------------------------------------------------
 }
 /*-------------------------------- FIN ESCOGER GRUPO ----------------------------------------------------*/
@@ -1938,7 +1898,7 @@ void slowAppearanceAndDisappareanceProcesamiento(int option){
     uint8_t i,j;
     switch(option){
         case 1: // Desaparecer CRUDO y aparecer COCINADO 
-            for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
+            for (i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
                 // Mostrar crudoGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
                 // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
@@ -1954,7 +1914,7 @@ void slowAppearanceAndDisappareanceProcesamiento(int option){
             break;
 
         case 2: // Desaparecer COCINADO y aparecer CRUDO
-            for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
+            for (i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
                 // Mostrar cociGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
                 // Mostrar crudoGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.

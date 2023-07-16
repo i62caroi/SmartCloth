@@ -69,9 +69,9 @@ void setup() {
     loadPicturesShowHourglass();
     
     //pantalla_inicial(); // OK
-    //select_Grupo(); // OK con movimiento de mano y 2º pulsación
+    select_Grupo(); // OK con movimiento de mano y 2º pulsación
     //crudo_cocinado(); // OK con 3º alternancia y aparición/desaparición paulatinas
-    colocar_alimento(); // OK con aparición paulatina
+    //colocar_alimento(); // OK con aparición paulatina
 
     //add_Plato();
 
@@ -298,7 +298,29 @@ void select_Grupo(){ // PAGE3 (OK) ==> HECHO
     desplazar_mano_Grupos();
     // ----------------------------------------------------------------------------------------------------
 
+    bool borrarZonaGrupo3 = false;
+    bool pulsacion = false;
 
+    for(int i = 0; i < 5; i++){
+        if(!pulsacion){
+          Serial.println("No pulsacion");
+          sin_pulsacion_Grupos(borrarZonaGrupo3); // false = no borrar. Solo está a false la primera vez.
+          if(!borrarZonaGrupo3) borrarZonaGrupo3 = true;
+        }
+        else {
+          Serial.println("Pulsacion");
+          pulsacion_Grupos();
+        }
+        if(i < 4){ // No hacer el delay si es la última pulsación/no pulsación (debería ser no pulsación)
+            // Dividir 1 seg de delay en partes para chequear interrupciones mientras
+            delay(500);
+            // checkinterrupt
+            delay(500);
+        }
+        pulsacion = !pulsacion;
+    }
+
+/*
     // -------- SIN PULSACIÓN -----------------------------------------------------------------------------
     sin_pulsacion_Grupos(false); // false = no borrar
     // ----------------------------------------------------------------------------------------------------
@@ -342,50 +364,30 @@ void select_Grupo(){ // PAGE3 (OK) ==> HECHO
     // -------- SIN PULSACIÓN -----------------------------------------------------------------------------
     sin_pulsacion_Grupos(true); // true = borrar
     // ----------------------------------------------------------------------------------------------------
-    
+    */
 }
 
 void desplazar_mano_Grupos(){
+    int alto = 127;
+    int posY = 480;
+
     // MANO por el camino
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,480,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,480,674,607,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,470,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,470,674,597,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,460,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,460,674,587,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,450,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,450,674,577,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,440,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,440,674,567,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,430,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,430,674,557,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,420,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,420,674,547,VERDE_PEDIR); 
-    //
-    tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,410,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
-    delay(50);
-    tft.clearArea(556,413,674,537,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo4
-    //
+    while(posY >= 410){
+        tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,posY,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
+        delay(50);
+        if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del grupo3 que está debajo
+        tft.clearArea(556,posY,674,posY + alto,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
+        posY -= 10; // Subimos verticalmente la imagen 10 píxeles
+    }
+
     // ------ Grupo 3 (130x125) ---------
     // Para superponerse a la última mano y que desaparezca para simular el movimiento
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
-    //
+
+    // Movimiento final de la mano
     tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,556,400,118,127,VERDE_PEDIR); // Mostrar manoG (120x129) en PAGE1
     delay(50);
-    tft.clearArea(556,413,674,527,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo4
+    tft.clearArea(556,413,674,527,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del grupo3
 
     // En la función principal escoger_grupos() se vuelve a mostrar grupo3 para superponerlo a la última mano
 }
@@ -403,6 +405,7 @@ void sin_pulsacion_Grupos(bool borrar){
 }
 
 void pulsacion_Grupos(){
+    int x1, y1, x2, y2;
     // ------------- 1º PULSACIÓN ---------------------------------------------------------------------------------------------------------------------
     // 1 - Borrar todo (grupo, mano y pulsación)
     tft.clearArea(546,278,690,527,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
@@ -414,7 +417,7 @@ void pulsacion_Grupos(){
     // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
     // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
     // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-    tft.drawRect(556,288,680,413,RED_BUTTON); // Alrededor de grupo3
+   /* tft.drawRect(556,288,680,413,RED_BUTTON); // Alrededor de grupo3
     tft.drawRect(555,287,681,414,RED_BUTTON); // Alrededor de grupo3
     tft.drawRect(554,286,682,415,RED_BUTTON); // Alrededor de grupo3
     tft.drawRect(553,285,683,416,RED_BUTTON); // Alrededor de grupo3
@@ -425,6 +428,13 @@ void pulsacion_Grupos(){
     tft.drawRect(548,280,688,421,RED_BUTTON); // Alrededor de grupo3
     tft.drawRect(547,279,689,422,RED_BUTTON); // Alrededor de grupo3
     tft.drawRect(546,278,690,423,RED_BUTTON); // Alrededor de grupo3
+*/
+
+    for (int i = 0; i <= 10; i++) {
+        x1 = 556 - i;   y1 = 288 - i;   
+        x2 = 680 + i;   y2 = 413 + i;
+        tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
+    }
     // ----------------------------------------------------------------------------------------------------
 
     // 4 - Mano
@@ -436,25 +446,43 @@ void pulsacion_Grupos(){
     // 5 - Rayitas pulsación
     // ------------ RAYITAS (PULSACION) ------------------
     // Línea izquierda
-    tft.drawLine(584,355,594,375,RED_BUTTON);
+    /*tft.drawLine(584,355,594,375,RED_BUTTON);
     tft.drawLine(585,355,595,375,RED_BUTTON);
     tft.drawLine(586,355,596,375,RED_BUTTON);
     tft.drawLine(587,355,597,375,RED_BUTTON);
     tft.drawLine(588,355,598,375,RED_BUTTON);
+    */
+    for (int i = 0; i <= 4; i++) {
+        x1 = 584 + i;   y1 = 355;   
+        x2 = 594 + i;   y2 = 375;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
 
     // Línea central
-    tft.drawLine(604,350,604,370,RED_BUTTON);
+    /*tft.drawLine(604,350,604,370,RED_BUTTON);
     tft.drawLine(605,350,605,370,RED_BUTTON);
     tft.drawLine(606,350,606,370,RED_BUTTON);
     tft.drawLine(607,350,607,370,RED_BUTTON);
     tft.drawLine(608,350,608,370,RED_BUTTON);
+    */
+    for (int i = 0; i <= 4; i++) {
+        x1 = 604 + i;   y1 = 350;   
+        x2 = 604 + i;   y2 = 370;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
 
     // Línea derecha
-    tft.drawLine(614,375,624,355,RED_BUTTON);
+    /*tft.drawLine(614,375,624,355,RED_BUTTON);
     tft.drawLine(615,375,625,355,RED_BUTTON);
     tft.drawLine(616,375,626,355,RED_BUTTON);
     tft.drawLine(617,375,627,355,RED_BUTTON);
     tft.drawLine(618,375,628,355,RED_BUTTON);
+    */
+    for (int i = 0; i <= 4; i++) {
+        x1 = 614 + i;   y1 = 375;   
+        x2 = 624 + i;   y2 = 355;
+        tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+    }
     // ---------------------------------------------------
 }
 
@@ -534,35 +562,6 @@ void crudo_cocinado(){ // Tb PAGE3, pero más a la derecha
 }
 
 
-void mostrarOpcionProcesamiento(int option){
-    switch(option){
-        case 1: // Cocinado
-            /*
-            // Borrar imagen crudo 1 de la page1. Se "borra" aunque no haya nada para simplificar función
-            slowDisappearance(2); // Desaparecer crudo
-            tft.clearArea(500,280,724,480,VERDE_PEDIR); 
-            // Mostrar cociGra
-            slowAppearance(1); // option = 1 --> imagen cocinado con 16/32 a 7/32 de opacidad
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-            */
-            slowAppearanceAndDisappareance(1); // Desaparecer CRUDO y aparecer COCINADO 
-            break;
-
-        case 2: // Crudo
-            /*
-            // Borrar imagen cocinado 1 de la page1
-            slowDisappearance(1); // Desaparecer cocinado
-            tft.clearArea(280,280,497,470,VERDE_PEDIR); 
-            // Mostrar crudoGra
-            slowAppearance(2); // option = 2 --> imagen crudo con 16/32 a 7/32 de opacidad
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
-            */
-            slowAppearanceAndDisappareance(2); // Desaparecer COCINADO y aparecer CRUDO
-            break;
-
-        default: break;
-    }
-}
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- FIN CRUDO/COCINADO --------------------------------------------------------------------------------------------------------------------------------------
@@ -595,7 +594,6 @@ void slowDisappearance(int option){
 }
 
 void slowAppearanceAndDisappareanceProcesamiento(int option){
-    uint8_t i,j;
     switch(option){
         case 1: // Desaparecer CRUDO y aparecer COCINADO 
             for (int i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
@@ -625,9 +623,6 @@ void slowAppearanceAndDisappareanceProcesamiento(int option){
     }
 }
 
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-//----------------------------- COLOCAR ALIMENTO ----------------------------------------------------------------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 void slowAppearanceImage(int option){
     uint8_t i;
     switch(option){
@@ -639,15 +634,6 @@ void slowAppearanceImage(int option){
                 delay(10);
             }
             break;
-
-        /*case 2: // Crudo
-            for(i = 24; i > 3; i--){
-                // Mostrar crudoGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
-                // i = 16 --> RA8876_ALPHA_OPACITY_16
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
-                delay(50);
-            }
-            break;*/
 
         case 2: // Scale
             for(i = 30; i >= 4; i--){
@@ -662,6 +648,10 @@ void slowAppearanceImage(int option){
     }
     
 }
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- COLOCAR ALIMENTO ----------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void colocar_alimento(){ // PAGE3 (OK)
 
