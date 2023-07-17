@@ -267,8 +267,8 @@ void    showAccionCancelada();            // Mensaje general de acción cancelad
 void    showError(int option);            // Pantalla de error con mensaje según estado 
 void    showWarning(int option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Aparición/Desaparición imágenes --
-void    slowAppearanceImage(int option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
-void    slowAppearanceAndDisappareanceProcesamiento(int option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
+bool    slowAppearanceImage(int option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
+bool    slowAppearanceAndDisappareanceProcesamiento(int option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
 // --- CARGA DE IMÁGENES ---
 void    loadPicturesShowHourglass();      // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloj de arena (hourglass)
 void    putReloj1();
@@ -1224,6 +1224,8 @@ void pedirGrupoAlimentos(){
 
 /*---------------------------------------------------------------------------------------------------------
    desplazar_mano(): Desplazar imagen de "mano" por la pantalla simulando movimiento hasta botón correspondiente.
+        Return:   true: ha habido interrupción    false: no ha habido interrupción
+            Devuelve bool para salir de la función que llamó de desplazar_mano() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
 
 bool desplazar_mano(int option){
@@ -1578,9 +1580,10 @@ void pedirProcesamiento(){
     // ******** BOTONES ***********************************************************************************
     // ******** 1º ALTERNANCIA ***********************************
     // Apareciendo imagen cocinado
-    slowAppearanceImage(SLOW_APPEAR_COCINADO); // Imagen cocinado apareciendo
+    if(slowAppearanceImage(SLOW_APPEAR_COCINADO)) return; // Si ha ocurrido interrupción mientras aparecía la imagen de cocinado, 
+                                                          // se sale de la función.
     // ----- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) -> ¿Necesario si se hace el check al mostrar imagen?
     // Mostrar COCINADO
     tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
     
@@ -1588,17 +1591,20 @@ void pedirProcesamiento(){
     if(doubleDelayAndCheckInterrupt(1000)) return;
 
     // Mostrar CRUDO
-    slowAppearanceAndDisappareanceProcesamiento(SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO); // Desaparecer COCINADO y aparecer CRUDO
+    if(slowAppearanceAndDisappareanceProcesamiento(SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO)) return; 
+            // Si ha ocurrido interrupción mientras aparecía la imagen de crudo y desaparecía la de cocinado, 
+            // se sale de la función.
     
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(1000)) return; 
     // ***********************************************************
 
 
     // ******** 2º Y 3º ALTERNANCIAS ***********************************
     for(uint8_t i = 0; i < 2; i++){ // 2 alternancias más
         for(uint8_t j = 1; j <= 2; j++){
-            slowAppearanceAndDisappareanceProcesamiento(j); // j = 1 --> Desaparecer CRUDO y aparecer COCINADO  |  j = 2 -->  Desaparecer COCINADO y aparecer CRUDO
+            if(slowAppearanceAndDisappareanceProcesamiento(j)) return;  // j = 1 --> Desaparecer CRUDO y aparecer COCINADO 
+                                                                        // j = 2 --> Desaparecer COCINADO y aparecer CRUDO
             // ----- ESPERA E INTERRUPCION ----------------
             if(doubleDelayAndCheckInterrupt(1000)) return;
         }
@@ -1645,10 +1651,11 @@ void pedirAlimento(){
       
     // ************ SCALE *********************************************************************************
     // Imagen scale 
-    slowAppearanceImage(SLOW_APPEAR_SCALE); // Imagen de scale apareciendo
+    if(slowAppearanceImage(SLOW_APPEAR_SCALE)) return; // Imagen de scale apareciendo
     // ----- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149); // Mostrar scale (150x150) en PAGE1
+    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) -> ¿Necesario si se hace el check al mostrar imagen?
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,146,147); // Mostrar scaleG (150x150) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149); 
     // **************************************************************************************************** 
     
     // ----- ESPERA E INTERRUPCION ----------------
@@ -2077,8 +2084,11 @@ void showError(int option){
                           apareciendo poco a poco en pantalla cuando corresponda.
         Parámetros: 
             - option -> 1: cocinado  2: scale
+
+        Return:   true: ha habido interrupción    false: no ha habido interrupción
+            Devuelve bool para salir de la función que llamó de slowAppearanceImage() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
-void slowAppearanceImage(int option){
+bool slowAppearanceImage(int option){
     uint8_t i;
     switch(option){
         case 1: // Cocinado
@@ -2087,7 +2097,7 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
                 delay(10);
                 // ----- INT -------------------
-                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
             break;
 
@@ -2097,12 +2107,15 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149,i);
                 delay(10);
                 // ----- INT -------------------
-                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
             break;
 
         default: break;
     }
+
+    return false; // Si no ha ocurrido ninguna interrupción mientras aparecía la imagen,
+                  // se continúa con la función que llamó a esta.
 }
 
 
@@ -2111,8 +2124,11 @@ void slowAppearanceImage(int option){
                                                   o viceversa.
         Parámetros: 
             - option -> 1: desaparecer crudo y aparecer cocinado    2: desaparecer cocinado y aparecer crudo
+
+        Return:   true: ha habido interrupción    false: no ha habido interrupción
+            Devuelve bool para salir de la función que llamó de slowAppearanceAndDisappareanceProcesamiento() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
-void slowAppearanceAndDisappareanceProcesamiento(int option){
+bool slowAppearanceAndDisappareanceProcesamiento(int option){
     uint8_t i,j;
     switch(option){
         case 1: // Desaparecer CRUDO y aparecer COCINADO 
@@ -2123,12 +2139,12 @@ void slowAppearanceAndDisappareanceProcesamiento(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,j);
                 delay(10);
                 // ----- INT -------------------
-                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
             tft.clearArea(500,280,724,480,VERDE_PEDIR); // Borrar crudoGra
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
             // ----- INT -------------------
-            if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             break;
 
         case 2: // Desaparecer COCINADO y aparecer CRUDO
@@ -2139,16 +2155,19 @@ void slowAppearanceAndDisappareanceProcesamiento(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,j);
                 delay(10);
                 // ----- INT -------------------
-                if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
             tft.clearArea(280,280,497,470,VERDE_PEDIR); // Borrar cociGra
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
             // ----- INT -------------------
-            if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             break;
 
         default: break;
     }
+
+    return false; // Si no ha ocurrido ninguna interrupción mientras aparecían/desaparecían las imágenes,
+                  // se continúa con la función que llamó a esta.
 }
 
 
@@ -2398,7 +2417,7 @@ void loadPicturesShowHourglass(){
     // -------------- COLOCAR ALIMENTO -------------------------------------------------------------------
       // scale
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      tft.sdCardDraw16bppBIN256bits(372,292,150,150,fileScale); // Cargar scale (150x150) en PAGE3 => x =  <manoY(251) + manoY(120) + 1 = 372   ->  y = 292
+      tft.sdCardDraw16bppBIN256bits(372,292,150,150,fileScale); // Cargar scaleG (150x150) en PAGE3 => x =  <manoY(251) + manoY(120) + 1 = 372   ->  y = 292
 
       putRelojGirado2(); // Mostrar relGir2 en PAGE1 
     // ----------- FIN COLOCAR ALIMENTO ------------------------------------------------------------------
