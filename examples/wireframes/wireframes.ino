@@ -107,6 +107,7 @@ void pedirConfirmacion_DELETE_CSV(){
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
     tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()+50); tft.println("GRUPO 20 PARA CONFIRMAR");
+    tft.setCursor(220, tft.getCursorY() + tft.getTextSizeY()+70); tft.println("ESPERE 5 SEGUNDOS PARA CANCELAR");
     // -------------------------------------------------------------------
 }
 

@@ -3,7 +3,7 @@
  * @brief Máquina de Estados (State Machine) de SmartCloth
  *
  * @author Irene Casares Rodríguez
- * @date 11/07/23
+ * @date 17/07/23
  * @version 1.0
  *
  *  Este archivo contiene las definiciones de los estados y eventos, además de las funciones
@@ -32,7 +32,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 140
+#define RULES 147   // HASTA AHORA ERAN 140. 
 
 // --- PEDIR CONFIRMACIÓN ---
 #define  ASK_CONFIRMATION_ADD     1
@@ -113,7 +113,11 @@ typedef enum {
               STATE_saved         =   (13),   // comida guardada
               STATE_ERROR         =   (14),   // Estado ficticio de error (acción incorrecta)
               STATE_CANCEL        =   (15),   // Estado ficticio de Cancelación
-              STATE_AVISO         =   (16)    // Estado ficticio de Aviso
+              STATE_AVISO         =   (16),   // Estado ficticio de Aviso
+
+              STATE_DELETE_CSV_CHECK    =   (17),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.
+              STATE_DELETED_CSV         =   (18)    // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
+                                                    //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
 } states_t;
 
 
@@ -156,7 +160,8 @@ typedef enum {
               GO_TO_DELETED         =   (26),   // Evento ficticio para volver a STATE_deleted porque saltó un error
               GO_TO_SAVE_CHECK      =   (27),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
               GO_TO_SAVED           =   (28),   // Evento ficticio para volver a STATE_saved porque saltó un error 
-              GO_TO_CANCEL          =   (29)    // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
+              GO_TO_CANCEL          =   (29),   // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
+              DELETE_CSV            =   (30)    // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
 } event_t;
 
 
@@ -384,6 +389,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_CANCEL,STATE_weighted,GO_TO_WEIGHTED},   // Regresar a STATE_weighted tras cancelar add/delete/save iniciada desde STATE_weighted
                                         {STATE_CANCEL,STATE_ERROR,ERROR},               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría e
                                                                                         // en bucle marcando error.                  
+                                                                                        // 
+                                        {STATE_CANCEL,STATE_DELETE_CSV_CHECK,DELETE_CSV},  // BORRAR FICHERO CSV. EL USUARIO NO DEBERÍA ACTIVAR EL EVENTO. SOLO PARA LAS PRUEBAS.
                                         // -----------------------
 
 
@@ -391,8 +398,21 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_AVISO,STATE_groupA,GO_TO_GROUP_A},     // Regresar a groupA tras 3 segundos de warning
                                         {STATE_AVISO,STATE_groupB,GO_TO_GROUP_B},     // Regresar a groupB tras 3 segundos de warning
                                         {STATE_AVISO,STATE_Empty,GO_TO_EMPTY},        // Regresar a Empty tras 3 segundos de warning
-                                        {STATE_AVISO,STATE_ERROR,ERROR}               // Acción incorrecta durante aviso. Cualquier cosa es acción incorrecta. Igual que en Cancelar.
+                                        {STATE_AVISO,STATE_ERROR,ERROR},               // Acción incorrecta durante aviso. Cualquier cosa es acción incorrecta. Igual que en Cancelar.
                                         // -----------------------
+
+
+                                         // --- CHECK DELETE CSV ---
+                                        {STATE_DELETE_CSV_CHECK,STATE_DELETED_CSV,DELETE_CSV},   // CONFIRMAR BORRAR CSV
+                                        {STATE_DELETE_CSV_CHECK,STATE_Empty,GO_TO_EMPTY},         // Regresar a STATE_Empty tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_Empty
+                                        {STATE_DELETE_CSV_CHECK,STATE_raw,GO_TO_RAW},             // Regresar a STATE_raw tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_raw   
+                                        {STATE_DELETE_CSV_CHECK,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_cooked
+                                        {STATE_DELETE_CSV_CHECK,STATE_weighted,GO_TO_WEIGHTED},   // Regresar a STATE_weighted tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_weighted
+                                        // --------------------------
+
+                                        // --- FICHERO CSV BORRADO ---
+                                        {STATE_DELETED_CSV,STATE_Empty,GO_TO_EMPTY}         // Regresar a STATE_Empty tras BORRAR CSV (siempre iniciado desde STATE_Empty)
+                                        // ---------------------
                                       };
 
 
@@ -428,6 +448,7 @@ bool keepErrorScreen = false; // Mantener pantalla de error cometido por colocar
                               // se retire el plato para comenzar de nuevo.
 
 bool flagComidaSaved = false;
+bool flagFicheroCSVBorrado = false;
 // ------ FIN VARIABLES DE EVENTOS ----------------------------------------------------
 
 
@@ -485,6 +506,9 @@ void    actStateSaved();                               // Actividades STATE_save
 void    actStateERROR();                               // Actividades STATE_ERROR
 void    actStateCANCEL();                              // Actividades STATE_CANCEL
 void    actStateAVISO();                               // Actividades STATE_AVISO
+
+void    actState_DELETE_CSV_CHECK();       // Actividades STATE_DELETE_CSV_CHECK
+void    actState_DELETED_CSV();            // Actividades STATE_DELETED_CSV
 
 // --- Actividades estado actual ---
 void    doStateActions();                              // Actividades según estado actual
@@ -564,6 +588,17 @@ void actStateEmpty(){
     if(!doneState){
         if(state_prev != STATE_Empty){
             Serial.println(F("\nSTATE_Empty...")); 
+
+            // ----- RESETEAR COPIA SI SE HA BORRADO CSV -----------------
+            if(flagFicheroCSVBorrado){
+                comidaActualCopia.restoreComida();   
+                flagFicheroCSVBorrado = false;
+                flagComidaSaved = false; // Por si he hecho el borrado justo tras guardar
+            } 
+            // -----------------------------------------------------------
+
+
+            
 
             tareScale();
             
@@ -692,7 +727,9 @@ void actStatePlato(){
             // sino qye ya se está haciendo la nueva comida, que aún está a 0.
             // 
             if((comidaActual.isComidaEmpty() == true) and (comidaActualCopia.isComidaEmpty() == false)) comidaActualCopia.restoreComida();   
+
             if(flagComidaSaved) flagComidaSaved = false;  // Si se había guardado comida, se muestra "Comida guardada" en lugar de "Comida actual" en printZona3()
+                                                          // en STATE_Empty, por eso ahora se resetea la flag.
             // ----- FIN REINICIAR COPIA DE COMIDA GUARDADA ----------------------
 
             // ----- INFO INICIAL DE PANTALLA -------------------------
@@ -1868,7 +1905,7 @@ void actStateCANCEL(){
 
     // ----- TIEMPO DE ESPERA -------------------------------
     currentTime = millis();
-    if ((currentTime - previousTimeCancel) > 1000) {    // Tras 3 segundos mostrando acción cancelada...
+    if ((currentTime - previousTimeCancel) > 1000) {    // Tras 1 segundo mostrando acción cancelada...
         // Regreso al estado desde donde se inició la acción ahora cancelada.
 
         // Ultimo estado válido puede ser Empty, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
@@ -1885,6 +1922,21 @@ void actStateCANCEL(){
                   
     }
     // ----- FIN TIEMPO DE ESPERA ---------------------------
+    
+
+    // ----- EVENTOS OCURRIDOS DURANTE CANCELACIÓN ----------
+    // La pantalla solo dura 1 segundo, no debería darle tiempo a los usuarios hacer nada. Además, no deben hacer nada.
+    // Solo se va a gestionar el pulsar grupo1 para acceder al menú escondido de borrar el fichero csv.
+
+    else if(buttonInterruptOccurred()){ // Evento de interrupción por botonera durante pantalla de cancelación. 
+        checkAllButtons(); // Qué botón se ha pulsado
+        if(buttonGrande == 1){ // Se ha pulsado grupo1
+            Serial.print(F("\ngrupo1 pulsado durante CANCELAR. Entrando a menú de BORRAR CSV..."));   
+            addEventToBuffer(DELETE_CSV);      
+            flagEvent = true;  
+        }
+    }
+    // ----- FIN EVENTOS OCURRIDOS DURANTE CANCELACIÓN ------
 }
 
 
@@ -1942,6 +1994,138 @@ void actStateAVISO(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   actState_DELETE_CSV_CHECK(): Acciones del STATE_DELETE_CSV_CHECK
+----------------------------------------------------------------------------------------------------------*/
+void actState_DELETE_CSV_CHECK(){ 
+
+    // ------------ FUNCIONAMIENTO BORRADO FICHERO CSV ----------------------------------------------------
+    //
+    // Durante la pantalla de "Acción cancelada", que solo se muestra durante 1 segundo, los usuarios no deberían hacer nada.
+    // Aprovechando esto, se va a introducir una función escondida para borrar el contenido del fichero csv que guarda la info
+    // de las comidas. Así, el "Acumulado hoy" quedará vacío para el próximo paciente. 
+    //
+    // ESTO SOLO SE VA A REALIZAR EN LAS PRUEBAS, PARA AGILIZAR EL RESETEO DEL FICHERO ENTRE UN PACIENTE Y OTRO.
+    // 
+    // La idea es, durante la pantalla de cancelación, pulsar el botón de grupo1, accediendo a STATE_DELETE_CSV_CHECK donde se
+    // pide confirmar la acción pulsando grupo20. Si no se confirma en 5 segundos, se regresa a donde se estuviera.
+    // De esta forma, si algún usuario entrara sin querer a este menú, solo tendría que dejar pasar esos 5 seg para continuar.
+    //
+    // No se incluye el CANCELAR la acción pulsando cualquier otro botón por simplificar.
+    //
+    // -----------------------------------------------------------------------------------------------------
+
+
+    static unsigned long previousTimeCancelDeleteCSV;      // Tiempo usado para cancelar la acción tras 5 segundos de inactividad
+    unsigned long currentTime;                             // Tiempo actual  
+
+    if(!doneState){
+        previousTimeCancelDeleteCSV = millis(); 
+
+        Serial.println(F("\n¿SEGURO QUE QUIERE BORRAR EL FICHERO CSV?")); 
+        
+        pedirConfirmacion_DELETE_CSV();       // Mostrar pregunta de confirmación para BORRAR CSV
+                                              //    No se ha incluido esta pantalla en pedirConfirmacion(option) porque interesa
+                                              //    tenerlo separado para eliminarlo tras las pruebas
+
+
+        doneState = true;               // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                        // cada vez que se entre a esta función debido al loop de Arduino.
+                                        // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
+    }
+
+    
+  
+
+    // ----- CONFIRMACIÓN DE ACCIÓN ----------
+    if(buttonInterruptOccurred()){ // Pulsación de botón
+        checkAllButtons(); // Qué botón se ha pulsado
+        if(buttonGrande == 20){ // Se ha pulsado grupo20
+            Serial.print(F("\ngrupo20 pulsado durante DELETE_CSV_CHECK. Iniciando borrado..."));   
+            addEventToBuffer(DELETE_CSV);      
+            flagEvent = true; 
+        }
+    }
+    // ----- FIN CONFIRMACIÓN DE ACCIÓN ------
+
+
+    // ----- CANCELACIÓN AUTOMÁTICA -------------------------------
+    else{
+        currentTime = millis(); // Tomar tiempo para saber si han pasado los 5 seg para cancelar la acción
+        if ((currentTime - previousTimeCancelDeleteCSV) > 5000) {    // Tras 5 segundos de inactividad, se cancela automáticamente la acción BORRAR CSV
+            // Regreso al estado desde donde se inició la acción cancelada previo a entrar a este menú.
+
+            // Ultimo estado válido puede ser Empty, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
+            // cancelable (add/delete/save), tras cuya cancelación se habría entrado a este menú.
+            switch (lastValidState){
+              case STATE_Empty:     Serial.print(F("\nRegreso a Empty tras cancelar BORRAR CSV..."));       addEventToBuffer(GO_TO_EMPTY);       break;  // Empty
+              case STATE_raw:       Serial.print(F("\nRegreso a raw tras cancelar BORRAR CSV..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+              case STATE_cooked:    Serial.print(F("\nRegreso a cooked tras cancelar BORRAR CSV..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+              case STATE_weighted:  Serial.print(F("\nRegreso a weighted tras cancelar BORRAR CSV..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+              default:  break;  
+            }
+
+            flagEvent = true; 
+        }
+                  
+    }
+    // ----- FIN CANCELACIÓN AUTOMÁTICA ---------------------------
+
+    
+
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   actState_DELETED_CSV(): Acciones del STATE_DELETED_CSV
+----------------------------------------------------------------------------------------------------------*/
+void actState_DELETED_CSV(){ 
+
+    // ------------ FUNCIONAMIENTO BORRADO FICHERO CSV ----------------------------------------------------
+    //
+    // ESTO SOLO SE VA A REALIZAR EN LAS PRUEBAS, PARA AGILIZAR EL RESETEO DEL FICHERO ENTRE UN PACIENTE Y OTRO.
+    // 
+    // Ya se ha confirmado la acción en STATE_DELETE_CSV_CHECK. Ahora se realiza el borrado.
+    //
+    // -----------------------------------------------------------------------------------------------------
+
+    static unsigned long previousTimeDeleted;  // Para regresar a Empty tras borrado (o no)
+    unsigned long currentTime;                 // Tiempo actual  
+
+    if(!doneState){
+        previousTimeDeleted = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de borrado, regresar a Empty
+
+        Serial.println(F("\nBORRANDO CONTENIDO DEL FICHERO CSV. LIMPIANDO ACUMULADO...")); 
+
+        if(borrarFicheroCSV()) showAcumuladoBorrado(true); // true = éxito en el borrado
+        else showAcumuladoBorrado(false); // false = error en el borrado
+
+        flagFicheroCSVBorrado = true;
+
+        doneState = true;               // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                        // cada vez que se entre a esta función debido al loop de Arduino.
+                                        // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
+    }
+
+    // ----- REGRESO A EMPTY TRAS BORRADO -----
+    // Se ha gestionado la posibilidad de que los usuarios accedan a este menú desde cualquier estado desde donde se pueda
+    // iniciar una acción cancelable (add/delete/save), pero no deberían llevar a cabo el borrado del csv, sino dejar
+    // pasar los 5 seg para su cancelación.
+    //
+    // En las pruebas, nosotros (yo) iniciaremos el borrado únicamente desde STATE_Empty (nada en la báscula), por lo que
+    // hacemos el regreso directamente a Empty.
+    currentTime = millis();
+    if ((currentTime - previousTimeDeleted) > 2000) {    // Tras 3 segundos mostrando warning...
+        Serial.print(F("\nRegreso a Empty tras BORRAR CSV..."));       
+        addEventToBuffer(GO_TO_EMPTY);
+        flagEvent = true; 
+    }
+    // ----- FIN REGRESO A EMPTY TRAS BORRADO --
+}
+
+
+
+
 
 /*---------------------------------------------------------------------------------------------------------
    doStateActions(): Acciones a realizar según el estado actual
@@ -1964,6 +2148,10 @@ void doStateActions(){
       case STATE_ERROR:         actStateERROR();        break;  // ERROR
       case STATE_CANCEL:        actStateCANCEL();       break;  // CANCEL
       case STATE_AVISO:         actStateAVISO();        break; // AVISO
+
+      case STATE_DELETE_CSV_CHECK:  actState_DELETE_CSV_CHECK();   break; // delete_csv_check
+      case STATE_DELETED_CSV:       actState_DELETED_CSV();        break; // deleted_csv
+
       default: break;
     }
 }
