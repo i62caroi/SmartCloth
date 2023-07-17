@@ -66,7 +66,7 @@ void setup() {
     tft.clearScreen(BLACK);
 
 
-    loadPicturesShowHourglass();
+    //loadPicturesShowHourglass();
     
     //pantalla_inicial(); // OK
     //select_Grupo(); // OK con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
@@ -75,76 +75,14 @@ void setup() {
 
     //add_Plato(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
     //delete_Plato(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-    save_Comida(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+    //save_Comida(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
 
     // Se ha modularizado y automatizado el movimiento de la mano y las pulsaciones de la imagen correspondiente:
     //    desplazar_mano()    sin_pulsacion()     con_pulsacion()
     // option: 1 (añadir)   2 (eliminar)    3 (guardar)
 
 
-
-    
-    //loadPicturesRelojCompleto();  // 15 segundos solamente cargando imágenes de reloj (girando)
-    //loadPicturesRelojCompletoMitad(); // 1/2 de tamaño para tardar menos
-    //loadPicturesRelojCompletoCuarto(); // 1/4 de tamaño
-
-
-    //error();
-    //showError(1);
-    //delay(2000);
-
-    //aviso_v1(); // Primero texto de ¡AVISO! entre líneas, luego imagen y luego comentario
-    //aviso_v2(); // Primero texto, luego imagen, luego una línea y luego comentario
-    
-    //showWarning(3);
- 
- /* showWarning(1); // Igual que aviso_v2() pero con comentario específico según opción (1: añadir, 2: eliminar o 3: guardar)
-    delay(3000);
-    showWarning(2); 
-    delay(3000);
-    showWarning(3); 
-*/
-
-    //dashboard(); // PAGE3
-
-
-  /*  arranque();  // PAGE2   (OK)
-    delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(BLACK);
-    delay(500);
-   
-    pantalla_inicial(); // PAGE2  (OK)
-    delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(BLACK);
-    delay(500);
-
-    select_Grupo();   // PAGE3 (~OK)
-    delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(BLACK);
-    delay(500);
-
-    add_Plato();      // PAGE3 (~OK)
-    delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(BLACK);
-    delay(500);
-
-    delete_Plato();   // PAGE3 (~OK)
-    delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(BLACK);
-    delay(500);
-
-    save_Comida();    // PAGE4 (~OK)
-    delay(3000);
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(BLACK);
-    delay(500);
-
-    crudo_cocinado(); // PAGE4 (OK)*/
+    pedirConfirmacion_DELETE_CSV();
 }
 
 
@@ -158,7 +96,19 @@ void loop() {
 
 
 
-
+void pedirConfirmacion_DELETE_CSV(){
+    // ----- TEXTO (CONFIRMAR BORRADO CSV) -----------------------------------
+    tft.clearScreen(BLACK);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(220, 200);  tft.println("\xBF""BORRAR FICHERO CSV\x3F"""); // 12x24 escalado x3
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()+50); tft.println("GRUPO 20 PARA CONFIRMAR");
+    // -------------------------------------------------------------------
+}
 
 
 
@@ -893,8 +843,6 @@ void con_pulsacion(int option){
 
 
 void add_Plato(){ // Tb PAGE3, pero más abajo ==> HECHO
-    int x1, y1, x2, y2;
-
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
@@ -990,8 +938,6 @@ void add_Plato(){ // Tb PAGE3, pero más abajo ==> HECHO
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void delete_Plato(){ // Tb PAGE3, pero más a la derecha ==> HECHO
-    int x1, y1, x2, y2;
-
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo rojo en PAGE1
 
@@ -1083,8 +1029,6 @@ void delete_Plato(){ // Tb PAGE3, pero más a la derecha ==> HECHO
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void save_Comida(){ // Tb PAGE3, pero más a la derecha
-    int x1, y1, x2, y2;
-
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo AMARILLO en PAGE1
 
