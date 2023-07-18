@@ -1030,17 +1030,30 @@ void actStateCooked(){
    actStateWeighted(): Acciones del STATE_weighted
 ----------------------------------------------------------------------------------------------------------*/
 void actStateWeighted(){ 
+    // Tiempos utilizados para alternar entre dashboard y pantalla de sugerencia de acciones:
+    const unsigned long dashboardInterval = 10000;      // Intervalo de tiempo para mostrar el dashboard (10 segundos)
+    const unsigned long sugerenciasInterval = 15000;    // Intervalo de tiempo para sugerir acciones (10 segundos)
+
+    static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
+    unsigned long currentTime;
+
+    static bool showing_dash;       
+    static bool showing_sugerir_acciones;
+
     if(!doneState){
         Serial.println(F("\nAlimento pesado...")); 
 
         // ----- INFO DE PANTALLA -------------------------
-        // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria (p. ej. pedir alimento). 
+        // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria (sugerencia acciones). 
         // Si se estaba mostrando el dashboard, solo se modifican las zonas 3 y 4 con los valores correspondientes.
         if(showingTemporalScreen) showDashboardStyle2();  
         else{
             printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
             printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
         }
+        showing_dash = true;                        // Se está mostrando dashboard estilo 2 (Alimento | Comida)
+        showing_sugerir_acciones = false;   
+        previousTime = millis();                    // Inicializar 'previousTime' para la alternancia de pantallas
         // ----- FIN INFO DE PANTALLA ---------------------
 
         doneState = true;                           // Solo realizar una vez las actividades del estado por cada vez que se active y no
@@ -1048,7 +1061,26 @@ void actStateWeighted(){
                                                     // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
-    // Alternar dashboard con pantalla de sugerencias (nuevo diseño)
+
+    // ----- ALTERNANCIA PANTALLAS -------------------------
+    currentTime = millis();
+    if(showing_dash){ // Se está mostrando dashboard estilo 2 (Alimento | Comida)
+        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a sugerir acciones
+            previousTime = currentTime;
+            sugerirAccion();
+            showing_dash = false;  
+            showing_sugerir_acciones = true;   // Mostrando sugerir acciones
+        }
+    }
+    else if(showing_sugerir_acciones){ // Se está mostrando sugerir acciones
+        if (currentTime - previousTime >= sugerenciasInterval) { // Si el sugerir acciones ha estado 10 segundos, se cambia a dashboard estilo 2
+            previousTime = currentTime;
+            showDashboardStyle2();
+            showing_dash = true;  // Mostrando dashboard estilo 2 (Alimento | Comida)
+            showing_sugerir_acciones = false;   
+        }
+    }
+    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 }
 
 

@@ -206,8 +206,13 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   SHOW_RACIONES_ZONA4         1   // Ubicacion en zona 4 de las raciones en showRaciones()
 
 // Lenta aparición de imágenes: 
-#define   SLOW_APPEAR_COCINADO   1
-#define   SLOW_APPEAR_SCALE      2
+#define   SLOW_APPEAR_COCINADO            1
+#define   SLOW_APPEAR_SCALE               2
+#define   SLOW_APPEAR_SCALE_SUGERENCIA    3
+#define   SLOW_APPEAR_GRUPO1_SUGERENCIA   4
+#define   SLOW_APPEAR_ANADIR_SUGERENCIA   5
+#define   SLOW_APPEAR_BORRAR_SUGERENCIA   6
+#define   SLOW_APPEAR_GUARDAR_SUGERENCIA  7
 
 // Lenta aparición/desaparición de imágenes:
 #define   SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO  1   // Desaparecer crudoGra y aparecer cociGra 
@@ -257,6 +262,8 @@ void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =
 void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
 // -- Colocar alimento ---
 void    pedirAlimento();                  // Pedir colocar alimento
+// -- Sugerir acción ----
+void    sugerirAccion();                  // Sugerir acción: añadir más alimento, escoger otro grupo, añadir otro plato, borrar plato actual o guardar comida.
 // -- Confirmar acción ---
 void    pedirConfirmacion(int option);        // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 // -- Acción realizada ---
@@ -1655,8 +1662,90 @@ void pedirAlimento(){
 
 }
 
-
 /*------------------------- FIN COLOCAR ALIMENTO --------------------------------------------------------*/
+
+
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*---------------------------- SUGERIR ACCIONES ---------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+
+void sugerirAccion(){
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
+    // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
+    tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
+    tft.setCursor(50, 50);
+    tft.println("\xBF""QU\xC9"" QUIERE HACER AHORA\x3F""");
+    
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+    // ----------------------------------------------------------------------------------------------------
+
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    // ------------ POSIBLES ACCIONES ---------------------------------------------------------------------
+    // 30 pixeles entre cuadro y cuadro
+    // Mostrar en PAGE1 (copiar de PAGE3 a PAGE1)
+
+    // ------ Añadir más cantidad de alimento --> scaleG (150x150) ---------
+    tft.setCursor(90, 377);                                       tft.println("A\xD1""ADIR");
+    tft.setCursor(115, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("M\xC1""S");
+    tft.setCursor(75, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("ALIMENTO");
+    // Apareciendo y recortando bordes de add/delete/save
+    if(slowAppearanceImage(SLOW_APPEAR_SCALE_SUGERENCIA)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
+
+    // ------ Escoger nuevo grupo --> grupo1 (130x1125) ---------
+    tft.setCursor(250, 377);                                       tft.println("ESCOGER");
+    tft.setCursor(275, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("OTRO");
+    tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("GRUPO");
+    // Apareciendo y recortando bordes de add/delete/save
+    if(slowAppearanceImage(SLOW_APPEAR_GRUPO1_SUGERENCIA)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
+
+    // ------ Añadir plato --> anadir (172x130) ---------
+    tft.setCursor(430, 377);                                       tft.println("A\xD1""ADIR");
+    tft.setCursor(445, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("OTRO");
+    tft.setCursor(440, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("PLATO");
+    // Apareciendo y recortando bordes de add/delete/save
+    if(slowAppearanceImage(SLOW_APPEAR_ANADIR_SUGERENCIA)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
+
+    // ------ Borrar plato --> borrar (172x130) ---------
+    tft.setCursor(617, 377);                                       tft.println("BORRAR");
+    tft.setCursor(627, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("PLATO");
+    tft.setCursor(617, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("ACTUAL");
+    // Apareciendo y recortando bordes de add/delete/save
+    if(slowAppearanceImage(SLOW_APPEAR_BORRAR_SUGERENCIA)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(1000)) return;
+
+
+    // ------ Guardar comida --> guardar (172x130) ---------
+    tft.setCursor(795, 377);                                       tft.println("GUARDAR");
+    tft.setCursor(800, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("COMIDA");
+    // Apareciendo y recortando bordes de add/delete/save
+    if(slowAppearanceImage(SLOW_APPEAR_GUARDAR_SUGERENCIA)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    //if(doubleDelayAndCheckInterrupt(1000)) return;
+    // ----------------------------------------------------------------------------------------------------
+}
+/*------------------------- FIN SUGERIR ACCIONES --------------------------------------------------------*/
+
 
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -2087,14 +2176,14 @@ bool slowAppearanceImage(int option){
     uint8_t i;
     switch(option){
         case SLOW_APPEAR_COCINADO: // Cocinado
-            for(i = 30; i >= 4; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
                 // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
                 delay(10);
                 // ----- INT -------------------
                 if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar sin transparencia
+            //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar sin transparencia
 
             // ----- INT -------------------
             if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
@@ -2103,17 +2192,97 @@ bool slowAppearanceImage(int option){
 
 
         case SLOW_APPEAR_SCALE: // Scale
-            for(i = 30; i >= 4; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
                 // Mostrar scale apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149,i);
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,146,147,i);
                 delay(10);
                 // ----- INT -------------------
                 if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,146,147); // Mostrar sin transparencia
+            //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,146,147); // Mostrar sin transparencia
   
             // ----- INT -------------------
             if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+
+        case SLOW_APPEAR_SCALE_SUGERENCIA: // ScaleG sugerencias
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar scale apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,69,200,146,147,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,69,200,146,147); // Mostrar scaleG (150x150)
+  
+            // ----- INT -------------------
+            //if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+
+        case SLOW_APPEAR_GRUPO1_SUGERENCIA: // grupo1 sugerencias
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar grupo1 apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,1,1,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,245,213,129,124,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,1,1,PAGE1_START_ADDR,SCREEN_WIDTH,245,213,129,124); // Mostrar grupo1 (130x125)
+  
+            // ----- INT -------------------
+            //if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+
+        case SLOW_APPEAR_ANADIR_SUGERENCIA: // añadir sugerencias
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar añadir apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,404,206,158,130,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,404,206,158,130); // Mostrar añadir (172x130)
+  
+            // ----- INT -------------------
+            //if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+
+        case SLOW_APPEAR_BORRAR_SUGERENCIA: // borrar sugerencias
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar borrar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130); // Mostrar borrar (172x130) 
+  
+            // ----- INT -------------------
+            //if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+
+        case SLOW_APPEAR_GUARDAR_SUGERENCIA: // guardar sugerencias
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,780,206,158,130,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,780,206,158,130); // Mostrar guardar (172x130)
+  
+            // ----- INT -------------------
+            //if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
   
             break;
 
