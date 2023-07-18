@@ -162,6 +162,7 @@ void checkBascula(){
                             // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
                             Serial.print(F("\nLIBERADA"));
                             eventoBascula = LIBERAR;
+                            flagRecipienteRetirado = true;
                         }
                         else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
                             Serial.print(F("\nQUITANDO"));
@@ -171,14 +172,14 @@ void checkBascula(){
                 }
             }
 
-            Serial.println(F("\n--------------------------------------"));
+            /*Serial.println(F("\n--------------------------------------"));
             Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 
             Serial.print(F("Peso actual: ")); Serial.println(newWeight); 
             Serial.print(F("Peso Bascula: ")); Serial.println(pesoBascula);
             Serial.print(F("Peso a retirar: ")); Serial.println(pesoARetirar);
             Serial.print(F("Peso recipiente: ")); Serial.println(pesoRecipiente);
             Serial.print(F("Peso plato: ")); Serial.println(pesoPlato);
-            Serial.println(F("\n--------------------------------------"));
+            Serial.println(F("\n--------------------------------------"));*/
 
             addEventToBuffer(eventoBascula);
             flagEvent = true;

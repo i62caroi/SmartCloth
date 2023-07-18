@@ -443,12 +443,15 @@ bool  flagError = false;    // El error es una acción de diferente naturaleza. 
                             // sino que si ha ocurrido algo que no es evento, se considera error. Por eso se utiliza
                             // otra flag.
 
-bool keepErrorScreen = false; // Mantener pantalla de error cometido por colocar alimento cuando no toca (desde Grupos).
+bool  keepErrorScreen = false; // Mantener pantalla de error cometido por colocar alimento cuando no toca (desde Grupos).
                               // En este caso no se retira la pantalla tras 3 segundos, sino que se mantiene hasta que
                               // se retire el plato para comenzar de nuevo.
 
-bool flagComidaSaved = false;
-bool flagFicheroCSVBorrado = false;
+bool  flagComidaSaved = false;
+bool  flagFicheroCSVBorrado = false;
+
+bool  flagRecipienteRetirado = false;
+//bool  comidaSinGuardar_recipienteRetirado = false;
 // ------ FIN VARIABLES DE EVENTOS ----------------------------------------------------
 
 
@@ -611,6 +614,9 @@ void actStateEmpty(){
             keepErrorScreen = false;
 
             // ----- BORRAR PLATO ------------------------------------
+            // Solo se mira si el plato actual está vacío porque si fuera el 2º plato o sucesivos, los anteriores se
+            // habrían "guardado" al hacer "Añadir plato". Entonces, si el usuario retira el recipiente, solo se borra el actual,
+            // por si quisieran cambiar de recipiente o algo.
             if(!platoActual.isPlatoEmpty()){ // ==> Si se regresa a Empty con el plato aún con cosas, es porque no se ha borrado con "Eliminar plato" ni
                                             //    se ha restaurado con "Añadir plato" o "Guardar comida", sino que se ha retirado de repente en mitad del proceso.
                                             //    Si ocurre esa liberación tan repentina y cuando no toca (desde Grupos, raw, cooked, weighted...),
@@ -623,12 +629,23 @@ void actStateEmpty(){
 
                 comidaActual.deletePlato(platoActual);    // Borrar plato actual
                 platoActual.restorePlato();               // Restaurar plato
+
+
+                // Si tras borrar el plato la comida se ha quedado vacía, se avisa de que se ha borrado la info que no
+                // se ha guardado. Si no se quedara vacía, seguiría apareciendo su info con el resto de platos.
+                // Esto se hace para que entiendan por qué ahora aparece todo a 0.
+               /* if(comidaActual.isComidaEmpty()) {
+                  Serial.println("COMIDA VACIA");
+                  comidaSinGuardar_recipienteRetirado = true;
+                }*/
+
             }
             // ----- FIN BORRAR PLATO ---------------------------------
 
 
             // ----- INFO INICIAL DE PANTALLA -------------------------
-            if(lastEvent == LIBERAR){ 
+            if(flagRecipienteRetirado){
+            //if(lastEvent == LIBERAR){ 
                 recipienteRetirado();                 // Mostrar "Recipiente retirado" tras LIBERAR báscula
                 showing_recipiente_retirado = true;   // Se está mostrando "Recipiente retirado"
                 showing_dash = false;      

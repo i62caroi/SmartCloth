@@ -380,6 +380,9 @@ bool doubleDelayAndCheckInterrupt(unsigned long period){
               de arena y después muestra el logo de SmartCloth (wireframe de arranque).
 ----------------------------------------------------------------------------------------------------------*/
 void Welcome(){
+
+    uint8_t i;
+
     showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
 
     //tft.canvasImageStartAddress(PAGE1_START_ADDR); 
@@ -396,37 +399,103 @@ void Welcome(){
 
     // S M A R T C L O T H ==> S T O T M L R A C H (orden de aparición)
 
+    // ----------- LETRA S ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar S apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,40,150,95,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,40,150,95,159);       // S (95x159) 
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA T1 ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar T1 apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,428,150,104,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,428,150,104,159);   // T1 (104x159)
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA O ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar  apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,669,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,702,150,85,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,669,0,PAGE1_START_ADDR,SCREEN_WIDTH,702,150,85,159);    // O (85x159)
-    delay(300);
+    delay(200);
     
+    // ----------- LETRA T2 ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar T2 apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,787,150,104,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,787,150,104,159);   // T2 (104x159) 
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA M ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar M apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,96,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,135,150,104,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,96,0,PAGE1_START_ADDR,SCREEN_WIDTH,135,150,104,159);    // M (104x154) 
-    delay(300);
+    delay(200);
     
+    // ----------- LETRA L ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar L apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,583,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,617,150,85,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,583,0,PAGE1_START_ADDR,SCREEN_WIDTH,617,150,85,159);    // L (85x159) 
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA R ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar R apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,306,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,343,150,85,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,306,0,PAGE1_START_ADDR,SCREEN_WIDTH,343,150,85,159);    // R (85x159) 
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA A ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar A apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,201,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,239,150,104,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,201,0,PAGE1_START_ADDR,SCREEN_WIDTH,239,150,104,159);   // A (104x159) 
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA C ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar C apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,497,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,532,150,85,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,497,0,PAGE1_START_ADDR,SCREEN_WIDTH,532,150,85,159);    // C (85x159) 
-    delay(300);
+    delay(200);
 
+    // ----------- LETRA H ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar H apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,755,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,891,150,85,159,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,755,0,PAGE1_START_ADDR,SCREEN_WIDTH,891,150,85,159);    // H (85x159) 
-    delay(300);   
+    delay(200);   
 
-    // LOGO
+    
+    // ----------- LOGO ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar LOGO apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,841,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,417,350,162,169,i);
+        delay(10);
+    }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,841,0,PAGE1_START_ADDR,SCREEN_WIDTH,417,350,162,169);   // Logo (162x169) ==> debajo
     
     delay(2000);
@@ -1140,6 +1209,16 @@ void recipienteRetirado(){
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
+
+
+    // Puede ser que se haya retirado el único plato de la comida sin haberla guardado antes,
+    // entonces se indica que se ha borrado la info no guardada. 
+    // Si aún quedaran platos en la comida, aparecería su info.
+  /*  if(comidaSinGuardar_recipienteRetirado){
+        tft.selectInternalFont(RA8876_FONT_SIZE_32);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+        tft.setCursor(190, 418); tft.println("LA INFORMACIÓN NO GUARDADA HA SIDO ELIMINADA");
+    }*/
 }
 /*------------------------------ FIN PEDIR RECIPIENTE ---------------------------------------------------*/
 
@@ -1209,7 +1288,7 @@ void pedirGrupoAlimentos(){
     // ------ Grupo 4 (130x125) ---------
     //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
     slowAppearanceImage(SLOW_APPEAR_GRUPO4);
-    
+
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(800)) return;
     // ****************************************************************************************************
@@ -2099,13 +2178,14 @@ void showError(int option){
 
     switch (option){
       case ERROR_STATE_EMPTY: // Empty
-              tft.setCursor(160, 420);                                     tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
-              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); // "O GUARDE LA COMIDA"
+              tft.setCursor(250, 420);                                     tft.println("COLOQUE UN RECIPIENTE"); 
+              //tft.setCursor(160, 420);                                     tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
+              //tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); // "O GUARDE LA COMIDA"
               break;
 
       case ERROR_STATE_PLATO: // Plato
               tft.setCursor(160, 420);                                     tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
-              tft.setCursor(120, tft.getCursorY() + tft.getTextSizeY());   tft.print("Y DESPU\xC9""S ESCOJA COCINADO O CRUDO"); 
+              //tft.setCursor(120, tft.getCursorY() + tft.getTextSizeY());   tft.print("Y DESPU\xC9""S ESCOJA COCINADO O CRUDO"); 
               // Los errores que se pueden cometer en STATE_PLATO son pulsar crudo, cocinado, añadir, borrar o guardar.
               // Modificar el mensaje para que indique "No puede realizar esa acción. Seleccione grupo y después crudo/cocinado"??
               // Puede que el mensaje actual no sea lo suficiente claro porque no indica específicamente qué se ha hecho mal.
@@ -2120,7 +2200,7 @@ void showError(int option){
               }
               else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar)
                   tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
-                  tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
+                  //tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
               }
               break;
 
@@ -2195,10 +2275,6 @@ void showError(int option){
 ----------------------------------------------------------------------------------------------------------*/
 bool slowAppearanceImage(int option){
     uint8_t i;
-    #define   SLOW_APPEAR_GRUPO1              3
-#define   SLOW_APPEAR_GRUPO2              4
-#define   SLOW_APPEAR_GRUPO3              5
-#define   SLOW_APPEAR_GRUPO4              6
     switch(option){
         case SLOW_APPEAR_COCINADO: // Cocinado
             for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
