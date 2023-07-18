@@ -69,7 +69,7 @@ void setup() {
     loadPicturesShowHourglass();
     
     //pantalla_inicial(); // OK
-    //select_Grupo(); // OK con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
+    select_Grupo(); // OK con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
     //crudo_cocinado(); // OK con 3º alternancia y aparición/desaparición paulatinas
     //colocar_alimento(); // OK con aparición paulatina
 
@@ -84,7 +84,7 @@ void setup() {
 
     //pedirConfirmacion_DELETE_CSV();
 
-    suggestAction();
+    //suggestAction();
 }
 
 
@@ -127,14 +127,7 @@ void suggestAction(){
     delay(1000);
     // ----------------------------------------------------------------------------------------------------
 
-/*
-    // ------------ LINEAS --------------------------------------------------------------------------------
-    tft.fillRoundRect(0,160,256,168,3,WHITE);
-    tft.fillRoundRect(768,517,1024,525,3,WHITE);
-    // ----------------------------------------------------------------------------------------------------
 
-    delay(1000);
-*/
     tft.selectInternalFont(RA8876_FONT_SIZE_16);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
@@ -332,19 +325,23 @@ void select_Grupo(){ // PAGE3 (OK) ==> HECHO
     // Mostrar en PAGE1 (copiar de PAGE3 a PAGE1)
 
     // ------ Grupo 1 (130x125) ---------
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
+    slowAppearanceImage(8);
     delay(800);
 
     // ------ Grupo 2 (130x125) ---------
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
+    slowAppearanceImage(9);
     delay(800);
 
     // ------ Grupo 3 (130x125) ---------
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
+    slowAppearanceImage(10);
     delay(800);
 
     // ------ Grupo 4 (130x125) ---------
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
+    slowAppearanceImage(11);
     delay(800);
     // ----------------------------------------------------------------------------------------------------
 
@@ -576,7 +573,7 @@ void slowAppearanceImage(int option){
     uint8_t i;
     switch(option){
         case 1: // Cocinado
-            for(i = 30; i >= 4; i--){
+            for(i = 32; i >= 1; i--){
                 // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 // i = 16 --> RA8876_ALPHA_OPACITY_16
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
@@ -586,7 +583,7 @@ void slowAppearanceImage(int option){
             break;
 
         case 2: // ScaleG
-            for(i = 30; i >= 4; i--){
+            for(i = 32; i >= 1; i--){
                 // Mostrar scaleG apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 // i = 16 --> RA8876_ALPHA_OPACITY_16
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149,i);
@@ -602,7 +599,7 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,69,200,146,147,i);
                 delay(10);
             }
-            //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,69,200,146,147); // Mostrar scaleG (150x150)
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,69,200,146,147); // Mostrar scaleG (150x150)
             break;
 
         case 4: // grupo1 sugerencias
@@ -612,7 +609,7 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,1,1,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,245,213,129,124,i);
                 delay(10);
             }
-            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,1,1,PAGE1_START_ADDR,SCREEN_WIDTH,245,213,129,124); // Mostrar grupo1 (130x125)
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,1,1,PAGE1_START_ADDR,SCREEN_WIDTH,245,213,129,124); // Mostrar grupo1 (130x125)
             break;
 
         case 5: // añadir sugerencias
@@ -622,7 +619,7 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,404,206,158,130,i);
                 delay(10);
             }
-            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,404,206,158,130); // Mostrar añadir (172x130)
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,404,206,158,130); // Mostrar añadir (172x130)
             break;
 
         case 6: // borrar sugerencias
@@ -632,7 +629,7 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130,i);
                 delay(10);
             }
-            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130); // Mostrar borrar (172x130) 
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130); // Mostrar borrar (172x130) 
             break;
 
         case 7: // guardar sugerencias
@@ -642,7 +639,50 @@ void slowAppearanceImage(int option){
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,780,206,158,130,i);
                 delay(10);
             }
-            // tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,780,206,158,130); // Mostrar guardar (172x130)
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,780,206,158,130); // Mostrar guardar (172x130)
+            break;
+
+        case 8: // GRUPO1
+            for(i = 32; i >= 1; i--){
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,288,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
+            break;
+
+
+        case 9: // GRUPO2
+            for(i = 32; i >= 1; i--){
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,288,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
+            break;
+
+
+        case 10: // GRUPO3
+            for(i = 32; i >= 1; i--){
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,288,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
+            break;
+
+
+        case 11: // GRUPO4
+            for(i = 32; i >= 1; i--){
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                // i = 16 --> RA8876_ALPHA_OPACITY_16
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,288,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
             break;
 
         default: break;
