@@ -70,7 +70,7 @@ char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
 
 
 // --- IMAGEN BASCULA ---
-char   fileScale[30]  = "bin/alimento/scale.bin";
+char   fileScale[30]  = "bin/alimento/scaleG.bin";
 
 
 // --- IMAGENES DASHBOARD ---

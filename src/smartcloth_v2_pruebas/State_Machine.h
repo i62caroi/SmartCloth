@@ -1047,6 +1047,8 @@ void actStateWeighted(){
                                                     // cada vez que se entre a esta función debido al loop de Arduino.
                                                     // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
+
+    // Alternar dashboard con pantalla de sugerencias (nuevo diseño)
 }
 
 
@@ -1486,6 +1488,9 @@ void actStateERROR(){
         switch (state_prev){
           case STATE_Empty:         showError(ERROR_STATE_EMPTY);           break;  // Empty
           case STATE_Plato:         showError(ERROR_STATE_PLATO);           break;  // Plato
+                    // Los errores que se pueden cometer en STATE_PLATO son pulsar crudo, cocinado, añadir, borrar o guardar.
+                    // ¿¿Modificar el mensaje para que indique "No puede realizar esa acción. Seleccione grupo y después crudo/cocinado"??
+                    // Puede que el mensaje actual no sea lo suficiente claro porque no indica específicamente qué se ha hecho mal.
 
           case STATE_groupA: case STATE_groupB:    
                                     if(hasScaleEventOccurred() and (eventoBascula == INCREMENTO)){ // El error ha sido colocar alimento antes de escoger crudo/cocinado

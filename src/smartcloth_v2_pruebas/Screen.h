@@ -1582,11 +1582,7 @@ void pedirProcesamiento(){
     // Apareciendo imagen cocinado
     if(slowAppearanceImage(SLOW_APPEAR_COCINADO)) return; // Si ha ocurrido interrupción mientras aparecía la imagen de cocinado, 
                                                           // se sale de la función.
-    // ----- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) -> ¿Necesario si se hace el check al mostrar imagen?
-    // Mostrar COCINADO
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-    
+
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(1000)) return;
 
@@ -1652,10 +1648,6 @@ void pedirAlimento(){
     // ************ SCALE *********************************************************************************
     // Imagen scale 
     if(slowAppearanceImage(SLOW_APPEAR_SCALE)) return; // Imagen de scale apareciendo
-    // ----- INT -------------------
-    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) -> ¿Necesario si se hace el check al mostrar imagen?
-    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,146,147); // Mostrar scaleG (150x150) en PAGE1
-    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149); 
     // **************************************************************************************************** 
     
     // ----- ESPERA E INTERRUPCION ----------------
@@ -1727,7 +1719,7 @@ void pedirConfirmacion(int option){
     if(option == ASK_CONFIRMATION_SAVE) tft.setCursor(150, 275); // Guardar
     else tft.setCursor(150, 245); // Añadir y eliminar
     tft.println("PARA CONFIRMAR, PULSE DE NUEVO");
-    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY());   tft.print("EL BOT\xD3""N"); 
+    tft.setCursor(400, tft.getCursorY() + tft.getTextSizeY()-10);   tft.print("EL BOT\xD3""N"); 
     // ----------------------------------------------------------------------------------------------------
 
     // -------- INT -------------------
@@ -2004,6 +1996,9 @@ void showError(int option){
       case ERROR_STATE_PLATO: // Plato
               tft.setCursor(160, 420);                                     tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
               tft.setCursor(120, tft.getCursorY() + tft.getTextSizeY());   tft.print("Y DESPU\xC9""S ESCOJA COCINADO O CRUDO"); 
+              // Los errores que se pueden cometer en STATE_PLATO son pulsar crudo, cocinado, añadir, borrar o guardar.
+              // Modificar el mensaje para que indique "No puede realizar esa acción. Seleccione grupo y después crudo/cocinado"??
+              // Puede que el mensaje actual no sea lo suficiente claro porque no indica específicamente qué se ha hecho mal.
               break;
 
       case ERROR_STATE_GROUPS: // Grupos (grupoA o groupB)
@@ -2091,7 +2086,7 @@ void showError(int option){
 bool slowAppearanceImage(int option){
     uint8_t i;
     switch(option){
-        case 1: // Cocinado
+        case SLOW_APPEAR_COCINADO: // Cocinado
             for(i = 30; i >= 4; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
                 // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
@@ -2099,9 +2094,15 @@ bool slowAppearanceImage(int option){
                 // ----- INT -------------------
                 if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar sin transparencia
+
+            // ----- INT -------------------
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+
             break;
 
-        case 2: // Scale
+
+        case SLOW_APPEAR_SCALE: // Scale
             for(i = 30; i >= 4; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
                 // Mostrar scale apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
                 tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,372,293,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,150,149,i);
@@ -2109,7 +2110,13 @@ bool slowAppearanceImage(int option){
                 // ----- INT -------------------
                 if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,373,293,PAGE1_START_ADDR,SCREEN_WIDTH,437,320,146,147); // Mostrar sin transparencia
+  
+            // ----- INT -------------------
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
             break;
+
 
         default: break;
     }
