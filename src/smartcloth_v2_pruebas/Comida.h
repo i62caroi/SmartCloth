@@ -46,20 +46,8 @@ class Comida{
      * @return El número de platos de la comida
      */
     inline int _getNumPlatos(){ return _nPlatos; };
-    
-    /**
-     * @brief Obtiene la primera posición disponible en el array de platos.
-     * 
-     * @return La primera posición disponible en el array de platos
-     */
-    inline int _firstGapComida(){ return this->_getNumPlatos(); }; 
-    
-    /**
-     * @brief Obtiene la posición del último plato en el array de platos.
-     * 
-     * @return La última posición ocupada en el array de platos
-     */
-    inline int _getLastPositionPlato(){ return this->_getNumPlatos() - 1; }; 
+  
+  
 
 
 

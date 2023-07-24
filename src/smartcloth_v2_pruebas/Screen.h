@@ -1767,7 +1767,7 @@ void sugerirAccion(){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
     //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
-    tft.setCursor(50, 50);
+    tft.setCursor(80, 50);
     tft.println("\xBF""QU\xC9"" QUIERE HACER AHORA\x3F""");
     
     // ----- ESPERA E INTERRUPCION ----------------

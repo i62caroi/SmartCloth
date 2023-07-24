@@ -37,7 +37,7 @@
 class Alimento{
   private:
     Grupo                 _grupo;             /**< Grupo al que pertenece el alimento */
-    double                _peso;              /**< Peso del alimento */
+    float                _peso;              /**< Peso del alimento */
     ValoresNutricionales  _valoresAlimento;   /**< Valores nutricionales del alimento */
 
   public:
@@ -54,7 +54,7 @@ class Alimento{
      * @param grupo Grupo al que pertenece el alimento
      * @param peso Peso del alimento
      */
-    Alimento(Grupo grupo, double peso); 
+    Alimento(Grupo grupo, float peso); 
     
     /**
      * @brief Establece el grupo al que pertenece el alimento.
@@ -75,14 +75,14 @@ class Alimento{
      * 
      * @param peso Peso del alimento
      */
-    inline void setPesoAlimento(double peso){ _peso = peso; };
+    inline void setPesoAlimento(float peso){ _peso = peso; };
 
     /**
      * @brief Obtiene el peso del alimento.
      * 
      * @return El peso del alimento
      */
-    inline double getPesoAlimento(){ return _peso; };
+    inline float getPesoAlimento(){ return _peso; };
 
     /**
      * @brief Actualiza los valores nutricionales del alimento según el grupo y el peso especificados.
@@ -90,7 +90,7 @@ class Alimento{
      * @param grupo Grupo al que pertenece el alimento
      * @param peso Peso del alimento
      */
-    void updateValoresAlimento(Grupo grupo, double peso);
+    void updateValoresAlimento(Grupo grupo, float peso);
 
     /**
      * @brief Establece los valores nutricionales del alimento a partir de un objeto ValoresNutricionales.
@@ -114,18 +114,18 @@ Alimento::Alimento(){
     this->setPesoAlimento(0.0);
 }
 
-Alimento::Alimento(Grupo grupo, double peso){
+Alimento::Alimento(Grupo grupo, float peso){
     this->setGrupoAlimento(grupo);
     this->setPesoAlimento(peso);
     this->updateValoresAlimento(grupo, peso);
 }
 
 
-void Alimento::updateValoresAlimento(Grupo grupo, double peso){
-    double carb = grupo.Carb_g * peso;
-    double lip = grupo.Lip_g * peso;
-    double prot = grupo.Prot_g * peso;
-    double kcal = grupo.Kcal_g * peso;
+void Alimento::updateValoresAlimento(Grupo grupo, float peso){
+    float carb = grupo.Carb_g * peso;
+    float lip = grupo.Lip_g * peso;
+    float prot = grupo.Prot_g * peso;
+    float kcal = grupo.Kcal_g * peso;
     ValoresNutricionales valAux(carb, lip, prot, kcal);
     _valoresAlimento.setValores(valAux);
 }

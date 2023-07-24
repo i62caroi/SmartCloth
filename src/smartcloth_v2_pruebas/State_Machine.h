@@ -94,7 +94,7 @@ bool doneState;       // Flag para que solo se realicen una vez las actividades 
 /*-------------------------------------- ESTADOS -----------------------------------------------*/
 /*----------------------------------------------------------------------------------------------*/
 /**
- * @enum states_t
+ * @enum state_t
  * @brief Enumeración de los diferentes estados de la Máquina de Estados.
  */
 typedef enum {
@@ -118,7 +118,7 @@ typedef enum {
               STATE_DELETE_CSV_CHECK    =   (17),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.
               STATE_DELETED_CSV         =   (18)    // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
                                                     //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
-} states_t;
+} state_t;
 
 
 
@@ -186,8 +186,8 @@ static event_t event_buffer[MAX_EVENTS];       // Buffer de eventos al que se ir
  * @brief Estructura que define una regla de transición en la Máquina de Estados.
  */
 typedef struct{
-    states_t state_i;     /**< Estado actual */
-    states_t state_j;     /**< Estado siguiente */
+    state_t state_i;     /**< Estado actual */
+    state_t state_j;     /**< Estado siguiente */
     event_t condition;    /**< Condición para transición de estado */
 }transition_rule;
 
@@ -422,10 +422,10 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 /*----------------------------------------------------------------------------------------------*/
 
 // ---- VARIABLES DE ESTADOS ---------------------------------------------------------
-states_t state_actual;          // Estado actual
-states_t state_new;             // Nuevo estado al que se va a pasar
-states_t state_prev;            // Estado anterior
-states_t lastValidState;         // Último estado válido (Empty, Plato, groupA, groupB, raw, cooked, weighted)
+state_t state_actual;          // Estado actual
+state_t state_new;             // Nuevo estado al que se va a pasar
+state_t state_prev;            // Estado anterior
+state_t lastValidState;         // Último estado válido (Empty, Plato, groupA, groupB, raw, cooked, weighted)
 // ------ FIN VARIABLES DE ESTADOS ----------------------------------------------------
 
 
@@ -490,6 +490,8 @@ bool      showingTemporalScreen = false;
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
+void printEventName(event_t event);
+void printStateName(state_t state);
 // --- Reglas transición ---
 bool    checkStateConditions();                        // Comprobar reglas de transición de estados
 
@@ -528,6 +530,70 @@ void    addEventToBuffer(event_t evento);              // Añadir evento al buff
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 
+// Función para imprimir el nombre del evento
+void printEventName(event_t event) {
+    switch (event) {
+        case NONE:                  Serial.print("NONE");                     break;
+        case TIPO_A:                Serial.print("TIPO_A");                   break;
+        case TIPO_B:                Serial.print("TIPO_B");                   break;
+        case CRUDO:                 Serial.print("CRUDO");                    break;
+        case COCINADO:              Serial.print("COCINADO");                 break;
+        case ADD_PLATO:             Serial.print("ADD_PLATO");                break;
+        case DELETE_PLATO:          Serial.print("DELETE_PLATO");             break;
+        case GUARDAR:               Serial.print("GUARDAR");                  break;
+        case INCREMENTO:            Serial.print("INCREMENTO");               break;
+        case DECREMENTO:            Serial.print("DECREMENTO");               break;
+        case TARAR:                 Serial.print("TARAR");                    break;
+        case QUITAR:                Serial.print("QUITAR");                   break;
+        case LIBERAR:               Serial.print("LIBERAR");                  break;
+        case ERROR:                 Serial.print("ERROR");                    break;
+        case CANCELAR:              Serial.print("CANCELAR");                 break;
+        case AVISO:                 Serial.print("AVISO");                    break;
+        case GO_TO_EMPTY:           Serial.print("GO_TO_EMPTY");              break;
+        case GO_TO_PLATO:           Serial.print("GO_TO_PLATO");              break;
+        case GO_TO_GROUP_A:         Serial.print("GO_TO_GROUP_A");            break;
+        case GO_TO_GROUP_B:         Serial.print("GO_TO_GROUP_B");            break;
+        case GO_TO_RAW:             Serial.print("GO_TO_RAW");                break;
+        case GO_TO_COOKED:          Serial.print("GO_TO_COOKED");             break;
+        case GO_TO_WEIGHTED:        Serial.print("GO_TO_WEIGHTED");           break;
+        case GO_TO_ADD_CHECK:       Serial.print("GO_TO_ADD_CHECK");          break;
+        case GO_TO_ADDED:           Serial.print("GO_TO_ADDED");              break;
+        case GO_TO_DELETE_CHECK:    Serial.print("GO_TO_DELETE_CHECK");       break;
+        case GO_TO_DELETED:         Serial.print("GO_TO_DELETED");            break;
+        case GO_TO_SAVE_CHECK:      Serial.print("GO_TO_SAVE_CHECK");         break;
+        case GO_TO_SAVED:           Serial.print("GO_TO_SAVED");              break;
+        case GO_TO_CANCEL:          Serial.print("GO_TO_CANCEL");             break;
+        case DELETE_CSV:            Serial.print("DELETE_CSV");               break;
+        
+        default:                    Serial.print("Evento desconocido");       break;
+    }
+}
+
+// Función para imprimir el nombre del estado
+void printStateName(state_t state) {
+    switch (state) {
+        case STATE_Empty:               Serial.print("STATE_Empty");                break;
+        case STATE_Plato:               Serial.print("STATE_Plato");                break;
+        case STATE_groupA:              Serial.print("STATE_groupA");               break;
+        case STATE_groupB:              Serial.print("STATE_groupB");               break;
+        case STATE_raw:                 Serial.print("STATE_raw");                  break;
+        case STATE_cooked:              Serial.print("STATE_cooked");               break;
+        case STATE_weighted:            Serial.print("STATE_weighted");             break;
+        case STATE_add_check:           Serial.print("STATE_add_check");            break;
+        case STATE_added:               Serial.print("STATE_added");                break;
+        case STATE_delete_check:        Serial.print("STATE_delete_check");         break;
+        case STATE_deleted:             Serial.print("STATE_deleted");              break;
+        case STATE_save_check:          Serial.print("STATE_save_check");           break;
+        case STATE_saved:               Serial.print("STATE_saved");                break;
+        case STATE_ERROR:               Serial.print("STATE_ERROR");                break;
+        case STATE_CANCEL:              Serial.print("STATE_CANCEL");               break;
+        case STATE_AVISO:               Serial.print("STATE_AVISO");                break;
+        case STATE_DELETE_CSV_CHECK:    Serial.print("STATE_DELETE_CSV_CHECK");     break;
+        case STATE_DELETED_CSV:         Serial.print("STATE_DELETED_CSV");          break;
+        
+        default:                        Serial.print("Estado desconocido");         break;
+    }
+}
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
@@ -833,6 +899,7 @@ void actGruposAlimentos(){
     static bool showing_escoger_procesamiento;
 
     if(!doneState){        
+        Serial.println(F("Grupo de alimentos..."));
         
         // ----- ACCIONES ------------------------------
         if(lastValidState == STATE_Plato){ // Si se viene directo de plato o a través de un error
@@ -2309,9 +2376,13 @@ void addEventToBuffer(event_t evento){
     lastEvent = evento;
     Serial.print("\nBuffer: "); 
     for (int i = 0; i < MAX_EVENTS; i++){
-        Serial.print(event_buffer[i]); Serial.print(" ");
+        //Serial.print(event_buffer[i]); Serial.print(" ");
+        printEventName(event_buffer[i]); Serial.print(" | ");
     }
-    Serial.print(F("Last event: ")); Serial.println(lastEvent);
+    //Serial.print(F("Last event: ")); Serial.println(lastEvent);
+    Serial.println();
+    printEventName(lastEvent);
+    Serial.println();
 }
 
 

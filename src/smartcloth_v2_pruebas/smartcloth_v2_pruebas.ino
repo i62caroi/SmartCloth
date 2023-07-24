@@ -160,9 +160,9 @@ void loop() {
                         default: break;
                     }
                 }
-                Serial.print(F("\n\nEstado anterior: "));         Serial.println(state_prev);
-                Serial.print(F("Nuevo estado: "));            Serial.println(state_new);
-                Serial.print(F("Último estado válido: "));    Serial.println(lastValidState);
+                Serial.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      Serial.print();
+                Serial.print(F("Nuevo estado: "));           printStateName(state_new);       Serial.println();
+                Serial.print(F("Último estado válido: "));   printStateName(lastValidState);  Serial.println();
             }
             else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
                                                     // Para evitar seguir marcando error durante los 3 segundos que no se cumple
