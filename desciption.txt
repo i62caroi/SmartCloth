@@ -1,0 +1,54 @@
+El proyecto se llama SmartCloth y trata de un mantel digital para la autogestión de la dieta en pacientes diabéticos. El objetivo de SmartCloth es que los usuarios lo utilicen en la elaboración de sus comidas para llevar un control de las kilocalorías y las raciones de carbohidratos, grasas y proteínas consumidas, diferenciando entre la comida que están elaborando y el total de las comidas ya realizadas en el día.
+
+
+Este mantel digital consta de una báscula (basada en una célula de carga), dos botoneras (una de 4x5 y otra de 1x5) y una pantalla TFT. La botonera A (la de 4x5) tiene 20 botones que indican diferentes grupos de alimentos (lácteos azucarados, legumbres, carnes magras, etc.), mientras que la botonera B (la de 1x5) tiene 5 botones para marcar diferentes opciones y acciones: (1) alimento cocinado, (2) alimento crudo, (3) añadir plato, (4) eliminar plato y (5) guardar comida. 
+
+Cabe mencionar que para la "elaboración de las comidas" se ha realizado una abstracción del orden Alimento < Plato < Comida < Acumulado del día, de forma que en el total del día se incluyen todas las comidas realizadas, que tienen varios platos cada una y los cuales incluyen diferentes alimentos.
+
+
+
+El funcionamiento principal de SmartCloth es el siguiente: 
+
+Antes de nada, el usuario pone un recipiente sobre la báscula, donde se irán colocando los alimentos. A continuación, escoge un grupo de alimentos pulsando uno de los 20 botones de la botonera A y, después, indica el procesamiento del alimento (si está cocinado o crudo) pulsando el botón correspondiente en la botonera B (el (1) o el (2)). Es necesario indicar esta opción de procesamiento para un correcto cálculo de los macronutrientes (carbohidratos, grasas y proteínas) y de las kcal.
+
+Una vez hecho esto, el usuario coloca el alimento sobre la báscula. Entonces, en la pantalla aparece la información de macronutrientes y kcal correspondientes a ese tipo de alimento con ese peso, así como el estado actual de la comida completa en elaboración, incluyendo la última información calculada.
+
+En este punto, se puede añadir un alimento diferente al actual repitiendo el proceso desde que se escoge grupo de alimentos (botonera A) o, si ya está completo el plato, se puede añadir un nuevo plato (opción (3) de botonera B) o guardar la comida (opción (5) de botonera B) si se ha terminado toda la elaboración. Si se cometiera algún error en la elaboración del plato, se podría eliminar el plato actual con el botón (4) de la botonera B. 
+
+Cada vez que se indique alguna de las acciones de la botonera B ((3) añadir plato, (4) eliminar plato o (5) guardar comida), se pide por pantalla una confirmación de la acción: se confirma pulsando de nuevo el botón de la acción indicada y se cancela pulsando cualquier otro botón o tras 10 segundos de inactividad. Tras la confirmación de cualquiera de estas acciones, se debe retirar el plato completo para continuar.
+
+
+En resumen, el orden general del uso de SmartCloth es:
+[1] Colocar recipiente en báscula
+[2] Escoger grupo de alimentos
+[3] Escoger procesamiento del alimento (cocinado o crudo)
+[4] Colocar alimento en báscula
+[5.a] Volver a paso 2 para escoger otro grupo para un alimento diferente al pesado actualmente 
+[5.b] Eliminar plato actual si se ha cometido error
+[5.c] Añadir nuevo plato
+[5.d] Guardar comida
+
+
+
+Se ha incluido una gestión de errores de forma que cuando no se hagan los pasos en el orden indicado, la pantalla muestre un mensaje de error y, si es necesario, una sugerencia para solucionarlo. Los errores por pulsación de algún botón no requieren ninguna rectificación, sino que simplemente se marca el error y se vuelve al punto anterior. Sin embargo, los errores que incluyen una manipulación del peso de la báscula (p.ej. colocar el alimento antes de tiempo o retirar el plato en mitad de la elaboración y sin previo aviso) sí necesitan una rectificación, siendo generalmente la retirada del plato completo para comenzar de nuevo.
+
+Por otro lado, también se ha incluido una gestión de avisos para cuando se intente eliminar el plato o añadir uno nuevo pero el actual esté aún vacío, o cuando se intente guardar la comida pero aún no se haya elaborado ningún plato de la misma. En estas situaciones, se muestra por pantalla un mensaje de aviso indicando que el plato o la comida están vacíos y que no se ha realizado la acción. 
+
+
+
+
+Respecto a la información de macronutrientes y kcal mostrada en pantalla, se han creado dos "dashboard" con la misma estructura pero que, según el caso, muestran la información de la "Comida Actual" (CA), "Acumulado Hoy" (AH) o "Alimento Actual" (AA) en dos columnas:
+
+- Dashboard 1: CA | AH
+		En la columna izquierda se muestra la información de la comida que se está elaborando y en la derecha la del total de comidas del día, es decir, la suma de los macronutrientes y kcal de todas las comidas ya realizadas y guardadas previamente en el día.
+	Este dashboard se muestra en 3 ocasiones: tras encender SmartCloth (CA está a 0), tras colocar el recipiente (CA puede ya incluir información de platos anteriores) y tras la retirada del plato luego de las acciones de añadir plato, eliminar plato o guardar comida. En el último caso, CA incluye los datos calculados hasta ese momento, incluso si se acaba de guardar la comida, de forma que se sepa la información total de la comida que se acaba de elaborar. 
+
+- Dashboard 2: AA | CA
+		En la columna izquierda se muestra la información del alimento que se está pesando actualmente, que podría no ser el único del plato, y en la derecha la información de la comida que se está elaborando, incluyendo la info del AA. Esta info del AA puede cambiar según varíe la cantidad colocada en la báscula, provocando una actualización inmediata de la info de la CA mostrada.
+	Este dashboard se muestra mientras se esté elaborando un plato, es decir, desde que se escoge un grupo de alimentos (paso [2]) hasta que se coloca el alimento (paso [4]) y mientras se repita ese ciclo con diferentes alimentos.
+
+
+
+
+A nivel técnico, para el control del sistema se ha utilizado un Arduino Due, que se comunica por SPI con la pantalla y por I2C con la báscula. Respecto a las botoneras, la botonera A (la de 4x5) incluye un chip de puertas OR con una salida conectada al arduino en un pin digital y configurada como interrupción, de forma que si se pulsara algún botón de esa botonera, se activaría esa interrupción, dando lugar a un pulling para saber qué botón se está pulsando. Por otro lado, la botonera B (la de 1x5) tiene los 5 botones conectados directamente al arduino, también en pines digitales y configurados como interrupción, sabiendo inmediatamente qué botón de esa botonera se ha pulsado, sin necesidad de hacer pulling.
+
