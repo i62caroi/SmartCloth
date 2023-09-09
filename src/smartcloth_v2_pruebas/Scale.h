@@ -135,7 +135,7 @@ void checkBascula(){
             pesoBascula = newWeight;
             if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
 
-            if(lastWeight < newWeight){ //INCREMENTO con diferencia de 5 gr
+            if(lastWeight < newWeight){ //INCREMENTO con diferencia de 2 gr
                 Serial.println(F("\nIncremento..."));
                 if(lastWeight > -1.0){ //Incremento en positivo (salvando valores cercanos a 0)
                     Serial.print(F("\nINCREMENTO"));
@@ -145,8 +145,17 @@ void checkBascula(){
                     Serial.print(F("\nTARADO"));
                     eventoBascula = TARAR;
                 }
+                /*
+                if(tarado){
+                    Serial.print(F("\nTARADO"));
+                    eventoBascula = TARAR;
+                }
+                else{
+                    Serial.print(F("\nINCREMENTO"));
+                    eventoBascula = INCREMENTO;
+                }*/
             }
-            else { //DECREMENTO con diferencia de 5 gr
+            else { //DECREMENTO con diferencia de 2 gr
                 Serial.println(F("\nDecremento..."));
                 if(newWeight >= 1.0){ //Se ha quitado algo pero no todo (sigue positivo)
                     Serial.print(F("\nDECREMENTO"));
@@ -170,6 +179,23 @@ void checkBascula(){
                         }
                     }
                 }
+                /*
+                if(tarado){
+                    Serial.print(F("\nTARADO"));
+                    eventoBascula = TARAR;  
+                }
+                else{
+                    if(abs(abs(newWeight) - pesoARetirar) < 5.0){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
+                        // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
+                        Serial.print(F("\nLIBERADA"));
+                        eventoBascula = LIBERAR;
+                        flagRecipienteRetirado = true;
+                    }
+                    else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
+                        Serial.print(F("\nDECREMENTO"));
+                        eventoBascula = DECREMENTO;
+                    }
+                }*/
             }
 
             Serial.println(F("\n--------------------------------------"));

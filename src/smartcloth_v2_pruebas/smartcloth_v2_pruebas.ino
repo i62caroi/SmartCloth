@@ -53,7 +53,7 @@ void setup() {
     setupRTC(); 
 
     /* ------ SD card -------- */
-    setupSDcard(); // Incluye sumar en "Acumulado hoy" las comidas guardadas el día de hoy
+    setupSDcard(); // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
 
     /* ------ SCALE --------- */
     setupScale();   
@@ -63,7 +63,7 @@ void setup() {
     
 
     /*------- ESTADO INICIAL --------- */
-    state_actual = STATE_Empty;
+    state_actual = STATE_Init;
 
 
     /* ---------- BUTTONS PINS --------------- */
@@ -117,7 +117,7 @@ void loop() {
         prevMillis = millis();
         
         
-        doStateActions();   // Actividades del estado actual. Comienza en STATE_Empty 
+        doStateActions();   // Actividades del estado actual. Comienza en STATE_Init 
 
 
         /*--------------------------------------------------------------*/
@@ -154,13 +154,13 @@ void loop() {
                 
                 if(state_prev != lastValidState){
                     switch(state_prev){ // Último estado válido 
-                        case STATE_Empty: case STATE_Plato: case STATE_groupA: case STATE_groupB: case STATE_raw: case STATE_cooked: case STATE_weighted:
+                        case STATE_Init: case STATE_Plato: case STATE_groupA: case STATE_groupB: case STATE_raw: case STATE_cooked: case STATE_weighted:
                             lastValidState = state_prev;
                             break;
                         default: break;
                     }
                 }
-                Serial.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      Serial.print();
+                Serial.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      Serial.println();
                 Serial.print(F("Nuevo estado: "));           printStateName(state_new);       Serial.println();
                 Serial.print(F("Último estado válido: "));   printStateName(lastValidState);  Serial.println();
             }

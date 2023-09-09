@@ -103,12 +103,11 @@ class Comida{
     //void deletePlato();
 
     /**
-     * @brief Actualiza los valores nutricionales de la comida.
+     * @brief Establece los valores nutricionales de la comida a partir de un objeto ValoresNutricionales.
      * 
-     * @param suma True si se quieren sumar los valores nutricionales (al agregar alimento), False si se quieren restar (al eliminar plato)
-     * @param val Valores nutricionales con los que actualizar la comida
+     * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    void updateValoresComida(bool suma, ValoresNutricionales val); 
+    void setValoresComida(ValoresNutricionales val){ this->_valoresComida.setValores(val); };
     
     /**
      * @brief Obtiene los valores nutricionales totales de la comida. 
@@ -116,6 +115,14 @@ class Comida{
      * @return Los valores nutricionales de la comida
      */
     inline ValoresNutricionales getValoresComida(){ return _valoresComida; }; 
+
+    /**
+     * @brief Actualiza los valores nutricionales de la comida.
+     * 
+     * @param suma True si se quieren sumar los valores nutricionales (al agregar alimento), False si se quieren restar (al eliminar plato)
+     * @param val Valores nutricionales con los que actualizar la comida
+     */
+    void updateValoresComida(bool suma, ValoresNutricionales val); 
 
     /**
      * @brief Copiar los valores de un objeto 'Comida' (valores nutricionales, platos y peso) en el objeto Comida tratado.
@@ -203,7 +210,8 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
         kcal = _valoresComida.getKcalValores() - val.getKcalValores();
     }
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    _valoresComida.setValores(valAux);
+    //this->_valoresComida.setValores(valAux);
+    this->setValoresComida(valAux);
 }
 
 // --------------------------------------------------------------------
@@ -212,7 +220,8 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
 void Comida::copyComida(Comida comida){
     this->_setNumPlatos(comida._getNumPlatos());                  // Nº platos 
     this->setPesoComida(comida.getPesoComida());                  // Peso
-    this->_valoresComida.setValores(comida.getValoresComida());   // Valores 
+    //this->_valoresComida.setValores(comida.getValoresComida());   // Valores 
+    this->setValoresComida(comida.getValoresComida());
 }
 // --------------------------------------------------------------------
 
@@ -222,7 +231,8 @@ void Comida::restoreComida(){
     this->_setNumPlatos(0);                                  // Nº platos = 0
     this->setPesoComida(0.0);                                // Peso = 0.0
     ValoresNutricionales valAux; //(0.0, 0.0, 0.0, 0.0)
-    this->_valoresComida.setValores(valAux);                 // Valores = 0.0
+    //this->_valoresComida.setValores(valAux);                 // Valores = 0.0
+    this->setValoresComida(valAux);
 }
 
 // --------------------------------------------------------------------

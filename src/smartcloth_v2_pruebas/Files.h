@@ -55,7 +55,7 @@ char    fileBrain2Green[30] = "bin/inicial/brain2G.bin";
 char    fileManoWhiteIcon[30]   = "bin/manos/manoWppt.bin";
 char    fileManoGreenIcon[30]   = "bin/manos/manoGppt.bin";
 
-// --- IMAGENES GRUPOS Y MANO ---
+// --- IMAGENES GRUPOS ---
 char    fileGrupo1[30]      = "bin/grupo/grupo1.bin";
 char    fileGrupo2[30]      = "bin/grupo/grupo2.bin";
 char    fileGrupo3[30]      = "bin/grupo/grupo3.bin";

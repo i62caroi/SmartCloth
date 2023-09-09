@@ -72,6 +72,13 @@ class Plato{
     void addAlimentoPlato(Alimento alimento);         
     
     /**
+     * @brief Establece los valores nutricionales del plato a partir de un objeto ValoresNutricionales.
+     * 
+     * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
+     */
+    void setValoresPlato(ValoresNutricionales val){ this->_valoresPlato.setValores(val); };
+
+    /**
      * @brief Obtiene los valores nutricionales del plato.
      * 
      * @return Los valores nutricionales del plato
@@ -113,7 +120,8 @@ void Plato::updateValoresPlato(ValoresNutricionales val){
     float prot = _valoresPlato.getProtValores() + val.getProtValores();
     float kcal = _valoresPlato.getKcalValores() + val.getKcalValores();
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    _valoresPlato.setValores(valAux);
+    //_valoresPlato.setValores(valAux);
+    this->setValoresPlato(valAux);
 }
 
 
@@ -122,7 +130,8 @@ void Plato::restorePlato(){
     this->_setNumAlimentos(0);                             // Nº alimentos = 0
     this->setPesoPlato(0.0);                              // Peso = 0.0
     ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);
-    _valoresPlato.setValores(valAux);                     // Valores = 0
+    //_valoresPlato.setValores(valAux);                     // Valores = 0
+    this->setValoresPlato(valAux);
 }
 
 

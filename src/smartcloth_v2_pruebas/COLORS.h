@@ -29,7 +29,7 @@
 // ---------------- COLORES GENERALES ---------
 #define   BLACK     0x0000  // Limpiar páginas antes de escribir o copiar imágenes
 #define   WHITE     0xFFFF  // Texto y wireframes de carga y arranque
-#define   YELLOW    0xFFE0  // Texto "Comida guardada" en STATE_Empty si se acaba de guardar la comida
+#define   YELLOW    0xFFE0  // Texto "Comida guardada" en STATE_Init si se acaba de guardar la comida
 // -------------------------------------------------
 
 

@@ -38,7 +38,7 @@ class Diario{
      * 
      * @return La primera posición disponible en el array de comidas
      */
-    inline int _firstGapDiario(){ return this->getNumComidas(); };
+    //inline int _firstGapDiario(){ return this->getNumComidas(); };
 
   public:
     /**
@@ -80,13 +80,6 @@ class Diario{
      * @param comida Objeto Comida a agregar
      */
     void addComida(Comida comida);      
-    
-    /**
-     * @brief Actualiza los valores nutricionales del diario.
-     * 
-     * @param val Valores nutricionales con los que actualizar el diario
-     */
-    void updateValoresDiario(ValoresNutricionales val);
 
     /**
      * @brief Establece los valores nutricionales del diario a partir de un objeto ValoresNutricionales.
@@ -101,6 +94,13 @@ class Diario{
      * @return Los valores nutricionales del diario
      */
     inline ValoresNutricionales getValoresDiario(){ return _valoresDiario; };
+
+    /**
+     * @brief Actualiza los valores nutricionales del diario.
+     * 
+     * @param val Valores nutricionales con los que actualizar el diario
+     */
+    void updateValoresDiario(ValoresNutricionales val);
 };
 
 
@@ -127,7 +127,8 @@ void Diario::updateValoresDiario(ValoresNutricionales val){
   float prot = _valoresDiario.getProtValores() + val.getProtValores();
   float kcal = _valoresDiario.getKcalValores() + val.getKcalValores();
   ValoresNutricionales valAux(carb, lip, prot, kcal);
-  _valoresDiario.setValores(valAux);
+  //_valoresDiario.setValores(valAux);
+  setValoresDiario(valAux);
 }
 
 Diario    diaActual; // Objeto del acumulado de hoy

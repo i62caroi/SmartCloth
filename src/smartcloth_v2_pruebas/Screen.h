@@ -253,13 +253,13 @@ void    printZona3(int show_objeto);      // Zona 3 => Mostrar comida actual cop
 void    printZona4(int show_objeto);      // Zona 4 => Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
 void    showValores(ValoresNutricionales &valores, int zona);  // Mostrar valores en la 'zona' correspondiente (SHOW_VALORES_ZONA3 O SHOW_VALORES_ZONA4).
 void    showRaciones(ValoresNutricionales &valores, int zona); // Mostrar raciones con decimales mínimos y centradas según la 'zona' (SHOW_RACIONES_ZONA3 o SHOW_RACIONES_ZONA4).
-void    showDashboardStyle1(int msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Empty y STATE_Plato
+void    showDashboardStyle1(int msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Init y STATE_Plato
 void    showDashboardStyle2();                // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
 // --- PANTALLAS TRANSITORIAS ---
 // -- Recipiente ---------
-void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Empty
+void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Init
 void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
-void    recipienteRetirado();             // Mostrar "Recipiente retirado"     =>  solo si se ha retirado (LIBERAR --> STATE_Empty)
+void    recipienteRetirado();             // Mostrar "Recipiente retirado"     =>  solo si se ha retirado (LIBERAR --> STATE_Init)
 // -- Grupo --------------
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
 // -- Procesamiento ------
@@ -1030,7 +1030,7 @@ void showRaciones(ValoresNutricionales &valores, int zona){
    showDashboardStyle1(): Muestra el dashboard de estilo 1 con Zona 1 (grupo), Zona 2 (procesamiento), 
                           Zona 3 (Comida Actual copiada) y Zona 4 (Acumulado Hoy).
 
-                          Este dashboard solo se muestra en STATE_Empty y STATE_Plato.
+                          Este dashboard solo se muestra en STATE_Init y STATE_Plato.
           Parámetros:
                     msg_option - int   -->   0: sin mensaje   1: "no hay recipiente"    2: "no hay grupo"
 ----------------------------------------------------------------------------------------------------------*/
@@ -1083,7 +1083,7 @@ void showDashboardStyle2(){
 /*-------------------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------------------
-   pedirRecipiente(): Pide colocar un recipiente (STATE_Empty)
+   pedirRecipiente(): Pide colocar un recipiente (STATE_Init)
 ----------------------------------------------------------------------------------------------------------*/
 void pedirRecipiente(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
@@ -1184,7 +1184,7 @@ void recipienteColocado(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(170, 258);  tft.println("RECIPIENTE COLOCADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    tft.setCursor(170, 258);  tft.println("RECIPIENTE COLOCADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Init
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
@@ -1205,7 +1205,7 @@ void recipienteRetirado(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(170, 258);  tft.println("RECIPIENTE RETIRADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    tft.setCursor(170, 258);  tft.println("RECIPIENTE RETIRADO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Init
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
@@ -1243,7 +1243,7 @@ void pedirGrupoAlimentos(){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(130, 50);                                           tft.println("SELECCIONE UN GRUPO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Empty
+    tft.setCursor(130, 50);                                           tft.println("SELECCIONE UN GRUPO"); // 12x24 escalado x3. Color texto foreground a WHITE en STATE_Init
     tft.setCursor(255, tft.getCursorY() + tft.getTextSizeY()-10);     tft.print("DE ALIMENTOS"); 
 
     // ----- ESPERA E INTERRUPCION ----------------
@@ -2003,8 +2003,8 @@ void showAccionRealizada(int option){
       case SAVE_EXECUTED: // GUARDADA
               // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
               //if((pesoRecipiente + pesoPlato) == 0.0){
-              if(lastValidState == STATE_Empty){
-                  // Puede ser que se quiera guardar desde el STATE_Empty, tras añadir o borrar. Si es así,
+              if(lastValidState == STATE_Init){
+                  // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
                   // la báscula estará vacía (pesoARetirar = 0).
                   tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
                   tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
@@ -2139,7 +2139,7 @@ void showWarning(int option){
    showError(): Pantalla genérica de error que indica una acción incorrecta. Según la opción indicada como
                 parámetro, dependiente del estado actual, se muestra un mensaje diferente de acción posible.
           Parámetros:
-                option - int -> 1: Empty        2: Plato          3: grupoA       4: grupoB   5: Crudo    
+                option - int -> 1: Init         2: Plato          3: grupoA       4: grupoB   5: Crudo    
                                 6: Cocinado     7: Pesado         8: add_check    9: Added    10: delete_check     
                                 11: Deleted     12: save_check    13: Saved
 ----------------------------------------------------------------------------------------------------------*/
@@ -2177,7 +2177,7 @@ void showError(int option){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
     switch (option){
-      case ERROR_STATE_EMPTY: // Empty
+      case ERROR_STATE_INIT: // Init
               tft.setCursor(250, 420);                                     tft.println("COLOQUE UN RECIPIENTE"); 
               //tft.setCursor(160, 420);                                     tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
               //tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); // "O GUARDE LA COMIDA"
@@ -2555,7 +2555,7 @@ void showAcumuladoBorrado(bool exito){
 
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()+50); tft.println("REGRESANDO A EMPTY...");
+    tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()+50); tft.println("REGRESANDO A INIT...");
     // -------------------------------------------------------------------
 }
 
