@@ -32,7 +32,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 147   // HASTA AHORA ERAN 140. 
+#define RULES 138   // 7 SON DE BORRAR CSV EN PRUEBAS. Serían 145 si se contaran las comentadas que no ya sirven (?) porque se tiene STATE_AVISO
 
 // --- PEDIR CONFIRMACIÓN ---
 #define  ASK_CONFIRMATION_ADD     1
@@ -304,8 +304,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                                                                          //     todo decremento de peso se considera evento QUITAR.
                                         {STATE_added,STATE_added,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_added,STATE_Init,LIBERAR},                // Se ha retirado el plato completo (+ recipiente) tras añadir uno nuevo.
-                                        {STATE_added,STATE_groupA,GO_TO_GROUP_A},        // No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.
-                                        {STATE_added,STATE_groupB,GO_TO_GROUP_B},        // No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.
+                                        //{STATE_added,STATE_groupA,GO_TO_GROUP_A},        // ¿NECESARIO CON STATE_AVISO? No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.??????
+                                        //{STATE_added,STATE_groupB,GO_TO_GROUP_B},        // ¿NECESARIO CON STATE_AVISO? No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         {STATE_added,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         {STATE_added,STATE_AVISO,AVISO},                 // No se ha añadido un plato porque el actual está vacío
                                         // ---------------------
@@ -329,8 +329,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                                                                          //     todo decremento de peso se considera evento QUITAR.
                                         {STATE_deleted,STATE_deleted,INCREMENTO},        // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_deleted,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) tras borrar. 
-                                        {STATE_deleted,STATE_groupA,GO_TO_GROUP_A},      // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
-                                        {STATE_deleted,STATE_groupB,GO_TO_GROUP_B},      // No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
+                                        //{STATE_deleted,STATE_groupA,GO_TO_GROUP_A},      // ¿NECESARIO CON STATE_AVISO? No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
+                                        //{STATE_deleted,STATE_groupB,GO_TO_GROUP_B},      // ¿NECESARIO CON STATE_AVISO? No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         {STATE_deleted,STATE_ERROR,ERROR},               // Acción incorrecta
                                         {STATE_deleted,STATE_AVISO,AVISO},               // No se ha eliminado el plato porque está vacío
                                         // -----------------------
@@ -354,9 +354,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                                                                          //     todo decremento de peso se considera evento QUITAR.
                                         {STATE_saved,STATE_saved,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_saved,STATE_Init,LIBERAR},                // Se ha retirado el plato completo (+ recipiente) tras guardar correctamente.  
-                                        {STATE_saved,STATE_groupA,GO_TO_GROUP_A},        // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
-                                        {STATE_saved,STATE_groupB,GO_TO_GROUP_B},        // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
-                                        {STATE_saved,STATE_Init,GO_TO_INIT},             // No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
+                                        //{STATE_saved,STATE_groupA,GO_TO_GROUP_A},        // ¿NECESARIO CON STATE_AVISO? No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
+                                        //{STATE_saved,STATE_groupB,GO_TO_GROUP_B},        // ¿NECESARIO CON STATE_AVISO? No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
+                                        //{STATE_saved,STATE_Init,GO_TO_INIT},             // ¿NECESARIO CON STATE_AVISO? No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
                                         {STATE_saved,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         {STATE_saved,STATE_AVISO,AVISO},                 // No se ha guardado la comida porque está vacía
                                         // -----------------------

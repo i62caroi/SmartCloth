@@ -12,6 +12,8 @@
  *  @note Se ha utilizado un RTC DS3231 de Az-Delivery
  *  @note https://www.amazon.es/AZDelivery-Reloj-tiempo-DS3231-Parent/dp/B082MN58TN Módulo RTC DS3231 de Az-Delivery
  *
+ *  @note Se ha utilizado la librería DS32321 de Rinky-Dink Electronics (http://www.rinkydinkelectronics.com/library.php?id=73)
+ *
  *  
  */
 

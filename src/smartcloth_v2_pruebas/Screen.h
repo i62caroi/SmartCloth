@@ -1229,6 +1229,9 @@ void recipienteRetirado(){
 
 /*---------------------------------------------------------------------------------------------------------
    pedirGrupoAlimentos(): Pide escoger grupo de alimentos, tras haber colocado recipiente (STATE_Plato)
+
+   TODO: DIBUJAR BORDE DE RECTANGULO REDONDEADO (VARIAS VECES POR GROSOR) DEL COLOR DEL FONDO Y PONERLO 
+          ENCIMA DE LAS IMÁGENES DE GRUPOS PARA TAPAR LAS SOMBRAS EN LAS ESQUINAS.
 ----------------------------------------------------------------------------------------------------------*/
 void pedirGrupoAlimentos(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
@@ -1267,6 +1270,9 @@ void pedirGrupoAlimentos(){
     // ------ Grupo 1 (130x125) ---------
     //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,236,288,130,125); // x = 236  ->  y = 288
     slowAppearanceImage(SLOW_APPEAR_GRUPO1);
+
+    // DIBUJAR BORDE DE RECTANGULO REDONDEADO (VARIAS VECES POR GROSOR) DEL COLOR DEL FONDO Y PONERLO ENCIMA 
+    // DE LAS IMÁGENES DE GRUPOS PARA TAPAR LAS SOMBRAS EN LAS ESQUINAS.
 
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(800)) return;
@@ -1756,7 +1762,8 @@ void pedirAlimento(){
 /*-------------------------------------------------------------------------------------------------------*/
 /*---------------------------- SUGERIR ACCIONES ---------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
-
+// TODO: DIBUJAR BORDE DE RECTANGULO REDONDEADO (VARIAS VECES POR GROSOR) DEL COLOR DEL FONDO Y PONERLO ENCIMA 
+//        DE LAS IMÁGENES PARA TAPAR LAS SOMBRAS EN LAS ESQUINAS.
 void sugerirAccion(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 

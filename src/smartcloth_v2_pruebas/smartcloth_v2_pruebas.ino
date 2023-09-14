@@ -47,7 +47,7 @@ unsigned long         tiempoPrevio = 0;
 void setup() {
     Serial.begin(115200);
     while (!Serial);
-    delay(1000);
+    delay(1000); 
 
     /* ------ RTC ------------ */
     setupRTC(); 

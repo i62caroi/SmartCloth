@@ -1,0 +1,90 @@
+El proyecto se llama SmartCloth y trata de un mantel digital para la autogestión de la dieta en pacientes diabéticos. El objetivo de SmartCloth es que los usuarios lo utilicen en la elaboración de sus comidas para llevar un control de las kilocalorías y las raciones de carbohidratos, grasas y proteínas consumidas, diferenciando entre la comida que están elaborando y el total de las comidas ya realizadas en el día.
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+A nivel general, SmartCloth consta de una báscula (basada en una célula de carga y un controlador HX711), dos botoneras (una de 4x5 y otra de 1x5) y una pantalla TFT. La botonera A (la de 4x5) tiene 20 botones que indican diferentes grupos de alimentos (lácteos azucarados, legumbres, carnes magras, etc.), mientras que la botonera B (la de 1x5) tiene 5 botones para marcar diferentes opciones y acciones: (1) alimento cocinado, (2) alimento crudo, (3) añadir plato, (4) eliminar plato y (5) guardar comida. 
+Además, el mantel también incluye un reloj en tiempo real (RTC) DS3231 para saber la fecha en todo momento, lo cual es necesario para guardar la información de la comida con una marca de tiempo. 
+
+Respecto a la alimentación, Smartcloth tiene un usb tipo A hembra desde donde se alimentaría todo el mantel y un conversor para transformar los 5V que da el usb en 3.3V. Este conversor es necesario ya que hay elementos que funcionan a 5V y otros a 3.3V (pantalla, báscula y botoneras).
+
+Como microcontrolador se ha utilizado un Arduino Due, que se comunica por SPI con la pantalla, por Serial con el controlador de la báscula (HX711) y por I2C con el RTC. 
+
+A continuación, se presenta información detallada de cada elemento del mantel y sus conexiones:
+
+· BOTONERAS: para evitar las interferencias electromagnéticas y minimizar las "pulsaciones fantasma", se ha diseñado una placa de circuito (PCB) para cada una (cuando digo "pulsaciones fantasma" me refiero a que cuando acercabas la mano a las botoneras, a veces se detectaba la pulsación de algún botón, aunque no se hubiera tocado nada). 
+Las PCBs de las botoneras están organizadas de la siguiente forma:
+
+- Botonera A (grupos de alimentos): es un teclado matricial de 4 filas y 5 columnas (20 botones) donde cada fila tiene una resistencia pull-down de 5K de forma que los botones se activen a HIGH. Además, la PCB tiene integrado un chip 74HC32 de 4 puertas OR de 2 entradas cada una. Las 4 filas de la matriz se conectan 2 a 2 a esas puertas OR y sus salidas se conectan a otra puerta OR para obtener una única salida final que se active cuando alguna de las filas esté activa, lo que significaría que hay algún botón pulsado. Esta salida del chip se conecta a un pin digital del Arduino y se configura como interrupción para avisar de que se está pulsando algún botón. Cuando salta la interrupción, se desencadena un pulling que hace un barrido activando columna a columna y viendo qué fila está a activa, pudiendo localizar así el botón que se está pulsando según el cruce entre la columna y la fila (esta información del pulling podría dejarse para el apartado de Diseño de Software). Por supuesto, tanto las 4 filas como las 5 columnas están conectadas a pines digitales del Arduino. Por último, además de los 20 botones, las 4 resistencias pull-down de 5K y el chip 74HC32, la PCB de la botonera A también incluye 20 diodos (uno por botón) para proteger eléctricamente los puertos de cada botón. Creo que se decidió colocar los diodos para proteger los botones en caso de que se pulsen varios a la vez, pero no estoy segura.
+En resumen, la PCB de la botonera A incluye 20 botones 'tact-switch', 4 resistencias de 5K, 20 diodos y un chip 74HC32.
+
+- Botonera B (opciones de cocción y funciones de añadir, borrar y guardar): está formada por 5 botones, cada uno con su resistencia pull-down de 5K. Cada botón está conectado a un pin digital del Arduino y configurado como interrupción para, si salta, saber directamente qué botón se ha pulsado. En resumen, la PCB de la botonera B incluye 5 botones 'tact-switch' y 5 resistencias de 5K.
+
+Por supuesto, ambas botoneras tienen conexión a tierra y a alimentación de 3.3V.
+
+
+· PANTALLA: se ha utilizado el modelo ER-TFTM070-6 de EastRising de 7 pulgadas con 1024x600 puntos RGB. Esta pantalla incluye una ranura para tarjeta microSD, pero aunque esté integrada por detrás de la pantalla, no tiene conexión directa con el chip controlador de la pantalla (el chip gráfico RA8876), por lo que se debe comunicar de forma independiente con el microcontrolador mediante SPI. La pantalla en sí misma (su chip) también se comunica por SPI con el microcontrolador, por lo que tanto la SD como la pantalla comparten el mismo bus SPI, aunque están conectadas a un pin CS diferente para poder distinguirlas. 
+
+Las conexiones de la SD están separadas de las del resto de la pantalla. En cada caso se han utilizado las siguientes conexiones:
+- SD: 4 pines para la comunicación SPI con el microcontrolador (MOSI, MISO, CLK y CS) y 1 pin para tierra (GND).
+- Pantalla: 4 pines para la comunicación SPI con el microcontrolador (MOSI, MISO, CLK y CS), 1 pin de reset, 1 pin de la luz de la pantalla (backlight), 4 pines para alimentación a 3.3V y 6 pines para tierra (GND).
+
+Lo de que la microSD no esté conectada directamente con el chip de la pantalla provoca que cada vez que se quiera mostrar en pantalla una imagen guardada en la SD, se deba llevar al microcontrolador y desde allí llevarla a la pantalla, lo que aumenta enormemente (>20 segundos según tamaño) el tiempo de aparición de la imagen en pantalla. Para solucionarlo, al arrancar SmartCloth se obtienen de la SD todas las imágenes y se guardan en la memoria SDRAM de la pantalla, de forma que el microcontrolador solo deba indicarle la zona de la memoria en la que está guardada la imagen que se quiere mostrar. Así, el encender de SmartCloth es lento (<1 minuto) porque se están cargando las imágenes en memoria, pero cuando haya que mostrarlas, será de forma instantánea.
+
+
+· BÁSCULA: está formada por una celda de carga y un conversor AD/DC con chip HX711 que comunica la celda con el microcontrolador mediante comunicación Serial. La celda tiene 4 cables que se conectan al conversor (E+, E- A- y A+) y el conversor, por otro lado, conecta 1 pin a tierra y 1 pin a VCC de 3.3V, y realiza la comunicación Serial conectando 1 pin DOUT a un pin digital del microcontrolador y 1 pin SCK a otro pin digital del microcontrolador.
+
+
+· RTC: se ha empleado un módulo DS3231 que, por supuesto, incluye un zócalo para batería CR2032 de 3V, de forma que continúe funcionando aun cuando SmartCloth esté apagado y no pierda la fecha. El RTC utiliza 4 pines para comunicarse mediante I2C con el microcontrolador (GND, VCC, SDA y SCL). En este caso, este es el único dispositivo que se alimenta a través de un pin de 3.3V del propio microcontrolador, mientras todos los demás dispositivos se alimentan directamente del conversor 5V-3.3V. (El Arduino, aunque trabaja a 3.3V, se alimenta por su puerto microUSB con 5V directamente desde la entrada de USB de SmartCloth. Tiene un conversor interno que convierte los 5V que recibe en los 3.3V que necesita).
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Cabe mencionar que para la "elaboración de las comidas" se ha realizado una abstracción del orden Alimento < Plato < Comida < Acumulado del día, de forma que en el total del día se incluyen todas las comidas realizadas, que tienen varios platos cada una y los cuales incluyen diferentes alimentos.
+
+
+
+El funcionamiento principal de SmartCloth es el siguiente: 
+
+Antes de nada, el usuario pone un recipiente sobre la báscula, donde se irán colocando los alimentos. A continuación, escoge un grupo de alimentos pulsando uno de los 20 botones de la botonera A y, después, indica el procesamiento del alimento (si está cocinado o crudo) pulsando el botón correspondiente en la botonera B (el (1) o el (2)). Es necesario indicar esta opción de procesamiento para un correcto cálculo de los macronutrientes (carbohidratos, grasas y proteínas) y de las kcal.
+
+Una vez hecho esto, el usuario coloca el alimento sobre la báscula. Entonces, en la pantalla aparece la información de macronutrientes y kcal correspondientes a ese tipo de alimento con ese peso, así como el estado actual de la comida completa en elaboración, incluyendo la última información calculada.
+
+En este punto, se puede añadir un alimento diferente al actual repitiendo el proceso desde que se escoge grupo de alimentos (botonera A) o, si ya está completo el plato, se puede añadir un nuevo plato (opción (3) de botonera B) o guardar la comida (opción (5) de botonera B) si se ha terminado toda la elaboración. Si se cometiera algún error en la elaboración del plato, se podría eliminar el plato actual con el botón (4) de la botonera B. 
+
+Cada vez que se indique alguna de las acciones de la botonera B ((3) añadir plato, (4) eliminar plato o (5) guardar comida), se pide por pantalla una confirmación de la acción: se confirma pulsando de nuevo el botón de la acción indicada y se cancela pulsando cualquier otro botón o tras 10 segundos de inactividad. Tras la confirmación de cualquiera de estas acciones, se debe retirar el plato completo para continuar.
+
+
+En resumen, el orden general del uso de SmartCloth es:
+[1] Colocar recipiente en báscula
+[2] Escoger grupo de alimentos
+[3] Escoger procesamiento del alimento (cocinado o crudo)
+[4] Colocar alimento en báscula
+[5.a] Volver a paso 2 para escoger otro grupo para un alimento diferente al pesado actualmente 
+[5.b] Eliminar plato actual si se ha cometido error
+[5.c] Añadir nuevo plato
+[5.d] Guardar comida
+
+
+
+Se ha incluido una gestión de errores de forma que cuando no se hagan los pasos en el orden indicado, la pantalla muestre un mensaje de error y, si es necesario, una sugerencia para solucionarlo. Los errores por pulsación de algún botón no requieren ninguna rectificación, sino que simplemente se marca el error y se vuelve al punto anterior. Sin embargo, los errores que incluyen una manipulación del peso de la báscula (p.ej. colocar el alimento antes de tiempo o retirar el plato en mitad de la elaboración y sin previo aviso) sí necesitan una rectificación, siendo generalmente la retirada del plato completo para comenzar de nuevo.
+
+Por otro lado, también se ha incluido una gestión de avisos para cuando se intente eliminar el plato o añadir uno nuevo pero el actual esté aún vacío, o cuando se intente guardar la comida pero aún no se haya elaborado ningún plato de la misma. En estas situaciones, se muestra por pantalla un mensaje de aviso indicando que el plato o la comida están vacíos y que no se ha realizado la acción. 
+
+
+
+
+Respecto a la información de macronutrientes y kcal mostrada en pantalla, se han creado dos "dashboard" con la misma estructura pero que, según el caso, muestran la información de la "Comida Actual" (CA), "Acumulado Hoy" (AH) o "Alimento Actual" (AA) en dos columnas:
+
+- Dashboard 1: CA | AH
+		En la columna izquierda se muestra la información de la comida que se está elaborando y en la derecha la del total de comidas del día, es decir, la suma de los macronutrientes y kcal de todas las comidas ya realizadas y guardadas previamente en el día.
+	Este dashboard se muestra en 3 ocasiones: tras encender SmartCloth (CA está a 0), tras colocar el recipiente (CA puede ya incluir información de platos anteriores) y tras la retirada del plato luego de las acciones de añadir plato, eliminar plato o guardar comida. En el último caso, CA incluye los datos calculados hasta ese momento, incluso si se acaba de guardar la comida, de forma que se sepa la información total de la comida que se acaba de elaborar. 
+
+- Dashboard 2: AA | CA
+		En la columna izquierda se muestra la información del alimento que se está pesando actualmente, que podría no ser el único del plato, y en la derecha la información de la comida que se está elaborando, incluyendo la info del AA. Esta info del AA puede cambiar según varíe la cantidad colocada en la báscula, provocando una actualización inmediata de la info de la CA mostrada.
+	Este dashboard se muestra mientras se esté elaborando un plato, es decir, desde que se escoge un grupo de alimentos (paso [2]) hasta que se coloca el alimento (paso [4]) y mientras se repita ese ciclo con diferentes alimentos.
+
+
+
+
+A nivel técnico, para el control del sistema se ha utilizado un Arduino Due, que se comunica por SPI con la pantalla y por I2C con la báscula. Respecto a las botoneras, la botonera A (la de 4x5) incluye un chip de puertas OR con una salida conectada al arduino en un pin digital y configurada como interrupción, de forma que si se pulsara algún botón de esa botonera, se activaría esa interrupción, dando lugar a un pulling para saber qué botón se está pulsando. Por otro lado, la botonera B (la de 1x5) tiene los 5 botones conectados directamente al arduino, también en pines digitales y configurados como interrupción, sabiendo inmediatamente qué botón de esa botonera se ha pulsado, sin necesidad de hacer pulling.
+
