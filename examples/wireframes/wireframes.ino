@@ -67,9 +67,11 @@ void setup() {
 
 
     loadPicturesShowHourglass();
+
+    crudo_cocinado_sobre_dashboard(); // sin transparencias ni alternancias, solo aparecer
     
     //pantalla_inicial(); // OK
-    select_Grupo(); // OK con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
+    //select_Grupo(); // OK con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
     //crudo_cocinado(); // OK con 3º alternancia y aparición/desaparición paulatinas
     //colocar_alimento(); // OK con aparición paulatina
 
@@ -505,6 +507,137 @@ void crudo_cocinado(){ // Tb PAGE3, pero más a la derecha
     slowAppearanceAndDisappareance(2); // Desaparecer COCINADO y aparecer CRUDO
     // ----------------------------------------------------------------------------------------------------
 */
+}
+
+
+
+// SUPERPUESTO AL DASHBOARD PARA OBLIGAR A ESCOGER CRUDO/COCINADO
+void crudo_cocinado_sobre_dashboard(){
+  int x1, y1, x2, y2;
+
+  tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
+
+    // ---------- ZONAS QUE SE MANTIENEN  ---------------------------------------------------------------
+      // -------------- ZONA 1 ----------------------------------------------------
+        // Recuadro grupo y ejemplos
+        tft.fillRoundRect(30,20,932,135,20,GRIS_CUADROS); // 902 x 115
+        
+        // -------- TEXTO ------------------------
+        tft.selectInternalFont(RA8876_FONT_SIZE_32);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+        tft.setTextForegroundColor(WHITE); 
+
+        // Título
+        tft.setCursor(40,30);
+        tft.print("Grupo Actual: ");  // 32 escale x1
+
+        // Nombre grupo
+        tft.setTextForegroundColor(COLOR_G1); // COLOR como atributo de struct 'grupo'
+        tft.setCursor(tft.getCursorX(),tft.getCursorY());
+        tft.print("L\xE1""cteos enteros"); // Nombre grupo // 32 escale x1
+
+        // Ejemplos grupo
+        tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+        tft.setCursor(40,70);
+        tft.println("Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc."); // 24 escale x1
+        // -------- FIN TEXTO --------------------
+      // -------------- FIN ZONA 1 ------------------------------------------------
+
+      // -------------- ZONA 2 ----------------------------------------------------
+        // ----- COCINADO ---------
+          // Dibujar cuadro cocinado
+          tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); 
+          // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+          tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
+          // Resaltado en cuadro cocinado
+          tft.drawRoundRect(937,20,994,74,10,RED); // Resaltado x1 en cuadro cocinado
+          tft.drawRoundRect(938,21,993,73,10,RED); // Resaltado x2 en cuadro cocinado
+          tft.drawRoundRect(939,22,992,72,10,RED); // Resaltado x3 en cuadro cocinado
+        // ----- FIN COCINADO -----
+
+        // ----- CRUDO ------------
+          // Dibujar cuadro crudo
+          tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); 
+          // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+          tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
+          // Resaltado en cuadro crudo
+          tft.drawRoundRect(937,79,994,133,10,RED); // Resaltado x1 en cuadro crudo
+          tft.drawRoundRect(938,80,993,132,10,RED); // Resaltado x2 en cuadro crudo
+          tft.drawRoundRect(939,81,992,131,10,RED); // Resaltado x3 en cuadro crudo
+        // ----- FIN CRUDO --------
+      // -------------- FIN ZONA 2 ------------------------------------------------
+    // ---------------------------------------------------------------------------------------------------
+
+
+    delay(1000);
+
+    // ---------- ZONAS QUE SE TAPAN ----------------------------------------------------------------------
+      // -------------- ZONAS 3 Y 4 -----------------------------------------------
+        // ------- GRÁFICOS -------------------------------------
+        // Recuadro tapando zonas 3 y 4 del dashboard
+        tft.fillRoundRect(30,145,994,580,20,VERDE_PEDIR); // 964 x 435
+        tft.drawRoundRect(30,145,994,580,20,VERDE_BORDE_PEDIR_COCCION); // Borde => 964 x 435
+        // ------ LINEAS -----
+        tft.fillRoundRect(30,330,256,338,3,WHITE);
+        tft.fillRoundRect(768,527,994,535,3,WHITE);
+        // ------- FIN GRÁFICOS ---------------------------------
+
+        delay(500);
+
+        // ----- TEXTO (PREGUNTA) -------------------------------
+        tft.selectInternalFont(RA8876_FONT_SIZE_32);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setTextForegroundColor(WHITE); 
+        tft.setCursor(230, 185);                                        tft.println("\xBF""EL ALIMENTO EST\xC1""");
+        tft.setCursor(250, tft.getCursorY() + tft.getTextSizeY()-20);   tft.print("COCINADO O CRUDO\x3F"""); 
+        delay(500);
+        // ------- FIN TEXTO ------------------------------------
+
+        // ----- BOTONES ----------------------------------------
+        // COCINADO
+        //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,230,220,177,160); // Mostrar cociGra (177x160) en PAGE1
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,280,350,177,160); // Mostrar cociGra (177x160) en PAGE1
+        delay(500);
+
+        /* QUEDA FEO PORQUE PIERDE LAS ESQUINAS REDONDAS
+        // CUADRADO REDONDEADO ALREDEDOR DE BOTONES PARA "ELIMINAR" ESQUINAS OSCURAS    
+          // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+          // cuadrados separados por 1 píxel en cada dirección, para simular un grosor mayor.
+        for (int i = 0; i <= 20; i++) {
+              x1 = 284 - i;   y1 = 353 - i;   // x1 +4    y1 +3
+              x2 = 452 + i;   y2 = 507 + i;   // x2 -5    y2 -3
+              tft.drawRect(x1,y1,x2,y2,VERDE_PEDIR); // Alrededor de botón
+              //tft.drawRoundRect(x1,y1,x2,y2,20,VERDE_PEDIR);
+          }
+        delay(500);
+        */
+
+        // CRUDO
+        //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,617,220,177,160); // Mostrar crudoGra (177x160) en PAGE1
+        tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,567,350,177,160); // Mostrar crudoGra (177x160) en PAGE1
+        //delay(500);
+
+        /* QUEDA FEO PORQUE PIERDE LAS ESQUINAS REDONDAS
+        // CUADRADO REDONDEADO ALREDEDOR DE BOTONES PARA "ELIMINAR" ESQUINAS OSCURAS    
+          // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+          // cuadrados separados por 1 píxel en cada dirección, para simular un grosor mayor.
+        for (int i = 0; i <= 20; i++) {
+              x1 = 571 - i;   y1 = 353 - i;   
+              x2 = 739 + i;   y2 = 507 + i;
+              tft.drawRect(x1,y1,x2,y2,VERDE_PEDIR); // Alrededor de botón
+              //tft.drawRoundRect(x1,y1,x2,y2,20,VERDE_PEDIR);
+          }
+          */
+        // ----- FIN BOTONES ------------------------------------
+
+
+      // -------------- FIN ZONAS 3 Y 4 -------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
+
+  
+
+  
+
 }
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //----------------------------- FIN CRUDO/COCINADO --------------------------------------------------------------------------------------------------------------------------------------
@@ -1825,7 +1958,8 @@ void dashboard(){ // OK ==> HECHO
     float raciones;
     int integerPart;
 
-    // --------- DASHBOARD -------------------------------------------------------------------------------
+// CARGA NO NECESARIA, SE HACE EN loadPicturesShowHourglass()
+ /*   // --------- CARGA IMÁGENES -------------------------------------------------------------------------------
       // cociPeq
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(529,131,47,42,"bin/dash/cociPeq.bin"); // Cargar cociPeq (47x42) en PAGE3 =>  x  =  <crudoGra(351) + crudoGra(177) + 1 = 529  ->   y = 131  
@@ -1839,9 +1973,10 @@ void dashboard(){ // OK ==> HECHO
       tft.sdCardDraw16bppBIN256bits(529,174,60,65,"bin/dash/kcal_20.bin"); // Cargar kcal_20 (60x65) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
       //tft.sdCardDraw16bppBIN256bits(529,174,50,54,"bin/dash/kcal_30.bin"); // Cargar kcal_30 (50x54) en PAGE3 =>  x = <crudoGra(351) + crudoGra(177) + 1 = 529   ->   y = <cociPeq(131) + cociPeq(42) + 1 = 174
 
-    // --------- FIN DASHBOARD ---------------------------------------------------------------------------
-
-    tft.canvasImageStartAddress(PAGE1_START_ADDR); // Regresar a PAGE1
+    // --------- FIN CARGA IMÁGENES ---------------------------------------------------------------------------
+*/
+    // NO HACE FALTA VOLVER A PAG1, YA SE HACE EN loadPicturesShowHourglass()
+    //tft.canvasImageStartAddress(PAGE1_START_ADDR); // Regresar a PAGE1
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     // ------------ ZONA SUPERIOR --------------------------------------------
