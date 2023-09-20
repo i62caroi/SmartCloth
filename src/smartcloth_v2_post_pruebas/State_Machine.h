@@ -462,7 +462,7 @@ bool  flagRecipienteRetirado = false;
  * @brief Enumeración de los diferentes valores del procesamiento del alimento.
  */
 typedef enum {
-              SIN_PROCESAMIENTO   =   (0),   /**< Alimento sin procesamiento indicado  */
+              //SIN_PROCESAMIENTO   =   (0),   /**< Alimento sin procesamiento indicado  */
               ALIMENTO_CRUDO      =   (1),   /**< Alimento crudo  */
               ALIMENTO_COCINADO   =   (2)    /**< Alimento cocinado  */
 } procesado_t;
@@ -677,7 +677,7 @@ void actStateInit(){
             pesoLastAlimento = 0.0;         // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
                                             // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
 
-            procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
+            //procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
             keepErrorScreen = false;
 
             // ----- BORRAR PLATO ------------------------------------
@@ -886,19 +886,6 @@ void actStatePlato(){
    actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void actGruposAlimentos(){ 
-    // Tiempos utilizados para alternar entre dashboard y pantalla de escoger crudo o cocinado:
-
-    //const unsigned long dashboardInterval = 10000;      // Intervalo de tiempo para mostrar el dashboard (10 segundos)
-    /*const unsigned long dashboardInterval = 5000;       // Intervalo de tiempo para mostrar el dashboard (5 segundos)
-    const unsigned long procesamientoInterval = 4500;   // Intervalo de tiempo para pedir escoger crudo o cocinado (4.5 segundos)
-
-    static unsigned long previousTime;                  // Variable estática para almacenar el tiempo anterior
-    unsigned long currentTime;
-*/
-    //static bool showing_semi_dash;       
-    //static bool showing_just_groups;
-    //static bool showing_buttons_procesamiento;
-    
 
     if(!doneState){        
         Serial.println(F("Grupo de alimentos..."));
@@ -923,80 +910,51 @@ void actGruposAlimentos(){
                 
         }
 
-        procesamiento = SIN_PROCESAMIENTO;   // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
+        //procesamiento = SIN_PROCESAMIENTO;   // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
         // ----- FIN ACCIONES --------------------------
 
 
         // ----- INFO PANTALLA -------------------------
         if((state_prev != STATE_groupA) and (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se forma medio Dashboard (ejemplos y parpadeo zona 2)
-            if(state_prev != STATE_ERROR) tareScale();      // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos, porque es innecesario.
-                                                            // Esta tara DEBE hacerse antes de showDashboardStyle2() para que muestre el peso a 0.      
-            if(showSemiDashboard_PedirProcesamiento()) return;  // Mostrar dashboard al inicio
+            if(state_prev != STATE_ERROR) tareScale();      // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos, porque sería innecesario.
+                                                            // Esta tara DEBE hacerse antes de showSemiDashboard_PedirProcesamiento() para que muestre el peso a 0.      
+            if(showSemiDashboard_PedirProcesamiento()) return;  // Mostrar semi dashboard completo al inicio
+                                                                // Si ocurre alguna interrupción mientras se forma el semi dashboard, se sale de la función.
         }
-        else if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
+        else if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){  // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
             tarado = false;        // Desactivar flag de haber 'tarado' 
             printGrupoyEjemplos(); 
         }
-        //if(showSemiDashboard_PedirProcesamiento()) return;
 
-/*
-        // ----- INFO PANTALLA -------------------------
-        if(showing_buttons_procesamiento or ((state_prev != STATE_groupA) and (state_prev != STATE_groupB))){ // ==> Si es la primera vez que se escoge grupo, se forma medio Dashboard (ejemplos y parpadeo zona 2)
-            if(state_prev != STATE_ERROR) tareScale();      // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos, porque es innecesario.
-                                                            // Esta tara DEBE hacerse antes de showDashboardStyle2() para que muestre el peso a 0.      
-            showDashboardStyle2();  // Mostrar dashboard al inicio
-            showing_semi_dash = true;    // Mostrando medio dashboard estilo 2 (zonas 1 y 2)
-            showing_just_groups = false;
-            showing_buttons_procesamiento = false;
-        }
-        else if(!showing_buttons_procesamiento and ((state_prev == STATE_groupA) or (state_prev == STATE_groupB))){   // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
-            tarado = false;        // Desactivar flag de haber 'tarado' 
-            printGrupoyEjemplos(); 
-            showing_semi_dash = false;
-            showing_just_groups = true;
-            showing_buttons_procesamiento = false;
-        }
-
-        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
-        // ----- FIN INFO PANTALLA ---------------------
-*/
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
-
-    // INFO PANTALLA
+    //
+    // 1 - La primera vez que se escoge un grupo de alimentos, se forma el semi dashboard completo --> showSemiDashboard_PedirProcesamiento()
+    // 2 - Las siguientes veces que se escoge un grupo para ver sus ejemplos, sin pasar por un estado diferente a STATE_groupA/B, no se vuelve
+    //      a formar el semi dashboard al completo, sino que solo se modifica la zona 1 con el nuevo grupo seleccionado --> printGrupoyEjemplos()
+    //
+    // En ambos casos anteriores, las zonas 2 y 3-4 presentan movimiento constante. Es decir, la zona 2 parpadea para indicar que no se ha escogido
+    // procesamiento (crudo o cocinado) y sobre las zonas 3-4 se muestra una pantalla que pide escoger el procesamiento alternando las imágenes
+    // de los botones correspondientes.
+    //
+    // Por tanto, la creación del semi dashboard completo solo se hace al entrar a STATE_groupA/B viniendo de algún estado diferente a esos y la 
+    // modificación de la zona 1 con los ejemplos se hace si se viene de STATE_groupA/B.
+    //
+    // Sin embargo, para que los movimientos en las zonas 2 y 3-4 sean fluidos y continuos, las funciones que los realizan se deben llamar en
+    // cada ciclo del loop. Estas funciones no realizan esperas bloqueantes (delay) para los parpadeos y alternancias, sino que usan esperas 
+    // no bloqueantes y variables 'static' para saber, al volver a entrar en la función, qué fue lo último que se hizo y continuar desde ahí.
+    //
+    // ----- PANTALLAS CON MOVIMIENTO -------------------------
     blinkGrupoyProcesamiento(NO_MSG);               // Zona 2 - Parpadea (procesamiento sin escoger)
     if(alternateButtonsProcesamiento()) return;     // Zonas 3 y 4 - Alternar botones de crudo y cocinado. Las formas colores y texto ya están (formGraphicsPedirProcesamiento())
                                                     // Si hay interrupción, mientras se alternan botones, se sale de la función --> en loop() se chequea la interrupción.
+    // --------------------------------------------------------
 
 
-/*
-    // ----- ALTERNANCIA PANTALLAS -------------------------
-    currentTime = millis();
-    if(showing_semi_dash or showing_just_groups){ // Se está mostrando dashboard estilo 2 (habiendolo modificado completo o solo Zona 1)
-        blinkGrupoyProcesamiento(NO_MSG);
-        if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a escoger crudo o cocinado
-            previousTime = currentTime;
-            pedirProcesamiento();
-            showing_semi_dash = false;
-            showing_just_groups = false;
-            showing_buttons_procesamiento = true;  // Mostrando escoger crudo o cocinado
-        }
-    }
-    else if(showing_buttons_procesamiento){ // Se está mostrando escoger crudo o cocinado
-        if (currentTime - previousTime >= procesamientoInterval) { // Si el escoger crudo o cocinado ha estado 5 segundos, se cambia a dashboard estilo 2
-            previousTime = currentTime;
-            showDashboardStyle2();
-            showing_semi_dash = true;  // Mostrando dashboard estilo 2 (Alimento | Comida)
-            showing_just_groups = false;
-            showing_buttons_procesamiento = false;
-        }
-    }
-    // ----- FIN ALTERNANCIA PANTALLAS ---------------------
-*/
 
 }
 

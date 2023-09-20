@@ -265,8 +265,9 @@ void    recipienteRetirado();             // Mostrar "Recipiente retirado"     =
 void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
 // -- Procesamiento ------
 //void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
+bool    formGraphicsPedirProcesamiento();   // Compone la pantalla (forma, colores, texto y 1º botón de cocinado) de pedir procesamiento sobre las zonas 3 y 4 del dashboard.
+bool    alternateButtonsProcesamiento();    // Alterna imágenes de botones crudo y cocinado 
 bool    pedirProcesamientoZonas3y4();       // Pedir procesamiento sobre zonas 3 y 4 del dashboard  =>  STATE_groupA y STATE_groupB
-bool    alternateButtonsProcesamiento();    // Pedir escoger crudo o cocinado (sobre Dashboard) => STATE_groupA y STATE_groupB
 // -- Colocar alimento ---
 void    pedirAlimento();                  // Pedir colocar alimento
 // -- Sugerir acción ----
@@ -683,10 +684,10 @@ void printGrupoyEjemplos(){
                                   recuadros parpadeando.
 ----------------------------------------------------------------------------------------------------------*/
 void printProcesamiento(){ 
-    if(procesamiento == SIN_PROCESAMIENTO){
+    /*if(procesamiento == SIN_PROCESAMIENTO){
         blinkGrupoyProcesamiento(NO_MSG); // Solo parpadea zona 2 (procesamiento sin escoger)
     }
-    else{
+    else{*/
         // Recuadro cocinado pequeño 
         tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
 
@@ -710,7 +711,7 @@ void printProcesamiento(){
 
             default: break;
         }
-    }
+    //}
     
 }
 
@@ -1084,10 +1085,10 @@ bool showSemiDashboard_PedirProcesamiento(){
 
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
-    printGrupoyEjemplos();                    // Zona 1 - Grupo y ejemplos 
-    blinkGrupoyProcesamiento(NO_MSG);         // Zona 2 - Procesamiento sin escoger (parpadeo)
+    printGrupoyEjemplos();                          // Zona 1 - Grupo y ejemplos 
+    blinkGrupoyProcesamiento(NO_MSG);               // Zona 2 - Procesamiento sin escoger (parpadeo)
     if(pedirProcesamientoZonas3y4()) return true;   // Zonas 3 y 4 - Pedir procesamiento
-                                              // Si ha ocurrido una interrupción mientras se formaba la pantalla de pedir recipiente, se sale de la función
+                                                        // Si ha ocurrido una interrupción mientras se formaba la pantalla de pedir recipiente, se sale de la función
     return false;
 }
 
@@ -1704,8 +1705,6 @@ bool formGraphicsPedirProcesamiento(){
     // ------- 1º BOTÓN -------------------------------------
     if(slowAppearanceImage(SLOW_APPEAR_COCINADO)) return true; // Si ha ocurrido interrupción mientras aparecía la imagen de cocinado
 
-    // ----- ESPERA E INTERRUPCION ----------------
-    //if(doubleDelayAndCheckInterrupt(1000)) return true; // Si ha ocurrido interrupción mientras se hacía el "delay"
     // ***********************************************************************************************
 
     return false;
@@ -1826,131 +1825,11 @@ void pedirProcesamiento(){
     // ***********************************************************
 
 }
-
 */
 
-/*
-void showButtonCocinado(){
-
-        // ******* ZONAS 3 Y 4 **************************************************************************
-        // ------- GRÁFICOS -------------------------------------
-            // Recuadro tapando zonas 3 y 4 del dashboard
-            tft.fillRoundRect(30,145,994,580,20,VERDE_PEDIR); // 964 x 435
-            tft.drawRoundRect(30,145,994,580,20,VERDE_BORDE_PEDIR_COCCION); // Borde => 964 x 435
-            // ------ LINEAS -----
-            tft.fillRoundRect(30,330,256,338,3,WHITE);
-            tft.fillRoundRect(768,527,994,535,3,WHITE);
-        // ------- FIN GRÁFICOS ---------------------------------
-
-        // ------ TEXTO (PREGUNTA) ---------------------------------------------------
-            tft.selectInternalFont(RA8876_FONT_SIZE_32);
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-            tft.setTextForegroundColor(WHITE); 
-            tft.setCursor(230, 185);                                        tft.println("\xBF""EL ALIMENTO EST\xC1""");
-            tft.setCursor(250, tft.getCursorY() + tft.getTextSizeY()-20);   tft.print("COCINADO O CRUDO\x3F"""); 
-        // ---------------------------------------------------------------------------
-        // ***********************************************************************************************
-
-        // ******* ZONA 2 ********************************************************************************
-        //blinkGrupoyProcesamiento(NO_MSG);     // Zona 2 - Parpadea (procesamiento sin escoger)
-        // ***********************************************************************************************
-
-        // -------- INT -------------------
-        if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-
-        // -------- BOTONES ----------------------------------------------------------
-            // Apareciendo imagen cocinado
-            if(slowAppearanceImage(SLOW_APPEAR_COCINADO)) return; // Si ha ocurrido interrupción mientras aparecía la imagen de cocinado, 
-                                                                  // se sale de la función.
-            showingCocinado = true;
-    }
-}*/
-
-/*---------------------------------------------------------------------------------------------------------
-   alternateButtonsProcesamiento(): Alternar botones de crudo cocinado en la pantalla de pedir procesamiento.
-                                    Zonas 3 y 4 tapadas con mensaje de petición en formGraphicsPedirProcesamiento().
-----------------------------------------------------------------------------------------------------------*/
-/*bool alternateButtonsProcesamiento(){ 
-    // Tiempos utilizados para alternar entre mostrar botón COCINADO o CRUDO:
-    static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
-    const unsigned long interval = 1000;        // Intervalo de tiempo para alternar entre botones (1 seg)
-
-    unsigned long currentTime = millis();
-
-    //static bool firstAppearance = true;
-    static bool showingCocinado = false;
-    static bool showingCrudo = false;
-
-    showingTemporalScreen = true; // Desactivar flag de estar mostrando pantalla temporal/transitoria
-
-    if(firstAppearance){    
-        //tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
-
-        // ******* ZONA 1 ********************************************************************************
-        //printGrupoyEjemplos();                // Zona 1 - Grupo y ejemplos 
-        // ***********************************************************************************************
-
-        // ******* ZONAS 3 Y 4 **************************************************************************
-        // ------- GRÁFICOS -------------------------------------
-            // Recuadro tapando zonas 3 y 4 del dashboard
-            tft.fillRoundRect(30,145,994,580,20,VERDE_PEDIR); // 964 x 435
-            tft.drawRoundRect(30,145,994,580,20,VERDE_BORDE_PEDIR_COCCION); // Borde => 964 x 435
-            // ------ LINEAS -----
-            tft.fillRoundRect(30,330,226,338,3,WHITE); // 256 -> 226
-            tft.fillRoundRect(798,527,994,535,3,WHITE); // 768 -> 798
-        // ------- FIN GRÁFICOS ---------------------------------
-
-        // ------ TEXTO (PREGUNTA) ---------------------------------------------------
-            tft.selectInternalFont(RA8876_FONT_SIZE_32);
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-            tft.setTextForegroundColor(WHITE); 
-            tft.setCursor(230, 185);                                        tft.println("\xBF""EL ALIMENTO EST\xC1""");
-            tft.setCursor(250, tft.getCursorY() + tft.getTextSizeY()-20);   tft.print("COCINADO O CRUDO\x3F"""); 
-        // ---------------------------------------------------------------------------
-        // ***********************************************************************************************
 
 
-        // ******* ZONA 2 ********************************************************************************
-        //blinkGrupoyProcesamiento(NO_MSG);     // Zona 2 - Parpadea (procesamiento sin escoger)
-        // ***********************************************************************************************
 
-        // -------- INT -------------------
-        //if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)
-
-        // -------- BOTONES ----------------------------------------------------------
-            // Apareciendo imagen cocinado
-            if(slowAppearanceImage(SLOW_APPEAR_COCINADO)) return; // Si ha ocurrido interrupción mientras aparecía la imagen de cocinado, 
-                                                                  // se sale de la función.
-            showingCocinado = true;
-    //}
-    //else{  // -------- BOTONES ----------------------------------------------------------
-        if(currentTime - previousTime >= interval) {
-            previousTime = currentTime;
-            if(showingCocinado){
-                // Mostrar CRUDO
-                if(slowAppearanceAndDisappareanceProcesamiento(SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO)) return; 
-                    // Si ha ocurrido interrupción mientras aparecía la imagen de crudo y desaparecía la de cocinado, 
-                    // se sale de la función.
-                showingCrudo = true;
-                showingCocinado = false;
-            }
-            else if(showingCrudo){
-                // Mostrar COCINADO
-                if(slowAppearanceAndDisappareanceProcesamiento(SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO)) return; 
-                    // Si ha ocurrido interrupción mientras aparecía la imagen de cocinado y desaparecía la de crudo, 
-                    // se sale de la función.
-                showingCocinado = true;
-                showingCrudo = false;
-            }
-        }
-    //}
-    //firstAppearance = false;
-    
-    // ----------------------------------------------------------------------------
-
-    // ****************************************************************************************************
-
-}*/
 /*------------------------- FIN ESCOGER CRUDO/COCINADO ---------------------------------------------------*/
 
 
