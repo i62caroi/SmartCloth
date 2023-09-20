@@ -451,8 +451,7 @@ bool  keepErrorScreen = false; // Mantener pantalla de error cometido por coloca
 bool  flagComidaSaved = false;
 bool  flagFicheroCSVBorrado = false;
 
-bool  flagRecipienteRetirado = false;
-//bool  comidaSinGuardar_recipienteRetirado = false;
+bool  flagRecipienteRetirado = false; // Flag para saber que se ha retirado el plato completo
 // ------ FIN VARIABLES DE EVENTOS ----------------------------------------------------
 
 
@@ -643,9 +642,11 @@ void actStateInit(){
 
     //    Se dejan 5 segundos para ver el dashboard y luego se muestra la ayuda. Si se acaba de guardar la comida, 
     //    se dejan 10 segundos para ver la info de la comida guardada.
+    /*
     if(flagComidaSaved){ // ==> Si se acaba de guardar la comida, se deja más tiempo para ver la info antes de pedir recipiente
         dashboardInterval = 10000;   // Intervalo de tiempo para mostrar el dashboard (10 segundos) 
     }
+    */
 
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
     unsigned long currentTime;
@@ -677,7 +678,6 @@ void actStateInit(){
             pesoLastAlimento = 0.0;         // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
                                             // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
 
-            //procesamiento = SIN_PROCESAMIENTO;           // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
             keepErrorScreen = false;
 
             // ----- BORRAR PLATO ------------------------------------
@@ -696,16 +696,6 @@ void actStateInit(){
 
                 comidaActual.deletePlato(platoActual);    // Borrar plato actual
                 platoActual.restorePlato();               // Restaurar plato
-
-
-                // Si tras borrar el plato la comida se ha quedado vacía, se avisa de que se ha borrado la info que no
-                // se ha guardado. Si no se quedara vacía, seguiría apareciendo su info con el resto de platos.
-                // Esto se hace para que entiendan por qué ahora aparece todo a 0.
-               /* if(comidaActual.isComidaEmpty()) {
-                  Serial.println("COMIDA VACIA");
-                  comidaSinGuardar_recipienteRetirado = true;
-                }*/
-
             }
             // ----- FIN BORRAR PLATO ---------------------------------
 
@@ -751,11 +741,15 @@ void actStateInit(){
     else{ // Ya no se muestra "Recipiente retirado"
         if(showing_dash){ // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
             blinkGrupoyProcesamiento(MSG_SIN_RECIPIENTE);
-            if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a colocar recipiente
-                previousTime = currentTime;
-                pedirRecipiente();
-                showing_dash = false;  
-                showing_pedir_recipiente = true; // Mostrando colocar recipiente
+            if(!flagComidaSaved){ // Si no se acaba de guardar comida, se pide colocar recipiente.
+                                  //    Si se acabara de guarda la comida, se dejaría el dashboard estático para que puedan consultar la 
+                                  //    información guardada en "Comida guardada".
+                if (currentTime - previousTime >= dashboardInterval) { // Si el dashboard ha estado 10 segundos, se cambia a colocar recipiente
+                    previousTime = currentTime;
+                    pedirRecipiente();
+                    showing_dash = false;  
+                    showing_pedir_recipiente = true; 
+                }
             }
         }
         else if(showing_pedir_recipiente){ // Se está mostrando colocar recipiente
@@ -909,8 +903,6 @@ void actGruposAlimentos(){
                 pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
                 
         }
-
-        //procesamiento = SIN_PROCESAMIENTO;   // Resetear procesamiento (0: nada    1: crudo    2: cocinado)
         // ----- FIN ACCIONES --------------------------
 
 

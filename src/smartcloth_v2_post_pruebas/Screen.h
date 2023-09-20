@@ -680,39 +680,31 @@ void printGrupoyEjemplos(){
 
 /*---------------------------------------------------------------------------------------------------------
    printProcesamiento(): Zona 2 => Muestra el símbolo de 'crudo' o 'cocinado' según el procesamiento activo
-                                  Si no hay ningún procesamiento activo (SIN_PROCESAMIENTO), se muestran los
-                                  recuadros parpadeando.
 ----------------------------------------------------------------------------------------------------------*/
 void printProcesamiento(){ 
-    /*if(procesamiento == SIN_PROCESAMIENTO){
-        blinkGrupoyProcesamiento(NO_MSG); // Solo parpadea zona 2 (procesamiento sin escoger)
+    // Recuadro cocinado pequeño 
+    tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
+
+    // Recuadro crudo pequeño
+    tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
+
+    switch(procesamiento){
+        case ALIMENTO_CRUDO:  // CRUDO activo
+            // Mostrar crudoPeq normal
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
+            // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+            tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
+            break;
+
+        case ALIMENTO_COCINADO: // COCINADO activo
+            // Mostrar cociPeq normal
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
+            // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
+            tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
+            break;
+
+        default: break;
     }
-    else{*/
-        // Recuadro cocinado pequeño 
-        tft.fillRoundRect(937,20,994,74,10,GRIS_CUADROS); // 57 x 52
-
-        // Recuadro crudo pequeño
-        tft.fillRoundRect(937,79,994,133,10,GRIS_CUADROS); // 57 x 52
-
-        switch(procesamiento){
-            case ALIMENTO_CRUDO:  // CRUDO activo
-                // Mostrar crudoPeq normal
-                tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42);  // Mostrar crudoPeq (47x42) en PAGE1
-                // Mostrar cociPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42,RA8876_ALPHA_OPACITY_24);
-                break;
-
-            case ALIMENTO_COCINADO: // COCINADO activo
-                // Mostrar cociPeq normal
-                tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,131,PAGE1_START_ADDR,SCREEN_WIDTH,942,26,47,42);  // Mostrar cociPeq (47x42) en PAGE1
-                // Mostrar crudoPeq con opacidad a nivel 24/32. Utiliza un recuadro de color GRIS_CUADROS escrito en page3 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,577,131,PAGE3_START_ADDR,SCREEN_WIDTH,610,174,PAGE1_START_ADDR,SCREEN_WIDTH,942,85,47,42,RA8876_ALPHA_OPACITY_24);
-                break;
-
-            default: break;
-        }
-    //}
-    
 }
 
 
@@ -1240,16 +1232,6 @@ void recipienteRetirado(){
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
-
-
-    // Puede ser que se haya retirado el único plato de la comida sin haberla guardado antes,
-    // entonces se indica que se ha borrado la info no guardada. 
-    // Si aún quedaran platos en la comida, aparecería su info.
-  /*  if(comidaSinGuardar_recipienteRetirado){
-        tft.selectInternalFont(RA8876_FONT_SIZE_32);
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-        tft.setCursor(190, 418); tft.println("LA INFORMACIÓN NO GUARDADA HA SIDO ELIMINADA");
-    }*/
 }
 /*------------------------------ FIN PEDIR RECIPIENTE ---------------------------------------------------*/
 

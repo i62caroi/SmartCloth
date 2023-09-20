@@ -171,7 +171,7 @@ void checkBascula(){
                             // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
                             Serial.print(F("\nLIBERADA"));
                             eventoBascula = LIBERAR;
-                            flagRecipienteRetirado = true;
+                            flagRecipienteRetirado = true; // Se ha retirado el plato completo --> pantalla recipienteRetirado()
                         }
                         else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
                             Serial.print(F("\nQUITANDO"));
@@ -189,7 +189,7 @@ void checkBascula(){
                         // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
                         Serial.print(F("\nLIBERADA"));
                         eventoBascula = LIBERAR;
-                        flagRecipienteRetirado = true;
+                        flagRecipienteRetirado = true; // Se ha retirado el plato completo --> pantalla recipienteRetirado()
                     }
                     else{ //Se están quitando elementos de la báscula tras haber tarado, por eso se baja a negativo. Se pasa por 'QUITAR' antes de 'LIBERAR'.
                         Serial.print(F("\nDECREMENTO"));
