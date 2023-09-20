@@ -24,14 +24,27 @@
 #include "Plato.h"
 
 
+
+// **************************************************************************************************************************
+// *****************      DECLARACIÓN CLASE 'COMIDA'       ******************************************************************
+// **************************************************************************************************************************
+
+
 /**
  * @brief Clase que representa una comida compuesta por varios platos.
  */
 class Comida{
+
   private:
+  
     int                   _nPlatos;                 /**< Número de platos en la comida. */
     float                 _peso;                    /**< Peso total de la comida. */
     ValoresNutricionales  _valoresComida;           /**< Valores nutricionales totales de la comida. */
+
+    
+    // ----------------------------------------------------------------------
+    // -------       Nº PLATOS        ---------------------------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Establece el número de platos.
@@ -49,14 +62,22 @@ class Comida{
   
   
 
-
-
-
   public:
+
+
+    // ----------------------------------------------------------------------
+    // -------      CONSTRUCTOR 'COMIDA'       ------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Constructor de la clase Comida.
      */
     Comida();
+
+
+    // ----------------------------------------------------------------------
+    // -------      ¿COMIDA VACÍA?         ----------------------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Verifica si la comida está vacía.
@@ -64,6 +85,12 @@ class Comida{
      * @return True si la comida está vacía, False en caso contrario.
      */
     inline bool isComidaEmpty(){ if(this->_getNumPlatos() == 0) return true; else return false;}; 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------       PESO COMIDA        -------------------------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Establece el peso total de la comida.
@@ -79,12 +106,24 @@ class Comida{
      */
     inline float getPesoComida(){ return _peso; }; 
 
+
+
+    // ----------------------------------------------------------------------
+    // -------    AÑADIR ALIMENTO A LA COMIDA     ---------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Agrega un Alimento a la comida.
      * 
      * @param alimento Objeto Alimento a agregar
      */
     void addAlimentoComida(Alimento &alimento); 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------    AÑADIR/BORRAR PLATO A/DE LA COMIDA     --------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Agrega un Plato a la comida.
@@ -102,12 +141,18 @@ class Comida{
 
     //void deletePlato();
 
+
+
+    // ----------------------------------------------------------------------
+    // -------      VALORES NUTRICIONALES       -----------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece los valores nutricionales de la comida a partir de un objeto ValoresNutricionales.
      * 
      * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    void setValoresComida(ValoresNutricionales val){ this->_valoresComida.setValores(val); };
+    inline void setValoresComida(ValoresNutricionales val){ this->_valoresComida.setValores(val); };
     
     /**
      * @brief Obtiene los valores nutricionales totales de la comida. 
@@ -124,6 +169,12 @@ class Comida{
      */
     void updateValoresComida(bool suma, ValoresNutricionales val); 
 
+
+
+    // ----------------------------------------------------------------------
+    // -------      COPIAR/RESTAURAR COMIDA        --------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Copiar los valores de un objeto 'Comida' (valores nutricionales, platos y peso) en el objeto Comida tratado.
      * @param comida Objeto Comida a copiar
@@ -135,30 +186,78 @@ class Comida{
      */
     void restoreComida(); 
 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------      STRING DE VALORES DE LA COMIDA        -------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Obtiene todos los valores de la comida en formato de cadena de texto
      * 
      * @return Cadena de texto con los valores nutricionales de la comida
      */
     String getComidaAllValues(); 
+
 };
 
 
 
+
+
+
+// **************************************************************************************************************************
+// *****************      DEFINICIONES       ********************************************************************************
+// **************************************************************************************************************************
+
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      CONSTRUCTOR 'COMIDA'       ************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   Comida(): Constructor de la clase Comida que inicializa el número de platos a 0 y el peso total de
+             la comida a 0.0
+----------------------------------------------------------------------------------------------------------*/
 Comida::Comida(){
   this->_setNumPlatos(0);
   this->setPesoComida(0.0);
 }
 
-// --------------------------------------------------------------------
 
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      AÑADIR ALIMENTO A LA COMIDA      ******************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   addAlimentoComida(): Añade la información nutricional de un alimento a la comida. Incrementa el peso de 
+                        la comida y actualiza los valores nutricionales con los del alimento.
+
+          Parámetros: 
+                  alimento - Objeto Alimento con la información nutricional y peso de la porción del 
+                             alimento pesado.
+----------------------------------------------------------------------------------------------------------*/
 void Comida::addAlimentoComida(Alimento &alimento){   
     this->setPesoComida(this->getPesoComida() + alimento.getPesoAlimento());       // Incrementar peso de la comida
     this->updateValoresComida(true, alimento.getValoresAlimento());                // Sumar (suma = true) Valores Nutricionales de la comida
 }
 
-// --------------------------------------------------------------------
 
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      AÑADIR/BORRAR PLATO A/DE LA COMIDA      ***********************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   addPlato(): Añade oficialmente un plato a la comida incrementando el número de platos. Los valores
+               nutricionales de los alimentos presentes en el Plato se van incluyendo a la comida conforme
+               se añaden al plato.
+
+          Parámetros: 
+                  plato - Objeto Plato oficialmente "guardado".
+----------------------------------------------------------------------------------------------------------*/
 void Comida::addPlato(Plato plato){
 //void Comida::addPlato(Plato &plato){
   // En realidad no hace falta guardar el objeto plato porque sus elementos
@@ -167,37 +266,45 @@ void Comida::addPlato(Plato plato){
   // Posteriormente, al borrarlo, se restan sus valores nutricionales y peso
     this->_setNumPlatos(this->_getNumPlatos() + 1);                       // Incrementar num platos
 }
-// --------------------------------------------------------------------
 
 
-// --------------------- DELETE SOLO ACTUAL -----------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   deletePlato(): Elimina un plato de la comida disminuyendo su peso según el peso del plato y eliminando
+                  los valores nutricionales del plato del total de la comida.
+                  No se decrementa el número de platos porque si se ha decidido borrar el plato (actual),
+                  entonces no se ha llegado a "guardar" incrementando el número de platos, lo cual se haría 
+                  si se hubiera elegido "Añadir plato" en lugar de "Borrar plato".
+
+          Parámetros: 
+                  plato - Objeto Plato a borrar
+----------------------------------------------------------------------------------------------------------*/
 void Comida::deletePlato(Plato &plato){
        // No hace falta decrementar nPlatos porque no se ha llegado a guardar 
        // el plato ni, por tanto, incrementar el numero platos. 
     this->setPesoComida(this->getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
     this->updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
 }
-// ----------------------------------------------------------------------------
 
 
-// --------------------- DELETE RETROACTIVO -----------------------------------
-/*void Comida::deletePlato(){
-    // Se decrementa peso de comida según peso completo del plato. 
-    this->setPesoComida(this->getPesoComida() - _platos[this->_getLastPositionPlato()].getPesoPlato());        // Decrementar peso de la comida según peso del último plato (actual)
-
-    this->updateValoresComida(false, _platos[this->_getLastPositionPlato()].getValoresPlato());                // Restar (suma = false) Valores Nutricionales de la comida
-
-    // Hay que decrementar nPlatos aunque se borre el plato actual porque se ha guardado temporalmente
-    this->_setNumPlatos(this->_getNumPlatos() - 1);                                                             // Decrementar número de platos
-}*/
-// ----------------------------------------------------------------------------
 
 
-// --------------------------------------------------------------------
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      VALORES NUTRICIONALES      ************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
 
+/*---------------------------------------------------------------------------------------------------------
+   updateValoresComida(): Actualiza los valores nutricionales de la comida sumando o restando a los que ya 
+                          tuviera los pasados como argumento, correspondientes a la porción de alimento pesada
+                          o al plato a eliminar. 
+
+          Parámetros: 
+                  suma - true: sumar valores    false: restar valores
+                  val - Valores nutricionales del alimento pesado o del plato a eliminar
+----------------------------------------------------------------------------------------------------------*/
 void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
     float carb, lip, prot, kcal;
-    if(suma){        // Añadir plato
+    if(suma){        // Añadir alimento
         carb = _valoresComida.getCarbValores() + val.getCarbValores();
         lip = _valoresComida.getLipValores() + val.getLipValores();
         prot = _valoresComida.getProtValores() + val.getProtValores();
@@ -210,34 +317,51 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
         kcal = _valoresComida.getKcalValores() - val.getKcalValores();
     }
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    //this->_valoresComida.setValores(valAux);
     this->setValoresComida(valAux);
 }
 
-// --------------------------------------------------------------------
 
-// Copiar comida
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      COPIAR/RESTAURAR COMIDA      **********************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   copyComida(): Establece los datos del objeto actual a partir de otro. Es decir, "copia" el número de platos,
+                 el peso de la comida y los valores nutricionales.
+                 Esto es útil tras guardar la comida, pues en ese momento se borra el objeto Comida que incluía
+                 los valores guardados, pero se quiere mostrar la información guardada al usuario para que la
+                 pueda analizar.
+----------------------------------------------------------------------------------------------------------*/
 void Comida::copyComida(Comida comida){
-    this->_setNumPlatos(comida._getNumPlatos());                  // Nº platos 
-    this->setPesoComida(comida.getPesoComida());                  // Peso
-    //this->_valoresComida.setValores(comida.getValoresComida());   // Valores 
-    this->setValoresComida(comida.getValoresComida());
+    this->_setNumPlatos(comida._getNumPlatos());          // Nº platos 
+    this->setPesoComida(comida.getPesoComida());          // Peso
+    this->setValoresComida(comida.getValoresComida());    // Valores 
 }
-// --------------------------------------------------------------------
 
 
-// "Reiniciar" comida
+
+/*---------------------------------------------------------------------------------------------------------
+   restoreComida(): Restaura o "reinicia" la comida, reseteando el número de platos, el peso y los
+                    valores nutricionales de la comida.
+----------------------------------------------------------------------------------------------------------*/
 void Comida::restoreComida(){
-    this->_setNumPlatos(0);                                  // Nº platos = 0
-    this->setPesoComida(0.0);                                // Peso = 0.0
-    ValoresNutricionales valAux; //(0.0, 0.0, 0.0, 0.0)
-    //this->_valoresComida.setValores(valAux);                 // Valores = 0.0
-    this->setValoresComida(valAux);
+    this->_setNumPlatos(0);                 // Nº platos = 0
+    this->setPesoComida(0.0);               // Peso = 0.0
+    ValoresNutricionales valAux;            // Crea un objeto ValoresNutricionales con todos sus valores a 0.0
+    this->setValoresComida(valAux);         // Valores = 0.0
 }
 
-// --------------------------------------------------------------------
 
 
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      STRING DE VALORES DE LA COMIDA      ***************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   getComidaAllValues(): Conforma una cadena con los valores nutricionales de la comida separados por
+                         el caracter ';' para poderlos escribir en el fichero .csv al guardarla.
+----------------------------------------------------------------------------------------------------------*/
 String Comida::getComidaAllValues(){
     String dataString = String(_valoresComida.getCarbValores()) + ";" + String(_valoresComida.getCarbRaciones()) + ";" + 
                         String(_valoresComida.getLipValores()) + ";" + String(_valoresComida.getLipRaciones()) + ";" + 
@@ -249,7 +373,17 @@ String Comida::getComidaAllValues(){
 
 
 
+
+
+
+// **************************************************************************************************************************
+// *****************      OBJETOS 'COMIDA'      *****************************************************************************
+// **************************************************************************************************************************
+
 Comida    comidaActual;       // Objeto de comida actual real, actualizada en tiempo real
 Comida    comidaActualCopia;  // Objeto de comida copiada de la actual real, solamente para mostrar sus valores tras guardarla en el acumulado y limpiar el objeto 'comidaActual'.
+
+
+
 
 #endif

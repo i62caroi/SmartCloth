@@ -31,16 +31,30 @@
 
 
 
+
+// **************************************************************************************************************************
+// *****************      DECLARACIÓN CLASE 'ALIMENTO'       ****************************************************************
+// **************************************************************************************************************************
+
 /**
  * @brief Clase que representa un alimento.
  */
 class Alimento{
+
   private:
+  
     Grupo                 _grupo;             /**< Grupo al que pertenece el alimento */
     float                 _peso;              /**< Peso del alimento */
     ValoresNutricionales  _valoresAlimento;   /**< Valores nutricionales del alimento */
 
+
   public:
+
+
+    // ----------------------------------------------------------------------
+    // -------     CONSTRUCTORES 'ALIMENTO'     -----------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Constructor por defecto de la clase Alimento.
      */
@@ -55,6 +69,12 @@ class Alimento{
      * @param peso Peso del alimento
      */
     Alimento(Grupo grupo, float peso); 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------    GRUPO DEL ALIMENTO    -------------------------------------
+    // ----------------------------------------------------------------------
     
     /**
      * @brief Establece el grupo al que pertenece el alimento.
@@ -70,6 +90,12 @@ class Alimento{
      */
     inline Grupo getGrupoAlimento(){ return _grupo; };
     
+
+
+    // ----------------------------------------------------------------------
+    // -------    PESO DEL ALIMENTO    --------------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece el peso del alimento.
      * 
@@ -84,6 +110,12 @@ class Alimento{
      */
     inline float getPesoAlimento(){ return _peso; };
 
+
+
+    // ----------------------------------------------------------------------
+    // -------   VALORES NUTRICIONALES DEL ALIMENTO    ----------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Actualiza los valores nutricionales del alimento según el grupo y el peso especificados.
      * 
@@ -97,7 +129,7 @@ class Alimento{
      * 
      * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    inline void setValoresAlimento(ValoresNutricionales val){ _valoresAlimento.setValores(val); };
+    inline void setValoresAlimento(ValoresNutricionales val){ this->_valoresAlimento.setValores(val); };
 
     /**
      * @brief Obtiene los valores nutricionales del alimento.
@@ -105,15 +137,37 @@ class Alimento{
      * @return Los valores nutricionales del alimento
      */
     inline ValoresNutricionales getValoresAlimento(){ return _valoresAlimento; };
+
 };
 
 
 
 
+
+// **************************************************************************************************************************
+// *****************      DEFINICIONES       ********************************************************************************
+// **************************************************************************************************************************
+
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************       CONSTRUCTORES 'ALIMENTO'       *******************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   Alimento(): Constructor de la clase Alimento que establece su peso a 0.0
+----------------------------------------------------------------------------------------------------------*/
 Alimento::Alimento(){
     this->setPesoAlimento(0.0);
 }
 
+/*---------------------------------------------------------------------------------------------------------
+   Alimento(): Constructor de la clase Alimento que inicializa sus valores de grupo, peso y valores 
+               nutricionales según los valores pasados como argumentos.
+
+       Parámetros:
+              grupo - Grupo al que pertenece el alimento
+              peso - Peso de la porción de alimento
+----------------------------------------------------------------------------------------------------------*/
 Alimento::Alimento(Grupo grupo, float peso){
     this->setGrupoAlimento(grupo);
     this->setPesoAlimento(peso);
@@ -121,13 +175,33 @@ Alimento::Alimento(Grupo grupo, float peso){
 }
 
 
+
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************     VALORES NUTRICIONALES DEL ALIMENTO       ***********************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   updateValoresAlimento(): Calcula los valores nutricionales del alimento a partir del grupo al que pertenece,
+                            distinguiendo grupos de alimentos crudos o cocinados, y su peso.
+
+                            Los valores de macronutrientes los calcula multiplicando el peso del alimento 
+                            por el valor/gr preestablecido para el macronutriente correspondiente.
+
+                            La clase 'ValoresNutricionales' se encarga internamente de calcular las raciones
+                            de macronutrientes a partir de sus valores en gramos.
+
+          Parámetros: 
+                  grupo - Grupo al que pertenece el alimento
+                  peso - Peso de la porción de alimento
+----------------------------------------------------------------------------------------------------------*/
 void Alimento::updateValoresAlimento(Grupo grupo, float peso){
     float carb = grupo.Carb_g * peso;
     float lip = grupo.Lip_g * peso;
     float prot = grupo.Prot_g * peso;
     float kcal = grupo.Kcal_g * peso;
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    _valoresAlimento.setValores(valAux);
+    this->setValoresAlimento(valAux); 
 }
 
 

@@ -45,17 +45,18 @@ byte iRow = 0, iCol = 0;//, keyMain = 0;
 const byte countRows = 4;
 const byte countColumns = 5;
 
+
 /* Buttons */
 const byte rowsPins[countRows] = {26,28,30,32};
 const byte columnsPins[countColumns] = {44,46,48,50,52};
 
-/* Buttons info => IDs de grupo crudo */
+
+/* Buttons info => IDs de grupo (crudo) */
 int buttons[countRows][countColumns] = {{1,2,3,4,5},
                                         {6,7,8,9,10},
                                         {11,12,13,14,15},
                                         {16,17,18,19,20}};
 
-//String buttonsMainKeyboard[countButtons] = {"AMARILLO", "BLANCO","VERDE","ROJO","NEGRO"};
 
 int  buttonGrande;                  //Botón pulsado en la botonera grande (checkAllButtons())
 
@@ -65,6 +66,8 @@ int  buttonGrande;                  //Botón pulsado en la botonera grande (chec
 #include "State_Machine.h"  
 // -- Tras las pruebas, volver a poner tras #ifndef BUTTONS_H
 
+
+
 /*-----------------------------------------------------------------------------
                           DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
@@ -72,6 +75,7 @@ void  readButtonsGrande();     // Polling de botonera grande tras saltar interru
 void  checkAllButtons();       // Asignación de eventos según botón pulsado en Grande o Main
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
+
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -106,7 +110,7 @@ void  checkAllButtons();       // Asignación de eventos según botón pulsado e
 }
 
 
- /*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 /**
  * @brief Función para chequear los botones de ambas botoneras
  * 

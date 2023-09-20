@@ -15,12 +15,8 @@
 #ifndef STATE_MACHINE_H
 #define STATE_MACHINE_H
 
-/*
-#define SMARTCLOTH_DEBUG // Uncomment to enable debug messaging
 
-#if defined(SMARTCLOTH_DEBUG)
-#endif // SMARTCLOTH_DEBUG
-*/
+
 
 /**
  * @def MAX_EVENTS
@@ -33,6 +29,8 @@
  * @brief Máximo número de reglas de transición.
  */
 #define RULES 138   // 7 SON DE BORRAR CSV EN PRUEBAS. Serían 145 si se contaran las comentadas que no ya sirven (?) porque se tiene STATE_AVISO
+
+
 
 // --- PEDIR CONFIRMACIÓN ---
 #define  ASK_CONFIRMATION_ADD     1
@@ -72,6 +70,7 @@
 #define  NO_MSG             0
 #define  MSG_SIN_RECIPIENTE 1
 #define  MSG_SIN_GRUPO      2
+
 
 
 void    tareScale();
@@ -418,6 +417,8 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
 
 
+
+
 /*----------------------------------------------------------------------------------------------*/
 /*------------------------------ VARIABLES ESTADOS/EVENTOS -------------------------------------*/
 /*----------------------------------------------------------------------------------------------*/
@@ -436,22 +437,21 @@ event_t eventoMain;         // Evento ocurrido en botonera Main
 event_t eventoGrande;       // Evento ocurrido en botonera grande
 event_t eventoBascula;      // Evento ocurrido en báscula
 
-bool  flagEvent = false;    // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada medio segundo
-                            // por la interrupción de la báscula.
-                            // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento)
+bool    flagEvent               = false;    // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada medio segundo
+                                            // por la interrupción de la báscula.
+                                            // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento)
 
-bool  flagError = false;    // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
-                            // sino que si ha ocurrido algo que no es evento, se considera error. Por eso se utiliza
-                            // otra flag.
+bool    flagError               = false;    // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
+                                            // sino que si ha ocurrido algo que no es evento, se considera error. Por eso se utiliza
+                                            // otra flag.
 
-bool  keepErrorScreen = false; // Mantener pantalla de error cometido por colocar alimento cuando no toca (desde Grupos).
-                              // En este caso no se retira la pantalla tras 3 segundos, sino que se mantiene hasta que
-                              // se retire el plato para comenzar de nuevo.
+bool    keepErrorScreen         = false;    // Mantener pantalla de error cometido por colocar alimento cuando no toca (desde Grupos).
+                                            // En este caso no se retira la pantalla tras 3 segundos, sino que se mantiene hasta que
+                                            // se retire el plato para comenzar de nuevo.
 
-bool  flagComidaSaved = false;
-bool  flagFicheroCSVBorrado = false;
-
-bool  flagRecipienteRetirado = false; // Flag para saber que se ha retirado el plato completo
+bool    flagComidaSaved         = false;    // Flag para saber que se ha guardado la comida
+bool    flagFicheroCSVBorrado   = false;    // Flag para saber que se ha borrado el fichero csv
+bool    flagRecipienteRetirado  = false;    // Flag para saber que se ha retirado el plato completo
 // ------ FIN VARIABLES DE EVENTOS ----------------------------------------------------
 
 
@@ -461,21 +461,23 @@ bool  flagRecipienteRetirado = false; // Flag para saber que se ha retirado el p
  * @brief Enumeración de los diferentes valores del procesamiento del alimento.
  */
 typedef enum {
-              //SIN_PROCESAMIENTO   =   (0),   /**< Alimento sin procesamiento indicado  */
               ALIMENTO_CRUDO      =   (1),   /**< Alimento crudo  */
               ALIMENTO_COCINADO   =   (2)    /**< Alimento cocinado  */
 } procesado_t;
+
 procesado_t procesamiento;
 // ------ FIN PROCESAMIENTO ------------------------------------------------------------
 
 
 // ------ VARIABLES DE PESO ------------------------------------------------------------
-float     pesoRecipiente = 0.0; 
-float     pesoPlato = 0.0;
-float     pesoLastAlimento = 0.0;
+float     pesoRecipiente    =   0.0; 
+float     pesoPlato         =   0.0;
+float     pesoLastAlimento  =   0.0;
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
-bool      showingTemporalScreen = false;
+
+bool      showingTemporalScreen = false; // Flag para saber que se está mostrando una pantalla temporal o auxiliar
+
 
 
 
@@ -530,7 +532,18 @@ void    addEventToBuffer(event_t evento);              // Añadir evento al buff
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
 
-// Función para imprimir el nombre del evento
+
+
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*---------------------------- NOMBRES DE EVENTOS/ESTADOS -----------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/ 
+
+/*---------------------------------------------------------------------------------------------------------
+   printEventName(): Imprime el nombre del evento cuyo ID se pasa como argumento
+          Parámetros: 
+                  event - ID del evento 
+----------------------------------------------------------------------------------------------------------*/
 void printEventName(event_t event) {
     switch (event) {
         case NONE:                  Serial.print("NONE");                     break;
@@ -569,7 +582,11 @@ void printEventName(event_t event) {
     }
 }
 
-// Función para imprimir el nombre del estado
+/*---------------------------------------------------------------------------------------------------------
+   printStateName(): Imprime el nombre del estado cuyo ID se pasa como argumento
+          Parámetros: 
+                  state - ID del estado 
+----------------------------------------------------------------------------------------------------------*/
 void printStateName(state_t state) {
     switch (state) {
         case STATE_Init:                Serial.print("STATE_Init");                 break;
@@ -594,6 +611,10 @@ void printStateName(state_t state) {
         default:                        Serial.print("Estado desconocido");         break;
     }
 }
+
+
+
+
 
 /*-------------------------------------------------------------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
@@ -1561,7 +1582,7 @@ void actStateSaved(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   actStateERROR(): Acciones del STATE_ERROR
+   actStateERROR(): Acciones del STATE_ERROR según el estado anterior
 ----------------------------------------------------------------------------------------------------------*/
 void actStateERROR(){ 
     static unsigned long previousTimeError;   // Tiempo usado para regresar al estado desde el que se cometió el error tras mostrar
@@ -1619,6 +1640,7 @@ void actStateERROR(){
     // ----- FIN INFO MOSTRADA ------------------------------------ 
 
 
+    // -----  TRANSICIONES TRAS ERROR  ----------------------------
     if(!keepErrorScreen){
         // ----- TIEMPO DE ESPERA -------------------------------------
         // Solo para regresar si el error cometido ha sido pulsar un botón.
@@ -1970,6 +1992,8 @@ void actStateERROR(){
               flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
           }
     }
+
+    // -----  FIN TRANSICIONES TRAS ERROR  ------------------------
 }
 
 
@@ -2252,7 +2276,7 @@ void doStateActions(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   actEventError(): Información de error según estado cuando ocurre un evento que no correspondía
+   actEventError(): Marca evento de ERROR por no cumplirse ninguna regla de transición
 ----------------------------------------------------------------------------------------------------------*/
 void actEventError(){
     // Independientemente del estado actual, se marca el evento ERROR para pasar al STATE_ERROR, donde 
@@ -2273,7 +2297,7 @@ void actEventError(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   isBufferInit(): Comprobar si el buffer está vacío
+   isBufferInit(): Comprobar si el buffer está vacío, es decir, si el primer hueco lo ocupa un evento NONE.
 ----------------------------------------------------------------------------------------------------------*/
 bool isBufferInit(){
     if(event_buffer[0] == NONE) return true;
@@ -2282,7 +2306,7 @@ bool isBufferInit(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   isBufferFull(): Comprobar si el buffer está lleno
+   isBufferFull(): Comprobar si el buffer está lleno, es decir, si no hay ningún hueco (evento NONE).
 ----------------------------------------------------------------------------------------------------------*/
 bool isBufferFull(){
     for (int i = 0; i < MAX_EVENTS; i++){
@@ -2310,7 +2334,7 @@ int getFirstGapBuffer(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   shiftLeftEventBuffer(): Mover elementos del buffer a la izq para liberar un hueco sin perder 
+   shiftLeftEventBuffer(): Traslada los elementos del buffer a la izq para liberar un hueco sin perder 
                            los eventos previos.
 ----------------------------------------------------------------------------------------------------------*/
 void shiftLeftEventBuffer(){ 
@@ -2327,7 +2351,7 @@ void shiftLeftEventBuffer(){
 
 
 /*---------------------------------------------------------------------------------------------------------
-   addEventToBuffer(): Añadir el último evento al buffer de eventos
+   addEventToBuffer(): Añade el último evento ocurrido al buffer de eventos
 ----------------------------------------------------------------------------------------------------------*/
 void addEventToBuffer(event_t evento){
     //Serial.println(F("\n***********************************"));

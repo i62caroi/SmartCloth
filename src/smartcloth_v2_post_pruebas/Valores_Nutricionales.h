@@ -21,11 +21,19 @@
 #define VALORES_NUTRICIONALES_H
 
 
+
+
+// **************************************************************************************************************************
+// *****************      DECLARACIÓN CLASE 'VALORESNUTRICIONALES'       ****************************************************
+// **************************************************************************************************************************
+
 /**
  * @brief Clase que representa los valores nutricionales.
  */
 class ValoresNutricionales{
+  
   private:
+  
     float   _carb;    /**< Valor de carbohidratos */
     float   _lip;     /**< Valor de lípidos */
     float   _prot;    /**< Valor de proteínas */
@@ -34,16 +42,23 @@ class ValoresNutricionales{
     float   _lip_R;   /**< Raciones de lípidos */
     float   _prot_R;  /**< Raciones de proteínas */
 
+
+
   public:
+
+    // ----------------------------------------------------------------------
+    // -------     CONSTRUCTORES 'VALORESNUTRICIONALES'      ----------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Constructor por defecto de la clase ValoresNutricionales.
-     *        Inicializa los valores a 0.0 y calcula automáticamente las raciones correspondientes.
+     *        Inicializa los valores nutricionales a 0.0 y calcula automáticamente las raciones correspondientes.
      */
     ValoresNutricionales();
 
     /**
      * @brief Constructor de la clase ValoresNutricionales.
-     *        Inicializa los valores según los parámetros pasados como argumentos y calcula automáticamente las raciones correspondientes.
+     *        Inicializa los valores nutricionales según los parámetros pasados como argumentos y calcula automáticamente las raciones correspondientes.
      * 
      * @param carb Valor de carbohidratos
      * @param lip Valor de lípidos
@@ -52,12 +67,19 @@ class ValoresNutricionales{
      */
     ValoresNutricionales(float carb, float lip, float prot, float kcal);
 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------          CARBOHIDRATOS           -----------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece el valor de carbohidratos y calcula las raciones correspondientes.
      * 
      * @param carb Valor de carbohidratos a establecer
      */
-    void setCarbValores(float carb);
+    inline void setCarbValores(float carb){ _carb = carb; this->computeCarbRaciones();  };
 
     /**
      * @brief Calcula las raciones de carbohidratos a partir del valor establecido.
@@ -78,12 +100,19 @@ class ValoresNutricionales{
      */
     inline float getCarbRaciones(){ return _carb_R; };
 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------          LÍPIDOS           -----------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece el valor de lípidos y calcula las raciones correspondientes.
      * 
      * @param lip Valor de lípidos a establecer
      */
-    void setLipValores(float lip);
+    inline void setLipValores(float lip){ _lip = lip; this->computeLipRaciones(); };
 
     /**
      * @brief Calcula las raciones de lípidos a partir del valor establecido.
@@ -104,12 +133,19 @@ class ValoresNutricionales{
      */
     inline float getLipRaciones(){ return _lip_R; };
 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------          PROTEÍNAS           ---------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece el valor de proteínas y calcula las raciones correspondientes.
      * 
      * @param prot Valor de proteínas a establecer
      */
-    void setProtValores(float prot);
+    inline void setProtValores(float prot){ _prot = prot; this->computeProtRaciones(); };
 
     /**
      * @brief Calcula las raciones de proteínas a partir del valor establecido.
@@ -130,6 +166,13 @@ class ValoresNutricionales{
      */
     inline float getProtRaciones(){ return _prot_R; };
 
+
+
+
+    // ----------------------------------------------------------------------
+    // -------          KILOCALORÍAS           ------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece el valor calórico.
      * 
@@ -143,6 +186,13 @@ class ValoresNutricionales{
      * @return El valor calórico
      */
     inline float getKcalValores(){ return _kcal; };
+
+
+
+
+    // ----------------------------------------------------------------------
+    // -------     VALORES NUTRICIONALES (TODOS)          -------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Establece los valores de carbohidratos, lípidos, proteínas y valor calórico a partir de un objeto ValoresNutricionales.
@@ -160,8 +210,23 @@ class ValoresNutricionales{
      * @param kcal Valor calórico
      */
     void setValores(float carb, float lip, float prot, float kcal);
+
 };
 
+
+
+
+
+
+// **************************************************************************************************************************
+// *****************      DEFINICIONES       ********************************************************************************
+// **************************************************************************************************************************
+
+
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      CONSTRUCTORES 'VALORESNUTRICIONALES'       ********************************************************
+// --------------------------------------------------------------------------------------------------------------------------
 
 /*---------------------------------------------------------------------------------------------------------
    ValoresNutricionales(): Constructor de la clase ValoresNutricionales que inicializa sus valores 
@@ -173,69 +238,108 @@ ValoresNutricionales::ValoresNutricionales(){
   this->setLipValores(0.0);
   this->setProtValores(0.0);
   this->setKcalValores(0.0);
-  //this->setValores(0.0,0.0,0.0,0.0);
 }
+
 
 /*---------------------------------------------------------------------------------------------------------
    ValoresNutricionales(): Constructor de la clase ValoresNutricionales que inicializa sus valores 
                            según los parámetros pasados como argumentos, calculando automáticamente 
                            las raciones correspondientes.
-                           
 ----------------------------------------------------------------------------------------------------------*/
 ValoresNutricionales::ValoresNutricionales(float carb, float lip, float prot, float kcal){
   this->setCarbValores(carb);
   this->setLipValores(lip);
   this->setProtValores(prot);
   this->setKcalValores(kcal);
-  //this->setValores(carb,lip,prot,kcal);
 }
 
 
-void ValoresNutricionales::setCarbValores(float carb){
-  _carb = carb;
-  this->computeCarbRaciones();
-}
 
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************          CARBOHIDRATOS           ***********************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   computeCarbRaciones(): Calcula las raciones de carbohidratos según el valor establecido. Divide entre 10
+                          y redondea al entero más cercano si el valor es menor que .3 o mayor que .7 
+                          Si el valor está entre .3 y .7, se redondea a .5 
+----------------------------------------------------------------------------------------------------------*/
 void ValoresNutricionales::computeCarbRaciones(){
   _carb_R = round(2.0*(this->getCarbValores()/10));   // 0.3 <= raciones <= 0.7   ------->  raciones = 0.5
   _carb_R = _carb_R/2;
 }
 
-void ValoresNutricionales::setLipValores(float lip){
-  _lip = lip;
-  this->computeLipRaciones();
-}
 
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************          LÍPIDOS           *****************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   computeLipRaciones(): Calcula las raciones de lípidos según el valor establecido. Divide entre 10
+                         y redondea al entero más cercano si el valor es menor que .3 o mayor que .7 
+                         Si el valor está entre .3 y .7, se redondea a .5 
+----------------------------------------------------------------------------------------------------------*/
 void ValoresNutricionales::computeLipRaciones(){
   _lip_R = round(2.0*(this->getLipValores()/10));   // 0.3 <= raciones <= 0.7   ------->  raciones = 0.5
   _lip_R = _lip_R/2;
 }
 
-void ValoresNutricionales::setProtValores(float prot){
-  _prot = prot;
-  this->computeProtRaciones();
-}
 
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************          PROTEÍNAS           ***************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   computeProtRaciones(): Calcula las raciones de proteínas según el valor establecido. Divide entre 10
+                          y redondea al entero más cercano si el valor es menor que .3 o mayor que .7 
+                          Si el valor está entre .3 y .7, se redondea a .5 
+----------------------------------------------------------------------------------------------------------*/
 void ValoresNutricionales::computeProtRaciones(){
   _prot_R = round(2.0*(this->getProtValores()/10));   // 0.3 <= raciones <= 0.7   ------->  raciones = 0.5
   _prot_R = _prot_R/2;
 }
 
 
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************       VALORES NUTRICIONALES (TODOS)        *************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   setValores(): Establece los valores nutricionales del objeto actual a partir de otro. Es decir, "copia"
+                 los valores de carbohidratos, lípidos, proteínas y kilocalorías.
+
+          Parámetros: 
+                  val - Valores a establecer
+----------------------------------------------------------------------------------------------------------*/
 void ValoresNutricionales::setValores(ValoresNutricionales val){
   this->setCarbValores(val.getCarbValores());
   this->setLipValores(val.getLipValores());
   this->setProtValores(val.getProtValores());
   this->setKcalValores(val.getKcalValores());
-  //this->setValores(val.getCarbValores(), val.getLipValores(), val.getProtValores(), val.getKcalValores());
 }
 
+
+
+/*---------------------------------------------------------------------------------------------------------
+   setValores(): Establece los valores nutricionales del objeto actual a partir de los valores pasados como
+                 argumentos. 
+
+          Parámetros: 
+                  carb - Valor de carbohidratos a establecer
+                  lip - Valor de lípidos a establecer
+                  prot - Valor de proteínas a establecer
+                  kcal - Valor de kilocalorías a establecer
+----------------------------------------------------------------------------------------------------------*/
 void ValoresNutricionales::setValores(float carb, float lip, float prot, float kcal){
   this->setCarbValores(carb);
   this->setLipValores(lip);
   this->setProtValores(prot);
   this->setKcalValores(kcal);
 }
+
 
 
 #endif

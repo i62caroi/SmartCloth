@@ -24,27 +24,42 @@
 #include "Comida.h"
 
 
+
+
+// **************************************************************************************************************************
+// *****************      DECLARACIÓN CLASE 'DIARIO'       ******************************************************************
+// **************************************************************************************************************************
+
+
 /**
  * @brief Clase que representa un diario de comidas.
  */
 class Diario{
+
   private:
+  
     int                   _nComidas;        /**< Número de comidas en el diario. */
     float                 _peso;            /**< Peso total del diario. */
     ValoresNutricionales  _valoresDiario;   /**< Valores nutricionales totales del diario. */
 
-    /**
-     * @brief Obtiene la primera posición disponible en el array de comidas.
-     * 
-     * @return La primera posición disponible en el array de comidas
-     */
-    //inline int _firstGapDiario(){ return this->getNumComidas(); };
 
   public:
+
+
+    // ----------------------------------------------------------------------
+    // -------      CONSTRUCTOR 'DIARIO'       ------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Constructor de la clase Diario.
      */
     Diario();
+
+
+
+    // ----------------------------------------------------------------------
+    // -------       Nº COMIDAS        --------------------------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Establece el peso total del diario.
@@ -60,6 +75,12 @@ class Diario{
      */
     inline int getNumComidas(){ return _nComidas; };
 
+
+
+    // ----------------------------------------------------------------------
+    // -------       PESO DIARIO        -------------------------------------
+    // ----------------------------------------------------------------------
+
     /**
      * @brief Establece el peso total del diario.
      * 
@@ -73,6 +94,11 @@ class Diario{
      * @return El peso total del diario
      */
     inline float getPesoDiario(){ return _peso; };
+
+
+    // ----------------------------------------------------------------------
+    // -------    AÑADIR COMIDA AL DIARIO     -------------------------------
+    // ----------------------------------------------------------------------
     
     /**
      * @brief Agrega una Comida al diario.
@@ -80,6 +106,11 @@ class Diario{
      * @param comida Objeto Comida a agregar
      */
     void addComida(Comida comida);      
+
+
+    // ----------------------------------------------------------------------
+    // -------      VALORES NUTRICIONALES       -----------------------------
+    // ----------------------------------------------------------------------
 
     /**
      * @brief Establece los valores nutricionales del diario a partir de un objeto ValoresNutricionales.
@@ -101,36 +132,88 @@ class Diario{
      * @param val Valores nutricionales con los que actualizar el diario
      */
     void updateValoresDiario(ValoresNutricionales val);
+
 };
 
 
+
+
+
+
+// **************************************************************************************************************************
+// *****************      DEFINICIONES       ********************************************************************************
+// **************************************************************************************************************************
+
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      CONSTRUCTOR 'DIARIO'       ************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   Diario(): Constructor de la clase Diario que inicializa el número de comidas a 0 y el peso total del
+             diario a 0.0
+----------------------------------------------------------------------------------------------------------*/
 Diario::Diario(){
   this->setNumComidas(0);
   this->setPesoDiario(0.0);
 }
 
-// --------------------------------------------------------------------
+
+
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      AÑADIR COMIDA AL DIARIO    ************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   addComida(): Añade la información nutricional de una comida al acumulado diario. Incrementa el número 
+                de comidas, el peso del acumulado y actualiza los valores nutricionales con los de la comida.
+
+          Parámetros: 
+                  comida - Objeto Comida con la información nutricional y peso de la comida guardada.
+----------------------------------------------------------------------------------------------------------*/
 void Diario::addComida(Comida comida){
-  //_comidas[this->_firstGapDiario()] = comida;                            // Añadir comida
-  this->setNumComidas(this->getNumComidas()+1);                         // Incrementar num comidas
-  this->setPesoDiario(this->getPesoDiario() + comida.getPesoComida());  // Incrementar peso
-  this->updateValoresDiario(comida.getValoresComida());                       // Actualizar Valores Nutricionales
+  this->setNumComidas(this->getNumComidas()+1);                           // Incrementar num comidas
+  this->setPesoDiario(this->getPesoDiario() + comida.getPesoComida());    // Incrementar peso
+  this->updateValoresDiario(comida.getValoresComida());                   // Actualizar Valores Nutricionales
 }
 
 
 
-// --------------------------------------------------------------------
 
+// --------------------------------------------------------------------------------------------------------------------------
+// *****************      VALORES NUTRICIONALES      ************************************************************************
+// --------------------------------------------------------------------------------------------------------------------------
+
+/*---------------------------------------------------------------------------------------------------------
+   updateValoresDiario(): Actualiza los valores nutricionales del acumulado diario sumando los que ya tuviera 
+                          con los pasados como argumento, correspondientes a la comida guardada. 
+
+          Parámetros: 
+                  val - Valores nutricionales de la comida guardada
+----------------------------------------------------------------------------------------------------------*/
 void Diario::updateValoresDiario(ValoresNutricionales val){
   float carb = _valoresDiario.getCarbValores() + val.getCarbValores();
   float lip = _valoresDiario.getLipValores() + val.getLipValores();
   float prot = _valoresDiario.getProtValores() + val.getProtValores();
   float kcal = _valoresDiario.getKcalValores() + val.getKcalValores();
   ValoresNutricionales valAux(carb, lip, prot, kcal);
-  //_valoresDiario.setValores(valAux);
   setValoresDiario(valAux);
 }
 
+
+
+
+
+
+// **************************************************************************************************************************
+// *****************      OBJETOS 'DIARIO'      *****************************************************************************
+// **************************************************************************************************************************
+
+
 Diario    diaActual; // Objeto del acumulado de hoy
+
+
+
+
 
 #endif
