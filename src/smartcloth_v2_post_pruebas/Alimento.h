@@ -37,7 +37,7 @@
 class Alimento{
   private:
     Grupo                 _grupo;             /**< Grupo al que pertenece el alimento */
-    float                _peso;              /**< Peso del alimento */
+    float                 _peso;              /**< Peso del alimento */
     ValoresNutricionales  _valoresAlimento;   /**< Valores nutricionales del alimento */
 
   public:
