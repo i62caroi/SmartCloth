@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 138   // 7 SON DE BORRAR CSV EN PRUEBAS. Serían 145 si se contaran las comentadas que no ya sirven (?) porque se tiene STATE_AVISO
+#define RULES 132   // 7 SON DE BORRAR CSV EN PRUEBAS
 
 
 
@@ -142,26 +142,25 @@ typedef enum {
               INCREMENTO            =   (8),    // Báscula
               DECREMENTO            =   (9),    // Báscula
               TARAR                 =   (10),   // Báscula tarada
-              QUITAR                =   (11),   // Quitar de la báscula
-              LIBERAR               =   (12),   // Báscula vacía real
-              ERROR                 =   (13),   // Error (acción incorrecta)
-              CANCELAR              =   (14),   // Cancelar acción de añadir, eliminar o guardar
-              AVISO                 =   (15),   // Aviso de plato o comida vacía
-              GO_TO_INIT            =   (16),   // Evento ficticio para volver a STATE_Init porque saltó un error, aviso o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_PLATO           =   (17),   // Evento ficticio para volver a STATE_Plato porque saltó un error 
-              GO_TO_GROUP_A         =   (18),   // Evento ficticio para volver a STATE_groupA porque saltó un error o aviso
-              GO_TO_GROUP_B         =   (19),   // Evento ficticio para volver a STATE_groupB porque saltó un error o aviso
-              GO_TO_RAW             =   (20),   // Evento ficticio para volver a STATE_raw porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_COOKED          =   (21),   // Evento ficticio para volver a STATE_cooked porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_WEIGHTED        =   (22),   // Evento ficticio para volver a STATE_weighted porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
-              GO_TO_ADD_CHECK       =   (23),   // Evento ficticio para volver a STATE_add_check porque saltó un error 
-              GO_TO_ADDED           =   (24),   // Evento ficticio para volver a STATE_added porque saltó un error 
-              GO_TO_DELETE_CHECK    =   (25),   // Evento ficticio para volver a STATE_delete_check porque saltó un error 
-              GO_TO_DELETED         =   (26),   // Evento ficticio para volver a STATE_deleted porque saltó un error
-              GO_TO_SAVE_CHECK      =   (27),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
-              GO_TO_SAVED           =   (28),   // Evento ficticio para volver a STATE_saved porque saltó un error 
-              GO_TO_CANCEL          =   (29),   // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
-              DELETE_CSV            =   (30)    // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
+              LIBERAR               =   (11),   // Báscula vacía real
+              ERROR                 =   (12),   // Error (acción incorrecta)
+              CANCELAR              =   (13),   // Cancelar acción de añadir, eliminar o guardar
+              AVISO                 =   (14),   // Aviso de plato o comida vacía
+              GO_TO_INIT            =   (15),   // Evento ficticio para volver a STATE_Init porque saltó un error, aviso o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_PLATO           =   (16),   // Evento ficticio para volver a STATE_Plato porque saltó un error 
+              GO_TO_GROUP_A         =   (17),   // Evento ficticio para volver a STATE_groupA porque saltó un error o aviso
+              GO_TO_GROUP_B         =   (18),   // Evento ficticio para volver a STATE_groupB porque saltó un error o aviso
+              GO_TO_RAW             =   (19),   // Evento ficticio para volver a STATE_raw porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_COOKED          =   (20),   // Evento ficticio para volver a STATE_cooked porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_WEIGHTED        =   (21),   // Evento ficticio para volver a STATE_weighted porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
+              GO_TO_ADD_CHECK       =   (22),   // Evento ficticio para volver a STATE_add_check porque saltó un error 
+              GO_TO_ADDED           =   (23),   // Evento ficticio para volver a STATE_added porque saltó un error 
+              GO_TO_DELETE_CHECK    =   (24),   // Evento ficticio para volver a STATE_delete_check porque saltó un error 
+              GO_TO_DELETED         =   (25),   // Evento ficticio para volver a STATE_deleted porque saltó un error
+              GO_TO_SAVE_CHECK      =   (26),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
+              GO_TO_SAVED           =   (27),   // Evento ficticio para volver a STATE_saved porque saltó un error 
+              GO_TO_CANCEL          =   (28),   // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
+              DELETE_CSV            =   (29)    // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
 } event_t;
 
 
@@ -205,7 +204,6 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // --- Recipiente colocado ---
                                         {STATE_Plato,STATE_Plato,INCREMENTO},           // Cambios por recolocar recipiente
                                         {STATE_Plato,STATE_Plato,DECREMENTO},           // Cambios por recolocar recipiente
-                                        {STATE_Plato,STATE_Plato,QUITAR},               // Retirando plato
                                         {STATE_Plato,STATE_Init,LIBERAR},               // Se ha retirado el recipiente
                                         {STATE_Plato,STATE_groupA,TIPO_A},              // Escoger alimento tipo A
                                         {STATE_Plato,STATE_groupB,TIPO_B},              // Escoger alimento tipo B
@@ -214,8 +212,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Alimentos grupo A ---
                                         {STATE_groupA,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
-                                        {STATE_groupA,STATE_groupA,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a QUITAR)
-                                        {STATE_groupA,STATE_groupA,QUITAR},             // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_groupA,STATE_groupA,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_groupA,STATE_groupA,TIPO_A},                
                                         {STATE_groupA,STATE_groupA,TARAR},              // Tarar tras colocar recipiente o alimento   
                                         {STATE_groupA,STATE_groupB,TIPO_B},                
@@ -226,8 +223,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Alimentos grupo B ---
                                         {STATE_groupB,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
-                                        {STATE_groupB,STATE_groupB,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a QUITAR)
-                                        {STATE_groupB,STATE_groupB,QUITAR},             // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_groupB,STATE_groupB,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_groupB,STATE_groupB,TIPO_B},                
                                         {STATE_groupB,STATE_groupB,TARAR},              // Tarar cada vez que se escoja grupo. Podría ser tras colocar recipiente o alimento   
                                         {STATE_groupB,STATE_groupA,TIPO_A},                
@@ -238,8 +234,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Alimento crudo ---
                                         {STATE_raw,STATE_Init,LIBERAR},                 // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
-                                        {STATE_raw,STATE_raw,DECREMENTO},               // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a QUITAR)
-                                        {STATE_raw,STATE_raw,QUITAR},                   // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_raw,STATE_raw,DECREMENTO},               // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_raw,STATE_groupA,TIPO_A},                // Cambiar grupo alimentos.  
                                         {STATE_raw,STATE_groupB,TIPO_B},                // Cambiar grupo alimentos.
                                         {STATE_raw,STATE_raw,CRUDO},                    // Para que no dé error si se vuelve a pulsar 'crudo'.
@@ -253,8 +248,7 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Alimento cocinado ---
                                         {STATE_cooked,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
-                                        {STATE_cooked,STATE_cooked,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a QUITAR)
-                                        {STATE_cooked,STATE_cooked,QUITAR},             // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR)
+                                        {STATE_cooked,STATE_cooked,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_cooked,STATE_groupA,TIPO_A},             // Cambiar grupo alimentos.  
                                         {STATE_cooked,STATE_groupB,TIPO_B},             // Cambiar grupo alimentos.
                                         {STATE_cooked,STATE_cooked,COCINADO},           // Para que no dé error si se vuelve a pulsar 'cocinado'.
@@ -267,15 +261,11 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // --------------------------
 
                                         // --- Alimento pesado ---
-                                        {STATE_weighted,STATE_Init,LIBERAR},            // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
-                                        {STATE_weighted,STATE_weighted,INCREMENTO},     // Se coloca más alimento.  
-                                        {STATE_weighted,STATE_weighted,DECREMENTO},     // Se retira alimento.   
-                                        {STATE_weighted,STATE_weighted,QUITAR},         // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-
-                                                                                        // Estas dos últimas reglas permiten que se coloque algo en la báscula y luego se retire para
-                                                                                            // escoger un grupo diferente porque nos hayamos confundido y sin guardar lo que se hubiera 
-                                                                                            // colocado, pues al retirarlo su peso sería 0.0 .
-
+                                        {STATE_weighted,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
+                                        {STATE_weighted,STATE_weighted,INCREMENTO},       // Se coloca más alimento.  
+                                        {STATE_weighted,STATE_weighted,DECREMENTO},       // Se retira alimento.  Esta regla permite que se coloque algo en la báscula y luego se retire para
+                                                                                          //                      escoger un grupo diferente porque nos hayamos confundido y sin guardar lo 
+                                                                                          //                      que se hubiera colocado, pues al retirarlo su peso sería 0.0 .
                                         {STATE_weighted,STATE_groupA,TIPO_A},             // Escoger nuevo grupo. Se guarda el peso del alimento en báscula.
                                         {STATE_weighted,STATE_groupB,TIPO_B},             // Escoger nuevo grupo. Se guarda el peso del alimento en báscula.
                                         {STATE_weighted,STATE_add_check,ADD_PLATO},       // Nuevo plato, aunque no se haya colocado alimento.
@@ -298,13 +288,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Plato añadido ---
                                         {STATE_added,STATE_added,TARAR},                 // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
-                                        {STATE_added,STATE_added,QUITAR},                // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-                                                                                         //     No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, 
-                                                                                         //     todo decremento de peso se considera evento QUITAR.
+                                        {STATE_added,STATE_added,DECREMENTO},            // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR).
                                         {STATE_added,STATE_added,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_added,STATE_Init,LIBERAR},                // Se ha retirado el plato completo (+ recipiente) tras añadir uno nuevo.
-                                        //{STATE_added,STATE_groupA,GO_TO_GROUP_A},        // ¿NECESARIO CON STATE_AVISO? No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.??????
-                                        //{STATE_added,STATE_groupB,GO_TO_GROUP_B},        // ¿NECESARIO CON STATE_AVISO? No se ha creado otro plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         {STATE_added,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         {STATE_added,STATE_AVISO,AVISO},                 // No se ha añadido un plato porque el actual está vacío
                                         // ---------------------
@@ -323,13 +309,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Plato eliminado ---
                                         {STATE_deleted,STATE_deleted,TARAR},             // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
-                                        {STATE_deleted,STATE_deleted,QUITAR},            // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-                                                                                         //     No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, 
-                                                                                         //     todo decremento de peso se considera evento QUITAR.
+                                        {STATE_deleted,STATE_deleted,DECREMENTO},        // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR).
                                         {STATE_deleted,STATE_deleted,INCREMENTO},        // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_deleted,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) tras borrar. 
-                                        //{STATE_deleted,STATE_groupA,GO_TO_GROUP_A},      // ¿NECESARIO CON STATE_AVISO? No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
-                                        //{STATE_deleted,STATE_groupB,GO_TO_GROUP_B},      // ¿NECESARIO CON STATE_AVISO? No se ha eliminado el plato porque estaba vacío. Se fuerza el regreso tras aviso.
                                         {STATE_deleted,STATE_ERROR,ERROR},               // Acción incorrecta
                                         {STATE_deleted,STATE_AVISO,AVISO},               // No se ha eliminado el plato porque está vacío
                                         // -----------------------
@@ -348,14 +330,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 
                                         // --- Comida guardada ---
                                         {STATE_saved,STATE_saved,TARAR},                 // Taramos para saber (en negativo) cuánto se va quitando al retirar el plato para LIBERAR.
-                                        {STATE_saved,STATE_saved,QUITAR},                // Para evitar error de evento cuando pase por condiciones que habilitan QUITAR (previo a LIBERAR).
-                                                                                         //     No se incluye evento DECREMENTO porque ese solo se da con valores positivos. Al tarar, 
-                                                                                         //     todo decremento de peso se considera evento QUITAR.
+                                        {STATE_saved,STATE_saved,DECREMENTO},            // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR).
                                         {STATE_saved,STATE_saved,INCREMENTO},            // Para evitar error de evento cuando, al retirar el plato, pueda detectar un ligero incremento.
                                         {STATE_saved,STATE_Init,LIBERAR},                // Se ha retirado el plato completo (+ recipiente) tras guardar correctamente.  
-                                        //{STATE_saved,STATE_groupA,GO_TO_GROUP_A},        // ¿NECESARIO CON STATE_AVISO? No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
-                                        //{STATE_saved,STATE_groupB,GO_TO_GROUP_B},        // ¿NECESARIO CON STATE_AVISO? No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
-                                        //{STATE_saved,STATE_Init,GO_TO_INIT},             // ¿NECESARIO CON STATE_AVISO? No se ha guardado la comida porque estaba vacía. Se fuerza el regreso tras aviso.
                                         {STATE_saved,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         {STATE_saved,STATE_AVISO,AVISO},                 // No se ha guardado la comida porque está vacía
                                         // -----------------------
@@ -376,9 +353,6 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_ERROR,STATE_save_check,GO_TO_SAVE_CHECK},        // Regresar a STATE_save_check tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_saved,GO_TO_SAVED},                  // Regresar a STATE_saved tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_CANCEL,GO_TO_CANCEL},                // Ir a STATE_CANCEL si se ha cancelado un acción iniciada durante error
-                                        //{STATE_ERROR,STATE_Init,LIBERAR},                     // Se colocó peso cuando no tocaba (en Grupos), y se ha mantenido la
-                                                                                                // pantalla de error hasta que se ha liberado la báscula para comenzar
-                                                                                                // de nuevo.
                                         // -----------------------
 
 
@@ -387,9 +361,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_CANCEL,STATE_raw,GO_TO_RAW},             // Regresar a STATE_raw tras cancelar add/delete/save iniciada desde STATE_raw   
                                         {STATE_CANCEL,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar add/delete/save iniciada desde STATE_cooked
                                         {STATE_CANCEL,STATE_weighted,GO_TO_WEIGHTED},   // Regresar a STATE_weighted tras cancelar add/delete/save iniciada desde STATE_weighted
-                                        {STATE_CANCEL,STATE_ERROR,ERROR},               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría e
-                                                                                        // en bucle marcando error.                  
-                                                                                        // 
+                                        {STATE_CANCEL,STATE_ERROR,ERROR},               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría 
+                                                                                        // en bucle marcando error.    
+
                                         {STATE_CANCEL,STATE_DELETE_CSV_CHECK,DELETE_CSV},  // BORRAR FICHERO CSV. EL USUARIO NO DEBERÍA ACTIVAR EL EVENTO. SOLO PARA LAS PRUEBAS.
                                         // -----------------------
 
@@ -557,7 +531,7 @@ void printEventName(event_t event) {
         case INCREMENTO:            Serial.print("INCREMENTO");               break;
         case DECREMENTO:            Serial.print("DECREMENTO");               break;
         case TARAR:                 Serial.print("TARAR");                    break;
-        case QUITAR:                Serial.print("QUITAR");                   break;
+   //     case QUITAR:                Serial.print("QUITAR");                   break;
         case LIBERAR:               Serial.print("LIBERAR");                  break;
         case ERROR:                 Serial.print("ERROR");                    break;
         case CANCELAR:              Serial.print("CANCELAR");                 break;
@@ -739,6 +713,9 @@ void actStateInit(){
             
             
         }
+        else if(tarado){           // ==> Si se viene del propio STATE_Init, donde se ha tarado.
+            tarado = false;              // Desactivar flag de haber 'tarado'.          
+        }
 
         previousTime = millis();                              // Inicializar 'previousTime' para la alternancia de pantallas
 
@@ -906,8 +883,9 @@ void actGruposAlimentos(){
         Serial.println(F("Grupo de alimentos..."));
         
         // ----- ACCIONES ------------------------------
-        if(lastValidState == STATE_Plato){ // Si se viene directo de plato o a través de un error
-            pesoRecipiente = pesoBascula;                                   // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
+        if(lastValidState == STATE_Plato){ // Si se acaba de colocar el recipiente
+            pesoRecipiente = pesoBascula;    // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
+            tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
         else if((state_prev != STATE_ERROR) and (state_prev != STATE_groupA) and (state_prev != STATE_groupB) and (pesoBascula != 0.0)){ 
                 Serial.println(F("Añadiendo alimento al plato..."));
@@ -922,28 +900,31 @@ void actGruposAlimentos(){
                 comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
 
                 pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
+
+                tareScale();                                                // Tras guardar la información del último alimento colocado, se tara la báscula
+                                                                            // para pesar el siguiente alimento
                 
         }
         // ----- FIN ACCIONES --------------------------
 
 
         // ----- INFO PANTALLA -------------------------
-        if((state_prev != STATE_groupA) and (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se forma medio Dashboard (ejemplos y parpadeo zona 2)
-            if(state_prev != STATE_ERROR) tareScale();      // Tarar al seleccionar un grupo de alimentos nuevo, a no ser que se estén leyendo ejemplos, porque sería innecesario.
-                                                            // Esta tara DEBE hacerse antes de showSemiDashboard_PedirProcesamiento() para que muestre el peso a 0.      
-            if(showSemiDashboard_PedirProcesamiento()) return;  // Mostrar semi dashboard completo al inicio
-                                                                // Si ocurre alguna interrupción mientras se forma el semi dashboard, se sale de la función.
+        if((state_prev != STATE_groupA) and (state_prev != STATE_groupB)){ // ==> Si es la primera vez que se escoge grupo, se forma medio Dashboard (ejemplos y parpadeo zona 2)  
+            if(showSemiDashboard_PedirProcesamiento()) return;              // Mostrar semi dashboard completo al inicio
+                                                                            // Si ocurre alguna interrupción mientras se forma el semi dashboard, se sale de la función.
         }
-        else if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){  // Si se está pulsando grupos para ver sus ejemplos, solo se van modificando los grupos y sus ejemplos
-            tarado = false;        // Desactivar flag de haber 'tarado' 
-            printGrupoyEjemplos(); 
+        else if((state_prev == STATE_groupA) or (state_prev == STATE_groupB)){  // ==> Si se están pulsando grupos para ver sus ejemplos, solo se modifica la zona 1
+            printGrupoyEjemplos();                                          // Modificar zona 1 con los ejemplos del nuevo grupo escogido
+            tarado = false;                                                 // Desactivar flag de haber 'tarado' previamente
         }
 
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
                                                                             // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
+
     }
+
 
     //
     // 1 - La primera vez que se escoge un grupo de alimentos, se forma el semi dashboard completo --> showSemiDashboard_PedirProcesamiento()
@@ -1754,7 +1735,8 @@ void actStateERROR(){
 
               case STATE_groupA:   
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                      if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
+                      if(eventoBascula == DECREMENTO){
+                      //if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
                           Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoA..."));             addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
@@ -1781,7 +1763,8 @@ void actStateERROR(){
             
               case STATE_groupB:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                      if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
+                      if(eventoBascula == DECREMENTO){
+                      //if((eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
                           Serial.print(F("\nRetirando alimento durante ERROR en STATE_grupoB..."));             addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
@@ -1844,7 +1827,8 @@ void actStateERROR(){
 
               case STATE_weighted:   
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                      if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
+                      if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){
+                      //if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO) or (eventoBascula == QUITAR)){
                           Serial.print(F("\nColocando/retirando alimento durante ERROR en STATE_weighted...")); addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
@@ -1896,7 +1880,8 @@ void actStateERROR(){
               
               case STATE_added:   
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                      if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
+                      if(eventoBascula == INCREMENTO){
+                      //if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
                           Serial.print(F("\nRetirando alimento durante ERROR en STATE_added..."));              addEventToBuffer(GO_TO_ADDED);   flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
@@ -1924,7 +1909,8 @@ void actStateERROR(){
               
               case STATE_deleted:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                      if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
+                      if(eventoBascula == INCREMENTO){
+                      //if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
                           Serial.print(F("\nRetirando alimento durante ERROR en STATE_deleted..."));            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición
@@ -1952,7 +1938,8 @@ void actStateERROR(){
               
               case STATE_saved:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
-                      if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
+                      if(eventoBascula == INCREMENTO){
+                      //if((eventoBascula == INCREMENTO) or (eventoBascula == QUITAR)){
                           Serial.print(F("\nRetirando alimento durante ERROR en STATE_saved..."));             addEventToBuffer(GO_TO_SAVED);     flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto nunca se detectará desde error porque va antes DECREMENTO y QUITAR --> eliminar condición

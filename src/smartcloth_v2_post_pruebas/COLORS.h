@@ -16,6 +16,7 @@
  *       intensidad del componente rojo, los siguientes 6 bits corresponden al componente verde y los
  *       5 bits inferiores corresponden al componente azul.
  * 
+ * @see http://www.rinkydinkelectronics.com/calc_rgb565.php Calculadora de códigos RGB565 a partir de otros códigos
  * @see https://github.com/newdigate/rgb565_colors Colección de colores con códigos HEX para rgb565
  * @see http://www.barth-dev.de/online/rgb565-color-picker/ Herramienta para obtener el código HEX de un color seleccionado
  * @see La herramienta "Medidor de Color Digital" del MacBook permite obtener el HEX de cualquier color en pantalla

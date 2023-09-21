@@ -70,8 +70,8 @@ uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día espe
  * Esta función inicializa el objeto RTC y ajusta la hora si es necesario por
  * el cambio de hora en verano e invierno.
  */
- /*-----------------------------------------------------------------------------*/
- void setupRTC(){
+/*-----------------------------------------------------------------------------*/
+void setupRTC(){
     // Initialize the rtc object
     rtc.begin();
 

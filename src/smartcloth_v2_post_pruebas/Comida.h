@@ -139,8 +139,6 @@ class Comida{
      */
     void deletePlato(Plato &plato); 
 
-    //void deletePlato();
-
 
 
     // ----------------------------------------------------------------------

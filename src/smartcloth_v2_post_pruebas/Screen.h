@@ -10,7 +10,7 @@
  * @see https://www.buydisplay.com/spi-7-inch-tft-lcd-dislay-module-1024x600-ra8876-optl-touch-screen-panel 
  */
 
- /*
+/*
  
   ------ ESPECIFICACIONES BASE --------------
    * 1024x600 (7") TFT LCD

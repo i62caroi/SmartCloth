@@ -85,8 +85,8 @@ void  checkAllButtons();       // Asignación de eventos según botón pulsado e
  * utilizando el método de polling. Se busca el botón activo en cada fila y columna
  * y se actualizan las variables iRow e iCol con la posición del botón pulsado.
  */
- /*-----------------------------------------------------------------------------*/
- void readButtonsGrande(){
+/*-----------------------------------------------------------------------------*/
+void readButtonsGrande(){
     for (byte c = 0; c < countColumns; c++){  
         pinMode(columnsPins[c], INPUT); //Para proteger eléctricamente los puertos de los botones y que no llegue 0 y 1 a la vez
     }
@@ -118,8 +118,8 @@ void  checkAllButtons();       // Asignación de eventos según botón pulsado e
  * ambas botoneras (grande y main). Dependiendo del botón pulsado, se asigna
  * un evento correspondiente y se agrega al búfer de eventos.
  */
-  /*-----------------------------------------------------------------------------*/
- void checkAllButtons(){
+/*-----------------------------------------------------------------------------*/
+void checkAllButtons(){
         /*--------------------------------------------------------------*/
         /* ---------------    PULSACIONES BOTONERAS   ----------------- */
         /*--------------------------------------------------------------*/
