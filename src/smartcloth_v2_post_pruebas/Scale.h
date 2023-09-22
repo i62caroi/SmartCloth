@@ -103,7 +103,7 @@ void  tareScale(){
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Función para comprobar si ha habido algún evento en la báscula.
+ * @brief Función para comprobar si ha habido algún evento en la báscula y determinar el tipo de evento.
  */
 /*-----------------------------------------------------------------------------*/
 void checkBascula(){
@@ -124,37 +124,30 @@ void checkBascula(){
         // ------- COMPROBAR SI HA HABIDO EVENTO --------------
         // ----------------------------------------------------
 
-        if (diffWeight > 2.0){ // Cambio no causado por "interferencias" de la báscula con diferencia de 2 gr
-            scaleEventOccurred = true;
-            
-            // 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
-            //  Este valor es el que se usará como peso de los alimentos. 
-               
-            pesoBascula = newWeight;
-            if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
+        if(tarado){
+            Serial.print(F("\nTARANDO"));
+            eventoBascula = TARAR;
+        }
+        else{
+            if(diffWeight > 2.0){ // Si ha habido una variación de peso de más de 2 gramos y no ha sido causada por una tara --> evento
+                scaleEventOccurred = true;
+                
+                // 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
+                //  Este valor es el que se usará como peso individual de los alimentos. 
+                  
+                pesoBascula = newWeight;
+                if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
 
 
-            // ----------------------------------------------------
-            // --------- RECONOCER EVENTO OCURRIDO ----------------
-            // ----------------------------------------------------
+                // ----------------------------------------------------
+                // --------- RECONOCER EVENTO OCURRIDO ----------------
+                // ----------------------------------------------------
 
-            if(lastWeight < newWeight){ // Incremento de peso                 
-                if(tarado){
-                    Serial.print(F("\nTARADO"));
-                    eventoBascula = TARAR;
-                }
-                else{
+                if(lastWeight < newWeight){ // Incremento de peso                 
                     Serial.print(F("\nINCREMENTO"));
                     eventoBascula = INCREMENTO;
                 }
-
-            }
-            else { // Decremento de peso 
-                if(tarado){
-                    Serial.print(F("\nTARADO"));
-                    eventoBascula = TARAR;  
-                }
-                else{
+                else { // Decremento de peso 
                     if(abs(abs(newWeight) - pesoARetirar) < 5.0){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
                         // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
                         Serial.print(F("\nLIBERADA"));
@@ -167,24 +160,25 @@ void checkBascula(){
                     }
                 }
 
+
+                Serial.println(F("\n--------------------------------------"));
+                Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 
+                Serial.print(F("Peso actual: ")); Serial.println(newWeight); 
+                Serial.print(F("Peso Bascula: ")); Serial.println(pesoBascula);
+                Serial.print(F("Peso a retirar: ")); Serial.println(pesoARetirar);
+                Serial.print(F("Peso recipiente: ")); Serial.println(pesoRecipiente);
+                Serial.print(F("Peso plato: ")); Serial.println(pesoPlato);
+                Serial.println(F("\n--------------------------------------"));
+
+                addEventToBuffer(eventoBascula);
+                flagEvent = true;
             }
-
-
-            Serial.println(F("\n--------------------------------------"));
-            Serial.print(F("\nPeso anterior: ")); Serial.println(lastWeight); 
-            Serial.print(F("Peso actual: ")); Serial.println(newWeight); 
-            Serial.print(F("Peso Bascula: ")); Serial.println(pesoBascula);
-            Serial.print(F("Peso a retirar: ")); Serial.println(pesoARetirar);
-            Serial.print(F("Peso recipiente: ")); Serial.println(pesoRecipiente);
-            Serial.print(F("Peso plato: ")); Serial.println(pesoPlato);
-            Serial.println(F("\n--------------------------------------"));
-
-            addEventToBuffer(eventoBascula);
-            flagEvent = true;
+            else scaleEventOccurred = false; // No ha habido evento
         }
-        else scaleEventOccurred = false; // No ha habido evento
 
         pesado = false;
+
+        if(tarado) tarado = false;
     }
 
 
