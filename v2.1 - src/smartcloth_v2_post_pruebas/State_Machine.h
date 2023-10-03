@@ -1947,6 +1947,28 @@ void actStateERROR(){
               flagEvent = true;  
               flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
           }
+
+          if(buttonInterruptOccurred()){ // Ha habido pulsación
+              checkAllButtons(); // Qué botón se ha pulsado
+              if((eventoMain == CRUDO) or (eventoMain == COCINADO)){
+                  if(eventoMain == CRUDO){
+                      Serial.print(F("\nCRUDO escogido durante ERROR por PESO en ")); printStateName(state_prev); Serial.print(F("...")); // STATE_groupA o STATE_groupB
+                      Serial.println(F("\nAlimento crudo..."));        
+                      procesamiento = ALIMENTO_CRUDO;         
+                  }
+                  else if(eventoMain == COCINADO){ 
+                      Serial.print(F("\nCOCINADO escogido durante ERROR por PESO en ")); printStateName(state_prev); Serial.print(F("...")); // STATE_groupA o STATE_groupB  
+                      Serial.println(F("\nAlimento cocinado..."));        
+                      procesamiento = ALIMENTO_COCINADO;  
+                  }
+                  addEventToBuffer(GO_TO_WEIGHTED);   // Pasar directamente a STATE_weighted para mostrar la info de lo pesado según la cocción (crudo o cocinado)
+                                                      // Si se pasara a STATE_raw o STATE_cooked, el sistema esperaría un incremento de peso para pasar a STATE_weighted,
+                                                      // pero ese incremento ya ha ocurrido porque se ha colocado alimento, aunque haya resultado en un error, pero es
+                                                      // un error subsanable de esta forma: pulsando CRUDO o COCINADO tras marcarse el error.
+                  flagEvent = true;  
+                  flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
+              }
+          }
     }
 
     // -----  FIN TRANSICIONES TRAS ERROR  ------------------------

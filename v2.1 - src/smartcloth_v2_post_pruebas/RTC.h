@@ -1,3 +1,9 @@
+#include <DS3231.h>
+
+#include <DS3231.h>
+
+#include <DS3231.h>
+
 /** @file RTC.h
  *  @brief Funciones de un Real Time Clock (RTC) 
  *

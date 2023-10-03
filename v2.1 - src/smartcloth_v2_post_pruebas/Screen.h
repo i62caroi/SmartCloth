@@ -2343,9 +2343,14 @@ void showError(int option){
       case ERROR_STATE_GROUPS: // Grupos (grupoA o groupB)
               if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
                   tft.setCursor(10, 420); tft.println("SELECCIONE COCINADO O CRUDO ANTES DE PESAR");  
+                  /*
                   tft.selectInternalFont(RA8876_FONT_SIZE_32);
                   tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
                   tft.setCursor(200,tft.getCursorY() + tft.getTextSizeY()); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
+                  */
+                  tft.selectInternalFont(RA8876_FONT_SIZE_32);
+                  tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+                  tft.setCursor(130,tft.getCursorY() + tft.getTextSizeY()); tft.println("TAMBI\xC9""N PUEDE RETIRAR EL PLATO PARA COMENZAR DE NUEVO"); 
               }
               else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar)
                   tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
