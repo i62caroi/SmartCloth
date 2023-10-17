@@ -1,0 +1,16 @@
+Received POST request. Values to insert: carb: 10.00, carb_R: 1.00, lip: 16.00, lip_R: 2.00, prot: 19.00, prot_R: 2.00, kcal: 260.00, peso: 85.00
+Received POST request. Values to insert: carb: 27.00, carb_R: 3.00, lip: 8.00, lip_R: 1.00, prot: 21.00, prot_R: 2.00, kcal: 264.00, peso: 101.00
+Received POST request. Values to insert: carb: 17.00, carb_R: 2.00, lip: 23.00, lip_R: 2.00, prot: 17.00, prot_R: 2.00, kcal: 343.00, peso: 112.00
+Received POST request. Values to insert: carb: 20.00, carb_R: 2.00, lip: 19.00, lip_R: 2.00, prot: 27.00, prot_R: 3.00, kcal: 359.00, peso: 91.00
+Received POST request. Values to insert: carb: 13.00, carb_R: 1.00, lip: 24.00, lip_R: 2.00, prot: 17.00, prot_R: 2.00, kcal: 336.00, peso: 133.00
+Received POST request. Values to insert: carb: 20.00, carb_R: 2.00, lip: 19.00, lip_R: 2.00, prot: 28.00, prot_R: 3.00, kcal: 363.00, peso: 102.00
+Received POST request. Values to insert: carb: 29.50, carb_R: 3.00, lip: 23.50, lip_R: 2.00, prot: 27.50, prot_R: 3.00, kcal: 439.50, peso: 146.50
+Received POST request. Values to insert: carb: 11.50, carb_R: 1.00, lip: 18.50, lip_R: 2.00, prot: 8.50, prot_R: 1.00, kcal: 246.50, peso: 121.50
+Received POST request. Values to insert: carb: 7.50, carb_R: 1.00, lip: 7.50, lip_R: 1.00, prot: 21.50, prot_R: 2.00, kcal: 183.50, peso: 88.50
+Received POST request. Values to insert: carb: 19.50, carb_R: 2.00, lip: 29.50, lip_R: 3.00, prot: 8.50, prot_R: 1.00, kcal: 377.50, peso: 80.50
+Received POST request. Values to insert: carb: 12.50, carb_R: 1.00, lip: 20.50, lip_R: 2.00, prot: 25.50, prot_R: 3.00, kcal: 336.50, peso: 145.50
+Received POST request. Values to insert: carb: 17.50, carb_R: 2.00, lip: 18.50, lip_R: 2.00, prot: 21.50, prot_R: 2.00, kcal: 322.50, peso: 72.50
+Received POST request. Values to insert: carb: 22.50, carb_R: 2.00, lip: 13.50, lip_R: 1.00, prot: 27.50, prot_R: 3.00, kcal: 321.50, peso: 93.50
+Received POST request. Values to insert: carb: 17.50, carb_R: 2.00, lip: 10.50, lip_R: 1.00, prot: 13.50, prot_R: 1.00, kcal: 218.50, peso: 142.50
+Received POST request. Values to insert: carb: 6.50, carb_R: 1.00, lip: 10.50, lip_R: 1.00, prot: 27.50, prot_R: 3.00, kcal: 230.50, peso: 83.50
+Received POST request. Values to insert: carb: 28.50, carb_R: 3.00, lip: 9.50, lip_R: 1.00, prot: 17.50, prot_R: 2.00, kcal: 269.50, peso: 138.50

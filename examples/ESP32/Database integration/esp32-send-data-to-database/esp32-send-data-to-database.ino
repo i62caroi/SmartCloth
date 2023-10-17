@@ -49,14 +49,14 @@ void setup() {
 
 void loop() {
   // Generar valores aleatorios para guardar en la database
-  carb = random(5,30);
+  carb = random(5,30) + 0.5; // + 0.5 para ver si se muestran decimales, porque con .0 se trunca el valor
   carb_R = round(carb/10);
-  lip = random(5,30);
+  lip = random(5,30) + 0.5;
   lip_R = round(lip/10);
-  prot = random(5,30);
+  prot = random(5,30) + 0.5;
   prot_R = round(prot/10);
   kcal = (carb * 4) + (lip * 9) + (prot * 4);
-  peso = random(50, 150);
+  peso = random(50, 150) + 0.5;
 
   Serial.println();
   Serial.print(carb); Serial.print(" "); Serial.print(carb_R); Serial.print(" ");
