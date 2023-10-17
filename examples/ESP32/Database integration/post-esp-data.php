@@ -22,7 +22,7 @@ $password = "SmartCloth.database/pass23";
 
 // Keep this API Key value to be compatible with the ESP32 code provided in the project page. 
 // If you change this value, the ESP32 sketch needs to match
-$api_key_value = "tPmAT5Ab3j7F9";
+$api_key_value = "apiKeySmartCloth";
 
 $api_key= $carb = $carb_R = $lip = $lip_R = $prot = $prot_R = $kcal = $peso = "";
 
@@ -48,6 +48,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $sql = "INSERT INTO comidas (carb, carb_R, lip, lip_R, prot, prot_R, kcal, peso)
         VALUES ('" . $carb . "', '" . $carb_R . "', '" . $lip . "', '" . $lip_R . "', '" . $prot . "', '" . $prot_R . "', '" . $kcal . "', '" . $peso . "')";
         
+
+        //$sql = "INSERT INTO comidas (carb, carb_R, lip, lip_R, prot, prot_R, kcal, peso) VALUES (35.7, 3.5, 23.7, 3, 12.7, 1, 134.6, 234.67)";
+
         if ($conn->query($sql) === TRUE) {
             echo "New record created successfully";
         } 
