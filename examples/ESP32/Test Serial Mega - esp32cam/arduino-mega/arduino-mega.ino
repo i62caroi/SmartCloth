@@ -1,10 +1,4 @@
 #include <SoftwareSerial.h>
-/*
-#define rxPin 19
-#define txPin 18
-
-SoftwareSerial espSerial =  SoftwareSerial(rxPin, txPin);
-*/
 
 #define SerialPC Serial
 #define SerialMegaESP32 Serial3
@@ -15,15 +9,6 @@ void setup() {
 
   SerialMegaESP32.begin(9600);
   while (!SerialMegaESP32);
-
-/*
-  // Define pin modes for TX and RX
-  pinMode(rxPin, INPUT);
-  pinMode(txPin, OUTPUT);
-  
-  espSerial.begin(115200); // Inicializa la comunicación serial con el ESP32-CAM
-  while (!espSerial);
-  */
 }
 
 void loop() {
@@ -32,6 +17,12 @@ void loop() {
 
     SerialPC.print("Mensaje a enviar: "); SerialPC.println(command);
     SerialMegaESP32.print(command); // Envía al ESP32-CAM
+  }
+
+  if (SerialMegaESP32.available() > 0) {
+    String msg = SerialMegaESP32.readStringUntil('\n');
+
+    SerialPC.print("Mensaje recibido: "); SerialPC.println(msg); 
   }
 
 }

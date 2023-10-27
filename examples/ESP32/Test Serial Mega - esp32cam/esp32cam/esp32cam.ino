@@ -47,9 +47,9 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT); // Pin del LED del ESP32-CAM
 }
 
-void loop() {
-  //SerialPC.println("Esperando mensaje...");
 
+void loop() {
+  
   if (SerialESP32Mega.available() > 0) {
     String command = SerialESP32Mega.readStringUntil('\n');
 
@@ -57,14 +57,18 @@ void loop() {
 
     if (command == "ON") {
       digitalWrite(LED_BUILTIN, HIGH); // Enciende el LED
-      SerialPC.println("Led encendido");
+      SerialPC.println("Led ON");
+      SerialESP32Mega.println("Led encendido");
     }
     else if (command == "OFF") {
       digitalWrite(LED_BUILTIN, LOW); // Apaga el LED
-      SerialPC.println("Led apagado");
+      SerialPC.println("Led OFF");
+      SerialESP32Mega.println("Led apagado");
     }
-    else SerialPC.println("Command not valid");
+    else{
+      SerialPC.println("Command not valid");
+      SerialESP32Mega.println("Command not valid");
+    }
   }
 
-  //delay(1000);
 }
