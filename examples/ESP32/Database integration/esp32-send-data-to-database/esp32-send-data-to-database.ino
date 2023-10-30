@@ -10,6 +10,18 @@
 
 */
 
+
+/*
+  Irene Casares Rodríguez
+  17/10/23
+
+  Este programa genera valores aleatorios de macronutrientes, kcal y peso, y los envía
+  mediante petición HTTP POST a un servidor encargado de obtener los valores de la query
+  e insertarlos en la base de datos. 
+  El programa realiza un envío cada 5 minutos.
+
+*/
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 //#include <WiFiClientSecure.h> // HTTPS
@@ -131,6 +143,6 @@ void loop() {
   else {
     Serial.println("WiFi Disconnected");
   }
-  //Send an HTTP POST request every 60 seconds
+  //Send an HTTP POST request every 5 minutes
   delay(300000);  
 }
