@@ -81,6 +81,7 @@ bool    hasScaleEventOccurred();
 
 #include "SD_functions.h"
 #include "Buttons.h"
+#include "Serial_esp32cam.h"
 
 
 /**
@@ -1461,6 +1462,7 @@ void actStateSaved(){
                 errorComidaWasEmpty = false;
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
                 saveComidaSD();                             // Comida ==> fichero CSV en SD
+                //saveComidaDatabase();                       // Comida ==> esp32 ==> base de datos
 
                 comidaActualCopia.copyComida(comidaActual); // Copiar nº platos, peso y valores de la comida actual a la copia. Este objeto 'Comida' solo sirve para mostrar
                                                             // en el dashboard estilo 1 (STATE_Init y STATE_Plato) la comida guardada junto con el acumulado, pues tras guardarla

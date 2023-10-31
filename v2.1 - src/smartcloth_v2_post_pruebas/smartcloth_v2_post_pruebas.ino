@@ -13,6 +13,7 @@
 
 
 
+#include "Serial_esp32cam.h" //Comunicación con ESP32-CAM
 
 #include "Buttons.h"       /**< Buttons.h 
                                 => ISR.h 
@@ -35,6 +36,7 @@
                                                                       
                             */
 
+
 /* Time */
 const unsigned long   period = 50;
 unsigned long         prevMillis = 0;
@@ -45,21 +47,31 @@ unsigned long         tiempoPrevio = 0;
    \brief Función para inicializar el RTC, la SD, la pantalla, la báscula, las botoneras y las interrupciones
 ----------------------------------------------------------------------------------------------------------*/
 void setup() {
-    Serial.begin(115200);
+    /* ------ COMUNICACIÓN SERIAL ------------ */
+    // Inicializar comunicación con PC (Serial)
+    Serial.begin(9600); //115200
     while (!Serial);
-    delay(1000); 
+    delay(100);
+    // Inicializar comunicación con ESP32-CAM (Serial1)
+    SerialDueESP32.begin(9600);
+    while (!SerialDueESP32);
+    delay(100); 
 
     /* ------ RTC ------------ */
     setupRTC(); 
+    delay(100); 
 
     /* ------ SD card -------- */
     setupSDcard(); // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
+    delay(100); 
 
     /* ------ SCALE --------- */
     setupScale();   
+    delay(100); 
     
     /* ------ SCREEN --------- */
     setupScreen();  
+    delay(100); 
     
 
     /*------- ESTADO INICIAL --------- */

@@ -198,6 +198,14 @@ class Comida{
      */
     String getComidaAllValues(); 
 
+
+    /**
+     * @brief Obtiene todos los valores de la comida en formato de cadena de texto listos para añadirlos a la petición HTTP POST
+     * 
+     * @return Cadena de texto con los valores nutricionales de la comida
+     */
+    String getComidaAllValuesHttpRequest(); 
+
 };
 
 
@@ -358,7 +366,8 @@ void Comida::restoreComida(){
 
 /*---------------------------------------------------------------------------------------------------------
    getComidaAllValues(): Conforma una cadena con los valores nutricionales de la comida separados por
-                         el caracter ';' para poderlos escribir en el fichero .csv al guardarla.
+                         el caracter ';' para poderlos escribir en el fichero .csv al guardarla. También
+                         incluye el peso
 ----------------------------------------------------------------------------------------------------------*/
 String Comida::getComidaAllValues(){
     String dataString = String(_valoresComida.getCarbValores()) + ";" + String(_valoresComida.getCarbRaciones()) + ";" + 
@@ -368,6 +377,22 @@ String Comida::getComidaAllValues(){
 
     return dataString;
 }
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   getComidaAllValuesHttpRequest(): Conforma una cadena con los valores nutricionales de la comida separados por
+                         el caracter '&' para poderlos insertar en la petición HTTP POST del esp32 directamente.
+----------------------------------------------------------------------------------------------------------*/
+String Comida::getComidaAllValuesHttpRequest(){
+    String dataString = "&carb=" + String(_valoresComida.getCarbValores()) + "&carb_R=" + String(_valoresComida.getCarbRaciones()) + "&lip=" + 
+                        String(_valoresComida.getLipValores()) + "&lip_R=" + String(_valoresComida.getLipRaciones()) + "&prot=" + 
+                        String(_valoresComida.getProtValores()) + "&prot_R" + String(_valoresComida.getProtRaciones()) + "&kcal" + 
+                        String(_valoresComida.getKcalValores()) + "&peso=" + String(this->.getPesoComida()); 
+
+    return dataString;
+}
+
 
 
 

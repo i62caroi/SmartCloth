@@ -52,7 +52,6 @@ void setup() {
     // Intentar conectarse a la red WiFi
     connectToWiFi();
   
-    
 }
 
 

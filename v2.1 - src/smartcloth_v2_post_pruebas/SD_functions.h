@@ -161,6 +161,7 @@ void saveComidaSD(){
     if (myFile){
         myFile.println(dataString);
         myFile.close(); // close the file
+        Serial.println("Comida guardada correctamente en la SD");
     }
     else{
         Serial.println("Error opening file for writing!");
