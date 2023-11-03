@@ -388,7 +388,7 @@ String Comida::getComidaAllValuesHttpRequest(){
     String dataString = "&carb=" + String(_valoresComida.getCarbValores()) + "&carb_R=" + String(_valoresComida.getCarbRaciones()) + "&lip=" + 
                         String(_valoresComida.getLipValores()) + "&lip_R=" + String(_valoresComida.getLipRaciones()) + "&prot=" + 
                         String(_valoresComida.getProtValores()) + "&prot_R" + String(_valoresComida.getProtRaciones()) + "&kcal" + 
-                        String(_valoresComida.getKcalValores()) + "&peso=" + String(this->.getPesoComida()); 
+                        String(_valoresComida.getKcalValores()) + "&peso=" + String(this->getPesoComida()); 
 
     return dataString;
 }

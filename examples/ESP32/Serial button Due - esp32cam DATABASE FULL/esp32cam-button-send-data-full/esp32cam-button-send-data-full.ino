@@ -11,6 +11,42 @@
   
 */
 
+
+
+/*
+   -------- MENSAJES ARDUINO -> ESP32 --------------
+  
+  1. Guardar info en base de datos:
+      "SAVE-&carb=X&carb_R=X&lip=X&lip_R=X&prot=X&prot_R=X&kcal=X&peso=X"
+      Esta opción ya está lista para la petición POST
+
+      Proxima opción: "SAVE:<grupoX>-<peso>;<grupoY>-<peso>;<grupoZ>-<peso>;...." 
+          Con esta opción se guardarían los pares 'grupoX-peso' en la base de datos y se calcularían los valores 
+          de macronutrientes en el servidor al hacer GET. De esta forma, se podría llevar una trazabilidad de
+          lo comido exactamente (a nivel grupo).
+
+  2. Activar cámara y leer código de barras:
+      "GET-BARCODE"
+
+  
+  -------- MENSAJES ESP32 -> ARDUINO -------------- 
+
+  1. Guardado correctamente:
+      "SAVED-OK"
+  
+  2. Error en el guardado (petición HTTP POST):
+      "ERROR-HTTP:<codigo_error>"
+  
+  3. No hay wifi:
+      "NO-WIFI"
+
+  4. Código de barras leído (se consulta base de datos de alimentos y se obtienen sus valores de carb, lip, prot y kcal por gramo):
+      "BARCODE-<codigo_barras_leido>:<carb>;<prot>;<kcal>"
+ 
+ */
+
+ 
+
 #include <WiFi.h>
 #include <HTTPClient.h>
 
@@ -26,16 +62,28 @@
 const char* ssid     = "Irene";
 const char* password = "icradeba5050";
 
+
 // REPLACE with your Domain name and URL path or IP address with path
 const char* serverName = "http://smartcloth.site/post-esp-data.php"; 
+
 
 // Keep this API Key value to be compatible with the PHP code provided in the project page. 
 // If you change the apiKeyValue value, the PHP file /post-esp-data.php also needs to have the same key 
 String apiKeyValue = "apiKeySmartCloth";
 
 
-float carb, carb_R, lip, lip_R, prot, prot_R, kcal, peso;
 
+
+struct Message {
+  String command;
+  String data;
+};
+
+
+// ----- FUNCIONES ------
+Message getQuery(String msg);
+void connectToWiFi();
+void enviarPeticion(String comidaValues);
 
 
 
@@ -50,6 +98,8 @@ void setup() {
 
     // Intentar conectarse a la red WiFi
     connectToWiFi();
+
+    Serial.println("\n");
   
 }
 
@@ -60,41 +110,71 @@ void loop() {
     // --- SE HA RECIBIDO MENSAJE ---
     if (SerialESP32Due.available() > 0) {
         // --- MENSAJE RECIBIDO ---
-        String command = SerialESP32Due.readStringUntil('\n');
-        Serial.print("Mensaje recibido: "); Serial.println(command);
+        String msgFromDue = SerialESP32Due.readStringUntil('\n');
+        Serial.print("Mensaje recibido: "); Serial.println(msgFromDue); Serial.println();
+
+        Message msgReceived = getQuery(msgFromDue);
 
         // --- RECIBIDO "SAVE" ---
-        if (command == "save") {
+        if (msgReceived.command == "SAVE-") {
 
             // --- HAY CONEXION WIFI ---
             if (WiFi.status() == WL_CONNECTED) {
-                Serial.println("Generando valores aleatorios...");
-                generarValores();
                 Serial.println("Enviando petición POST...");
-                enviarPeticion();
-                //msgToSend = false; //Peticion enviada
+                enviarPeticion(msgReceived.data); // Enviar valores de la comida
             } 
 
             // --- FALLO EN LA CONEXION WIFI ---
-            else { // WiFi.status() != WL_CONNECTED
-                /*Serial.println("WiFi connection lost. Retrying...");
-                SerialESP32Due.println("Se ha perdido la conexión WiFi. Reintentando...");
-                connectToWiFi();*/
+            else { 
+                // A lo mejor no se puso el wifi al encender SM y se pone justo
+                // antes de guardar, entonces habría que hacer un intento de conexión
+                // por si acaso:
+                //connectToWiFi();
                 Serial.println("WiFi connection lost.");
-                SerialESP32Due.println("Se ha perdido la conexión WiFi.");
+                SerialESP32Due.println("NO-WIFI");
             }
 
 
         }
-        // --- RECIBIDO OTRO MENSAJE --- (no debería ocurrir)
+        // --- RECIBIDO OTRO MENSAJE --- 
         else{
-          Serial.println("Command not valid");
-          SerialESP32Due.println("Command not valid");
+          Serial.println("Comando no gestionado");
+          SerialESP32Due.println("Comando no gestionado");
         }
         
     }
 
 }
+
+
+
+
+
+
+Message getQuery(String msg){
+    // Objeto 'Message'
+    Message myMessage;
+    
+    // Busca el carácter '-' en el mensaje
+    int delimiterIndex = msg.indexOf('-');
+    
+    if (delimiterIndex != -1) { // Si existe el delimitador en la cadena
+        myMessage.command = msg.substring(0, delimiterIndex + 1); // "SAVE-"
+        myMessage.data = msg.substring(delimiterIndex + 1); // "&carb=X&carb_R=X&lip=X&lip_R=X&prot=X&prot_R=X&kcal=X&peso=X"
+        
+        Serial.print("Comando recibido: "); Serial.println(myMessage.command);
+        Serial.print("Datos recibidos: "); Serial.println(myMessage.data);
+        Serial.println();
+    }
+    /*else {
+        myMessage.command = "NO";
+        myMessage.data = "msg";
+    }*/
+
+    return myMessage;
+}
+
+
 
 
 
@@ -133,56 +213,17 @@ void connectToWiFi() {
 
     // Si tras 30 segundos, reintentándolo cada 10s, no se ha establecido la conexión:
     Serial.println("Unable to establish WiFi connection.");
-    //SerialESP32Due.println("No es posible establecer la conexión WiFi");
+    //SerialESP32Due.println("NO WIFI");
 
 }
 
 
 
-void generarValores(){
-    // --- GENERAR VALORES ALEATORIOS ---
-    // Generar valores aleatorios para guardar en la database
-    carb = random(5,30) + 0.5; // + 0.5 para ver si se muestran decimales, porque con .0 se trunca el valor
-    carb_R = round(carb/10);
-    lip = random(5,30) + 0.5;
-    lip_R = round(lip/10);
-    prot = random(5,30) + 0.5;
-    prot_R = round(prot/10);
-    kcal = (carb * 4) + (lip * 9) + (prot * 4);
-    peso = random(50, 150) + 0.5;
-
-    // ----- 1. FORMATO DEL CONTENIDO: FORMULARIO -----
-    Serial.println();
-    Serial.print(carb); Serial.print(" "); Serial.print(carb_R); Serial.print(" ");
-    Serial.print(lip); Serial.print(" "); Serial.print(lip_R); Serial.print(" ");
-    Serial.print(prot); Serial.print(" "); Serial.print(prot_R); Serial.print(" ");
-    Serial.print(kcal); Serial.print(" "); Serial.print(peso); Serial.println("\n");
-    // --- fin FORMULARIO ---
-
-    /*
-    // ----- 2. FORMATO DEL CONTENIDO: JSON -----
-    // Crear un objeto JSON para almacenar los datos
-    DynamicJsonDocument jsonDoc(200);  // Ajusta el tamaño según tus necesidades
-
-    // Agregar datos al objeto JSON
-    jsonDoc["api_key"] = apiKeyValue;
-    jsonDoc["carb"] = carb;
-    jsonDoc["carb_R"] = carb_R;
-    jsonDoc["lip"] = lip;
-    jsonDoc["lip_R"] = lip_R;
-    jsonDoc["prot"] = prot;
-    jsonDoc["prot_R"] = prot_R;
-    jsonDoc["kcal"] = kcal;
-    jsonDoc["peso"] = peso;
-
-    // Serializar el objeto JSON en una cadena
-    String jsonString;
-    serializeJson(jsonDoc, jsonString);
-    */// --- fin JSON ---
-}
 
 
-void enviarPeticion(){
+
+
+void enviarPeticion(String comidaValues){
     // --- CLIENTES WIFI Y HTTP ----
     WiFiClient client;
     HTTPClient http;
@@ -190,41 +231,27 @@ void enviarPeticion(){
     // Your Domain name with URL path or IP address with path
     http.begin(client, serverName);
 
-    // 1. FORMATO DEL CONTENIDO: FORMULARIO 
     // Specify content-type header --> Formulario
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
-    // 2. FORMATO DEL CONTENIDO: JSON 
-    // Specify content-type header --> JSON
-    //http.addHeader("Content-Type", "application/json");
 
 
     // ------------ PETICION HTTP POST ------------------------
-    // ----- 1. FORMATO DEL CONTENIDO: FORMULARIO -----
     // Prepare your HTTP POST request data
-    String httpRequestData = "api_key=" + apiKeyValue + "&carb=" + String(carb) + "&carb_R=" + String(carb_R)
-                          + "&lip=" + String(lip) + "&lip_R=" + String(lip_R) 
-                          + "&prot=" + String(prot) + "&prot_R=" + String(prot_R) 
-                          + "&kcal=" + String(kcal) + "&peso=" + String(peso) + "";
+    String httpRequestData = "api_key=" + apiKeyValue + comidaValues + "";
 
-    Serial.print("httpRequestData: "); Serial.println(httpRequestData);
+    Serial.print("httpRequestData: "); Serial.println(httpRequestData); Serial.println();
     // Send HTTP POST request
     int httpResponseCode = http.POST(httpRequestData);
-    // --- fin FORMULARIO ---
-
-    // ----- 2. FORMATO DEL CONTENIDO: JSON -----
-    // Enviar la solicitud HTTP con el cuerpo de JSON
-    //int httpResponseCode = http.POST(jsonString);
-    // --- fin JSON ---
-    // -------------- FIN PETICION -----------------------------
+    Serial.print("httpResponseCode: "); Serial.println(httpResponseCode); Serial.println();
 
       // --- RESPUESTA DEL SERVIDOR A LA PETICION ---
-      if (httpResponseCode>0) {
-          Serial.print("HTTP Response code: "); Serial.println(httpResponseCode);
-          SerialESP32Due.print("HTTP Response code: "); SerialESP32Due.println(httpResponseCode);
+      if((httpResponseCode >= 200) and (httpResponseCode < 300)){// Todo OK 
+          Serial.println("Guardado correcto\n");
+          SerialESP32Due.println("SAVED-OK");
       }
       else {
-          Serial.print("Error code: "); Serial.println(httpResponseCode);
-          SerialESP32Due.print("Error code: "); SerialESP32Due.println(httpResponseCode);
+          Serial.print("Error code: "); Serial.println(httpResponseCode); Serial.println();
+          SerialESP32Due.print("ERROR-HTTP:"); SerialESP32Due.println(httpResponseCode);
       }
 
       // Free resources
