@@ -31,6 +31,11 @@
 #define RULES 133   // 7 SON DE BORRAR CSV EN PRUEBAS
 
 
+#include "SD_functions.h"
+#include "Buttons.h"
+#include "Serial_esp32cam.h"
+
+
 
 // --- PEDIR CONFIRMACIÓN ---
 #define  ASK_CONFIRMATION_ADD     1
@@ -38,9 +43,18 @@
 #define  ASK_CONFIRMATION_SAVE    3  
 
 // --- ACCIÓN CONFIRMADA ---
-#define  ADD_EXECUTED     1
-#define  DELETE_EXECUTED  2
-#define  SAVE_EXECUTED    3  
+#define  ADD_EXECUTED                             1
+#define  DELETE_EXECUTED                          2
+#define  SAVE_EXECUTED_FULL                       3  
+#define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
+#define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
+#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   6
+
+// --- RESPUESTAS AL GUARDAR EN DATABASE ---
+#define  SAVED_OK     1
+#define  ERROR_HTTP   2
+#define  NO_WIFI      3
+#define  UNKNOWN      4
 
 // --- MENSAJE DE AVISO ---
 #define  WARNING_NOT_ADDED      1
@@ -78,10 +92,6 @@ void    checkAllButtons();
 bool    buttonInterruptOccurred(); 
 bool    hasScaleEventOccurred(); 
 
-
-#include "SD_functions.h"
-#include "Buttons.h"
-#include "Serial_esp32cam.h"
 
 
 /**
@@ -1410,6 +1420,9 @@ void actStateSaved(){
                                            // o un mensaje de aviso indicando no se ha guardado la comida porque  
                                            // está vacía.
 
+    //int responseFromESP32;
+
+
     if(!doneState){
       
         if(state_prev != STATE_saved){        // ==> Si no se viene del propio STATE_saved, para evitar que se vuelva 
@@ -1462,7 +1475,7 @@ void actStateSaved(){
                 errorComidaWasEmpty = false;
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
                 saveComidaSD();                             // Comida ==> fichero CSV en SD
-                //saveComidaDatabase();                       // Comida ==> esp32 ==> base de datos
+                //responseFromESP32 = saveComidaDatabase();   // Comida ==> esp32 ==> base de datos
 
                 comidaActualCopia.copyComida(comidaActual); // Copiar nº platos, peso y valores de la comida actual a la copia. Este objeto 'Comida' solo sirve para mostrar
                                                             // en el dashboard estilo 1 (STATE_Init y STATE_Plato) la comida guardada junto con el acumulado, pues tras guardarla
@@ -1489,7 +1502,15 @@ void actStateSaved(){
 
             /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */             
             if(!errorComidaWasEmpty){ 
-                showAccionRealizada(SAVE_EXECUTED); // Se muestra si no ha habido aviso.
+                // Se muestra si no ha habido aviso. 
+                /*switch (responseFromESP32){
+                  case SAVED_OK:       showAccionRealizada(SAVE_EXECUTED_FULL);                       break; // COMIDA GUARDADA EN LOCAL Y DATABASE
+                  case ERROR_HTTP:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);      break; // COMIDA GUARDADA SOLO LOCAL, FALLO EN SERVIDOR
+                  case NO_WIFI:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);         break; // COMIDA GUARDADA SOLO LOCAL, NO HAY WIFI
+                  case UNKNOWN:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR);   break; // COMIDA GUARDADA SOLO LOCAL, ERROR DESCONOCIDO
+                }*/
+                showAccionRealizada(SAVE_EXECUTED_FULL);
+
                 if(lastValidState == STATE_Init) previousTimeComidaSaved = millis(); // Comida guardada desde Init
             }
                 // Solo habrá aviso si la comida está vacía y si no se viene de error, por eso no hace falta chequear aquí

@@ -1770,6 +1770,9 @@ bool pedirProcesamientoZonas3y4(){
 
 /*---------------------------------------------------------------------------------------------------------
    pedirProcesamiento(): Pide escoger crudo cocinado, tras haber escogido grupo (STATE_groupA/B)
+                        Ocupa toda la pantalla. 
+                        ¡¡¡ Esta versión se ha sustituido por showSemiDashboard_PedirProcesamiento()
+                        que solo se superpone a las zonas 3 y 4 del dashboard !!!
 ----------------------------------------------------------------------------------------------------------*/
 /*
 void pedirProcesamiento(){ 
@@ -2002,6 +2005,19 @@ void pedirConfirmacion(int option){
 
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
+    
+    // ----- SIN INTERNET -----
+    /*if ((option == ASK_CONFIRMATION_SAVE) and (NO INTERNET)){
+        // "Resaltar" texto:
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+        tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo rojo, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
+        // Texto
+        tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
+        // Eliminar "resaltado" del texto de aquí en adelante:
+        tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
+    }*/
+    // ------------------------
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
@@ -2123,9 +2139,13 @@ void showAccionRealizada(int option){
     tft.setTextForegroundColor(WHITE); 
 
     switch (option){
-      case ADD_EXECUTED:    tft.setCursor(170, 208); tft.println("NUEVO PLATO A\xD1""ADIDO"); break; // PLATO AÑADIDO
-      case DELETE_EXECUTED: tft.setCursor(100, 208); tft.println("PLATO ACTUAL ELIMINADO");   break; // PLATO ELIMINADO
-      case SAVE_EXECUTED:   tft.setCursor(120, 208); tft.println("COMIDA ACTUAL GUARDADA");   break; // COMIDA GUARDADA
+      case ADD_EXECUTED:               tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");  break; // PLATO AÑADIDO
+      case DELETE_EXECUTED:            tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");    break; // PLATO ELIMINADO
+      case SAVE_EXECUTED_FULL:  
+      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   
+      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:    
+      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:
+                                       tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break; // COMIDA GUARDADA AL MENOS EN LOCAL
     }
     // ----------------------------------------------------------------------------------------------------
     
@@ -2143,9 +2163,11 @@ void showAccionRealizada(int option){
 
       case DELETE_EXECUTED: tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break; // ELIMINADO
               
-      case SAVE_EXECUTED: // GUARDADA
+      case SAVE_EXECUTED_FULL: // GUARDADA EN LOCAL Y DATABASE
+      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   // GUARDADA SOLO EN LOCAL POR FALLO EN PETICION HTTP
+      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:  // GUARDADA SOLO EN LOCAL POR NO TENER WIFI
+      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:  // GUARDADA SOLO EN LOCAL POR UN ERROR DESCONOCIDO AL GUARDAR EN DATABASE
               // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
-              //if((pesoRecipiente + pesoPlato) == 0.0){
               if(lastValidState == STATE_Init){
                   // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
                   // la báscula estará vacía (pesoARetirar = 0).
@@ -2158,7 +2180,30 @@ void showAccionRealizada(int option){
                   tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
                   tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
               }
+
+              // Mensaje de error al guardar en database
+              if (option != SAVE_EXECUTED_FULL){ // SOLO SE HA GUARDADO EN LOCAL
+                  // "Resaltar" texto:
+                  tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo rojo, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
+                  // La línea anterior es lo mismo que hacer las tres siguientes:
+                  //    tft.setTextForegroundColor(WHITE); 
+                  //    tft.setTextBackgroundColor(RED);
+                  //    tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF);
+                  tft.selectInternalFont(RA8876_FONT_SIZE_24);
+                  tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+
+                  if (option != SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI){ 
+                      tft.setCursor(650,550); tft.println(" ERROR EN LA CONEXI\xD3""N A LA WEB "); 
+                  }
+                  else { 
+                      tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
+                  }
+
+                  // Eliminar "resaltado" del texto de aquí en adelante:
+                  tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
+              }
               break; 
+
     }
     // ----------------------------------------------------------------------------------------------------
 
