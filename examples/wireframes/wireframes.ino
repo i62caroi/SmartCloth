@@ -40,7 +40,8 @@ RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 #define  SAVE_EXECUTED_FULL                       3  
 #define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
 #define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
-#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   6
+#define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6
+#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -73,16 +74,21 @@ void setup() {
     tft.canvasImageStartAddress(PAGE1_START_ADDR);
     tft.clearScreen(BLACK);
 
+    
+
     //showAccionRealizada(ADD_EXECUTED);
     //showAccionRealizada(DELETE_EXECUTED);
     //showAccionRealizada(SAVE_EXECUTED_FULL);
+
+
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);
-    //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR);
+    showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT);
+    //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR); PROBAR!!!!!!!!!!
 
 
 
-    loadPicturesShowHourglass();
+    //loadPicturesShowHourglass();
 
     //crudo_cocinado_sobre_dashboard(); // sin transparencias ni alternancias, solo aparecer
     
@@ -93,7 +99,7 @@ void setup() {
 
     //add_Plato(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
     //delete_Plato(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-    save_Comida(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+    //save_Comida(); // Ok con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
 
     // Se ha modularizado y automatizado el movimiento de la mano y las pulsaciones de la imagen correspondiente:
     //    desplazar_mano()    sin_pulsacion()     con_pulsacion()
@@ -1527,6 +1533,7 @@ void showAccionRealizada(int option){
       case SAVE_EXECUTED_FULL:  
       case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   
       case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:    
+      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:
       case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:
                                        tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break; // COMIDA GUARDADA AL MENOS EN LOCAL
     }
@@ -1573,12 +1580,19 @@ void showAccionRealizada(int option){
                 tft.selectInternalFont(RA8876_FONT_SIZE_24);
                 tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
                 
-                if (option != SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI){ 
+                /*if (option != SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI){ 
                     tft.setCursor(650,550); tft.println(" ERROR EN LA CONEXI\xD3""N A LA WEB "); 
                 }
                 else { 
                     tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
+                }*/
+                switch(option){
+                    case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(650,550);   tft.println(" ERROR EN LA CONEXI\xD3""N A LA WEB ");  break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(750,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(800,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
                 }
+
                 // Eliminar "resaltado" del texto de aquí en adelante:
                 tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
               }
