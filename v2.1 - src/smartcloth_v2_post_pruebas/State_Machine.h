@@ -48,13 +48,15 @@
 #define  SAVE_EXECUTED_FULL                       3  
 #define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
 #define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
-#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   6
+#define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6
+#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
 
 // --- RESPUESTAS AL GUARDAR EN DATABASE ---
 #define  SAVED_OK     1
 #define  ERROR_HTTP   2
 #define  NO_WIFI      3
-#define  UNKNOWN      4
+#define  TIMEOUT      4
+#define  UNKNOWN      5
 
 // --- MENSAJE DE AVISO ---
 #define  WARNING_NOT_ADDED      1
@@ -1507,6 +1509,7 @@ void actStateSaved(){
                   case SAVED_OK:       showAccionRealizada(SAVE_EXECUTED_FULL);                       break; // COMIDA GUARDADA EN LOCAL Y DATABASE
                   case ERROR_HTTP:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);      break; // COMIDA GUARDADA SOLO LOCAL, FALLO EN SERVIDOR
                   case NO_WIFI:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);         break; // COMIDA GUARDADA SOLO LOCAL, NO HAY WIFI
+                  case TIMEOUT:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT);         break; // COMIDA GUARDADA SOLO LOCAL POR TIMEOUT EN RESPUESTA DE ESP32
                   case UNKNOWN:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR);   break; // COMIDA GUARDADA SOLO LOCAL, ERROR DESCONOCIDO
                 }*/
                 showAccionRealizada(SAVE_EXECUTED_FULL);
