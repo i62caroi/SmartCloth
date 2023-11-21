@@ -278,6 +278,8 @@ void    pedirConfirmacion(int option);        // Pregunta de confirmación gener
 void    showAccionRealizada(int option);  // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Acción cancelada ---
 void    showAccionCancelada();            // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
+// -- Fallo crítico en SD ---
+void    showCriticFailureSD();            // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
 // --- Errores o avisos ---
 void    showError(int option);            // Pantalla de error con mensaje según estado 
 void    showWarning(int option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
@@ -2321,6 +2323,40 @@ void showWarning(int option){
     
 }
 
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*--------------------------------- FALLO CRÍTICO EN SD -------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------------------------------------
+   showCriticFailureSD(): Indica que se ha cancelado la acción de añadir, eliminar o guardar.
+                          Puede ser indicado por el usuario o por time-out de 10 segundos.
+----------------------------------------------------------------------------------------------------------*/
+void showCriticFailureSD(){
+
+    // ----- TEXTO (FALLO EN MEMORIA INTERNA DE SM - SD) ---------------------
+    tft.clearScreen(RED);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,110,764,118,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.setCursor(60, 258);  tft.println("\xA1""FALLO EN MEMORIA INTERNA\x21"""); // 12x24 escalado x3
+    tft.setCursor(200, 158);  tft.println("\xA1""FALLO EN MEMORIA\x21"""); // 12x24 escalado x3
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,270,764,278,3,WHITE);
+    // -------------------------------------------------------------------
+
+
+    // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setCursor(300, 358); tft.println("REINICIE SMARTCLOTH");  
+
+    tft.setCursor(250,450); tft.println("SI SE MANTIENE EL FALLO,");
+    tft.setCursor(100,tft.getCursorY() + tft.getTextSizeY()-10); tft.println("CONTACTE CON EL EQUIPO DE SMARTCLOTH"); 
+    // ----------------------------------------------------------------------------------------------------
+}
 
 
 

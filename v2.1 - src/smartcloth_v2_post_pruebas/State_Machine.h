@@ -129,8 +129,12 @@ typedef enum {
               STATE_AVISO         =   (16),   // Estado ficticio de Aviso
 
               STATE_DELETE_CSV_CHECK    =   (17),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.
-              STATE_DELETED_CSV         =   (18)    // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
+              STATE_DELETED_CSV         =   (18),   // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
                                                     //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
+
+              STATE_CRITIC_FAILURE_SD   =   (19)    // La SD ha fallado en el setup o no se encuentra --> no se permite usar SM
+                                                    // Este estado no tiene transiciones de entrada ni de salida. Solo sirve para mostrar
+                                                    // la pantalla de fallo crítico.
 } state_t;
 
 
@@ -505,6 +509,8 @@ void    actStateAVISO();                               // Actividades STATE_AVIS
 void    actState_DELETE_CSV_CHECK();       // Actividades STATE_DELETE_CSV_CHECK
 void    actState_DELETED_CSV();            // Actividades STATE_DELETED_CSV
 
+void    actState_CRITIC_FAILURE_SD();                  // Actividades STATE_CRITIC_FAILURE_SD
+
 // --- Actividades estado actual ---
 void    doStateActions();                              // Actividades según estado actual
 
@@ -594,6 +600,7 @@ void printStateName(state_t state) {
         case STATE_AVISO:               Serial.print("STATE_AVISO");                break;
         case STATE_DELETE_CSV_CHECK:    Serial.print("STATE_DELETE_CSV_CHECK");     break;
         case STATE_DELETED_CSV:         Serial.print("STATE_DELETED_CSV");          break;
+        case STATE_CRITIC_FAILURE_SD:   Serial.print("STATE_CRITIC_FAILURE_SD");    break;
         
         default:                        Serial.print("Estado desconocido");         break;
     }
@@ -2033,7 +2040,7 @@ void actStateCANCEL(){
         // Ultimo estado válido puede ser Init, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
         // cancelable (add/delete/save).
         switch (lastValidState){
-          case STATE_Init:     Serial.print(F("\nRegreso a Init tras CANCELACION..."));       addEventToBuffer(GO_TO_INIT);       break;  // Init
+          case STATE_Init:      Serial.print(F("\nRegreso a Init tras CANCELACION..."));       addEventToBuffer(GO_TO_INIT);       break;  // Init
           case STATE_raw:       Serial.print(F("\nRegreso a raw tras CANCELACION..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
           case STATE_cooked:    Serial.print(F("\nRegreso a cooked tras CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
           case STATE_weighted:  Serial.print(F("\nRegreso a weighted tras CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
@@ -2246,6 +2253,25 @@ void actState_DELETED_CSV(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+   actState_CRITIC_FAILURE_SD(): Acciones del STATE_CRITIC_FAILURE_SD
+----------------------------------------------------------------------------------------------------------*/
+void actState_CRITIC_FAILURE_SD(){ 
+
+    // -----  INFORMACIÓN MOSTRADA  ------------------------
+    if(!doneState){ 
+        Serial.println(F("FALLO CRÍTICO EN LA SD")); 
+
+        showCriticFailureSD();        // Mostrar info de fallo crítico en SD
+
+        doneState = true;             // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                      // cada vez que se entre a esta función debido al loop de Arduino.
+    }
+    // ----- FIN INFORMACIÓN MOSTRADA -----------------------
+
+    // NO SE ATIENDE A NINGÚN EVENTO PORQUE SE IMPIDE USAR SMARTCLOTH
+}
+
 
 
 
@@ -2273,6 +2299,8 @@ void doStateActions(){
 
       case STATE_DELETE_CSV_CHECK:  actState_DELETE_CSV_CHECK();   break; // delete_csv_check
       case STATE_DELETED_CSV:       actState_DELETED_CSV();        break; // deleted_csv
+
+      case STATE_CRITIC_FAILURE_SD: actState_CRITIC_FAILURE_SD();  break; // Fallo crítico en SD
 
       default: break;
     }

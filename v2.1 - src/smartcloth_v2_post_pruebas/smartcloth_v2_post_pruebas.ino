@@ -42,6 +42,9 @@ const unsigned long   period = 50;
 unsigned long         prevMillis = 0;
 unsigned long         tiempoPrevio = 0;
 
+// Error al inicializar la SD
+int falloCriticoSD = false;
+
 
 /*---------------------------------------------------------------------------------------------------------
    \brief Función para inicializar el RTC, la SD, la pantalla, la báscula, las botoneras y las interrupciones
@@ -62,7 +65,8 @@ void setup() {
     delay(100); 
 
     /* ------ SD card -------- */
-    setupSDcard(); // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
+    // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
+    if (!setupSDcard()) falloCriticoSD = true; // Si la SD falla o no se encuentra, no se permitirá usar SM
     delay(100); 
 
     /* ------ SCALE --------- */
@@ -75,7 +79,11 @@ void setup() {
     
 
     /*------- ESTADO INICIAL --------- */
-    state_actual = STATE_Init;
+    // Si falla la SD, se inicia en el estado STATE_CRITIC_FAILURE_SD que no tiene transiciones
+    // de entrada ni de salida. Te obliga a reiniciar SM para intentar subsanar el fallo.
+    // Si no falla la SD, se inicia en el primer estado funcional.
+    if (falloCriticoSD) state_actual = STATE_CRITIC_FAILURE_SD; // Estado sin salida
+    else state_actual = STATE_Init; // Estado inicial de la Máquina de Estados
 
 
     /* ---------- BUTTONS PINS --------------- */
@@ -113,7 +121,9 @@ void setup() {
 
 
     /* ------- BIENVENIDA ------------------------ */
-    Welcome();  // Cargar imágenes y mostrar logo de SmartCloth
+    // Si no falla la SD, cargar las imágenes y mostrar pantalla de bienvenida.
+    // Si falla, directamente se mostrará la pantalla de "FALLO EN MEMORIA"
+    if (!falloCriticoSD) Welcome();  // Cargar imágenes y mostrar logo de SmartCloth
 
 }
 
@@ -127,65 +137,68 @@ void loop() {
     
     if (millis() - prevMillis > period){
         prevMillis = millis();
-        
-        
-        doStateActions();   // Actividades del estado actual. Comienza en STATE_Init 
-
-
-        /*--------------------------------------------------------------*/
-        /* ---------------    CHECK INTERRUPCIONES   ------------------ */
-        /*--------------------------------------------------------------*/
-        checkAllButtons();  // Comprueba interrupción de botoneras y marca evento
-        checkBascula();     // Comprueba interrupción de báscula y marca evento
-        
-
-
-        /*------------------------------------------------------------*/
-        /* ---------------    MOTOR DE INFERENCIA   ----------------- */
-        /*------------------------------------------------------------*/
-
-        if(flagEvent or flagError){     // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada
-                                        // medio segundo por la interrupción de la báscula, se utiliza la flag 'flagEvent'.
-                                        // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento).
-
-                                        // Se incluye 'flagError' en la condición para que también compruebe las reglas
-                                        // de transición en el caso de error y pase al STATE_ERROR.
-                                        // Esta flag se activa en actEventError() y se desactiva tras los 3 segundos para
-                                        // mostrar la pantalla de error en actStateERROR().
-
-                                        // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
-                                        // sino que si ha ocurrido algo que no es evento, se considera error. 
-
-            if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
-                                            // inicial fuera el actual, se modifica el estado actual por
-                                            // el próximo indicado en la regla.
                 
+        doStateActions();   // Actividades del estado actual. Comienza en STATE_Init (o en STATE_CRITIC_FAILURE_SD si ha fallado la SD)
 
-                state_prev = state_actual;
-                state_actual = state_new;
-                
-                if(state_prev != lastValidState){
-                    switch(state_prev){ // Último estado válido 
-                        case STATE_Init: case STATE_Plato: case STATE_groupA: case STATE_groupB: case STATE_raw: case STATE_cooked: case STATE_weighted:
-                            lastValidState = state_prev;
-                            break;
-                        default: break;
+        // Si no ha ocurrido un fallo al inicializar la SD, se chequean cambios en la Máquina de Estados
+        if (!falloCriticoSD){
+
+            /*--------------------------------------------------------------*/
+            /* ---------------    CHECK INTERRUPCIONES   ------------------ */
+            /*--------------------------------------------------------------*/
+            checkAllButtons();  // Comprueba interrupción de botoneras y marca evento
+            checkBascula();     // Comprueba interrupción de báscula y marca evento
+            
+
+
+            /*------------------------------------------------------------*/
+            /* ---------------    MOTOR DE INFERENCIA   ----------------- */
+            /*------------------------------------------------------------*/
+
+            if(flagEvent or flagError){     // Para evitar que marque evento para cada interrupción, ya que lo marcaría cada
+                                            // medio segundo por la interrupción de la báscula, se utiliza la flag 'flagEvent'.
+                                            // Con esta flag solo se da aviso de un evento real (pulsación, incremento o decremento).
+
+                                            // Se incluye 'flagError' en la condición para que también compruebe las reglas
+                                            // de transición en el caso de error y pase al STATE_ERROR.
+                                            // Esta flag se activa en actEventError() y se desactiva tras los 3 segundos para
+                                            // mostrar la pantalla de error en actStateERROR().
+
+                                            // El error es una acción de diferente naturaleza. Es decir, no ocurre un error,
+                                            // sino que si ha ocurrido algo que no es evento, se considera error. 
+
+                if(checkStateConditions()){     // Si se ha cumplido alguna regla de transición cuyo estado 
+                                                // inicial fuera el actual, se modifica el estado actual por
+                                                // el próximo indicado en la regla.
+                    
+
+                    state_prev = state_actual;
+                    state_actual = state_new;
+                    
+                    if(state_prev != lastValidState){
+                        switch(state_prev){ // Último estado válido 
+                            case STATE_Init: case STATE_Plato: case STATE_groupA: case STATE_groupB: case STATE_raw: case STATE_cooked: case STATE_weighted:
+                                lastValidState = state_prev;
+                                break;
+                            default: break;
+                        }
                     }
+                    Serial.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      Serial.println();
+                    Serial.print(F("Nuevo estado: "));           printStateName(state_new);       Serial.println();
+                    Serial.print(F("Último estado válido: "));   printStateName(lastValidState);  Serial.println();
                 }
-                Serial.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      Serial.println();
-                Serial.print(F("Nuevo estado: "));           printStateName(state_new);       Serial.println();
-                Serial.print(F("Último estado válido: "));   printStateName(lastValidState);  Serial.println();
-            }
-            else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
-                                                    // Para evitar seguir marcando error durante los 3 segundos que no se cumple
-                                                   // ninguna regla de transición porque se está en el estado de error.
-                    // ¡¡¡ CHEQUEAR ESTO !!!! ¿HACE FALTA STATE_CANCEL Y STATE_AVISO?
-                //Serial.println(F("\nERROR DE EVENTO"));
-                actEventError();       // Mensaje de error por evento erróneo según el estado actual
-            }
-            flagEvent = false;
-       }
+                else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
+                                                        // Para evitar seguir marcando error durante los 3 segundos que no se cumple
+                                                      // ninguna regla de transición porque se está en el estado de error.
+                        // ¡¡¡ CHEQUEAR ESTO !!!! ¿HACE FALTA STATE_CANCEL Y STATE_AVISO?
+                    //Serial.println(F("\nERROR DE EVENTO"));
+                    actEventError();       // Mensaje de error por evento erróneo según el estado actual
+                }
+                flagEvent = false;
 
+          }
+          
+        }
         
     }
     

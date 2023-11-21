@@ -76,7 +76,7 @@ File myFile;
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
-void    setupSDcard();                   // Inicializar tarjeta SD
+bool    setupSDcard();                   // Inicializar tarjeta SD
 void    writeHeaderFileSD();             // Crear fichero CSV y escribir header 
 void    saveComidaSD();                  // Guardar valores de la comida en fichero CSV
 void    getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
@@ -90,12 +90,13 @@ bool    borrarFicheroCSV();              // Borrar contenido del fichero csv
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Inicializar la tarjeta SD.
+ * @return true: inicialización correcta  false: fallo al inicializar la SD
  */
 /*-----------------------------------------------------------------------------*/
-void setupSDcard(){
+bool setupSDcard(){
     if(!SD.begin(SD_CARD_SCS)){
         Serial.println(F("SD card failure!"));
-        //while(1);
+        return false;
     }
     else Serial.println(F("SD card initialized"));
 
@@ -105,6 +106,8 @@ void setupSDcard(){
 
     getAcumuladoHoyFromSD();   // Leer fichero csv de la SD y sumar los valores nutricionales y el peso de las 
                                // comidas guardadas en el día de hoy
+    
+    return true;
 }
 
 

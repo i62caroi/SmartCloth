@@ -84,7 +84,7 @@ void setup() {
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);
     //showAccionRealizada(SAVE_ESP32_TIMEOUT);
-    showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR); 
+    //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR); 
 
 
 
@@ -109,6 +109,8 @@ void setup() {
     //pedirConfirmacion_DELETE_CSV();
 
     //suggestAction();
+
+    showCriticFailureSD();
 }
 
 
@@ -121,6 +123,40 @@ void loop() {
 }
 
 
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- FALLO CRÍTICO EN SD -------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+void showCriticFailureSD(){
+
+    // ----- TEXTO (FALLO EN MEMORIA INTERNA DE SM - SD) ---------------------
+    tft.clearScreen(RED);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,110,764,118,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    //tft.setCursor(60, 258);  tft.println("\xA1""FALLO EN MEMORIA INTERNA\x21"""); // 12x24 escalado x3
+    tft.setCursor(200, 158);  tft.println("\xA1""FALLO EN MEMORIA\x21"""); // 12x24 escalado x3
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,270,764,278,3,WHITE);
+    // -------------------------------------------------------------------
+
+
+    // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setCursor(300, 358); tft.println("REINICIE SMARTCLOTH");  
+
+    tft.setCursor(250,450); tft.println("SI SE MANTIENE EL FALLO,");
+    tft.setCursor(100,tft.getCursorY() + tft.getTextSizeY()-10); tft.println("CONTACTE CON EL EQUIPO DE SMARTCLOTH"); 
+    // ----------------------------------------------------------------------------------------------------
+}
+
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- DELETE CSV ----------------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void pedirConfirmacion_DELETE_CSV(){
     // ----- TEXTO (CONFIRMAR BORRADO CSV) -----------------------------------
@@ -137,6 +173,10 @@ void pedirConfirmacion_DELETE_CSV(){
     // -------------------------------------------------------------------
 }
 
+
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+//----------------------------- SUGERENCIA DE ACCIÓN ------------------------------------------------------------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void suggestAction(){
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
@@ -1590,7 +1630,7 @@ void showAccionRealizada(int option){
                 switch(option){
                     case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(650,550);   tft.println(" ERROR EN LA CONEXI\xD3""N A LA WEB ");  break;
                     case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
-                    case SAVE_ESP32_TIMEOUT:                          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
+                    case SAVE_ESP32_TIMEOUT:                        tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
                     case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
                 }
 
