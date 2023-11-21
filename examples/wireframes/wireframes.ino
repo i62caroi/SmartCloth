@@ -40,7 +40,7 @@ RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 #define  SAVE_EXECUTED_FULL                       3  
 #define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
 #define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
-#define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6
+#define  SAVE_ESP32_TIMEOUT                         6
 #define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -83,8 +83,8 @@ void setup() {
 
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);
-    showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT);
-    //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR); PROBAR!!!!!!!!!!
+    //showAccionRealizada(SAVE_ESP32_TIMEOUT);
+    showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR); 
 
 
 
@@ -1533,7 +1533,7 @@ void showAccionRealizada(int option){
       case SAVE_EXECUTED_FULL:  
       case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   
       case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:    
-      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:
+      case SAVE_ESP32_TIMEOUT:
       case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:
                                        tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break; // COMIDA GUARDADA AL MENOS EN LOCAL
     }
@@ -1556,6 +1556,7 @@ void showAccionRealizada(int option){
       case SAVE_EXECUTED_FULL: // GUARDADA EN LOCAL Y DATABASE
       case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   // GUARDADA SOLO EN LOCAL POR FALLO EN PETICION HTTP
       case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:  // GUARDADA SOLO EN LOCAL POR NO TENER WIFI
+      case SAVE_ESP32_TIMEOUT:  // TIMEOUT EN LA RESPUESTA DEL ESP32. NO SABEMOS SI HA GUARDADO O NO, PERO ASUMIMOS QUE NO
       case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:  // GUARDADA SOLO EN LOCAL POR UN ERROR DESCONOCIDO AL GUARDAR EN DATABASE
               // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
               //if(lastValidState == STATE_Init){
@@ -1589,8 +1590,8 @@ void showAccionRealizada(int option){
                 switch(option){
                     case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(650,550);   tft.println(" ERROR EN LA CONEXI\xD3""N A LA WEB ");  break;
                     case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(750,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(800,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
+                    case SAVE_ESP32_TIMEOUT:                          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
                 }
 
                 // Eliminar "resaltado" del texto de aquí en adelante:
