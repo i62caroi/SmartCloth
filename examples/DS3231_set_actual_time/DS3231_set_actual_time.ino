@@ -93,7 +93,7 @@ void loop()
  * @brief Ajustar la hora para corregir el desfase.
  *
  * Esta función toma como entrada la hora, minuto y segundo por referencia y 
- * ajusta el tiempo sumando 26 segundos para corregir el desfase. Si los segundos 
+ * ajusta el tiempo sumando 14 segundos para corregir el desfase. Si los segundos 
  * son 60 o más, suma un minuto, y si los minutos son 60 o más, suma una hora. 
  * Si la hora es 24 o más, resta 24 para pasar al día siguiente.
  *
@@ -105,7 +105,7 @@ void loop()
 void adjustTime(int& second, int& minute, int& hour) 
 {
   // Corregir el desfase de segundos
-  second += 26;
+  second += 14;
   if (second >= 60) {
     second -= 60;
     minute++;
