@@ -41,8 +41,14 @@ SAMDUE_ISR_Timer ISR_Timer;
 const byte intPinCocinado     = 33;   // Naranja 
 const byte intPinCrudo        = 31;   // Amarillo 
 const byte intPinAddPlato     = 29;   // Verde 
-const byte intPinDeletePlato  = 27;   // Azul 
-const byte intPinGuardar      = 25;   // Morado 
+// Los pines en las botoneras nuevas están B1 | B2 | B3 | B5 | B4
+// Intercambiamos los pines de borrar (B4) y guardar (B5)
+// ------ BOTONERAS ANTIGUAS ------------
+//const byte intPinDeletePlato  = 27;   // Azul 
+//const byte intPinGuardar      = 25;   // Morado 
+// ------ BOTONERAS NUEVAS --------------
+const byte intPinDeletePlato  = 25;   // Azul 
+const byte intPinGuardar      = 27;   // Morado 
 
 
 /*  -----   GRANDE  ----- */
