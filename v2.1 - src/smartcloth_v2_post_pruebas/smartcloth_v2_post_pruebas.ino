@@ -52,12 +52,12 @@ int falloCriticoSD = false;
 void setup() {
     /* ------ COMUNICACIÓN SERIAL ------------ */
     // Inicializar comunicación con PC (Serial)
-    Serial.begin(9600); //115200
+    Serial.begin(115200); //115200
     while (!Serial);
     delay(100);
     // Inicializar comunicación con ESP32-CAM (Serial1)
-    SerialDueESP32.begin(9600);
-    while (!SerialDueESP32);
+    //SerialDueESP32.begin(9600);
+    //while (!SerialDueESP32);
     delay(100); 
 
     /* ------ RTC ------------ */
@@ -67,6 +67,7 @@ void setup() {
     /* ------ SD card -------- */
     // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
     if (!setupSDcard()) falloCriticoSD = true; // Si la SD falla o no se encuentra, no se permitirá usar SM
+    //setupSDcard();
     delay(100); 
 
     /* ------ SCALE --------- */
@@ -84,6 +85,7 @@ void setup() {
     // Si no falla la SD, se inicia en el primer estado funcional.
     if (falloCriticoSD) state_actual = STATE_CRITIC_FAILURE_SD; // Estado sin salida
     else state_actual = STATE_Init; // Estado inicial de la Máquina de Estados
+    //state_actual = STATE_Init;
 
 
     /* ---------- BUTTONS PINS --------------- */
@@ -124,6 +126,7 @@ void setup() {
     // Si no falla la SD, cargar las imágenes y mostrar pantalla de bienvenida.
     // Si falla, directamente se mostrará la pantalla de "FALLO EN MEMORIA"
     if (!falloCriticoSD) Welcome();  // Cargar imágenes y mostrar logo de SmartCloth
+    //Welcome();
 
 }
 
