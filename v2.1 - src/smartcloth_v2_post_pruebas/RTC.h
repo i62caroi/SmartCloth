@@ -1,8 +1,3 @@
-#include <DS3231.h>
-
-#include <DS3231.h>
-
-#include <DS3231.h>
 
 /** @file RTC.h
  *  @brief Funciones de un Real Time Clock (RTC) 
@@ -257,7 +252,7 @@ uint8_t getDOW(uint8_t day, uint8_t month, uint16_t year) {
   // Fórmula del Algoritmo de Zeller
   uint8_t dow = (day + ((13 * (month + 1))/5) + yearOfCentury + (yearOfCentury/4) + (century/4) - (2*century)) % 7;
 
-  return dow + 1; // Pasar de L(0) - D(6) a L(1) - D(7)
+  return dow + 1; // Pasar de Lunes(0) - Domingo(6) a Lunes(1) - Domingo(7)
 }
 
 
