@@ -82,13 +82,13 @@ void setup() {
 
 
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);
-    //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);
+    showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);
     //showAccionRealizada(SAVE_ESP32_TIMEOUT);
     //showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR); 
 
+    delay(3000);
 
-
-    //loadPicturesShowHourglass();
+    loadPicturesShowHourglass();
 
     //crudo_cocinado_sobre_dashboard(); // sin transparencias ni alternancias, solo aparecer
     
@@ -108,9 +108,9 @@ void setup() {
 
     //pedirConfirmacion_DELETE_CSV();
 
-    //suggestAction();
+    suggestAction();
 
-    showCriticFailureSD();
+    //showCriticFailureSD();
 }
 
 
