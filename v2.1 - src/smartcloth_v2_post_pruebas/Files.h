@@ -28,32 +28,32 @@ char    fileReloj1[30]    = "bin/carga/reloj1.bin";
 char    fileReloj2[30]    = "bin/carga/reloj2.bin";
 char    fileReloj3[30]    = "bin/carga/reloj3.bin";
 char    fileReloj4[30]    = "bin/carga/reloj4.bin";
-char    fileRelGir1[30]   = "bin/carga/relGir1.bin";
-char    fileRelGir2[30]   = "bin/carga/relGir2.bin";
-char    fileRelGir3[30]   = "bin/carga/relGir3.bin";
-char    fileRelGir4[30]   = "bin/carga/relGir4.bin";
-char    fileRelGir5[30]   = "bin/carga/relGir5.bin";
-char    fileRelGir6[30]   = "bin/carga/relGir6.bin";
+char    fileRelGir1[30]   = "bin/carga/rel_gir1.bin";
+char    fileRelGir2[30]   = "bin/carga/rel_gir2.bin";
+char    fileRelGir3[30]   = "bin/carga/rel_gir3.bin";
+char    fileRelGir4[30]   = "bin/carga/rel_gir4.bin";
+char    fileRelGir5[30]   = "bin/carga/rel_gir5.bin";
+char    fileRelGir6[30]   = "bin/carga/rel_gir6.bin";
 
 // --- IMAGENES LETRAS LOGO ARRANQUE ---
-char    fileS[30]     = "bin/arranque/S.bin";
-char    fileM[30]     = "bin/arranque/M.bin";
-char    fileA[30]     = "bin/arranque/A.bin";
-char    fileR[30]     = "bin/arranque/R.bin";
-char    fileT[30]     = "bin/arranque/T.bin";
-char    fileC[30]     = "bin/arranque/C.bin";
-char    fileL[30]     = "bin/arranque/L.bin";
-char    fileO[30]     = "bin/arranque/O.bin";
-char    fileH[30]     = "bin/arranque/H.bin";
-char    fileLogo[30]  = "bin/arranque/Log.bin";
+char    fileS[30]     = "bin/arranque/s.bin";
+char    fileM[30]     = "bin/arranque/m.bin";
+char    fileA[30]     = "bin/arranque/a.bin";
+char    fileR[30]     = "bin/arranque/r.bin";
+char    fileT[30]     = "bin/arranque/t.bin";
+char    fileC[30]     = "bin/arranque/c.bin";
+char    fileL[30]     = "bin/arranque/l.bin";
+char    fileO[30]     = "bin/arranque/o.bin";
+char    fileH[30]     = "bin/arranque/h.bin";
+char    fileLogo[30]  = "bin/arranque/log.bin";
 
 // --- IMAGENES PANTALLA INICIAL ---
 char    fileBrain1[30]      = "bin/inicial/brain1.bin";
-char    fileBrain2Green[30] = "bin/inicial/brain2G.bin";
+char    fileBrain2Green[30] = "bin/inicial/brain2_g.bin";
 
 // --- IMAGENES MANOS ---
-char    fileManoWhiteIcon[30]   = "bin/manos/manoWppt.bin";
-char    fileManoGreenIcon[30]   = "bin/manos/manoGppt.bin";
+char    fileManoWhiteIcon[30]   = "bin/manos/manowppt.bin";
+char    fileManoGreenIcon[30]   = "bin/manos/manogppt.bin";
 
 // --- IMAGENES GRUPOS ---
 char    fileGrupo1[30]      = "bin/grupo/grupo1.bin";
@@ -66,26 +66,26 @@ char    fileGrupo4[30]      = "bin/grupo/grupo4.bin";
 char    fileBotonAnadir[30]     = "bin/botones/anadir.bin";
 char    fileBotonEliminar[30]   = "bin/botones/borrar.bin";
 char    fileBotonGuardar[30]    = "bin/botones/guardar.bin";
-char    fileCocinadoGrande[30]  = "bin/botones/cociGra.bin";
-char    fileCrudoGrande[30]     = "bin/botones/crudoGra.bin";
+char    fileCocinadoGrande[30]  = "bin/botones/coci_gra.bin";
+char    fileCrudoGrande[30]     = "bin/botones/cru_gra.bin";
 //char    fileManoYellow[30]      = "bin/botones/manoY.bin";
 
 // --- IMAGEN BASCULA ---
 //char   fileScale[30]  = "bin/alimento/scale.bin";
-char   fileScale[30]  = "bin/alimento/scaleG.bin";
+char   fileScale[30]  = "bin/alimento/scale_g.bin";
 
 
 // --- IMAGENES DASHBOARD ---
-char    fileCocinadoPeq[30]     = "bin/dash/cociPeq.bin";
-char    fileCrudoPeq[30]        = "bin/dash/crudoPeq.bin";
+char    fileCocinadoPeq[30]     = "bin/dash/coci_peq.bin";
+char    fileCrudoPeq[30]        = "bin/dash/cru_peq.bin";
 char    fileKcal[30]          = "bin/dash/kcal.bin"; // kcal_20
 
 // --- IMAGENES ERROR ---
 char    fileCruz[30]          = "bin/error/cruz.bin";
 
 // --- IMAGENES AVISO ---
-char    fileAvisoYellow[30]   = "bin/aviso/avisoY.bin";
-//char    fileAvisoDarkOrange[30]   = "bin/aviso/avisoO.bin";
+char    fileAvisoYellow[30]   = "bin/aviso/aviso_y.bin";
+//char    fileAvisoDarkOrange[30]   = "bin/aviso/aviso_o.bin";
 
 
 
