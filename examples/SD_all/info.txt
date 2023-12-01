@@ -1,0 +1,44 @@
+Conforme se elabora la comida, se van escribiendo líneas en un fichero auxiliar que guarda la info a enviar al esp32 cuando haya wifi. 
+La información de cada comida se escribe de esta forma:
+
+INICIO-COMIDA
+INICIO-PLATO
+ALIMENTO,<grupo>,<peso>
+ALIMENTO,<grupo>,<peso>
+ALIMENTO,<grupo>,<peso>
+INICIO-PLATO
+ALIMENTO,<grupo>,<peso>
+FIN-COMIDA,<fecha>,<hora>
+
+
+Esta info se va escribiendo al navegar por la Máquina de Estados:
+
+- En STATE_Init se escribe INICIO-COMIDA
+	- Antes de escribirlo, cuando se comprueba si el plato no está vacío porque se haya retirado de repente, se debe también borrar la info del plato 
+	  escrita en el fichero hasta la última línea de INICIO-PLATO (borrarLastPlato(true) con flag a 'true' para que escriba de nuevo INICIO-PLATO).
+
+- En STATE_Plato (al colocar recipiente) se escribe INICIO-PLATO
+
+- Al terminar el pesado de un alimento (pulsar otro grupo tras poner peso de alimento), se escribe ALIMENTO
+
+- Al añadir nuevo plato (STATE_added) se escribe INICIO-PLATO
+	- No hace falta comprobar si lo último escrito es INICIO-PLATO porque solo se pasa a STATE_added si el plato actual no está vacío, por lo que se comprueba antes.
+
+- Al borrar plato (STATE_deleted) se "borran" las últimas líneas hasta la última escrita con INICIO-PLATO, inclusive.
+
+- Al guardar la comida (STATE_saved) se escribe FIN-COMIDA
+	- Antes de escribirlo se comprueba si lo último escrito es INICIO-PLATO y se borra, pues el plato estará vacío.
+
+
+En el caso en que se borre el plato actual (escribiendo INICIO-PLATO tras el borrado para continuar) pero no se continúe con la comida sino que
+se guarde tal como está, antes de escribir FIN-COMIDA habría que comprobar si la última línea es ALIMENTO. Si no fuera así, la línea sería INICIO-PLATO, lo que 
+significa que el último plato está vacío. Si esto ocurriera, habría que borrar esa línea escrita con INICIO-PLATO (usar misma función borrarLastPlato()) antes de 
+escribir la línea de FIN-COMIDA para evitar enviar información vacía.
+
+
+TODO:
+
+Un problema que tiene todo esto es que, como se va escribiendo aunque no se llegue a guardar la comida, si se apaga SmartCloth en mitad del proceso, la info de la comida 
+se quedará en el fichero sin terminar. Por eso, al encender SmartCloth habría que comprobar si la última línea escrita es una 'FIN-COMIDA,<fecha>,<hora>'. Si no lo fuera, 
+significaría que se ha quedado una comida a mitad y que no debe guardarse, así que, antes de empezar una nueva, habría que "borrar" las últimas líneas hasta la última escrita
+con INICIO-COMIDA.

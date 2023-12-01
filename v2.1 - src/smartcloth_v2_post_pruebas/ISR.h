@@ -38,6 +38,7 @@ SAMDUE_ISR_Timer ISR_Timer;
 
 
 /*  -----   MAIN  ----- */
+volatile int  buttonMain = 0; // Botón pulsado en Main (botonera B)
 const byte intPinCocinado     = 33;   // Naranja 
 const byte intPinCrudo        = 31;   // Amarillo 
 const byte intPinAddPlato     = 29;   // Verde 
@@ -55,9 +56,8 @@ const byte intPinGuardar      = 25;   // Morado
 
 
 /*  -----   GRANDE  ----- */
-const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande
+const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
 volatile bool pulsandoGrande  = false;    // Flag de estar pulsando algo en Grande
-volatile int  buttonMain = 0;
 
 
 /*  -----  BÁSCULA ------ */

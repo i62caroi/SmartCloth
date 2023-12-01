@@ -39,7 +39,7 @@
 
 
   -------- MENSAJES ARDUINO -> ESP32 --------------
-  
+
   1. Guardar info en base de datos:
       "SAVE:&carb=X&carb_R=X&lip=X&lip_R=X&prot=X&prot_R=X&kcal=X&peso=X"
       Esta opción ya está lista para la petición POST

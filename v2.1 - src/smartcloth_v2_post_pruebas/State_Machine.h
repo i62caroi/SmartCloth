@@ -653,15 +653,7 @@ void actStateInit(){
     const unsigned long recipienteRetiradoInterval  = 1000; // Intervalo de tiempo para mostrar "Recipiente retirado" (1 segundo)
     unsigned long dashboardInterval = 5000;                 // Intervalo de tiempo para mostrar el dashboard (5 segundos) 
     const unsigned long recipienteInterval = 5000;          // Intervalo de tiempo para pedir colocar recipiente (5 segundos)
-    //const unsigned long dashboardInterval = 10000;        // Intervalo de tiempo para mostrar el dashboard (10 segundos)
-
-    //    Se dejan 5 segundos para ver el dashboard y luego se muestra la ayuda. Si se acaba de guardar la comida, 
-    //    se dejan 10 segundos para ver la info de la comida guardada.
-    /*
-    if(flagComidaSaved){ // ==> Si se acaba de guardar la comida, se deja más tiempo para ver la info antes de pedir recipiente
-        dashboardInterval = 10000;   // Intervalo de tiempo para mostrar el dashboard (10 segundos) 
-    }
-    */
+    
 
     static unsigned long previousTime;              // Variable estática para almacenar el tiempo anterior
     unsigned long currentTime;
@@ -684,8 +676,6 @@ void actStateInit(){
             // -----------------------------------------------------------
 
 
-            
-
             tareScale();
             
             pesoRecipiente = 0.0;           // Se inicializa 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
@@ -696,18 +686,20 @@ void actStateInit(){
             keepErrorScreen = false;
 
             // ----- BORRAR PLATO ------------------------------------
+            // Si se regresa a Init con el platoActual aún con cosas, es porque no se ha borrado con "Eliminar plato" ni
+            // se ha restaurado con "Añadir plato" o "Guardar comida", sino que se ha retirado de repente en mitad del proceso.
+            // Si ocurre esa liberación tan repentina y cuando no toca (desde Grupos, raw, cooked, weighted...),
+            // entonces se borra. Lo entiendo como una eliminación forzada del plato. 
+            // Si no se hiciera así, seguiría apareciendo su información en la comida copiada en el dashboard estilo 1, aunque 
+            // no se hubiera guardado ni eliminado.
+            //
+            //  ¡IMPORTANTE! ==> con este borrado se impide por completo el retirar el plato para colocar el alimento fuera
+            //                   de SmartCloth y luego colocarlo ya con el alimento.
+            //
             // Solo se mira si el plato actual está vacío porque si fuera el 2º plato o sucesivos, los anteriores se
-            // habrían "guardado" al hacer "Añadir plato". Entonces, si el usuario retira el recipiente, solo se borra el actual,
-            // por si quisieran cambiar de recipiente o algo.
-            if(!platoActual.isPlatoEmpty()){ // ==> Si se regresa a Init con el plato aún con cosas, es porque no se ha borrado con "Eliminar plato" ni
-                                            //    se ha restaurado con "Añadir plato" o "Guardar comida", sino que se ha retirado de repente en mitad del proceso.
-                                            //    Si ocurre esa liberación tan repentina y cuando no toca (desde Grupos, raw, cooked, weighted...),
-                                            //    entonces se borra. Lo entiendo como una eliminación forzada del plato. 
-                                            //    Si no se hiciera así, seguiría apareciendo su información en la comida copiada en el dashboard estilo 1, aunque 
-                                            //    no se hubiera guardado ni eliminado.
-
-                                            //  ¡IMPORTANTE! ==> con este borrado se impide por completo el retirar el plato para colocar el alimento fuera
-                                            //                   de SmartCloth y luego colocarlo ya con el alimento.
+            // habrían "guardado" al hacer "Añadir plato". 
+            //
+            if(!platoActual.isPlatoEmpty()){ 
 
                 comidaActual.deletePlato(platoActual);    // Borrar plato actual
                 platoActual.restorePlato();               // Restaurar plato
@@ -717,7 +709,6 @@ void actStateInit(){
 
             // ----- INFO INICIAL DE PANTALLA -------------------------
             if(flagRecipienteRetirado){
-            //if(lastEvent == LIBERAR){ 
                 recipienteRetirado();                 // Mostrar "Recipiente retirado" tras LIBERAR báscula
                 showing_recipiente_retirado = true;   // Se está mostrando "Recipiente retirado"
                 showing_dash = false;      
@@ -1497,11 +1488,12 @@ void actStateSaved(){
                                                             // que se ha comenzado otra comida, pasando ya a "Comida actual".
             }   
             else if(state_prev != STATE_ERROR){   // PLATO VACÍO ==> NO SE CREA OTRO 
-                      // Se chequea no venir de error para no marcar un falso aviso. Un aviso real habría saltado
-                      // al entrar a este estado STATE_saved, antes de cometer error. Si no hubiera saltado, se habría
-                      // guardado y limpiado la comida, por lo que tras un posible error en este estado, siempre se
-                      // marcaría aviso de comida vacía, porque se acaba de limpiar. Por eso se comprueba no venir
-                      // de error, para no marcar aviso.
+                    // Si se ha guardado la comida y, en lugar de retirar el plato, se comete un error (pulsando botón), al regresar a este
+                    // estado STATE_saved la comidaActual ya estará vacía porque se guardó anteriormente, por lo que daría aviso y regresaría al estado
+                    // desde donde se inició el guardado. Todo eso aún con el plato puesto en la báscula, por lo que se podrían ir encadenando
+                    // una serie de errores al retirarlo desde ese estado previo.
+                    // Para evitar marcar un aviso "falso", se chequea no venir de error. Un aviso real habría saltado al entrar a este estado STATE_saved
+                    // por primera vez y que la comida estuviera realmente vacía, no por venir de un error tras guardar la comida y limpiar comidaActual. 
                 errorComidaWasEmpty = true;  
                  addEventToBuffer(AVISO); 
                  flagEvent = true;
