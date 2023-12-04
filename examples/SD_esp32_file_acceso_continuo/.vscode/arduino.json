@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
-    "sketch": "SD_all.ino",
+    "sketch": "SD_esp32_file_acceso_continuo.ino",
     "port": "/dev/tty.usbmodem122301"
 }

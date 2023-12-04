@@ -85,31 +85,6 @@ int checkButtonsMain()
     }
     
     return 0;
-
-
-    /*if (digitalRead(intPinAddPlato) == HIGH) { // Si se pulsa el botón
-      delay(10); // Esperar para evitar rebotes
-      if (digitalRead(intPinAddPlato) == HIGH) { // Comprobar que sigue pulsado
-        while (digitalRead(intPinAddPlato) == HIGH) {} // Esperar a que se suelte el botón
-        return 1;
-      }
-    }
-
-    if (digitalRead(intPinDeletePlato) == HIGH) { // Si se pulsa el botón
-      delay(10); // Esperar para evitar rebotes
-      if (digitalRead(intPinDeletePlato) == HIGH) { // Comprobar que sigue pulsado
-        while (digitalRead(intPinDeletePlato) == HIGH) {} // Esperar a que se suelte el botón
-        return 2;
-      }
-    }
-
-    if (digitalRead(intPinGuardar) == HIGH) { // Si se pulsa el botón
-      delay(10); // Esperar para evitar rebotes
-      if (digitalRead(intPinGuardar) == HIGH) { // Comprobar que sigue pulsado
-        while (digitalRead(intPinGuardar) == HIGH) {} // Esperar a que se suelte el botón
-        return 3;
-      }
-    }*/
 }
 
 
@@ -138,6 +113,8 @@ bool checkButtonsGrande()
         pulsandoGrande = false;
         
     }
+
+    return false;
 
 }
 

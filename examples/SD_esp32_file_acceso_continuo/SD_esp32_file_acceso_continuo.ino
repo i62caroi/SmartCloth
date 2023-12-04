@@ -1,7 +1,7 @@
 /**
- * @file SD_all.ino
+ * @file SD_esp32_file_accesi_continuo.ino
  * @brief Este programa guarda la comida en un archivo .txt con palabras clave para enviar al ESP32 cuando haya wifi.
- * 
+ *        Todos los cambios (adiciones y borrado) los realiza directamente en el fichero txt.
  * @author Irene Casares Rodríguez
  * @date 01/12/2023
  */
@@ -128,7 +128,7 @@ void loop() {
 void doCosasMain(int buttonM)
 {
     switch (buttonM) {
-        case 1: // Crudo --> dar por terminado pesado aleatorio --> guardar alimento y peso
+        case 1: // Crudo --> dar por terminado pesado de alimento --> guardar alimento y peso
             saveAlimento();
             Serial.println("\nTerminando pesado de alimento...\n");
             readFileESP32();

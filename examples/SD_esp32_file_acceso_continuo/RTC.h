@@ -32,11 +32,6 @@
 DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la librería
 
 
-/**
- * @brief Variable para almacenar la fecha actual.
- */
-char *today;
-
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -49,7 +44,7 @@ void setupRTC(){
 
     Serial.print(F("RTC initialized"));
 
-    today = rtc.getDateStr();
+    char *today = rtc.getDateStr();
     char *time = rtc.getTimeStr();
 
     Serial.print(F(" => Hoy es ")); Serial.print(today); Serial.print(F(" y son las ")); Serial.println(time);
