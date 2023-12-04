@@ -1,0 +1,8 @@
+INICIO-COMIDA
+INICIO-PLATO
+ALIMENTO,<grupo>,<peso>
+ALIMENTO,<grupo>,<peso>
+ALIMENTO,<grupo>,<peso>
+INICIO-PLATO
+ALIMENTO,<grupo>,<peso>
+FIN-COMIDA,<fecha>,<hora>
