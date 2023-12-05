@@ -66,11 +66,10 @@
 #include "RTC.h"
 #include "Diario.h" // incluye Comida.h
 #include "Files.h"
+#include "lista_Comida.h"
+
 
 #define SD_CARD_SCS  4
-
-
-File myFile;
 
 
 /*-----------------------------------------------------------------------------
@@ -81,7 +80,10 @@ void    writeHeaderFileSD();             // Crear fichero CSV y escribir header
 void    saveComidaSD();                  // Guardar valores de la comida en fichero CSV
 void    getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 
-bool    borrarFicheroCSV();              // Borrar contenido del fichero csv
+bool    borrarFicheroCSV();              // Borrar contenido del fichero CSV
+
+bool    borrarFicheroESP32();            // Borrar contenido del fichero TXT del ESP32
+void    readFileESP32();                 // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
 /*-----------------------------------------------------------------------------*/
 
 
@@ -127,13 +129,13 @@ void writeHeaderFileSD(){
 
     String header = "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso";
 
-    myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
+    File myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
     if (myFile){
         myFile.println(header);
         myFile.close(); // close the file
     }
     else{
-        Serial.println("Error opening file for writing!");
+        Serial.println("Error abriendo archivo CSV!");
     }
 }
 
@@ -150,6 +152,7 @@ void saveComidaSD(){
 
     // Se ha utilizado un RTC para conocer la fecha a la que se guarda la comida
 
+    // ----- 1. GUARDADO LOCAL ------------------------------------------------------------
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
     // columnas directamente:
     //    "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso"
@@ -160,15 +163,43 @@ void saveComidaSD(){
     String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" + comidaValues + ";" + peso; 
 
 
-    myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
+    File myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
     if (myFile){
         myFile.println(dataString);
         myFile.close(); // close the file
         Serial.println("Comida guardada correctamente en la SD");
     }
     else{
-        Serial.println("Error opening file for writing!");
+        Serial.println("Error abriendo archivo CSV!");
     }
+    // --------------------------------------------------------------------------------
+
+
+    // ----- 2. GUARDADO FICHERO ESP32 -------------------------------------------------
+    // Guardar información en el fichero que se pasará al esp32 cuando haya WIFI
+
+    // Escribir FIN-COMIDA,<fecha>,<hora> en la lista
+    listaComidaESP32.saveComida();
+
+    // Guardar lista en fichero
+    myFile = SD.open(fileESP32, FILE_WRITE);
+
+    if (myFile) {
+        // Escribe cada línea en el archivo
+        for (int i = 0; i < listaComidaESP32.getListSize(); i++) {
+            myFile.println(listaComidaESP32.getItem(i));
+        }
+        
+        // Cierra el archivo
+        myFile.close();
+
+        // Limpia el vector para la próxima comida
+        listaComidaESP32.clearList();
+    } else {
+        // Si el archivo no se abre, imprime un error:
+        Serial.println("Error abriendo archivo TXT!");
+    }
+    // --------------------------------------------------------------------------------
 }
 
 
@@ -198,7 +229,7 @@ void getAcumuladoHoyFromSD(){
     bool msg = true;
 
 
-    myFile = SD.open(fileCSV, FILE_READ);
+    File myFile = SD.open(fileCSV, FILE_READ);
     if (myFile){
         while (myFile.available()) {
             
@@ -210,7 +241,7 @@ void getAcumuladoHoyFromSD(){
             token = strtok(lineBuffer, ";"); // Separar campos de la línea utilizando el delimitador ';'
             fieldIndex = 0;
 
-            if(strcmp(today, token) == 0){ // today == primer token ==> comida guardada hoy
+            if(strcmp(today, token) == 0){ // si 'today' igual que primer token ==> comida guardada hoy
                 
                 if(msg){
                     Serial.println(F("Obteniendo Acumulado Hoy..."));
@@ -255,7 +286,7 @@ void getAcumuladoHoyFromSD(){
         
     }
     else{
-        Serial.println("Error opening file for reading!");
+        Serial.println("Error abriendo archivo CSV!");
     }
 
 }
@@ -277,10 +308,10 @@ bool borrarFicheroCSV(){
     SD.remove(fileCSV);
 
     if (!SD.exists(fileCSV)) {
-        Serial.println("Fichero borrado");
+        Serial.println("Fichero CSV borrado");
     }
     else  {
-        Serial.println("Error borrando fichero.");
+        Serial.println("Error borrando fichero CSV!");
         return false;
     }
     // -------- FIN BORRAR FICHERO CSV ----------------------
@@ -296,5 +327,50 @@ bool borrarFicheroCSV(){
 }
 
 
+
+// ----------------------------------------------------------------------------
+// borrarFicheroESP32(): borrar contenido del fichero TXT 
+//        Return:     true - éxito en el borrado
+//                    false - error en el borrado
+// -----------------------------------------------------------------------------
+bool borrarFicheroESP32(){
+
+    // -------- BORRAR FICHERO ESP32 ------------------------
+    Serial.println("Borrando fichero ESP32...");
+    SD.remove(fileCSV);
+
+    if (!SD.exists(fileCSV)) {
+        Serial.println("Fichero ESP32 borrado");
+        return true;
+    }
+    else  {
+        Serial.println("Error borrando fichero ESP32!");
+        return false;
+    }
+    // ------------------------------------------------------
+
+    // En este caso no hace falta crearlo aquí, como sí ocurría con el CSV, porque
+    // cuando se vaya a escribir algo al guardar comida, ya se creará.
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Lee el contenido del archivo del ESP32 en la tarjeta SD.
+ */
+/*-----------------------------------------------------------------------------*/
+void readFileESP32(){
+    Serial.println(F("\n\nLeyendo fichero TXT del ESP32...\n"));
+    File myFile = SD.open(fileESP32, FILE_READ);
+    if (myFile){
+        while (myFile.available()) {
+            Serial.write(myFile.read());
+        }
+        myFile.close();
+    }
+    else{
+        Serial.println("Error abriendo fichero TXT!");
+    }
+}
 
 #endif

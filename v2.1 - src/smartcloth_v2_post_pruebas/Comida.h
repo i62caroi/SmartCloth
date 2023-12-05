@@ -84,7 +84,7 @@ class Comida{
      * 
      * @return True si la comida está vacía, False en caso contrario.
      */
-    inline bool isComidaEmpty(){ if(this->_getNumPlatos() == 0) return true; else return false;}; 
+    inline bool isComidaEmpty(){ if(_getNumPlatos() == 0) return true; else return false;}; 
 
 
 
@@ -150,7 +150,7 @@ class Comida{
      * 
      * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    inline void setValoresComida(ValoresNutricionales val){ this->_valoresComida.setValores(val); };
+    inline void setValoresComida(ValoresNutricionales val){ _valoresComida.setValores(val); };
     
     /**
      * @brief Obtiene los valores nutricionales totales de la comida. 
@@ -227,8 +227,8 @@ class Comida{
              la comida a 0.0
 ----------------------------------------------------------------------------------------------------------*/
 Comida::Comida(){
-  this->_setNumPlatos(0);
-  this->setPesoComida(0.0);
+  _setNumPlatos(0);
+  setPesoComida(0.0);
 }
 
 
@@ -246,8 +246,8 @@ Comida::Comida(){
                              alimento pesado.
 ----------------------------------------------------------------------------------------------------------*/
 void Comida::addAlimentoComida(Alimento &alimento){   
-    this->setPesoComida(this->getPesoComida() + alimento.getPesoAlimento());       // Incrementar peso de la comida
-    this->updateValoresComida(true, alimento.getValoresAlimento());                // Sumar (suma = true) Valores Nutricionales de la comida
+    setPesoComida(getPesoComida() + alimento.getPesoAlimento());       // Incrementar peso de la comida
+    updateValoresComida(true, alimento.getValoresAlimento());                // Sumar (suma = true) Valores Nutricionales de la comida
 }
 
 
@@ -270,7 +270,7 @@ void Comida::addPlato(Plato plato){
   // (valores nutricionales y peso de los alimentos) se han ido guardando uno a
   // uno. Solo haría falta aumentar el número de platos para indicar que se ha "guardado"
   // Posteriormente, al borrarlo, se restan sus valores nutricionales y peso
-    this->_setNumPlatos(this->_getNumPlatos() + 1);                       // Incrementar num platos
+    _setNumPlatos(_getNumPlatos() + 1);                       // Incrementar num platos
 }
 
 
@@ -288,8 +288,8 @@ void Comida::addPlato(Plato plato){
 void Comida::deletePlato(Plato &plato){
        // No hace falta decrementar nPlatos porque no se ha llegado a guardar 
        // el plato ni, por tanto, incrementar el numero platos. 
-    this->setPesoComida(this->getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
-    this->updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
+    setPesoComida(getPesoComida() - plato.getPesoPlato());          // Decrementar peso de la comida según peso del plato
+    updateValoresComida(false, plato.getValoresPlato());                  // Restar (suma = false) Valores Nutricionales de la comida
 }
 
 
@@ -323,7 +323,7 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
         kcal = _valoresComida.getKcalValores() - val.getKcalValores();
     }
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    this->setValoresComida(valAux);
+    setValoresComida(valAux);
 }
 
 
@@ -340,9 +340,9 @@ void Comida::updateValoresComida(bool suma, ValoresNutricionales val){
                  pueda analizar.
 ----------------------------------------------------------------------------------------------------------*/
 void Comida::copyComida(Comida comida){
-    this->_setNumPlatos(comida._getNumPlatos());          // Nº platos 
-    this->setPesoComida(comida.getPesoComida());          // Peso
-    this->setValoresComida(comida.getValoresComida());    // Valores 
+    _setNumPlatos(comida._getNumPlatos());          // Nº platos 
+    setPesoComida(comida.getPesoComida());          // Peso
+    setValoresComida(comida.getValoresComida());    // Valores 
 }
 
 
@@ -352,10 +352,10 @@ void Comida::copyComida(Comida comida){
                     valores nutricionales de la comida.
 ----------------------------------------------------------------------------------------------------------*/
 void Comida::restoreComida(){
-    this->_setNumPlatos(0);                 // Nº platos = 0
-    this->setPesoComida(0.0);               // Peso = 0.0
+    _setNumPlatos(0);                 // Nº platos = 0
+    setPesoComida(0.0);               // Peso = 0.0
     ValoresNutricionales valAux;            // Crea un objeto ValoresNutricionales con todos sus valores a 0.0
-    this->setValoresComida(valAux);         // Valores = 0.0
+    setValoresComida(valAux);         // Valores = 0.0
 }
 
 
@@ -388,7 +388,7 @@ String Comida::getComidaAllValuesHttpRequest(){
     String dataString = "&carb=" + String(_valoresComida.getCarbValores()) + "&carb_R=" + String(_valoresComida.getCarbRaciones()) + "&lip=" + 
                         String(_valoresComida.getLipValores()) + "&lip_R=" + String(_valoresComida.getLipRaciones()) + "&prot=" + 
                         String(_valoresComida.getProtValores()) + "&prot_R" + String(_valoresComida.getProtRaciones()) + "&kcal" + 
-                        String(_valoresComida.getKcalValores()) + "&peso=" + String(this->getPesoComida()); 
+                        String(_valoresComida.getKcalValores()) + "&peso=" + String(getPesoComida()); 
 
     return dataString;
 }

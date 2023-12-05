@@ -84,7 +84,7 @@ class Plato{
      * 
      * @return true si el plato está vacío, false en caso contrario
      */
-    inline bool isPlatoEmpty(){ if(this->_getNumAlimentos() == 0) return true; else return false; };
+    inline bool isPlatoEmpty(){ if(_getNumAlimentos() == 0) return true; else return false; };
     
 
 
@@ -130,7 +130,7 @@ class Plato{
      * 
      * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    inline void setValoresPlato(ValoresNutricionales val){ this->_valoresPlato.setValores(val); };
+    inline void setValoresPlato(ValoresNutricionales val){ _valoresPlato.setValores(val); };
 
     /**
      * @brief Obtiene los valores nutricionales del plato.
@@ -179,8 +179,8 @@ class Plato{
             plato a 0.0
 ----------------------------------------------------------------------------------------------------------*/
 Plato::Plato(){
-    this->_setNumAlimentos(0);
-    this->setPesoPlato(0.0);
+    _setNumAlimentos(0);
+    setPesoPlato(0.0);
 }
 
 
@@ -199,9 +199,9 @@ Plato::Plato(){
                              alimento pesado.
 ----------------------------------------------------------------------------------------------------------*/
 void Plato::addAlimentoPlato(Alimento alimento){
-    this->_setNumAlimentos(this->_getNumAlimentos() + 1);                        // Incrementar num alimentos
-    this->setPesoPlato(this->getPesoPlato() + alimento.getPesoAlimento());       // Incrementar peso del plato
-    this->updateValoresPlato(alimento.getValoresAlimento());                     // Actualizar Valores Nutricionales
+    _setNumAlimentos(_getNumAlimentos() + 1);                        // Incrementar num alimentos
+    setPesoPlato(getPesoPlato() + alimento.getPesoAlimento());       // Incrementar peso del plato
+    updateValoresPlato(alimento.getValoresAlimento());                     // Actualizar Valores Nutricionales
 }
 
 
@@ -224,7 +224,7 @@ void Plato::updateValoresPlato(ValoresNutricionales val){
     float prot = _valoresPlato.getProtValores() + val.getProtValores();
     float kcal = _valoresPlato.getKcalValores() + val.getKcalValores();
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    this->setValoresPlato(valAux);
+    setValoresPlato(valAux);
 }
 
 
@@ -239,10 +239,10 @@ void Plato::updateValoresPlato(ValoresNutricionales val){
                    valores nutricionales del plato.
 ----------------------------------------------------------------------------------------------------------*/
 void Plato::restorePlato(){
-    this->_setNumAlimentos(0);                          // Nº alimentos = 0
-    this->setPesoPlato(0.0);                            // Peso = 0.0
+    _setNumAlimentos(0);                          // Nº alimentos = 0
+    setPesoPlato(0.0);                            // Peso = 0.0
     ValoresNutricionales valAux(0.0, 0.0, 0.0, 0.0);    // Crea un objeto ValoresNutricionales con todos sus valores a 0.0
-    this->setValoresPlato(valAux);                      // Valores = 0
+    setValoresPlato(valAux);                      // Valores = 0
 }
 
 

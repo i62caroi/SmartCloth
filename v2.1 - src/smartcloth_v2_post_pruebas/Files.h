@@ -16,11 +16,13 @@
 // LIBRERÍA SD LIMITA LA LONGITUD DEL NOMBRE DEL FICHERO A 8 CARACTERES Y 3 PARA EXTENSION
 // Los 8 caracteres no incluyen el path hasta el fichero
 
-// --- FICHERO GUARDAR INFO ---
+// --- FICHERO GUARDAR INFO LOCAL ---
 char    fileCSV[30] = "data/data-SC.csv"; ///< Nombre del archivo para guardar las comidas realizadas
-
 //char    fileCSV[30] = "data/daTest.csv"; // Probando el borrado del csv
 
+
+// --- FICHERO GUARDAR INFO ESP32 ---
+char    fileESP32[30] = "data/data-ESP.txt"; ///< Nombre del archivo para guardar las comidas realizadas con pares <grupo>,<peso>
 
 
 // --- IMAGENES RELOJ ARENA ---

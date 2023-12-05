@@ -129,7 +129,7 @@ class Alimento{
      * 
      * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    inline void setValoresAlimento(ValoresNutricionales val){ this->_valoresAlimento.setValores(val); };
+    inline void setValoresAlimento(ValoresNutricionales val){ _valoresAlimento.setValores(val); };
 
     /**
      * @brief Obtiene los valores nutricionales del alimento.
@@ -157,7 +157,7 @@ class Alimento{
    Alimento(): Constructor de la clase Alimento que establece su peso a 0.0
 ----------------------------------------------------------------------------------------------------------*/
 Alimento::Alimento(){
-    this->setPesoAlimento(0.0);
+    setPesoAlimento(0.0);
 }
 
 /*---------------------------------------------------------------------------------------------------------
@@ -169,9 +169,9 @@ Alimento::Alimento(){
               peso - Peso de la porción de alimento
 ----------------------------------------------------------------------------------------------------------*/
 Alimento::Alimento(Grupo grupo, float peso){
-    this->setGrupoAlimento(grupo);
-    this->setPesoAlimento(peso);
-    this->updateValoresAlimento(grupo, peso);
+    setGrupoAlimento(grupo);
+    setPesoAlimento(peso);
+    updateValoresAlimento(grupo, peso);
 }
 
 
@@ -201,7 +201,7 @@ void Alimento::updateValoresAlimento(Grupo grupo, float peso){
     float prot = grupo.Prot_g * peso;
     float kcal = grupo.Kcal_g * peso;
     ValoresNutricionales valAux(carb, lip, prot, kcal);
-    this->setValoresAlimento(valAux); 
+    setValoresAlimento(valAux); 
 }
 
 

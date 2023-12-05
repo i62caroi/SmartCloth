@@ -117,7 +117,7 @@ class Diario{
      * 
      * @param val Objeto ValoresNutricionales a partir del cual se establecen los valores
      */
-    void setValoresDiario(ValoresNutricionales val){ this->_valoresDiario.setValores(val); };
+    void setValoresDiario(ValoresNutricionales val){ _valoresDiario.setValores(val); };
     
     /**
      * @brief Obtiene los valores nutricionales del diario.
@@ -154,8 +154,8 @@ class Diario{
              diario a 0.0
 ----------------------------------------------------------------------------------------------------------*/
 Diario::Diario(){
-  this->setNumComidas(0);
-  this->setPesoDiario(0.0);
+  setNumComidas(0);
+  setPesoDiario(0.0);
 }
 
 
@@ -172,9 +172,9 @@ Diario::Diario(){
                   comida - Objeto Comida con la información nutricional y peso de la comida guardada.
 ----------------------------------------------------------------------------------------------------------*/
 void Diario::addComida(Comida comida){
-  this->setNumComidas(this->getNumComidas()+1);                           // Incrementar num comidas
-  this->setPesoDiario(this->getPesoDiario() + comida.getPesoComida());    // Incrementar peso
-  this->updateValoresDiario(comida.getValoresComida());                   // Actualizar Valores Nutricionales
+  setNumComidas(getNumComidas()+1);                           // Incrementar num comidas
+  setPesoDiario(getPesoDiario() + comida.getPesoComida());    // Incrementar peso
+  updateValoresDiario(comida.getValoresComida());                   // Actualizar Valores Nutricionales
 }
 
 

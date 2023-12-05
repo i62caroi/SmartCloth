@@ -34,6 +34,7 @@
 #include "SD_functions.h"
 #include "Buttons.h"
 #include "Serial_esp32cam.h"
+#include "lista_Comida.h" 
 
 
 
@@ -48,7 +49,7 @@
 #define  SAVE_EXECUTED_FULL                       3  
 #define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
 #define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
-#define  SAVE_ESP32_TIMEOUT         6
+#define  SAVE_ESP32_TIMEOUT                       6
 #define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
 
 // --- RESPUESTAS AL GUARDAR EN DATABASE ---
@@ -664,8 +665,15 @@ void actStateInit(){
 
     
     if(!doneState){
-        if(state_prev != STATE_Init){
+        if(state_prev != STATE_Init){ 
             Serial.println(F("\nSTATE_Init...")); 
+
+            // ----- INICIAR COMIDA --------------------------------------
+            // Si lo último escrito no es INICIO-COMIDA (la lista está vacía), 
+            // se añade a la lista "INICIO-COMIDA"
+            listaComidaESP32.iniciarComida();
+            listaComidaESP32.leerLista();
+            // -----------------------------------------------------------
 
             // ----- RESETEAR COPIA SI SE HA BORRADO CSV -----------------
             if(flagFicheroCSVBorrado){
@@ -700,6 +708,11 @@ void actStateInit(){
             // habrían "guardado" al hacer "Añadir plato". 
             //
             if(!platoActual.isPlatoEmpty()){ 
+                // ----- BORRAR PLATO --------------------------------------
+                // Eliminar info del plato de la lista
+                listaComidaESP32.borrarLastPlato();
+                listaComidaESP32.leerLista();
+                // -----------------------------------------------------------
 
                 comidaActual.deletePlato(platoActual);    // Borrar plato actual
                 platoActual.restorePlato();               // Restaurar plato
@@ -805,6 +818,13 @@ void actStatePlato(){
         if(state_prev != STATE_Plato){
             Serial.println(F("\nPlato colocado")); 
 
+            // ----- INICIAR PLATO --------------------------------------
+            // Si lo último escrito no es INICIO-PLATO (la comida está vacía o se está empezando otro plato), 
+            // se añade a la lista "INICIO-PLATO"
+            listaComidaESP32.iniciarPlato();
+            listaComidaESP32.leerLista();
+            // -----------------------------------------------------------
+
             // ----- REINICIAR COPIA DE COMIDA GUARDADA -------------------------
             // Si se acaba de guardar la comida, ya se ha mostrado la copia de su info en STATE_Init. Entonces, si la comida real
             // está vacía porque se ha reiniciado tras guardarla, al colocar recipiente se entiende que va a comenzar una nueva,
@@ -894,8 +914,16 @@ void actGruposAlimentos(){
             tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
         else if((state_prev != STATE_ERROR) and (state_prev != STATE_groupA) and (state_prev != STATE_groupB) and (pesoBascula != 0.0)){ 
-                Serial.println(F("Añadiendo alimento al plato..."));
+
+                // ----- AÑADIR ALIMENTO A LISTA -----------------------------
+                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
+                listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
+                listaComidaESP32.leerLista();
+                // -----------------------------------------------------------
                 
+                // ----- AÑADIR ALIMENTO A PLATO -----------------------------
+                Serial.println(F("Añadiendo alimento al plato..."));
+
                 Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
                                                                             // Al escoger un nuevo grupo se guarda el alimento del grupo anterior
                                                                             // colocado en la iteración anterior. Por eso se utiliza 'grupoAnterior' para
@@ -909,7 +937,7 @@ void actGruposAlimentos(){
 
                 tareScale();                                                // Tras guardar la información del último alimento colocado, se tara la báscula
                                                                             // para pesar el siguiente alimento
-                
+                // -----------------------------------------------------------
         }
         // ----- FIN ACCIONES --------------------------
 
@@ -1193,7 +1221,15 @@ void actStateAdded(){
                                                                     // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
                                                                     // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar el plato, pues no se habría modificado.
+
+                // ----- AÑADIR ALIMENTO A LISTA -----------------------------
+                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
+                listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
+                listaComidaESP32.leerLista();
+                // -----------------------------------------------------------
                 
+
+                // ----- AÑADIR ALIMENTO A PLATO -----------------------------
                 Alimento alimento(grupoEscogido, pesoBascula);        // Cálculo automático de valores nutricionales. 
                                                                     // Usamos 'grupoEscogido' porque no se ha modificado. 
                 
@@ -1205,7 +1241,7 @@ void actStateAdded(){
                                                                     // se ha quitado todo el 'pesoARetirar'.
                                                                     // Solo se hace si se viene del STATE_weighted porque en los estados 
                                                                     // previos a ese ya se tara y es en STATE_weighted donde se modifica el peso.
-                
+                // -----------------------------------------------------------
             }
             /* ------------------------------ */
 
@@ -1298,10 +1334,17 @@ void actStateDeleted(){
         if(state_prev != STATE_deleted){                            // ==> Si no se viene del propio STATE_deleted, para evitar que se vuelva 
                                                                     //     a eliminar el plato de la comida.
           
+
+            // ----- BORRAR PLATO DE LISTA--------------------------------
+            // Borrar desde el final de la lista hasta la última aparición de "INICIO-PLATO".
+            listaComidaESP32.borrarLastPlato();
+            listaComidaESP32.leerLista();
+            // -----------------------------------------------------------
             
+
+            // ----- BORRAR PLATO DE COMIDA ------------------------------
             Serial.println(F("\nEliminando plato..."));
 
-            
             /* ----- PESO ÚLTIMO ALIMENTO  ----- */
             if(pesoBascula != 0.0){           // ==> Si se ha colocado algo nuevo en la báscula (pesoBascula marca algo) y no se ha retirado,
                                               //     debe incluirse en el plato. 
@@ -1351,6 +1394,8 @@ void actStateDeleted(){
                     flagEvent = true;
                 }
             }
+            // -----------------------------------------------------------
+
 
 
             /* -----  INFORMACIÓN MOSTRADA  ---------------------------------- */
@@ -1443,6 +1488,14 @@ void actStateSaved(){
                                                                     // guardar la comida actual sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar la comida, pues no se habría modificado.
             
+                // ----- AÑADIR ALIMENTO A LISTA -----------------------------
+                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
+                listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
+                listaComidaESP32.leerLista();
+                // -----------------------------------------------------------
+                
+
+                // ----- AÑADIR ALIMENTO A PLATO -----------------------------
                 Alimento alimento(grupoEscogido, pesoBascula);      // Cálculo automático de valores nutricionales.
                                                                     // Usamos 'grupoEscogido' porque no se ha modificado. 
                 
@@ -1454,6 +1507,7 @@ void actStateSaved(){
                                                                     // se ha quitado todo el 'pesoARetirar'.
                                                                     // Solo se hace si se viene del STATE_weighted porque en los estados 
                                                                     // previos a ese ya se tara y es en STATE_weighted donde se modifica el peso.
+                // -----------------------------------------------------------
             }
             /* ----- FIN ACTUALIZAR PLATO --------------------------------- */
 
@@ -1473,14 +1527,20 @@ void actStateSaved(){
             /* ----- GUARDAR COMIDA EN DIARIO ----------------------------- */
             if(!comidaActual.isComidaEmpty()){    // COMIDA CON PLATOS ==> HAY QUE GUARDAR
                 errorComidaWasEmpty = false;
-                diaActual.addComida(comidaActual);          // Comida ==> Diario
-                saveComidaSD();                             // Comida ==> fichero CSV en SD
-                //responseFromESP32 = saveComidaDatabase();   // Comida ==> esp32 ==> base de datos
 
+                // --- COMIDA A DIARIO Y FICHEROS ---
+                diaActual.addComida(comidaActual);          // Comida ==> Diario
+                saveComidaSD();                             // Comida ==> fichero CSV y fichero ESP32 en SD
+                readFileESP32();                            // Se lee el fichero en lugar de la lista porque, tras guardar la comida, la lista ya está vacía
+                //responseFromESP32 = saveComidaDatabase();   // Comida ==> esp32 ==> base de datos
+                // -----------------------------------
+
+                // --- ACTUALIZAR COPIA COMIDA -------
                 comidaActualCopia.copyComida(comidaActual); // Copiar nº platos, peso y valores de la comida actual a la copia. Este objeto 'Comida' solo sirve para mostrar
                                                             // en el dashboard estilo 1 (STATE_Init y STATE_Plato) la comida guardada junto con el acumulado, pues tras guardarla
                                                             // se limpia (siguiente línea). Por eso se copia antes, para poderla ver al regresar a STATE_Init.
                 comidaActual.restoreComida();               // "Reiniciar" comidaActual para usarla de nuevo.
+                // -----------------------------------
 
                 flagComidaSaved = true;                     // Se indica que se ha guardado la comida para que el dashboard estilo 1 en STATE_Init se muestre
                                                             // "Comida guardada" en lugar de "Comida actual". De este forma se entiende que los valores que se
@@ -2216,9 +2276,9 @@ void actState_DELETED_CSV(){
     if(!doneState){
         previousTimeDeleted = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de borrado, regresar a Init
 
-        Serial.println(F("\nBORRANDO CONTENIDO DEL FICHERO CSV. LIMPIANDO ACUMULADO...")); 
+        Serial.println(F("\nBORRANDO CONTENIDO DEL FICHERO CSV Y FICHERO ESP32. LIMPIANDO ACUMULADO...")); 
 
-        if(borrarFicheroCSV()) showAcumuladoBorrado(true); // true = éxito en el borrado
+        if(borrarFicheroCSV() && borrarFicheroESP32()) showAcumuladoBorrado(true); // true = éxito en el borrado
         else showAcumuladoBorrado(false); // false = error en el borrado
 
         flagFicheroCSVBorrado = true;

@@ -58,7 +58,7 @@ int buttons[countRows][countColumns] = {{1,2,3,4,5},
                                         {16,17,18,19,20}};
 
 
-int  buttonGrande;                  //Botón pulsado en la botonera grande (checkAllButtons())
+int  buttonGrande = 0;                  //Botón pulsado en la botonera grande (checkAllButtons())
 
 
 // -- Debajo de la declaración de buttonGrande para que esté en el ámbito de State_Machine.h --
