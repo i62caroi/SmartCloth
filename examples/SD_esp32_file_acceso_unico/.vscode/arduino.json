@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
     "sketch": "SD_esp32_file_acceso_unico.ino",
-    "port": "/dev/tty.usbmodem1123301"
+    "port": "/dev/tty.usbmodem1121301"
 }

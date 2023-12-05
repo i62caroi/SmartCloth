@@ -14,11 +14,11 @@ std::vector<String> lines;
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
 void    addLine(const String& line);
-void    iniciarElemento(const String& cadInicio);   // Escribir INICIO-COMIDA o INICIO-PLATO 
-void    saveAlimento();                             // Escribir ALIMENTO,<grupo>,<peso>
+void    iniciarComida();                            // Escribir INICIO-COMIDA 
+void    iniciarPlato();                             // Escribir INICIO-PLATO 
+void    addAlimento();                             // Escribir ALIMENTO,<grupo>,<peso>
 
-void    borrarLastPlato(bool writeNuevoPlato);      // Borrar información del plato actual (hasta último INICIO-PLATO)
-                                                    // writeNuevoPlato --> true: escribir de nuevo INICIO-PLATO     false: no escribirlo
+void    borrarLastPlato();
 
 void    leerLista();                                // Mostrar todos los elementos de la lista
 /*-----------------------------------------------------------------------------*/
@@ -40,27 +40,59 @@ void addLine(const String& line)
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Inicia un nuevo elemento (comida o plato).
- * @param cadInicio Cadena que indica el tipo de inicio ("INICIO-COMIDA" o "INICIO-PLATO").
+ * @brief Inicia una nueva comida.
  */
 /*-----------------------------------------------------------------------------*/
-void iniciarElemento(const String& cadInicio)
+void iniciarComida()
 {
-    if(cadInicio == "INICIO-COMIDA") Serial.println(F("\nIniciando comida..."));
-    else if(cadInicio == "INICIO-PLATO") Serial.println(F("\nIniciando plato..."));
-
-    // Añadir cadena a la lista
-    addLine(cadInicio);
+    // Comprobar si la lista está vacía para iniciar la comida. Si no lo está,
+    // significa que la comida ya ha comenzado, por lo que no hace falta escribirlo
+    // de nuevo.
+    // La lista estará vacía si se acaba de encender SM o si se acaba de guardar comida.
+    if (lines.empty()) {
+        Serial.println(F("\nIniciando comida..."));
+        // Añadir cadena a la lista
+        addLine("INICIO-COMIDA");
+    }
+    else{
+        Serial.println(F("\nLa COMIDA ya ha comenzado"));
+    }
 }
 
 
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Guarda un alimento con su peso correspondiente.
+ * @brief Inicia un nuevo plato.
  */
 /*-----------------------------------------------------------------------------*/
-void saveAlimento()
+void iniciarPlato()
+{   
+    // Comprobar si el último elemento no es "INICIO-PLATO"
+    if (lines.back() != "INICIO-PLATO") 
+    {
+        Serial.println(F("\nIniciando plato..."));
+
+        // Añadir cadena a la lista
+        addLine("INICIO-PLATO");
+    }
+    else
+    {
+        Serial.println(F("\nEl PLATO ya ha comenzado"));
+    }
+}
+
+
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Añade un alimento con su peso correspondiente.
+ */
+/*-----------------------------------------------------------------------------*/
+void addAlimento()
 {
     Serial.println(F("Guardando alimento y peso...\n"));
 
@@ -73,14 +105,12 @@ void saveAlimento()
 
 
 
-
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Borra la información del plato actual hasta el último "INICIO-PLATO" inclusive
- * @param writeNuevoPlato Indica si se debe escribir un nuevo "INICIO-PLATO" después de borrar.
  */
 /*-----------------------------------------------------------------------------*/
-void borrarLastPlato(bool writeNuevoPlato) 
+void borrarLastPlato() 
 {
 
   // Buscar el último INICIO-PLATO en la lista
@@ -91,30 +121,33 @@ void borrarLastPlato(bool writeNuevoPlato)
       lastPlatoIndex = i;
   }
 
-  if (lastPlatoIndex != -1) {
-
+  if (lastPlatoIndex != -1) 
     // Borrar todas las líneas desde el último INICIO-PLATO
     lines.erase(lines.begin() + lastPlatoIndex, lines.end());
-
-    // Crear nuevo plato con INICIO-PLATO para que pueda continuar añadiendo alimentos 
-    // sin tener que indicar explícitamente "añadir plato" tras borrar el contenido del actual.
-    // SmartCloth ya hace esto: tras borrar el plato, deja listo el objeto platoActual
-    // para continuar con la comida.
-
-    // En el caso en que se borre el plato pero no se continúe con la comida, sino que
-    // se guarde tal como está, antes de escribir FIN-COMIDA habría que comprobar
-    // si la última línea es INICIO-PLATO en lugar de ALIMENTO, lo que significaría
-    // que el último plato está vacío. Si esto ocurriera, habría que borrar esa línea
-    // escrita con INICIO-PLATO (usar misma función borrarLastPlato()) antes de escribir
-    // la línea de FIN-COMIDA para evitar enviar información vacía y no volverla a 
-    // escribir (writeNuevoPlato = false)
-
-    if (writeNuevoPlato) 
-      addLine("INICIO-PLATO");
-    
-  }
+  
 }
 
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Guardar comida con fecha y hora
+ */
+/*-----------------------------------------------------------------------------*/
+void saveComida()
+{
+    // No se comprueba si la comida está vacía (último escrito es INICIO-COMIDA),
+    // porque si lo estuviera, no se llegaría a hacer el guardado.
+
+    Serial.println(F("Finalizando y guardando comida...\n"));
+
+    char *today = rtc.getDateStr();
+    char *time = rtc.getTimeStr();
+
+    String cadFin = "FIN-COMIDA," + String(today) + "," + String(time); // FIN-COMIDA,<fecha>,<hora>
+
+    // Añadir cadena a la lista
+    addLine(cadFin);
+}
 
 
 

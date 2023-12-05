@@ -24,6 +24,7 @@
 #include "Buttons.h"
 
 #include "list_functions.h"
+#include "lista.h"
 
 
 /*-----------------------------------------------------------------------------
@@ -88,13 +89,16 @@ void setup()
     borrarFileESP32();
 
     // Iniciar comida
-    iniciarElemento("INICIO-COMIDA");
+    //iniciarComida();
+    listaComidaESP32.iniciarComida();
 
     // Iniciar plato
-    iniciarElemento("INICIO-PLATO"); 
+    //iniciarPlato();
+    //listaComidaESP32.iniciarPlato();
 
     // Mostrar lista
-    leerLista();
+    //leerLista();
+    listaComidaESP32.leerLista();
 
 }
 
@@ -131,9 +135,11 @@ void doCosasMain(int buttonM)
 {
     switch (buttonM) {
         case 1: // Crudo --> dar por terminado pesado aleatorio --> guardar alimento y peso
-            saveAlimento();
+            //addAlimento();
+            listaComidaESP32.addAlimento(grupoAlimento, pesoAlimento);
             Serial.println("\nTerminando pesado de alimento...\n");
-            leerLista();
+            //leerLista();
+            listaComidaESP32.leerLista();
             break;
 
         case 2: // Cocinado --> báscula peso aleatorio
@@ -143,19 +149,25 @@ void doCosasMain(int buttonM)
 
         case 3: // añadir
             Serial.println("\nAÑADIR");
-            iniciarElemento("INICIO-PLATO"); 
-            leerLista();
+            //iniciarPlato();
+            //leerLista();
+            listaComidaESP32.iniciarPlato();
+            listaComidaESP32.leerLista();
             break;
 
         case 4: // borrar
             Serial.println("\nBORRAR");
-            borrarLastPlato(true); // Borrar último INICIO-PLATO y escribirlo de nuevo (true)
+            /*borrarLastPlato(); // Borrar último INICIO-PLATO y escribirlo de nuevo (true)
             leerLista();
+            iniciarPlato();
+            leerLista();*/
+            listaComidaESP32.borrarLastPlato();
+            listaComidaESP32.leerLista();
             break;
 
         case 5: // guardar
             Serial.println("\nGUARDAR");
-            saveComida(); // Escribe FIN-COMIDA en fileESP32. Antes borra INICIO-PLATO si es lo último escrito
+            saveComidaSD(); // Escribe FIN-COMIDA en fileESP32. Antes borra INICIO-PLATO si es lo último escrito
             readFileESP32();
             break;
     }

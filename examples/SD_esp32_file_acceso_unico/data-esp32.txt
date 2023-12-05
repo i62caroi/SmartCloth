@@ -6,3 +6,27 @@ ALIMENTO,<grupo>,<peso>
 INICIO-PLATO
 ALIMENTO,<grupo>,<peso>
 FIN-COMIDA,<fecha>,<hora>
+
+
+
+
+STATE_Init:
+    - Si la lista no está vacía, escribe "INICIO-COMIDA". Solo estará vacía al inicio y tras guardar comida.
+    - Si se ha retirado plato de repente, se borra el último plato (como en STATE_deleted)
+
+STATE_Plato:
+    - Si lo último escrito no es "INICIO-PLATO", se escribe. Se comprueba para no volver a escribirlo mientras se coloca el plato.
+
+STATE_groupA/B:
+    - Escribir "ALIMENTO,<grupoAnterior>,<pesoBascula>" al incluir alimento anterior en plato
+
+STATE_added:
+    - Al actualizar plato actual previo al nuevo plato, escribir "ALIMENTO,<grupoEscogido>,<pesoBascula>"
+
+STATE_deleted:
+    - Borra todas las lineas finales de la lista hasta la última aparición de "INICIO-PLATO", inclusive.
+
+STATE_saved:
+    - Al actualizar plato actual previo a guardar comida, escribir "ALIMENTO,<grupoEscogido>,<pesoBascula>"
+    - Si se llega a guardar porque la comida no está vacía, escribir "FIN-COMIDA,<fecha>,<hora>"" en la lista, 
+      copiar la lista en el fichero y limpiar la lista.

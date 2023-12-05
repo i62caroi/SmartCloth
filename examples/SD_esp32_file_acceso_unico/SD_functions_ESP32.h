@@ -39,7 +39,8 @@
 #include <SD.h>
 #include "RTC.h"
 #include "functions.h"
-#include "list_functions.h"
+//#include "list_functions.h"
+#include "lista.h"
 
 
 #define SD_CARD_SCS  4 ///< Define el pin CS para la tarjeta SD
@@ -56,7 +57,7 @@ char fileESP32[30] = "data/data-ESP.txt";
 -----------------------------------------------------------------------------*/
 bool    setupSDcard();                   // Inicializar tarjeta SD
 
-void    saveComida();                           // Escribir FIN-COMIDA,<fecha>,<hora>
+void    saveComidaSD();                           // Escribir FIN-COMIDA,<fecha>,<hora>
 
 void    readFileESP32();
 void    borrarFileESP32();
@@ -92,46 +93,30 @@ bool setupSDcard(){
  * @brief Escribe "FIN-COMIDA" junto con la fecha y hora actuales.
  */
 /*-----------------------------------------------------------------------------*/
-void saveComida()
+void saveComidaSD()
 {
-    Serial.println(F("Finalizando y guardando comida...\n"));
+    // FIN-COMIDA,<fecha>,<hora> en lista
+    //saveComida();
+    listaComidaESP32.saveComida();
 
-    // ----- 1. COMPROBAR ULTIMO INICIO-PLATO ------------------------
-    // Comprobar si la última línea es INICIO-PLATO y borrarla si es así
-    if (!lines.empty() && lines.back() == "INICIO-PLATO") {
-        lines.pop_back();
-    }
-    // ---------------------------------------------------------------
-
-
-    // ----- 2. FIN-COMIDA -------------------------------------------
-    char *today = rtc.getDateStr();
-    char *time = rtc.getTimeStr();
-
-    String cadFin = "FIN-COMIDA," + String(today) + "," + String(time); // FIN-COMIDA,<fecha>,<hora>
-
-    // Añadir cadena a la lista
-    addLine(cadFin);
-    // ---------------------------------------------------------------
-
-
-    // ----- 3. GUARDAR EN FICHERO -----------------------------------
+    // Guardar lista en fichero
     File myFile = SD.open(fileESP32, FILE_WRITE);
 
     if (myFile) {
         // Escribe cada línea en el archivo
-        for (int i = 0; i < lines.size(); i++) {
-            myFile.println(lines[i]);
+        for (int i = 0; i < listaComidaESP32.getListSize(); i++) {
+            myFile.println(listaComidaESP32.getItem(i));
         }
+
         // Cierra el archivo
         myFile.close();
+
         // Limpia el vector para la próxima comida
-        lines.clear(); 
+        listaComidaESP32.clearList();
     } else {
         // Si el archivo no se abre, imprime un error:
         Serial.println("error opening comida.txt");
     }
-    // ---------------------------------------------------------------
 }
 
 
