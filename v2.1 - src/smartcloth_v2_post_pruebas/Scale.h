@@ -42,8 +42,15 @@ const int LOADCELL_SCK_PIN = 2;
 
 bool      scaleEventOccurred = false;
 bool      tarado = false;
-float     pesoARetirar = 0.0;         // Peso que se debe retirar para liberar la báscula (recipiente + alimentos)
-float     pesoBascula = 0.0;          // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
+
+// ------ VARIABLES DE PESO ------------------------------------------------------------
+float     pesoARetirar      =   0.0;    // Peso que se debe retirar para liberar la báscula (recipiente + alimentos)
+float     pesoBascula       =   0.0;    // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
+float     pesoRecipiente    =   0.0;    // Peso únicamente del recipiente
+float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  alimentos)
+float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
+// ------ FIN VARIABLES DE PESO --------------------------------------------------------
+
 
 #include "State_Machine.h" // Debajo de las variables para que estén disponibles en su ámbito
 
@@ -55,6 +62,7 @@ float     pesoBascula = 0.0;          // Peso utilizado en lugar de 'weight' par
 void    setupScale();
 float   weighScale();
 void    tareScale();
+void    reiniciarPesos();
 void    checkBascula();
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
@@ -89,7 +97,7 @@ float weighScale(){
 
 /*-----------------------------------------------------------------------------*/
 /**
- * \brief Realiza la tara de la báscula y actualiza el peso base.
+ * @brief Realiza la tara de la báscula y actualiza el peso base.
  */
  /*-----------------------------------------------------------------------------*/
 void  tareScale(){ 
@@ -98,6 +106,20 @@ void  tareScale(){
     if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
     tarado = true;
 };
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Reinicia los pesos de recipiente, plato y alimento.
+ */
+ /*-----------------------------------------------------------------------------*/
+void reiniciarPesos(){
+    pesoRecipiente = 0.0;           // Se reinicia 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
+    pesoPlato = 0.0;                // Se reinicia 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
+    pesoLastAlimento = 0.0;         // Se reinicia 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
+                                    // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
+}
 
 
 

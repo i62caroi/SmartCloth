@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 133   // 7 SON DE BORRAR CSV EN PRUEBAS
+#define RULES 134   // 7 SON DE BORRAR CSV EN PRUEBAS
 
 
 #include "SD_functions.h"
@@ -90,7 +90,10 @@
 
 
 
+// Para usar las funciones definidas en otros ficheros, se deben declarar aquí también,
+// no basta con incluir esos otros ficheros, por cuestión de inclusiones múltiples.
 void    tareScale();
+void    reiniciarPesos();
 void    checkAllButtons(); 
 bool    buttonInterruptOccurred(); 
 bool    hasScaleEventOccurred(); 
@@ -214,6 +217,7 @@ typedef struct{
  */
 static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         {STATE_Init,STATE_Init,TARAR},                 // Tara inicial
+                                        {STATE_Init,STATE_Init,DECREMENTO},            // Por si se inicia SM con un recipiente ya puesto y luego se retira
                                         {STATE_Init,STATE_Plato,INCREMENTO},           // Colocar recipiente
                                         {STATE_Init,STATE_save_check,GUARDAR},         // Guardar comida directamente (comidaActual no está vacía)
                                         {STATE_Init,STATE_ERROR,ERROR},                // Acción incorrecta
@@ -420,8 +424,9 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
 state_t state_actual;          // Estado actual
 state_t state_new;             // Nuevo estado al que se va a pasar
 state_t state_prev;            // Estado anterior
-state_t lastValidState;         // Último estado válido (Init, Plato, groupA, groupB, raw, cooked, weighted)
+state_t lastValidState;        // Último estado válido (Init, Plato, groupA, groupB, raw, cooked, weighted)
 // ------ FIN VARIABLES DE ESTADOS ----------------------------------------------------
+
 
 
 // ---- VARIABLES DE EVENTOS ----------------------------------------------------------
@@ -442,6 +447,8 @@ bool    keepErrorScreen         = false;    // Mantener pantalla de error cometi
                                             // En este caso no se retira la pantalla tras 3 segundos, sino que se mantiene hasta que
                                             // se retire el plato para comenzar de nuevo.
 
+bool    showingTemporalScreen   = false;    // Flag para saber que se está mostrando una pantalla temporal o auxiliar
+
 bool    flagComidaSaved         = false;    // Flag para saber que se ha guardado la comida
 bool    flagFicheroCSVBorrado   = false;    // Flag para saber que se ha borrado el fichero csv
 bool    flagRecipienteRetirado  = false;    // Flag para saber que se ha retirado el plato completo
@@ -460,17 +467,6 @@ typedef enum {
 
 procesado_t procesamiento;
 // ------ FIN PROCESAMIENTO ------------------------------------------------------------
-
-
-// ------ VARIABLES DE PESO ------------------------------------------------------------
-float     pesoRecipiente    =   0.0; 
-float     pesoPlato         =   0.0;
-float     pesoLastAlimento  =   0.0;
-// ------ FIN VARIABLES DE PESO --------------------------------------------------------
-
-
-bool      showingTemporalScreen = false; // Flag para saber que se está mostrando una pantalla temporal o auxiliar
-
 
 
 
@@ -665,7 +661,21 @@ void actStateInit(){
 
     
     if(!doneState){
-        if(state_prev != STATE_Init){ 
+
+        // ----- ENCENDER SM CON RECIPIENTE EN BÁSCULA --------------------------------------
+        if ((state_prev == STATE_Init) && (lastEvent == DECREMENTO)){   // Es posible que se encienda SM con un recipiente ya puesto, por lo que el sistema establecería ese peso
+                                                                        // como peso 0 al tarar. Además, se pediría colocar el recipiente y la respuesta más común del usuario
+                                                                        // sería retirar el recipiente y volverlo a poner. Por tanto, se ha incluido una regla para volver a 
+                                                                        // STATE_Init si se decrementa el peso.
+                                                                        // Si esto ocurre, se debe volver a tarar la báscula y reiniciar las variables de peso referentes al 
+                                                                        // recipiente, al plato (recipiente + alimentos) y al último alimento.
+
+            tareScale();        // Tarar báscula
+            reiniciarPesos();   // Poner a 0 los valores de 'pesoRecipiente'. 'pesoPlato' y 'pesoLastAlimento'.
+        }
+        // ----------------------------------------------------------------------------------
+
+        else if(state_prev != STATE_Init){ 
             Serial.println(F("\nSTATE_Init...")); 
 
             // ----- INICIAR COMIDA --------------------------------------
@@ -684,12 +694,8 @@ void actStateInit(){
             // -----------------------------------------------------------
 
 
-            tareScale();
-            
-            pesoRecipiente = 0.0;           // Se inicializa 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
-            pesoPlato = 0.0;                // Se inicializa 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
-            pesoLastAlimento = 0.0;         // Se inicializa 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
-                                            // se sumará a 'pesoPlato' y luego a 'pesoRecipiente' para saber el 'peroARetirar'.
+            tareScale();        // Tarar báscula
+            reiniciarPesos();   // Poner a 0 los valores de 'pesoRecipiente'. 'pesoPlato' y 'pesoLastAlimento'.
 
             keepErrorScreen = false;
 
@@ -729,7 +735,7 @@ void actStateInit(){
             }
             else{ 
                 showDashboardStyle1(MSG_SIN_RECIPIENTE); // Mostrar dashboard al inicio con mensaje de que falta recipiente
-                showing_dash = true;                // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+                showing_dash = true;                     // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
                 showing_pedir_recipiente = false;   
                 showing_recipiente_retirado = false;
             }
@@ -739,7 +745,7 @@ void actStateInit(){
             
         }
 
-        previousTime = millis();                              // Inicializar 'previousTime' para la alternancia de pantallas
+        previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
 
         doneState = true;                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                             // cada vez que se entre a esta función debido al loop de Arduino.

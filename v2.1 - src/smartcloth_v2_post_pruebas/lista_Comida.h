@@ -88,8 +88,8 @@ class Lista
         inline void addLineToList(const String& line) { _lines.push_back(line); };
 
         /**
-         * @brief Borra elementos de la lista desde el índice 'fromIndex'
-         * @param fromIndex Índice de la lista desde donde borrar elementos hasta el final de la lista
+         * @brief Borra elementos de la lista desde el índice 'fromIndex' hasta el final de la lista
+         * @param fromIndex Índice de la lista desde donde borrar elementos
         */
         inline void deleteItemsFrom(int& fromIndex) { _lines.erase(_lines.begin() + fromIndex, _lines.end()); };
 

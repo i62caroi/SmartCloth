@@ -337,9 +337,9 @@ bool borrarFicheroESP32(){
 
     // -------- BORRAR FICHERO ESP32 ------------------------
     Serial.println("Borrando fichero ESP32...");
-    SD.remove(fileCSV);
+    SD.remove(fileESP32);
 
-    if (!SD.exists(fileCSV)) {
+    if (!SD.exists(fileESP32)) {
         Serial.println("Fichero ESP32 borrado");
         return true;
     }
