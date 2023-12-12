@@ -1,0 +1,71 @@
+{
+    "comidas": [
+      {
+        "platos": [
+          {
+            "alimentos": [
+              {
+                "grupo": "15",
+                "peso": "53.50"
+              },
+              {
+                "grupo": "9",
+                "peso": "53.50"
+              }
+            ]
+          }
+        ],
+        "fecha": "05.12.2023",
+        "hora": "17:55:36"
+      },
+      {
+        "platos": [
+          {
+            "alimentos": [
+              {
+                "grupo": "15",
+                "peso": "24.40"
+              }
+            ]
+          }
+        ],
+        "fecha": "05.12.2023",
+        "hora": "18:25:25"
+      },
+      {
+        "platos": [
+          {
+            "alimentos": [
+              {
+                "grupo": "15",
+                "peso": "53.50"
+              },
+              {
+                "grupo": "9",
+                "peso": "53.50"
+              }
+            ]
+          },
+          {
+            "alimentos": [
+              {
+                "grupo": "3",
+                "peso": "32.07"
+              },
+              {
+                "grupo": "27",
+                "peso": "46.65"
+              },
+              {
+                "grupo": "10",
+                "peso": "16.23"
+              }
+            ]
+          }
+        ],
+        "fecha": "12.12.2023",
+        "hora": "13:39:36"
+      }
+    ],
+    "api_key": "apiKeySmartCloth"
+}

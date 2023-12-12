@@ -27,7 +27,8 @@ $api_key_value = "apiKeySmartCloth";
 $api_key= $carb = $carb_R = $lip = $lip_R = $prot = $prot_R = $kcal = $peso = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $api_key = test_input($_POST["api_key"]);
+    //$api_key = test_input($_POST["api_key"]); // api_key en el body (no seguro)
+    $api_key = $_SERVER['HTTP_API_KEY']; // api_key en el header (más seguro)
     if($api_key == $api_key_value) {
 
         // Formatear los valores con dos decimales para evitar que se trunquen si terminan en .0 --> no funciona
