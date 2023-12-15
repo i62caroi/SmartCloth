@@ -15,8 +15,11 @@
 
 /*
    -------- MENSAJES ARDUINO -> ESP32 --------------
+
+  1. Conectarse a Internet
+      "CONNECT"
   
-  1. Guardar info en base de datos:
+  2. Guardar info en base de datos:
       "SAVE:&carb=X&carb_R=X&lip=X&lip_R=X&prot=X&prot_R=X&kcal=X&peso=X"
       Esta opción ya está lista para la petición POST
 
@@ -25,7 +28,7 @@
           de macronutrientes en el servidor al hacer GET. De esta forma, se podría llevar una trazabilidad de
           lo comido exactamente (a nivel grupo).
 
-  2. Activar cámara y leer código de barras:
+  3. Activar cámara y leer código de barras:
       "GET-BARCODE"
 
   
@@ -97,7 +100,7 @@ void setup() {
     while (!SerialESP32Due);
 
     // Intentar conectarse a la red WiFi
-    connectToWiFi();
+    //connectToWiFi();
 
     Serial.println("\n");
   
@@ -155,7 +158,7 @@ Message getQuery(String msg){
     // Objeto 'Message'
     Message myMessage;
     
-    // Busca el carácter '-' en el mensaje
+    // Busca el carácter ':' en el mensaje
     int delimiterIndex = msg.indexOf(':');
     
     // Si existe el delimitador en la cadena
@@ -167,7 +170,7 @@ Message getQuery(String msg){
         Serial.print("Datos recibidos: "); Serial.println(myMessage.data);
         Serial.println();
     }
-    // Si no hay ':' puede ser GET-BARCODE, así que se guarda como comando (command) 
+    // Si no hay ':' puede ser GET-BARCODE o CONNECt, así que se guarda como comando (command) 
     // y se deja en blanco los datos adjuntos (data)
     else { 
         myMessage.command = msg;
@@ -236,6 +239,14 @@ void enviarPeticion(String comidaValues){
 
     // Specify content-type header --> Formulario
     http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    /* // Añadir api_key al header en lugar del body
+    // Add api_key to the headers
+    http.addHeader("api_key", apiKeyValue);
+
+    // Prepare your HTTP POST request data
+    String httpRequestData = comidaValues + "";
+  */
 
 
     // ------------ PETICION HTTP POST ------------------------

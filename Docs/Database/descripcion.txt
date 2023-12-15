@@ -1,0 +1,111 @@
+Mi profesor me dio un esquema entidad-relación que se puede resumir en esto:
+
+
+Entidades y sus atributos:
+
+COMIDA:
+- id_comida
+- fecha
+- hora
+
+PLATO:
+- id_plato
+
+ALIMENTO:
+- id_alimento
+- peso
+
+TIPOALIMENTO:
+- id_tipo
+
+GRUPOALIMENTO:
+- id_grupo
+
+BARCODE:
+- EAN
+
+VALORESNUTRICIONALES:
+- kcal_g
+- prot_g
+- lip_g
+- carb_g
+
+USUARIO:
+- dni
+- nombre
+
+MANTEL:
+- id_mantel
+
+MEDICION:
+- id_medicion
+
+INSULINA:
+- insulina
+
+INDICEGLUCEMICO:
+- indice_glucemico
+
+
+
+Relaciones:
+
+- ALIMENTO es un par peso + TIPOALIMENTO
+- PLATO es la agregación de 1 o varios ALIMENTO 
+- COMIDA es la agregación de 1 o varios PLATO 
+- Cada ALIMENTO pertenecerá a un TIPOALIMENTO
+- Cada TIPOALIMENTO tendrá unos VALORESNUTRICIONALES
+- Cada TIPOALIMENTO podrá ser un GRUPOALIMENTO o BARCODE
+
+- Cada USUARIO tiene un MANTEL durante un periodo de tiempo y un MANTEL solo es
+de un USUARIO durante un periodo de tiempo.
+- Los USUARIO pueden tener MEDICION en fecha y hora, que podrá ser INSULINA o
+INDICEGLUCEMICO.
+
+
+Cardinalidades:
+- COMIDA (1,1) <-> (*,n) PLATO
+- PLATO (1,1) <-> (*,n) ALIMENTO
+- ALIMENTO (*,n) <-> (1,1) TIPOALIMENTO
+- TIPOALIMENTO (1,1) <-> (1,1) VALORESNUTRICIONALES
+- TIPOALIMENTO (1,1) <-> (0,1) GRUPOALIMENTO
+- TIPOALIMENTO (1,1) <-> (0,1) BARCODE
+
+- ALIMENTO (*,n) <-> (1,1) USUARIO
+- USUARIO (1,1) <-> (1,1) MANTEL
+- USUARIO (1,1) <-> (*,n) MEDICION
+- MEDICION (1,1) <-> (0/1,1) INSULINA
+- MEDICION (1,1) <-> (0/1,1) INDICEGLUCEMICO
+
+
+¿Cómo se traduciría este esquema entidad-relación a un esquema relacional?
+
+
+
+Yo hice esta transformación a esquema relacional, ¿es correcta?:
+
+COMIDA(id_comida, fecha, hora) donde id_comida es Primary Key (PK)
+
+PLATO(id_plato, id_comida) donde id_plato es PK y id_comida es Foreign Key (FK) al id_comida de la tabla COMIDA
+
+ALIMENTO(id_alimento, peso, id_plato, id_tipo) donde id_alimento es PK, id_plato es FK al id_plato de la tabla PLATO y id_tipo es FK al id_tipo de la tabla TIPOALIMENTO
+
+TIPOALIMENTO(id_tipo, tipo) donde id_tipo es PK y 'tipo' es el atributo clasificador de la jerarquía entre GRUPOALIMENTO y BARCODE
+
+GRUPOALIMENTO(id_tipo, grupo) donde id_tipo es la PK heredada por la debilidad por identificacion respecto a TIPOALIMENTO producida al eliminar la jerarquía en la transformación a relacional y 'grupo' es el grupo de alimentos
+
+BARCODE(id_tipo, EAN) donde id_tipo es la PK heredada por la debilidad por identificación respecto a TIPOALIMENTO producida al eliminar la jerarquía en la transformación a relacional y 'EAN' es el código de barras
+
+VALORESNUTRICIONALES(id_tipo, tipo, kcal_g, prot_g, lip_g, carb_g) donde id_tipo es la PK heredada por la debilidad por identificación respecto a TIPOALIMENTO
+
+
+USUARIO(dni, nombre, id_mantel, inicio, fin) donde dni es PK, id_mantel es clave alterna y FK de id_mantel es MANTEL, 'inicio' es el atributo de la relación entre USUARIO y MANTEL referente a la fecha desde que el usuario tiene ese mantel y 'fin' es el atributo de la relación entre USUARIO y MANTEL referente a la fecha hasta la que el usuario tiene ese mantel
+
+MANTEL(id_mantel, dni) donde id_mantel es PK y 'dni' es clave alterna y FK de 'dni' en USUARIO
+
+MEDICION (id_medicion, dni, fecha, hora, tipo) donde id_medicion es PK, 'dni' es FK respecto a 'dni' en USUARIO, 'fecha' es el atributo de la relacion entre USUARIO y MEDICION referente a la fecha en que el usuario hace la medición y 'hora' es el atributo de la relación entre USUARIO y MEDICION referente a la hora en la que el usuario hace la medición
+
+INSULINA (id_medicion, insulina) donde id_medicion es la PK heredada por la debilidad por identificacion respecto a MEDICION producida al eliminar la jerarquía en la transformación a relacional
+
+INDICEGLUCEMICO (id_medicion, indice_glucemico) donde id_medicion es la PK heredada por la debilidad por identificacion respecto a MEDICION producida al eliminar la jerarquía en la transformación a relacional
+

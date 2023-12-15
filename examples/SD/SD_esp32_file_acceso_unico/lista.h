@@ -94,6 +94,7 @@ void Lista::iniciarComida()
 
     if (isListEmpty()) {
         Serial.println(F("\nIniciando comida..."));
+        
         // Añadir cadena a la lista
         addLineToList("INICIO-COMIDA");
     }
@@ -114,6 +115,7 @@ void Lista::iniciarPlato()
     // Comprobar si el último elemento no es "INICIO-PLATO"   
     if (getLastItem() != "INICIO-PLATO") {
         Serial.println(F("\nIniciando plato..."));
+        
         // Añadir cadena a la lista
         addLineToList("INICIO-PLATO"); 
     }
@@ -165,7 +167,8 @@ void Lista::borrarLastPlato()
 {
     // Buscar el último INICIO-PLATO en la lista
     int lastPlatoIndex = -1;
-    for (int i = 0; i < getListSize(); i++) {
+    for (int i = 0; i < getListSize(); i++) 
+    {
         if (getItem(i) == "INICIO-PLATO"){
             lastPlatoIndex = i;
         }

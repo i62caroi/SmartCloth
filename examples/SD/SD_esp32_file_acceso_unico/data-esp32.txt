@@ -1,3 +1,9 @@
+Conforme se elabora la comida, se van añadiendo cadenas a un objeto Lista (se ha creado una clase Lista) que constituye una lista
+de las lineas que habrá que escribir en el fichero TXT relativas a la comida al guardar la comida. El contenido de este fichero
+es el que se pasará al ESP32 cuando haya WiFi para que lo convierta en un JSON y suba la información a la base de datos.
+
+La información de cada comida se escribe de esta forma:
+
 INICIO-COMIDA
 INICIO-PLATO
 ALIMENTO,<grupo>,<peso>
@@ -8,7 +14,7 @@ ALIMENTO,<grupo>,<peso>
 FIN-COMIDA,<fecha>,<hora>
 
 
-
+Esta info se va escribiendo al navegar por la Máquina de Estados:
 
 STATE_Init:
     - Si la lista no está vacía, escribe "INICIO-COMIDA". Solo estará vacía al inicio y tras guardar comida.
