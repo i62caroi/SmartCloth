@@ -1,0 +1,64 @@
+{
+  "comidas": [
+    {
+      "fecha": "<fecha>",
+      "hora": "<hora>",
+      "platos": [
+        {
+          "alimentos": [
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            },
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            },
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            }
+          ]
+        },
+        {
+          "alimentos": [
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "fecha": "<fecha>",
+      "hora": "<hora>",
+      "platos": [
+        {
+          "alimentos": [
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            },
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            }
+          ]
+        },
+        {
+          "alimentos": [
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            },
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

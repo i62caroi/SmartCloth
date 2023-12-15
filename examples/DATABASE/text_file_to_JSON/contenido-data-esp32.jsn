@@ -1,0 +1,37 @@
+{
+    "comidas": [
+      {
+        "platos": [
+          {
+            "alimentos": [
+              {
+                "grupo": "15",
+                "peso": "53.50"
+              },
+              {
+                "grupo": "9",
+                "peso": "53.50"
+              }
+            ]
+          }
+        ],
+        "fecha": "05.12.2023",
+        "hora": "17:55:36"
+      },
+      {
+        "platos": [
+          {
+            "alimentos": [
+              {
+                "grupo": "15",
+                "peso": "24.40"
+              }
+            ]
+          }
+        ],
+        "fecha": "05.12.2023",
+        "hora": "18:25:25"
+      }
+    ],
+    "api_key": "apiKeySmartCloth"
+}
