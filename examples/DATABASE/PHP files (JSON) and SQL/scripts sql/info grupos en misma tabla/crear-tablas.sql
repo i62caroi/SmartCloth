@@ -51,13 +51,14 @@
     -------- ESQUEMA RELACIONAL -------------------------------------------------------
     - USUARIO(dni, nombre) 
 
-    - MANTEL(id_mantel, activo)
+    - MANTEL(id_mantel, MAC, activo)
 
     - USUARIO-MANTEL(dni, id_mantel, fecha_inicio, fecha_fin) 
         USUARIO.dni 	 --> USUARIO-MANTEL.dni
-	    MANTEL.id_mantel --> USUARIO-MANTEL.id_mante
+	    MANTEL.id_mantel --> USUARIO-MANTEL.id_mantel
 
     - MEDICION (id_medicion, dni, fecha_hora)
+        USUARIO.dni 	 --> MEDICION.dni
 
     - INSULINA (id_medicion, valor)
         MEDICION.id_medicion --> INSULINA.id_medicion
@@ -75,7 +76,6 @@
     
     - GRUPO_ALIMENTO(grupo, id_tipo, nombre, ejemplos)
         TIPO_ALIMENTO.id_tipo --> GRUPO_ALIMENTO.id_tipo
-        GRUPO_ALIMENTO_BASE.id_base --> GRUPO_ALIMENTO.id_base
     
     - TIPO_ALIMENTO(id_tipo, kcal_g, prot_g, lip_g, carb_g) 
     
