@@ -1,12 +1,13 @@
 /*
 
+
     -------- ESQUEMA ENTIDAD - RELACIÓN -----------------------------------------------
         ----- ENTIDADES Y ATRIBUTOS -------------
         - USUARIO: dni, nombre
         - MANTEL: id_mantel, activo
         - MEDICION: id_medicion, fecha_hora
-        - INSULINA: insulina
-        - INDICE_GLUCEMICO: indice_glucemico
+        - INSULINA: valor
+        - INDICE_GLUCEMICO: valor
         - COMIDA: id_comida, fecha, hora
         - PLATO: id_plato
         - ALIMENTO: id_alimento, peso
@@ -49,70 +50,79 @@
 
     -------- ESQUEMA RELACIONAL -------------------------------------------------------
     - USUARIO(dni, nombre) 
+
     - MANTEL(id_mantel, activo)
+
     - USUARIO-MANTEL(dni, id_mantel, fecha_inicio, fecha_fin) 
         USUARIO.dni 	 --> USUARIO-MANTEL.dni
-	    MANTEL.id_mantel --> USUARIO-MANTEL.id_mantel
-    - MEDICION (id_medicion, dni, fecha_hora, insulina, indice_glucemico) 
+	    MANTEL.id_mantel --> USUARIO-MANTEL.id_mante
+
+    - MEDICION (id_medicion, dni, fecha_hora)
+
+    - INSULINA (id_medicion, valor)
+        MEDICION.id_medicion --> INSULINA.id_medicion
+    
+    - IND_GLUCEMICO (id_medicion, valor)
+        MEDICION.id_medicion --> IND_GLUCEMICO.id_medicion
+    
     - COMIDA(id_comida, fecha, hora) 
+    
     - PLATO(id_plato, id_comida) 
         COMIDA.id_comida --> PLATO.id_comida
-    - BARCODE(EAN) 
-    - GRUPO_ALIMENTO_BASE(id_base, nombre_grupo, ejemplos_grupo)
-    - GRUPO_ALIMENTO(id_grupo, id_base)
+    
+    - BARCODE(EAN, id_tipo) 
+        TIPO_ALIMENTO.id_tipo --> BARCODE.id_tipo
+    
+    - GRUPO_ALIMENTO(grupo, id_tipo, nombre, ejemplos)
+        TIPO_ALIMENTO.id_tipo --> GRUPO_ALIMENTO.id_tipo
         GRUPO_ALIMENTO_BASE.id_base --> GRUPO_ALIMENTO.id_base
-    - TIPO_ALIMENTO(id_tipo, id_grupo, EAN) 
-        GRUPO_ALIMENTO.id_grupo --> TIPO_ALIMENTO.id_grupo
-	    BARCODE.EAN 			--> TIPO_ALIMENTO.EAN
+    
+    - TIPO_ALIMENTO(id_tipo, kcal_g, prot_g, lip_g, carb_g) 
+    
     - ALIMENTO(id_alimento, peso, id_plato, id_tipo, dni) 
         PLATO.id_plato 		  --> ALIMENTO.id_plato
 	    TIPO_ALIMENTO.id_tipo --> ALIMENTO.id_tipo
 	    USUARIO.dni 		  --> ALIMENTO.dni
-    - VALORES_NUTRICIONALES(id_tipo, kcal_g, prot_g, lip_g, carb_g) 
-	    TIPO_ALIMENTO.id_tipo --> VALORES_NUTRICIONALES.id_tipo
+
+    En lugar de usar 'id_tipo' como PK en GrupoAlimento y Barcode, se usa 'grupo' y 'EAN',
+    que son únicos y no nulos, para que el esquema sea más intuitivo y fácil de usar. 
     -----------------------------------------------------------------------------------
 
 
     RESUMEN DE LAS TABLAS:
 
-    - `Usuario`: Almacena información sobre los usuarios.
-    - `Mantel`: Almacena información sobre los manteles.
+    - `Usuario`: Almacena información sobre los usuarios, incluyendo su DNI (que es la clave primaria) y su nombre.
+    - `Mantel`: Almacena información sobre los manteles, incluyendo un ID autoincrementado, una dirección MAC y un campo booleano para indicar si el mantel está activo.
     - `UsuarioMantel`: Almacena la relación entre los usuarios y los manteles, permitiendo el seguimiento de la propiedad del mantel a lo largo del tiempo.
-    - `Medicion`: Almacena las mediciones de insulina e índice glucémico de los usuarios.
-    - `Comida`: Almacena información sobre las comidas.
-    - `Plato`: Almacena la relación entre los platos y las comidas.
-    - 'GrupoAlimentoBase': almacena información base general (nombre y ejemplos) de los grupos de alimentos.
-    - `GrupoAlimento`: Almacena información (id y enlace a info base) sobre los diferentes grupos de alimentos.
-    - `Barcode`: Almacena los códigos de barras de los alimentos escaneados.
-    - `TipoAlimento`: Almacena información sobre los diferentes tipos de alimentos, que pueden ser identificados por un grupo de alimentos o un código de barras.
+    - `Medicion`: Almacena mediciones asociadas a cada usuario en fechas concretas.
+    - `Insulina`: Almacena valores de insulina relacionados con mediciones concretas.
+    - 'IndGlucemico': Almacena valores de índice glucémico relacionados con mediciones concretas.
+    - `Comida`: Almacena información sobre las comidas, incluyendo la fecha y la hora.
+    - `Plato`: Almacena información sobre los platos, que están asociados a una comida.
+    - `TipoAlimento`: Almacena información sobre los tipos de alimentos, incluyendo su contenido nutricional, que pueden estar asociados a un grupo de alimentos o a un barcode.
+    - `GrupoAlimento`: Almacena información sobre los diferentes grupos de alimentos, que están asociados a un tipo de alimento.
+    - `Barcode`: Almacena los códigos de barras de los alimentos escaneados, que están asociados a un tipo de alimento
     - `Alimento`: Almacena información sobre los alimentos, que están asociados con un plato, un tipo de alimento y un usuario.
-    - `ValoresNutricionales`: Almacena los valores nutricionales de los diferentes tipos de alimentos.
+      
+    Cada tabla tiene claves foráneas que hacen referencia a otras tablas, lo que permite la creación de relaciones entre las diferentes entidades de la base de datos.
 
-    ¿¿NO SERÍA MÁS LÓGICO RELACIONAR EL USUARIO CON LA COMIDA EN LUGAR DEL ALIMENTO??
-        |
-        --> NO
-            |
-            --> Ya entiendo por qué se relaciona USUARIO con ALIMENTO en lugar de COMIDA: mi idea era que se podría relacionar USUARIO directamente con COMIDA 
-                teniendo en cuenta que una comida consta de uno o varios platos y que cada plato incluye uno o varios alimentos. Sin embargo, a nivel relacional 
-                es en la tabla ALIMENTO donde se tiene una referencia (FK) al plato en el que se encuentra ese alimento y en la tabla PLATO se tiene una referencia 
-                a la comida de la que forma parte. 
-                Por eso se relaciona USUARIO con ALIMENTO y no con COMIDA, porque si se relacionara con COMIDA, se podría saber cuándo ha comido un usuario, 
-                pero no qué alimentos ha consumido, ya que COMIDA no tiene referencias a las otras entidades.
-                
+
+
+
 */
 
 
 -- ---------- BORRAR TABLAS ANTES DE CREARLAS -------------------------
 -- Primero se borran las tablas que no tienen FK que hagan referencia a ellas
 -- y luego se borran las demás. Se suele empezar por las últimas creadas
-DROP TABLE IF EXISTS ValoresNutricionales;
 DROP TABLE IF EXISTS Alimento;
-DROP TABLE IF EXISTS TipoAlimento;
 DROP TABLE IF EXISTS Barcode;
 DROP TABLE IF EXISTS GrupoAlimento;
-DROP TABLE IF EXISTS GrupoAlimentoBase;
+DROP TABLE IF EXISTS TipoAlimento;
 DROP TABLE IF EXISTS Plato;
 DROP TABLE IF EXISTS Comida;
+DROP TABLE IF EXISTS IndiceGlucemico;
+DROP TABLE IF EXISTS Insulina;
 DROP TABLE IF EXISTS Medicion;
 DROP TABLE IF EXISTS UsuarioMantel;
 DROP TABLE IF EXISTS Mantel;
@@ -131,7 +141,8 @@ CREATE TABLE Usuario (
 
 -- ---------- MANTEL --------------------------------------------------
 CREATE TABLE Mantel (
-    id_mantel INT AUTO_INCREMENT PRIMARY KEY
+    id_mantel INT AUTO_INCREMENT PRIMARY KEY,
+    MAC VARCHAR(12),
     activo BOOLEAN NOT NULL DEFAULT FALSE
 );
 -- --------------------------------------------------------------------
@@ -152,8 +163,8 @@ CREATE TABLE UsuarioMantel (
     fecha_inicio DATE NOT NULL,
     fecha_fin DATE,
     PRIMARY KEY (dni, id_mantel, fecha_inicio),
-    FOREIGN KEY (dni) REFERENCES Usuario(dni),
-    FOREIGN KEY (id_mantel) REFERENCES Mantel(id_mantel)
+    CONSTRAINT fk_Mantel_Usuario FOREIGN KEY (dni) REFERENCES Usuario(dni),
+    CONSTRAINT fk_Usuario_Mantel FOREIGN KEY (id_mantel) REFERENCES Mantel(id_mantel)
 );
 -- --------------------------------------------------------------------
 
@@ -163,13 +174,25 @@ CREATE TABLE Medicion (
     id_medicion INT AUTO_INCREMENT PRIMARY KEY,
     dni VARCHAR(9) NOT NULL,
     fecha_hora DATETIME NOT NULL,
-    insulina FLOAT,
-    indice_glucemico FLOAT,
-    FOREIGN KEY (dni) REFERENCES Usuario(dni),
-    -- Comprobar exclusividad: una medición puede ser insulina o índice glucémico, pero no ambos
-    -- Si el usuario quiere guardar ambos valores, debe hacer dos mediciones
-    CHECK ((insulina IS NOT NULL AND indice_glucemico IS NULL) OR (insulina IS NULL AND indice_glucemico IS NOT NULL))
-    -- Si se van a guardar los dos valores a la vez, se debe quitar esta restricción CHECK
+    CONSTRAINT fk_Medicion_Usuario FOREIGN KEY (dni) REFERENCES Usuario(dni)
+);
+-- --------------------------------------------------------------------
+
+
+-- ---------- INSULINA ------------------------------------------------
+CREATE TABLE Insulina (
+    id_medicion INT PRIMARY KEY,
+    valor FLOAT NOT NULL, -- Valor de insulina
+    CONSTRAINT fk_Insulina_Medicion FOREIGN KEY (id_medicion) REFERENCES Medicion(id_medicion)
+);
+-- --------------------------------------------------------------------
+
+
+-- ---------- INDICE GLUCEMICO ------------------------------------------------
+CREATE TABLE IndiceGlucemico (
+    id_medicion INT PRIMARY KEY,
+    valor FLOAT NOT NULL, -- Valor del índice glucémico
+    CONSTRAINT fk_Glucemico_Medicion FOREIGN KEY (id_medicion) REFERENCES Medicion(id_medicion)
 );
 -- --------------------------------------------------------------------
 
@@ -189,38 +212,7 @@ CREATE TABLE Comida (
 CREATE TABLE Plato (
     id_plato INT AUTO_INCREMENT PRIMARY KEY,
     id_comida INT NOT NULL, -- comida de la que forma parte el plato
-    FOREIGN KEY (id_comida) REFERENCES Comida(id_comida)
-);
--- --------------------------------------------------------------------
-
-
--- ---------- BARCODE -------------------------------------------------
-CREATE TABLE Barcode (
-    EAN VARCHAR(13) PRIMARY KEY
-);
--- --------------------------------------------------------------------
-
-
--- ---------- GRUPO ALIMENTO BASE -------------------------------------
-/*  La tabla 'GrupoAlimentoBase' guarda los nombres y ejemplos de los 20 grupos oficiales. Luego a cada
-    'GrupoAlimento' se le asigna su 'id_base' con esa información. 
-    Se ha incluido esta tabla separada para no duplicar nombres y ejemplos en los casos de grupos con 
-    diferentes valores nutricionales según si el alimento es crudo o cocinado, ya que se consideran
-    como dos grupos separados pero tienen la misma información base (nombre y ejemplos).
-*/
-CREATE TABLE GrupoAlimentoBase (
-    id_base INT PRIMARY KEY,
-    nombre_grupo VARCHAR(100) NOT NULL,
-    ejemplos_grupo TEXT
-);
--- --------------------------------------------------------------------
-
-
--- ---------- GRUPO ALIMENTO ------------------------------------------
-CREATE TABLE GrupoAlimento (
-    id_grupo INT PRIMARY KEY,
-    id_base INT NOT NULL, -- información de 'nombre' y 'ejemplos'
-    FOREIGN KEY (id_base) REFERENCES GrupoAlimentoBase(id_base)
+    CONSTRAINT fk_Plato_Comida FOREIGN KEY (id_comida) REFERENCES Comida(id_comida)
 );
 -- --------------------------------------------------------------------
 
@@ -228,14 +220,30 @@ CREATE TABLE GrupoAlimento (
 -- ---------- TIPO ALIMENTO -------------------------------------------
 CREATE TABLE TipoAlimento (
     id_tipo INT AUTO_INCREMENT PRIMARY KEY,
-    -- Se usa UNIQUE para garantizar que no se creen tipos de alimentos  
-    -- duplicados para el mismo grupo o barcode
-    id_grupo INT UNIQUE, 
-    EAN VARCHAR(13) UNIQUE,
-    FOREIGN KEY (id_grupo) REFERENCES GrupoAlimento(id_grupo),
-    FOREIGN KEY (EAN) REFERENCES Barcode(EAN),
-    -- Comprobar exclusividad: un tipo de alimento puede ser grupo o barcode, pero no ambos
-    CHECK ((id_grupo IS NULL AND EAN IS NOT NULL) OR (id_grupo IS NOT NULL AND EAN IS NULL))
+    kcal_g FLOAT,
+    prot_g FLOAT,
+    lip_g FLOAT,
+    carb_g FLOAT
+);
+-- --------------------------------------------------------------------
+
+
+-- ---------- GRUPO ALIMENTO ------------------------------------------
+CREATE TABLE GrupoAlimento (
+    grupo INT PRIMARY KEY,  -- código del grupo
+    id_tipo INT NOT NULL,   -- tipo de alimento al que hace referencia
+    nombre VARCHAR(100),    -- nombre del grupo de alimentos
+    ejemplos TEXT,          -- ejemplos del grupo de alimentos
+    CONSTRAINT fk_Grupo_Tipo FOREIGN KEY (id_tipo) REFERENCES TipoAlimento(id_tipo)
+);
+-- --------------------------------------------------------------------
+
+
+-- ---------- BARCODE -------------------------------------------------
+CREATE TABLE Barcode (
+    EAN VARCHAR(13) PRIMARY KEY, 
+    id_tipo INT NOT NULL, -- tipo de alimento al que hace referencia
+    CONSTRAINT fk_Barcode_Tipo FOREIGN KEY (id_tipo) REFERENCES TipoAlimento(id_tipo)
 );
 -- --------------------------------------------------------------------
 
@@ -247,21 +255,8 @@ CREATE TABLE Alimento (
     id_plato INT NOT NULL, -- plato del que forma parte el alimento
     id_tipo INT NOT NULL,  -- tipo del que es el alimento (puede ser grupo o barcode)
     dni VARCHAR(9),        -- usuario que ha consumido el alimento 
-    FOREIGN KEY (id_plato) REFERENCES Plato(id_plato),
-    FOREIGN KEY (id_tipo) REFERENCES TipoAlimento(id_tipo),
-    FOREIGN KEY (dni) REFERENCES Usuario(dni)
+    CONSTRAINT fk_Alimento_Plato FOREIGN KEY (id_plato) REFERENCES Plato(id_plato),
+    CONSTRAINT fk_Alimento_Tipo FOREIGN KEY (id_tipo) REFERENCES TipoAlimento(id_tipo),
+    CONSTRAINT fk_Alimento_Usuario FOREIGN KEY (dni) REFERENCES Usuario(dni)
 );
 -- --------------------------------------------------------------------
-
-
--- ---------- VALORES NUTRICIONALES -----------------------------------
-CREATE TABLE ValoresNutricionales (
-    id_tipo INT PRIMARY KEY, -- tipo de alimento (grupo o barcode) que tiene estos macronutrientes por gramo
-    kcal_g FLOAT,
-    prot_g FLOAT,
-    lip_g FLOAT,
-    carb_g FLOAT,
-    FOREIGN KEY (id_tipo) REFERENCES TipoAlimento(id_tipo)
-);
--- --------------------------------------------------------------------
-
