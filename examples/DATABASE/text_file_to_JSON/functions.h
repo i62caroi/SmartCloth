@@ -15,6 +15,7 @@
 DynamicJsonDocument doc(1024);
 
 String apiKeyValue = "apiKeySmartCloth";
+String MAC = "08:D1:F9:CB:A1:EC";
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -29,6 +30,7 @@ void textToJSON()
     {
         JsonArray comidas = doc.createNestedArray("comidas");
         doc["api_key"] = apiKeyValue;
+        doc["MAC"] = MAC;
         JsonObject comida;
         JsonArray platos;
         JsonObject plato;
