@@ -142,7 +142,7 @@ CREATE TABLE Usuario (
 -- ---------- MANTEL --------------------------------------------------
 CREATE TABLE Mantel (
     id_mantel INT AUTO_INCREMENT PRIMARY KEY,
-    MAC VARCHAR(12),
+    MAC VARCHAR(17) NOT NULL,
     activo BOOLEAN NOT NULL DEFAULT FALSE
 );
 -- --------------------------------------------------------------------

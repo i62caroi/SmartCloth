@@ -7,7 +7,7 @@
 
 */
 
-
+DROP PROCEDURE IF EXISTS InsertarGrupoYTipo;
 
 -- Procedimiento almacenado para reducir la cantidad de consultas
 DELIMITER //
