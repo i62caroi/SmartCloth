@@ -1,8 +1,6 @@
 {
   "comidas": [
     {
-      "fecha": "<fecha>",
-      "hora": "<hora>",
       "platos": [
         {
           "alimentos": [
@@ -28,11 +26,11 @@
             }
           ]
         }
-      ]
+      ],
+      "fecha": "<fecha>",
+      "hora": "<hora>"
     },
     {
-      "fecha": "<fecha>",
-      "hora": "<hora>",
       "platos": [
         {
           "alimentos": [
@@ -58,7 +56,10 @@
             }
           ]
         }
-      ]
+      ],
+      "fecha": "<fecha>",
+      "hora": "<hora>"
     }
-  ]
+  ],
+  "MAC": "<mac>"
 }

@@ -1,0 +1,19 @@
+{
+  "comidas": [
+    {
+      "platos": [
+        {
+          "alimentos": [
+            {
+              "grupo": "<grupo>",
+              "peso": "<peso>"
+            }
+          ]
+        }
+      ],
+      "fecha": "<fecha>",
+      "hora": "<hora>"
+    }
+  ],
+  "MAC": "<mac>"
+}
