@@ -1,4 +1,29 @@
 /*
+      --------------------------------------------
+      |    ESP32-CAM   |    FTDI (Serial al PC)  |
+      --------------------------------------------
+      |    UOT (Tx)    |        RXD              |    
+      |    UOR (Rx)    |        TXD              |
+      --------------------------------------------
+
+      --------------------------------------------
+      |    ESP32-CAM   |  Arduino Due (Serial1)  |
+      --------------------------------------------
+      |    IO15 (Tx1)  |      pin 19 (Rx1)       |    
+      |    IO14 (Rx1)  |      pin 18 (Tx1)       |
+      |      3V3       |        3V3              |
+      |      GND       |        GND              | 
+      --------------------------------------------
+
+      CARGAR Y EJECUTAR PROGRAMA:
+        1. Puentear IO0 a GND (3º por la derecha de la camara)
+        2. Resetear
+        3. Cargar programa
+        4. Retirar puente
+        5. Resetear
+*/
+
+/*
   Irene Casares Rodríguez
   30/10/23
 

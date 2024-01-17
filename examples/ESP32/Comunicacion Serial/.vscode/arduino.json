@@ -1,0 +1,5 @@
+{
+    "board": "arduino:sam:arduino_due_x_dbg",
+    "sketch": "Due_esp32cam - LED msg/esp32cam/esp32cam.ino",
+    "port": "/dev/tty.usbmodem112301"
+}
