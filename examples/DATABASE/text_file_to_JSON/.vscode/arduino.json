@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
     "sketch": "text_to_JSON.ino",
-    "port": "/dev/tty.usbmodem1123301"
+    "port": "/dev/tty.usbmodem112301"
 }

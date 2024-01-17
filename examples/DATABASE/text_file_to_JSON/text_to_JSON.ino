@@ -6,8 +6,8 @@
  * @date 11/12/2023
  */
 
-#include "SD_functions.h"
-#include "functions.h"
+//#include "functions.h"
+#include "functions_String.h"
 
 
 void setup()
@@ -16,20 +16,27 @@ void setup()
     while (!Serial){};
      
     // Inicializar SD
-    if (!setupSDcard()){
+    /*if (!setupSDcard()){
         Serial.println("Card failed, or not present");
         return;
     }
-    delay(100);
+    delay(100);*/
 
+    // ---- TARJETA SD -----------------
     // Leer fichero
-    readFileESP32();
+    //readFileESP32();
     
     // Convertir a JSON
-    textToJSON();
+    //textFileToJSON();
 
     // Guardar JSON en fichero .json
     //saveJSON();
+    // ---------------------------------
+
+    // ---- NO SD (STRING) -------------
+    //stringToJSON(string1);
+    stringToJSON(string2); // Más larga
+    // ---------------------------------
 
 }
 
@@ -40,6 +47,8 @@ void loop() {
     
    delay(100);
 }
+
+
 
 
 

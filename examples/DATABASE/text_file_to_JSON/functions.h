@@ -1,6 +1,6 @@
 /**
  * @file functions.h
- * @brief Este archivo contiene funciones auxiliares para generar peso y obtener el par grupo-peso.
+ * @brief Este archivo contiene funciones auxiliares para convertir el fichero TXT en un JSON
  * 
  * @author Irene Casares Rodríguez
  * @date 01/12/2023
@@ -22,7 +22,7 @@ String MAC = "08:D1:F9:CB:A1:EC";
  * @brief Convierte el contenido del fichero en un JSON
  */
 /*-----------------------------------------------------------------------------*/
-void textToJSON()
+void textFileToJSON()
 {
     File dataFile = SD.open(fileESP32);
 
