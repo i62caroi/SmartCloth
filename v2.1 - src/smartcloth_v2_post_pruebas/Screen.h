@@ -171,6 +171,7 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
+#define SerialPC Serial
 
 void    checkBascula();           // Está en Scale.h, pero hay que declararla aquí también para que esté en este ámbito
 bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aquí también para que esté en este ámbito
@@ -331,7 +332,7 @@ void setupScreen(){
     digitalWrite(RA8876_BACKLIGHT, HIGH);  // Turn on backlight
 
     if (!tft.init()){
-      Serial.println(F("Could not initialize RA8876"));
+      SerialPC.println(F("Could not initialize RA8876"));
       while(1);
     }
 
@@ -340,7 +341,7 @@ void setupScreen(){
 
     SCREEN_WIDTH = tft.getWidth(); // X
     SCREEN_HEIGHT = tft.getHeight(); // Y
-    Serial.println(F("Screen initialized"));
+    SerialPC.println(F("Screen initialized"));
     delay(200);
 }
 

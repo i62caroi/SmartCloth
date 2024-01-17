@@ -75,6 +75,7 @@
 
 #include "Comida.h" // comidaActual
 
+#define SerialPC Serial
 #define SerialDueESP32 Serial1
 
 // --- RESPUESTAS AL GUARDAR EN DATABASE ---
@@ -118,13 +119,13 @@ Message getQuery(String msg);
                 - false --> no ha habido interrupción durante ningún delay
 ----------------------------------------------------------------------------------------------------------*/
 int saveComidaDatabase(){
-    Serial.println("Avisando al ESP32 para que guarde los datos...");
+    SerialPC.println("Avisando al ESP32 para que guarde los datos...");
 
     String comidaValues = comidaActual.getComidaAllValuesHttpRequest(); // &carb=X&carb_R=X&lip=X&lip_R=X&prot=X&prot_R=X&kcal=X&peso=X
     // No incluimos el tiempo del RTC porque ya se obtiene en el servidor
     String command = "SAVE:" + comidaValues;
 
-    Serial.print("Cadena enviada al esp32: "); Serial.println(command);
+    SerialPC.print("Cadena enviada al esp32: "); SerialPC.println(command);
     SerialDueESP32.print(command); //Envía la cadena al esp32
 
 
@@ -135,7 +136,7 @@ int saveComidaDatabase(){
         // Comprueba si hay datos disponibles en el puerto serie del ESP32
         if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
             String responseFromESP32 = SerialDueESP32.readStringUntil('\n');
-            Serial.print("Respuesta del ESP32: ");  Serial.println(responseFromESP32);
+            SerialPC.print("Respuesta del ESP32: ");  SerialPC.println(responseFromESP32);
 
             Message msgReceived = getQuery(responseFromESP32);
             
@@ -185,9 +186,9 @@ Message getQuery(String msg){
         myMessage.command = msg.substring(0, delimiterIndex + 1); // "ERROR-HTTP:" o "BARCODE:"
         myMessage.data = msg.substring(delimiterIndex + 1); // "<codigo_error>" o "<codigo_barras_leido>:<carb>;<prot>;<kcal>"
         
-        Serial.print("Comando recibido: "); Serial.println(myMessage.command);
-        Serial.print("Datos recibidos: "); Serial.println(myMessage.data);
-        Serial.println();
+        SerialPC.print("Comando recibido: "); SerialPC.println(myMessage.command);
+        SerialPC.print("Datos recibidos: "); SerialPC.println(myMessage.data);
+        SerialPC.println();
     }
     // Si no hay ':' puede ser SAVED-OK o NO-WIFI, así que se guardan como comando (command) 
     // y se dejan en blanco los datos adjuntos (data)

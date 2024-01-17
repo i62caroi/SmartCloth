@@ -68,6 +68,7 @@
 #include "Files.h"
 #include "lista_Comida.h"
 
+#define SerialPC Serial
 
 #define SD_CARD_SCS  4
 
@@ -97,10 +98,10 @@ void    readFileESP32();                 // Leer contenido del fichero TXT del E
 /*-----------------------------------------------------------------------------*/
 bool setupSDcard(){
     if(!SD.begin(SD_CARD_SCS)){
-        Serial.println(F("SD card failure!"));
+        SerialPC.println(F("SD card failure!"));
         return false;
     }
-    else Serial.println(F("SD card initialized"));
+    else SerialPC.println(F("SD card initialized"));
 
     if(!SD.exists(fileCSV)){ //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
         writeHeaderFileSD();
@@ -122,7 +123,7 @@ bool setupSDcard(){
  */
 /*-----------------------------------------------------------------------------*/
 void writeHeaderFileSD(){
-    Serial.print(F("\n Creando fichero ")); Serial.print(fileCSV); Serial.println(F(" ...\n"));
+    SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileCSV); SerialPC.println(F(" ...\n"));
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
     // columnas directamente:
@@ -135,7 +136,7 @@ void writeHeaderFileSD(){
         myFile.close(); // close the file
     }
     else{
-        Serial.println("Error abriendo archivo CSV!");
+        SerialPC.println("Error abriendo archivo CSV!");
     }
 }
 
@@ -148,7 +149,7 @@ void writeHeaderFileSD(){
  */
 /*-----------------------------------------------------------------------------*/
 void saveComidaSD(){
-    Serial.println(F("Guardando info...\n"));
+    SerialPC.println(F("Guardando info...\n"));
 
     // Se ha utilizado un RTC para conocer la fecha a la que se guarda la comida
 
@@ -167,10 +168,10 @@ void saveComidaSD(){
     if (myFile){
         myFile.println(dataString);
         myFile.close(); // close the file
-        Serial.println("Comida guardada correctamente en la SD");
+        SerialPC.println("Comida guardada correctamente en la SD");
     }
     else{
-        Serial.println("Error abriendo archivo CSV!");
+        SerialPC.println("Error abriendo archivo CSV!");
     }
     // --------------------------------------------------------------------------------
 
@@ -195,9 +196,11 @@ void saveComidaSD(){
 
         // Limpia el vector para la próxima comida
         listaComidaESP32.clearList();
+
+        SerialPC.println("Comida guardada correctamente en fichero TXT");
     } else {
         // Si el archivo no se abre, imprime un error:
-        Serial.println("Error abriendo archivo TXT!");
+        SerialPC.println("Error abriendo archivo TXT!");
     }
     // --------------------------------------------------------------------------------
 }
@@ -236,7 +239,7 @@ void getAcumuladoHoyFromSD(){
             myFile.readBytesUntil('\n', lineBuffer, sizeof(lineBuffer) - 1); // Leer línea completa hasta el tamaño máximo del búfer
             lineBuffer[sizeof(lineBuffer) - 1] = '\0'; // Asegurar terminación nula
 
-            //Serial.println(lineBuffer);
+            //SerialPC.println(lineBuffer);
             
             token = strtok(lineBuffer, ";"); // Separar campos de la línea utilizando el delimitador ';'
             fieldIndex = 0;
@@ -244,7 +247,7 @@ void getAcumuladoHoyFromSD(){
             if(strcmp(today, token) == 0){ // si 'today' igual que primer token ==> comida guardada hoy
                 
                 if(msg){
-                    Serial.println(F("Obteniendo Acumulado Hoy..."));
+                    SerialPC.println(F("Obteniendo Acumulado Hoy..."));
                     msg = false; // Solo imprimir una vez y si hay algo que sumar
                 }
 
@@ -286,7 +289,7 @@ void getAcumuladoHoyFromSD(){
         
     }
     else{
-        Serial.println("Error abriendo archivo CSV!");
+        SerialPC.println("Error abriendo archivo CSV!");
     }
 
 }
@@ -304,14 +307,14 @@ bool borrarFicheroCSV(){
     // pruebas no habrá problema.
 
     // -------- BORRAR FICHERO CSV --------------------------
-    Serial.println("Borrando fichero csv...");
+    SerialPC.println("Borrando fichero csv...");
     SD.remove(fileCSV);
 
     if (!SD.exists(fileCSV)) {
-        Serial.println("Fichero CSV borrado");
+        SerialPC.println("Fichero CSV borrado");
     }
     else  {
-        Serial.println("Error borrando fichero CSV!");
+        SerialPC.println("Error borrando fichero CSV!");
         return false;
     }
     // -------- FIN BORRAR FICHERO CSV ----------------------
@@ -319,7 +322,7 @@ bool borrarFicheroCSV(){
 
     // -------- CREAR NUEVO FICHERO CSV ---------------------
     // Creo uno nuevo con el mismo nombre (writeHeader())
-    Serial.println("\nCreando fichero de nuevo..");
+    SerialPC.println("\nCreando fichero de nuevo..");
     writeHeaderFileSD();      // Crear fichero de nuevo e incluir el header
     getAcumuladoHoyFromSD();  // Actualizar acumulado (ahora debe ser 0)
     return true;
@@ -336,15 +339,15 @@ bool borrarFicheroCSV(){
 bool borrarFicheroESP32(){
 
     // -------- BORRAR FICHERO ESP32 ------------------------
-    Serial.println("Borrando fichero ESP32...");
+    SerialPC.println("Borrando fichero ESP32...");
     SD.remove(fileESP32);
 
     if (!SD.exists(fileESP32)) {
-        Serial.println("Fichero ESP32 borrado");
+        SerialPC.println("Fichero ESP32 borrado");
         return true;
     }
     else  {
-        Serial.println("Error borrando fichero ESP32!");
+        SerialPC.println("Error borrando fichero ESP32!");
         return false;
     }
     // ------------------------------------------------------
@@ -360,16 +363,16 @@ bool borrarFicheroESP32(){
  */
 /*-----------------------------------------------------------------------------*/
 void readFileESP32(){
-    Serial.println(F("\n\nLeyendo fichero TXT del ESP32...\n"));
+    SerialPC.println(F("\n\nLeyendo fichero TXT del ESP32...\n"));
     File myFile = SD.open(fileESP32, FILE_READ);
     if (myFile){
         while (myFile.available()) {
-            Serial.write(myFile.read());
+            SerialPC.write(myFile.read());
         }
         myFile.close();
     }
     else{
-        Serial.println("Error abriendo fichero TXT!");
+        SerialPC.println("Error abriendo fichero TXT!");
     }
 }
 

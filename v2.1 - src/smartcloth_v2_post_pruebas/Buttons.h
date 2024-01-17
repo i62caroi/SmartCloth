@@ -47,6 +47,7 @@ const byte intPinGuardar      = 27;   // Morado
 #ifndef BUTTONS_H
 #define BUTTONS_H
 
+#define SerialPC Serial
 
 /* Keyboards variables */
 byte iRow = 0, iCol = 0;//, keyMain = 0;
@@ -170,7 +171,7 @@ void checkAllButtons(){
         if (pulsandoGrande){ // Se está pulsando una tecla
             readButtonsGrande(); // Qué tecla se está pulsando 
             buttonGrande = buttons[iRow][iCol];
-            Serial.print(F("Grupo: ")); Serial.println(buttonGrande);
+            SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande);
             /* ----- EVENTO ------- */ 
             if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
                 (buttons[iRow][iCol] <= 18))){

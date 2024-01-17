@@ -21,6 +21,8 @@
 #ifndef GRUPOS_H
 #define GRUPOS_H
 
+#define SerialPC Serial
+
 #define NUM_GRUPOS 26
 
 #include "COLORS.h" // Colores del texto de nombre de grupo y ejemplos
@@ -135,7 +137,7 @@ void setGrupoAlimentos(int id){       // 'id' pasado es buttonGrande
             break;
         }
     }
-    //Serial.print(F("\nPosicion en vector grupo: ")); Serial.println(posGrupo);
+    //SerialPC.print(F("\nPosicion en vector grupo: ")); SerialPC.println(posGrupo);
     grupoAnterior = grupoEscogido;
     grupoEscogido = gruposAlimentos[posGrupo]; 
 }

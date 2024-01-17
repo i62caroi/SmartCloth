@@ -44,6 +44,8 @@
 
 #include <DS3231.h>
 
+#define SerialPC Serial
+
 
 // RTC object 
 DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la librería
@@ -79,19 +81,19 @@ void setupRTC(){
     // ----- AJUSTAR HORA, SI ES NECESARIO ---------
     // Comprobar si es momento de cambiar la hora
     if (checkSummerTime()) {
-        Serial.println(F("SUMMER TIME"));
+        SerialPC.println(F("SUMMER TIME"));
         adjustSummerTime();
     }
     else if (checkWinterTime()) {
-        Serial.println(F("WINTER TIME"));
+        SerialPC.println(F("WINTER TIME"));
         adjustWinterTime();
     }
     // --------------------------------------
 
-    Serial.print(F("RTC initialized"));
+    SerialPC.print(F("RTC initialized"));
 
     char *today = rtc.getDateStr();
-    Serial.print(F(" => Hoy es ")); Serial.print(today); Serial.print(F(" y son las ")); Serial.println(rtc.getTimeStr());
+    SerialPC.print(F(" => Hoy es ")); SerialPC.print(today); SerialPC.print(F(" y son las ")); SerialPC.println(rtc.getTimeStr());
 }
 
 

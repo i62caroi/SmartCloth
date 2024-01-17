@@ -52,11 +52,11 @@ int falloCriticoSD = false;
 void setup() {
     /* ------ COMUNICACIÓN SERIAL ------------ */
     // Inicializar comunicación con PC (Serial)
-    Serial.begin(115200); //115200
+    SerialPC.begin(115200); //115200
     while (!Serial);
     delay(100);
     // Inicializar comunicación con ESP32-CAM (Serial1)
-    //SerialDueESP32.begin(9600);
+    //SerialDueESP32.begin(115200);
     //while (!SerialDueESP32);
     delay(100); 
 
@@ -186,15 +186,15 @@ void loop() {
                             default: break;
                         }
                     }
-                    Serial.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      Serial.println();
-                    Serial.print(F("Nuevo estado: "));           printStateName(state_new);       Serial.println();
-                    Serial.print(F("Último estado válido: "));   printStateName(lastValidState);  Serial.println();
+                    SerialPC.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      SerialPC.println();
+                    SerialPC.print(F("Nuevo estado: "));           printStateName(state_new);       SerialPC.println();
+                    SerialPC.print(F("Último estado válido: "));   printStateName(lastValidState);  SerialPC.println();
                 }
                 else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
                                                         // Para evitar seguir marcando error durante los 3 segundos que no se cumple
                                                       // ninguna regla de transición porque se está en el estado de error.
                         // ¡¡¡ CHEQUEAR ESTO !!!! ¿HACE FALTA STATE_CANCEL Y STATE_AVISO?
-                    //Serial.println(F("\nERROR DE EVENTO"));
+                    //SerialPC.println(F("\nERROR DE EVENTO"));
                     actEventError();       // Mensaje de error por evento erróneo según el estado actual
                 }
                 flagEvent = false;

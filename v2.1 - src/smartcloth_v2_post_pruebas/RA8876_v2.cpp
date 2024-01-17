@@ -415,22 +415,22 @@ bool RA8876::_calcClocks(void)
 void RA8876::_dumpClocks(void)
 {
     #if defined(RA8876_DEBUG)
-    Serial.println("\nMem\n---");
-    Serial.print("Requested kHz: "); Serial.println(_sdramInfo->speed * 1000);
-    Serial.print("Actual kHz   : "); Serial.println(_memPll.freq);
-    Serial.print("PLL k        : "); Serial.println(_memPll.k);
-    Serial.print("PLL n        : "); Serial.println(_memPll.n);
+    SerialPC.println("\nMem\n---");
+    SerialPC.print("Requested kHz: "); SerialPC.println(_sdramInfo->speed * 1000);
+    SerialPC.print("Actual kHz   : "); SerialPC.println(_memPll.freq);
+    SerialPC.print("PLL k        : "); SerialPC.println(_memPll.k);
+    SerialPC.print("PLL n        : "); SerialPC.println(_memPll.n);
 
-    Serial.println("\nCore\n----");
-    Serial.print("kHz          : "); Serial.println(_corePll.freq);
-    Serial.print("PLL k        : "); Serial.println(_corePll.k);
-    Serial.print("PLL n        : "); Serial.println(_corePll.n);
+    SerialPC.println("\nCore\n----");
+    SerialPC.print("kHz          : "); SerialPC.println(_corePll.freq);
+    SerialPC.print("PLL k        : "); SerialPC.println(_corePll.k);
+    SerialPC.print("PLL n        : "); SerialPC.println(_corePll.n);
     
-    Serial.println("\nScan\n----");
-    Serial.print("Requested kHz: "); Serial.println(_displayInfo->dotClock);
-    Serial.print("Actual kHz   : "); Serial.println(_scanPll.freq);
-    Serial.print("PLL k        : "); Serial.println(_scanPll.k);
-    Serial.print("PLL n        : "); Serial.println(_scanPll.n);
+    SerialPC.println("\nScan\n----");
+    SerialPC.print("Requested kHz: "); SerialPC.println(_displayInfo->dotClock);
+    SerialPC.print("Actual kHz   : "); SerialPC.println(_scanPll.freq);
+    SerialPC.print("PLL k        : "); SerialPC.println(_scanPll.k);
+    SerialPC.print("PLL n        : "); SerialPC.println(_scanPll.n);
     #endif // RA8876_DEBUG
 
     // TODO: Frame rate?
@@ -443,28 +443,28 @@ void RA8876::_dumpClocks(void)
 bool RA8876::_initPLL(void)
 {
     #if defined(RA8876_DEBUG)
-    Serial.println("init PLL");
+    SerialPC.println("init PLL");
     #endif // RA8876_DEBUG
 
     SPI.beginTransaction(_spiSettings);
 
-    //Serial.print("DRAM_FREQ "); Serial.println(_memPll.freq);
-    //Serial.print("7: "); Serial.println(_memPll.k << 1);
-    //Serial.print("8: "); Serial.println(_memPll.n);
+    //SerialPC.print("DRAM_FREQ "); SerialPC.println(_memPll.freq);
+    //SerialPC.print("7: "); SerialPC.println(_memPll.k << 1);
+    //SerialPC.print("8: "); SerialPC.println(_memPll.n);
     _writeReg(RA8876_REG_MPLLC1, _memPll.k << 1);
     _writeReg(RA8876_REG_MPLLC2, _memPll.n);
 
-    //Serial.print("CORE_FREQ "); Serial.println(_corePll.freq);
-    //Serial.print("9: "); Serial.println(_corePll.k << 1);
-    //Serial.print("A: "); Serial.println(_corePll.n);
+    //SerialPC.print("CORE_FREQ "); SerialPC.println(_corePll.freq);
+    //SerialPC.print("9: "); SerialPC.println(_corePll.k << 1);
+    //SerialPC.print("A: "); SerialPC.println(_corePll.n);
     _writeReg(RA8876_REG_SPLLC1, _corePll.k << 1);
     _writeReg(RA8876_REG_SPLLC2, _corePll.n);
 
     // Per the data sheet, there are two divider fields for the scan clock, but the math seems
     //  to work out if we treat k as a single 3-bit number in bits 3..1.
-    //Serial.print("SCAN_FREQ "); Serial.println(_scanPll.freq);
-    //Serial.print("5: "); Serial.println(_scanPll.k << 1);
-    //Serial.print("6: "); Serial.println(_scanPll.n);
+    //SerialPC.print("SCAN_FREQ "); SerialPC.println(_scanPll.freq);
+    //SerialPC.print("5: "); SerialPC.println(_scanPll.k << 1);
+    //SerialPC.print("6: "); SerialPC.println(_scanPll.n);
     _writeReg(RA8876_REG_PPLLC1, _scanPll.k << 1);
     _writeReg(RA8876_REG_PPLLC2, _scanPll.n);
 
@@ -487,7 +487,7 @@ bool RA8876::_initPLL(void)
 bool RA8876::_initMemory(SdramInfo *info)
 { 
     #if defined(RA8876_DEBUG)
-    Serial.println("init memory");    
+    SerialPC.println("init memory");    
     #endif // RA8876_DEBUG
 
     uint32_t sdramRefreshRate;
@@ -526,17 +526,17 @@ bool RA8876::_initMemory(SdramInfo *info)
     SPI.beginTransaction(_spiSettings);
 
     #if defined(RA8876_DEBUG)
-    Serial.print("SDRAR: "); Serial.println(sdrar);  // Expected: 0x29 (41 decimal)
+    SerialPC.print("SDRAR: "); SerialPC.println(sdrar);  // Expected: 0x29 (41 decimal)
     #endif // RA8876_DEBUG
     _writeReg(RA8876_REG_SDRAR, sdrar);
 
     #if defined(RA8876_DEBUG)
-    Serial.print("SDRMD: "); Serial.println(sdrmd);
+    SerialPC.print("SDRMD: "); SerialPC.println(sdrmd);
     #endif // RA8876_DEBUG
     _writeReg(RA8876_REG_SDRMD, sdrmd);
   
     #if defined(RA8876_DEBUG)
-    Serial.print("sdramRefreshRate: "); Serial.println(sdramRefreshRate);
+    SerialPC.print("sdramRefreshRate: "); SerialPC.println(sdramRefreshRate);
     #endif // RA8876_DEBUG
     _writeReg(RA8876_REG_SDR_REF_ITVL0, sdramRefreshRate & 0xFF);
     _writeReg(RA8876_REG_SDR_REF_ITVL1, sdramRefreshRate >> 8);
@@ -557,7 +557,7 @@ bool RA8876::_initMemory(SdramInfo *info)
     SPI.endTransaction();
 
     #if defined(RA8876_DEBUG)
-    Serial.println(status);
+    SerialPC.println(status);
     #endif // RA8876_DEBUG
     
     return (status & 0x40) ? true : false;
@@ -736,7 +736,7 @@ void RA8876::_setGraphicsMode(void)
    ************************************************************* */
 void RA8876::_drawTwoPointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color, uint8_t reg, uint8_t cmd)
 {
-    //Serial.println("_drawTwoPointShape");
+    //SerialPC.println("_drawTwoPointShape");
 
     SPI.beginTransaction(_spiSettings);
 
@@ -763,7 +763,7 @@ void RA8876::_drawTwoPointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t 
       iter++;
     }
 
-    //Serial.print(iter); Serial.println(" iterations");
+    //SerialPC.print(iter); SerialPC.println(" iterations");
 
     SPI.endTransaction();
 }
@@ -772,7 +772,7 @@ void RA8876::_drawTwoPointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t 
    ************************************************************* */
 void RA8876::_drawThreePointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color, uint8_t cmd)
 {
-    //Serial.println("_drawThreePointShape");
+    //SerialPC.println("_drawThreePointShape");
 
     SPI.beginTransaction(_spiSettings);
 
@@ -803,7 +803,7 @@ void RA8876::_drawThreePointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_
       iter++;
     }
 
-    //Serial.print(iter); Serial.println(" iterations");
+    //SerialPC.print(iter); SerialPC.println(" iterations");
 
     SPI.endTransaction();
 }
@@ -812,7 +812,7 @@ void RA8876::_drawThreePointShape(uint16_t x1, uint16_t y1, uint16_t x2, uint16_
    ************************************************************* */
 void RA8876::_drawEllipseShape(uint16_t x, uint16_t y, uint16_t xrad, uint16_t yrad, uint16_t color, uint8_t cmd)
 {
-    //Serial.println("_drawEllipseShape");
+    //SerialPC.println("_drawEllipseShape");
 
     SPI.beginTransaction(_spiSettings);
 
@@ -839,7 +839,7 @@ void RA8876::_drawEllipseShape(uint16_t x, uint16_t y, uint16_t xrad, uint16_t y
       iter++;
     }
 
-    //Serial.print(iter); Serial.println(" iterations");
+    //SerialPC.print(iter); SerialPC.println(" iterations");
 
     SPI.endTransaction();
 }
@@ -971,7 +971,7 @@ bool RA8876::init(void)
 
     if (!_calcClocks())
     {
-      Serial.println("_calcClocks failed");
+      SerialPC.println("_calcClocks failed");
       return false;
     }
 
@@ -985,19 +985,19 @@ bool RA8876::init(void)
 
     if (!_initPLL())
     {
-      Serial.println("_initPLL failed");
+      SerialPC.println("_initPLL failed");
       return false;
     }
 
     if (!_initMemory(_sdramInfo))
     {
-      Serial.println("_initMemory failed");
+      SerialPC.println("_initMemory failed");
       return false;
     }
 
     if (!_initDisplay())
     {
-      Serial.println("_initDisplay failed");
+      SerialPC.println("_initDisplay failed");
       return false;
     }
 
@@ -1030,7 +1030,7 @@ void RA8876::initExternalFontRom(int spiIf, enum ExternalFontRom chip)
     _fontRomInfo.chip = chip;
 
     #if defined(RA8876_DEBUG)
-    Serial.print("External font SPI divisor: "); Serial.println(divisor);
+    SerialPC.print("External font SPI divisor: "); SerialPC.println(divisor);
     #endif // RA8876_DEBUG
 
     SPI.beginTransaction(_spiSettings);
@@ -1041,15 +1041,15 @@ void RA8876::initExternalFontRom(int spiIf, enum ExternalFontRom chip)
       _writeReg(RA8876_REG_CCR, ccr | 0x02);
 
     #if defined(RA8876_DEBUG)
-    Serial.print("SFL_CTRL: "); Serial.println(((spiIf & 1) << 7) | 0x14, HEX);
+    SerialPC.print("SFL_CTRL: "); SerialPC.println(((spiIf & 1) << 7) | 0x14, HEX);
     #endif // RA8876_DEBUG
     _writeReg(RA8876_REG_SFL_CTRL, ((spiIf & 1) << 7) | 0x14);  // Font mode, 24-bit address, standard timing, supports FAST_READ
     #if defined(RA8876_DEBUG)
-    Serial.print("SPI_DIVSOR: "); Serial.println((divisor >> 1) - 1, HEX);
+    SerialPC.print("SPI_DIVSOR: "); SerialPC.println((divisor >> 1) - 1, HEX);
     #endif // RA8876_DEBUG
     _writeReg(RA8876_REG_SPI_DIVSOR, (divisor >> 1) - 1);
     #if defined(RA8876_DEBUG)
-    Serial.print("GTFNT_SEL: "); Serial.println((chip & 0x07) << 5, HEX);
+    SerialPC.print("GTFNT_SEL: "); SerialPC.println((chip & 0x07) << 5, HEX);
     #endif // RA8876_DEBUG
     _writeReg(RA8876_REG_GTFNT_SEL, (chip & 0x07) << 5);
 
@@ -1278,7 +1278,7 @@ void RA8876::selectExternalFont(enum ExternalFontFamily family, enum FontSize si
     SPI.beginTransaction(_spiSettings);
 
     #if defined(RA8876_DEBUG)
-    Serial.print("CCR0: "); Serial.println(0x40 | ((size & 0x03) << 4), HEX);
+    SerialPC.print("CCR0: "); SerialPC.println(0x40 | ((size & 0x03) << 4), HEX);
     #endif // RA8876_DEBUG
 
     _writeReg(RA8876_REG_CCR0, 0x40 | ((size & 0x03) << 4));  // Select external font ROM and size
@@ -1287,13 +1287,13 @@ void RA8876::selectExternalFont(enum ExternalFontFamily family, enum FontSize si
     ccr1 |= 0x40;  // Transparent background
 
     #if defined(RA8876_DEBUG)
-    Serial.print("CCR1: "); Serial.println(ccr1, HEX);
+    SerialPC.print("CCR1: "); SerialPC.println(ccr1, HEX);
     #endif // RA8876_DEBUG
 
     _writeReg(RA8876_REG_CCR1, ccr1);
 
     #if defined(RA8876_DEBUG)
-    Serial.print("GTFNT_CR: "); Serial.println((enc << 3) | (family & 0x03), HEX);
+    SerialPC.print("GTFNT_CR: "); SerialPC.println((enc << 3) | (family & 0x03), HEX);
     #endif // RA8876_DEBUG
     
     _writeReg(RA8876_REG_GTFNT_CR, (enc << 3) | (family & 0x03));  // Character encoding and family
@@ -1538,8 +1538,8 @@ void RA8876::setPixelCursor(uint16_t x,uint16_t y)
    ************************************************************* */
 void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 {
-    //Serial.println("drawPixel");
-    //Serial.println(_readStatus());
+    //SerialPC.println("drawPixel");
+    //SerialPC.println(_readStatus());
     
     SPI.beginTransaction(_spiSettings);
 
@@ -1862,14 +1862,14 @@ void RA8876::sdCardDraw16bppBIN8bits(uint16_t x,uint16_t y,uint16_t width, uint1
         ramAccessPrepare();
       while (dataFile.available()) 
       {
-          //Serial.write(dataFile.read());
+          //SerialPC.write(dataFile.read());
           //_checkWriteFifoNotFull();//if high speed mcu and without Xnwait check
           _writeData(dataFile.read());
           _writeData(dataFile.read());
       }
       dataFile.close();
     }   
-    else Serial.println(F("Fichero no encontrado"));
+    else SerialPC.println(F("Fichero no encontrado"));
     setCanvasWindow(0,0,_width,_height);
 
     _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
@@ -1912,7 +1912,7 @@ void RA8876::sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint
       }
       dataFile.close();
     }   
-    else Serial.println(F("Fichero no encontrado"));
+    else SerialPC.println(F("Fichero no encontrado"));
     setCanvasWindow(0,0,_width,_height);
 
     _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
@@ -1959,7 +1959,7 @@ void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uin
       }
       dataFile.close();
     }   
-    else Serial.println(F("Fichero no encontrado"));
+    else SerialPC.println(F("Fichero no encontrado"));
     setCanvasWindow(0,0,_width,_height);
 
     _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz

@@ -21,6 +21,7 @@
 #ifndef ISR_H
 #define ISR_H
 
+#define SerialPC Serial
 
 
 /*  ----- SCALE ISR ----- */
@@ -217,7 +218,7 @@ void TimerHandler() { ISR_Timer.run(); }
 
     // Número del timer utilizado
     uint16_t timerNumber = dueTimerInterrupt.getTimerNumber();
-    Serial.print(TimerName); Serial.print(F(" attached to Timer(")); Serial.print(timerNumber); Serial.println(F(")"));
+    SerialPC.print(TimerName); SerialPC.print(F(" attached to Timer(")); SerialPC.print(timerNumber); SerialPC.println(F(")"));
     return timerNumber;
 }
 

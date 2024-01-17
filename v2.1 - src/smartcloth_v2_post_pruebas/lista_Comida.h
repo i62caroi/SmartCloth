@@ -50,6 +50,7 @@
 #include "RTC.h"
 
 
+#define SerialPC Serial
 
 
 // **************************************************************************************************************************
@@ -137,13 +138,13 @@ void Lista::iniciarComida()
     // de nuevo.
 
     if (isListEmpty()) {
-        Serial.println(F("\nIniciando comida..."));
+        SerialPC.println(F("\nIniciando comida..."));
         
         // Añadir cadena a la lista
         addLineToList("INICIO-COMIDA");
     }
     else{
-        Serial.println(F("\nLa COMIDA ya ha comenzado"));
+        SerialPC.println(F("\nLa COMIDA ya ha comenzado"));
     }
 }
 
@@ -158,13 +159,13 @@ void Lista::iniciarPlato()
 {
     // Comprobar si el último elemento no es "INICIO-PLATO"   
     if (getLastItem() != "INICIO-PLATO") {
-        Serial.println(F("\nIniciando plato..."));
+        SerialPC.println(F("\nIniciando plato..."));
         
         // Añadir cadena a la lista
         addLineToList("INICIO-PLATO"); 
     }
     else {
-        Serial.println(F("\nEl PLATO ya ha comenzado"));
+        SerialPC.println(F("\nEl PLATO ya ha comenzado"));
     }
 }
 
@@ -189,7 +190,7 @@ void Lista::iniciarPlato()
 /*-----------------------------------------------------------------------------*/
 void Lista::addAlimento(int grupo, float peso) 
 {
-    Serial.println(F("Guardando alimento y peso...\n"));
+    SerialPC.println(F("Guardando alimento y peso...\n"));
     
     // Obtener cadena "ALIMENTO,<grupo>,<peso>"
     String parGrupoPeso = "ALIMENTO," + String(grupo) + "," + String(peso);
@@ -240,7 +241,7 @@ void Lista::saveComida()
     // No se comprueba si la comida está vacía (último escrito es INICIO-COMIDA),
     // porque si lo estuviera, no se llegaría a hacer el guardado.
 
-    Serial.println(F("\nFinalizando y guardando comida...\n"));
+    SerialPC.println(F("\nFinalizando y guardando comida...\n"));
 
     char *today = rtc.getDateStr();
     char *time = rtc.getTimeStr();
@@ -257,18 +258,18 @@ void Lista::saveComida()
 /**
  * @brief Imprime el contenido de la lista.
  *
- * Recorre la lista e imprime cada línea en la consola serial.
+ * Recorre la lista e imprime cada línea en la consola SerialPC.
  */
 /*-----------------------------------------------------------------------------*/
 void Lista::leerLista() 
 {
-    Serial.println(F("\n\nContenido de la Lista:\n"));
+    SerialPC.println(F("\n\nContenido de la Lista:\n"));
 
     for (int i = 0; i < getListSize(); i++) {
-        Serial.println(getItem(i));
+        SerialPC.println(getItem(i));
     }
 
-    Serial.println("\n");
+    SerialPC.println("\n");
 }
 
 
