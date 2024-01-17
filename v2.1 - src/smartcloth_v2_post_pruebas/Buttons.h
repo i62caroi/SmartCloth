@@ -31,6 +31,14 @@
       | 3.3 |   33    |     31     |    29    |    27    |     25    |  -  | GND |       
       ----------------------------------------------------------------------------
 
+// ------ BOTONERAS ANTIGUAS ------------
+const byte intPinDeletePlato  = 27;   // Azul 
+const byte intPinGuardar      = 25;   // Morado 
+
+// ------ BOTONERAS NUEVAS --------------
+const byte intPinDeletePlato  = 25;   // Azul 
+const byte intPinGuardar      = 27;   // Morado 
+
 ------------------------------------------------------------------
 */
 
