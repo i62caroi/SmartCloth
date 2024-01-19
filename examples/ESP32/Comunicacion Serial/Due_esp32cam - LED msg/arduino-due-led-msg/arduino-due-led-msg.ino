@@ -1,11 +1,13 @@
+
 #define SerialPC Serial
 #define SerialDueESP32 Serial1
 
 void setup() {
-  SerialPC.begin(9600);
+  SerialPC.begin(115200);
   while (!SerialPC);
 
-  SerialDueESP32.begin(9600);
+  // DEBE TENER LA MISMA VELOCIDAD EN BAUDIOS QUE EL ESP32 (p.ej. 115200)
+  SerialDueESP32.begin(115200);
   while (!SerialDueESP32);
 }
 

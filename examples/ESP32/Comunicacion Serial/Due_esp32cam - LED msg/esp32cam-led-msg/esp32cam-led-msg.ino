@@ -65,13 +65,16 @@
 #define SerialESP32Due Serial1
 
 void setup() {
-  SerialPC.begin(9600);
+  SerialPC.begin(115200);
   while (!SerialPC);
   
-  SerialESP32Due.begin(9600, SERIAL_8N1, RXD1, TXD1);
+  // DEBE TENER LA MISMA VELOCIDAD EN BAUDIOS QUE EL ARDUINO (p.ej. 115200)
+  SerialESP32Due.begin(115200, SERIAL_8N1, RXD1, TXD1);
   while (!SerialESP32Due);
   
   pinMode(LED_BUILTIN, OUTPUT); // Pin del LED del ESP32-CAM
+
+  SerialPC.print("jelou");
 }
 
 
