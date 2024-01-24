@@ -36,8 +36,11 @@
 */
 
 // Credenciales conexión red WiFi
-const char* ssid = "Irene";               // Nombre red
-const char* password =  "icradeba5050";   // Contraseña
+//const char* ssid = "Irene";               // Nombre red
+//const char* password =  "icradeba5050";   // Contraseña
+
+const char* ssid = "UCOTEAM";
+const char* password = "-polonio210alfileres-";
 
 
 // Variable global para almacenar la dirección MAC
@@ -97,7 +100,7 @@ void connectToWiFi()
         } 
         else 
         {
-            SerialPC.println("No se pudo establecer la conexion. Reintentando...");
+            SerialPC.println("\nNo se pudo establecer la conexion. Reintentando...");
             SerialESP32Due.println("Fallo en conexión WiFi. Reintentando...");
         }
     }
@@ -144,11 +147,11 @@ void sendJsonDocToDatabase(DynamicJsonDocument& JSONdoc)
         if(httpResponseCode > 0)
         {
             String response = http.getString(); // Obtener la respuesta del servidor
-            SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+            SerialPC.println(); SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
             SerialPC.println(response);         // Imprimir la respuesta del servidor
 
             if((httpResponseCode >= 200) && (httpResponseCode < 300)){
-                SerialESP32Due.println("JSON enviado correctamente");
+                SerialESP32Due.println("JSON - OK");
             }
             else{
                 SerialESP32Due.println("Error al enviar el JSON (servidor)");
@@ -156,7 +159,7 @@ void sendJsonDocToDatabase(DynamicJsonDocument& JSONdoc)
         }
         else
         {
-            SerialPC.print("Error en la petición HTTP POST: ");
+            SerialPC.print("\nError en la petición HTTP POST: ");
             SerialPC.println(httpResponseCode);
 
             SerialESP32Due.print("Error en la petición HTTP POST: ");

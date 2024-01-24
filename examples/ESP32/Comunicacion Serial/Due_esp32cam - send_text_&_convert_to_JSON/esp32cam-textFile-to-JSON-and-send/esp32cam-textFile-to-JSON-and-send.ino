@@ -76,6 +76,7 @@ void loop()
 
         SerialPC.print("Linea recibida: "); SerialPC.println(line);
 
+        //addLineToJSON_ONE(line);
         addLineToJSON(line);
     }
 

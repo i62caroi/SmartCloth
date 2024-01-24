@@ -58,7 +58,8 @@ char fileESP32[30] = "data/data-esp.txt";
 -----------------------------------------------------------------------------*/
 bool    setupSDcard();           // Inicializar tarjeta SD
 void    readFileESP32();         // Leer fichero esp32 
-void    sendFileToEsp32();       // Enviar fichero al esp32 
+void    sendFileToEsp32ONE();       // Enviar fichero al esp32 
+int     sendFileToEsp32();       // Enviar fichero al esp32 contando comidas enviadas
 /*-----------------------------------------------------------------------------*/
 
 
@@ -105,13 +106,12 @@ void readFileESP32(){
 }
 
 
-
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Envía el fichero por Serial al esp32
  */
 /*-----------------------------------------------------------------------------*/
-void sendFileToEsp32()
+void sendFileToEsp32ONE()
 {
     File dataFile = SD.open(fileESP32);
 
@@ -139,6 +139,50 @@ void sendFileToEsp32()
 }
 
 
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Envía el fichero por Serial al esp32
+ * @return Devuelve el número de comidas enviadas para saber si el esp32 las
+ *          ha podido subir todas
+ */
+/*-----------------------------------------------------------------------------*/
+int sendFileToEsp32()
+{
+    int nComidas = 0;
+
+    File dataFile = SD.open(fileESP32);
+
+    if (dataFile) 
+    {
+        
+        // Lee el archivo línea por línea y envía cada línea al ESP32
+        while (dataFile.available()) 
+        {
+            String line = dataFile.readStringUntil('\n');
+            line.trim();
+
+            if(line == "INICIO-COMIDA") nComidas++;
+
+            // Envía la línea al ESP32 a través de Serial
+            SerialDueESP32.println(line);
+        }
+        dataFile.close();
+
+        SerialDueESP32.println("FIN-TRANSMISION");
+
+        SerialPC.println("\nFichero completo enviado");
+    }
+    else 
+    {
+        SerialPC.println("\nError al abrir el archivo data-ESP.txt");
+    }
+
+    SerialPC.print("Numero de comidas a enviar: "); SerialPC.println(nComidas);
+
+    return nComidas;
+}
 
 
 

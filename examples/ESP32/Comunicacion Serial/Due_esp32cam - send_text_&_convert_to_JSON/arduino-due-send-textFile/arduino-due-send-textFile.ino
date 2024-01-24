@@ -9,6 +9,8 @@
 #include "functions.h" // incluye "defines.h" de Seriales
 #include "SD_functions.h"
 
+int nComidasToSend = -1;
+int nComidasUploaded = -2;
 
 void setup()
 {
@@ -28,6 +30,8 @@ void setup()
         return;
     }
     delay(100);
+
+    SerialPC.println("ENVIAME \"go\" PARA COMENZAR");
 }
 
 
@@ -51,8 +55,17 @@ void loop()
 
     // Lectura y envío real del fichero txt 
     if (SerialPC.available() > 0) { // Si se recibe algo desde el PC
-        // Enviar fichero al ESP32-CAM 
-        sendFileToEsp32();
+        String msgPC = SerialPC.readStringUntil('\n');
+        msgPC.trim();
+
+        SerialPC.print("Mensaje recibido: "); SerialPC.println(msgPC);
+        if(msgPC == "go"){ 
+            // Solo enviar fichero al ESP32-CAM 
+            //sendFileToEsp32ONE();
+
+            // Enviar fichero contando comidas
+            nComidasToSend = sendFileToEsp32();
+        }
     }
     // -----------------------------------------------------------
 
@@ -62,6 +75,16 @@ void loop()
         String msg = SerialDueESP32.readStringUntil('\n');
 
         SerialPC.print("Mensaje recibido: "); SerialPC.println(msg); 
+
+        // Acuse de recibo de comida subida
+        if(msg == "JSON - OK"){
+            if(nComidasUploaded == -2) nComidasUploaded = 1; // Primera comida
+            else nComidasUploaded++;
+        }
+
+        // Si se han subido todas las comidas enviadas, se subió toda la info del fichero
+        if(nComidasUploaded == nComidasToSend) SerialPC.println("Subidas todas las comidas");
+    
     }
     // -----------------------------------------------------------
 

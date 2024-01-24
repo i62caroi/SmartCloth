@@ -35,7 +35,7 @@ JsonArray alimentos;
  * @brief Añade la línea al JSON según su contenido. Un solo JSON para toda la info.
  */
 /*-----------------------------------------------------------------------------*/
-void addLineToJSON(String line)
+void addLineToJSON_ONE(String line)
 {
     if (line == "INICIO-COMIDA") 
     {
@@ -76,13 +76,6 @@ void addLineToJSON(String line)
 
         // Enviar JSON a database
         sendJsonDocToDatabase(JSONdoc);
-
-        /*
-        // Enviar JSON convertido a String a database
-        String jsonString;
-        serializeJson(doc, jsonString);
-        sendJsonStringToDatabase(jsonString);
-        */
         
     }
     else
@@ -101,7 +94,7 @@ void addLineToJSON(String line)
  *        el fichero txt.
  */
 /*-----------------------------------------------------------------------------*/
-/*void addLineToJSON(String line)
+void addLineToJSON(String line)
 {
     if (line == "INICIO-COMIDA") 
     {
@@ -142,7 +135,7 @@ void addLineToJSON(String line)
         // Finalizar el DynamicJsonDocument actual y enviarlo a la base de datos
         // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
         // enviará otro JSON y así hasta recibir FIN-TRANSMISION
-        sendJsonToDatabase(JSONdoc);
+        sendJsonDocToDatabase(JSONdoc);
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
     {
@@ -152,7 +145,7 @@ void addLineToJSON(String line)
     {
         SerialESP32Due.println("línea desconocida");
     }
-}*/
+}
 
 
 
