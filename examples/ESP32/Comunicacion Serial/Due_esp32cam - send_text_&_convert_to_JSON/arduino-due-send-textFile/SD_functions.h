@@ -37,13 +37,17 @@
 #define SD_FUNCTIONS
 
 #include <SD.h>
+// incluir esta línea en el includePath de c_cpp_properties.json 
+//
+// "/Applications/Arduino.app/Contents/Java/libraries/SD/src"
 
+#include "defines.h" // Seriales
 
 
 #define SD_CARD_SCS  4 ///< Define el pin CS para la tarjeta SD
 
 // Fichero donde ir escribiendo la info para cuando haya wifi
-char fileESP32[30] = "data/data-ESP.txt";
+char fileESP32[30] = "data/data-esp.txt";
 
 
 
@@ -52,8 +56,9 @@ char fileESP32[30] = "data/data-ESP.txt";
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
-bool    setupSDcard();                   // Inicializar tarjeta SD
-void    readFileESP32();
+bool    setupSDcard();           // Inicializar tarjeta SD
+void    readFileESP32();         // Leer fichero esp32 
+void    sendFileToEsp32();       // Enviar fichero al esp32 
 /*-----------------------------------------------------------------------------*/
 
 
@@ -101,7 +106,37 @@ void readFileESP32(){
 
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Envía el fichero por Serial al esp32
+ */
+/*-----------------------------------------------------------------------------*/
+void sendFileToEsp32()
+{
+    File dataFile = SD.open(fileESP32);
 
+    if (dataFile) 
+    {
+        // Lee el archivo línea por línea y envía cada línea al ESP32
+        while (dataFile.available()) 
+        {
+            String line = dataFile.readStringUntil('\n');
+            line.trim();
+
+            // Envía la línea al ESP32 a través de Serial
+            SerialDueESP32.println(line);
+        }
+        dataFile.close();
+
+        SerialDueESP32.println("FIN-TRANSMISION");
+
+        SerialPC.println("\nFichero completo enviado");
+    }
+    else 
+    {
+        SerialPC.println("\nError al abrir el archivo data-ESP.txt");
+    }
+}
 
 
 

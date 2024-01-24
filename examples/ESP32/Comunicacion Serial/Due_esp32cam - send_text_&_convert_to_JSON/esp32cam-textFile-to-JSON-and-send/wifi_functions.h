@@ -109,41 +109,6 @@ void connectToWiFi()
 }
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Envía el JSON generado a la base de datos para guardar su información.
- * @param jsonString - JSON convertido a String que se va a enviar
- */
-/*-----------------------------------------------------------------------------*/
-/*void sendJsonStringToDatabase(String jsonString)
-{
-    if(hayConexionWiFi())
-    {
-        HTTPClient http;
-        http.begin(serverName);
-        http.addHeader("Content-Type", "application/json");
-
-        int httpResponseCode = http.POST(jsonString);
-
-        if(httpResponseCode>0)
-        {
-            String response = http.getString();
-            SerialPC.println(httpResponseCode);
-            SerialPC.println(response);
-        }
-        else
-        {
-            SerialPC.print("Error on sending POST: ");
-            SerialPC.println(httpResponseCode);
-        }
-        http.end();
-    }
-    else
-    {
-        SerialPC.println("WiFi Disconnected");
-    }
-}*/
-
 
 /*-----------------------------------------------------------------------------*/
 /**
