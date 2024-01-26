@@ -1,3 +1,6 @@
+#include <JSON.h>
+#include <JSONVar.h>
+
 /**
  * @file text_to_JSON.ino
  * @brief Este programa convierte el contenido de data-esp32.txt en un fichero JSON para enviar por HTTP POST.
@@ -33,9 +36,10 @@ void setup()
     //saveJSON();
     // ---------------------------------
 
+    //Serial.println(ARDUINOJSON_VERSION);
+
     // ---- NO SD (STRING) -------------
-    //stringToJSON(string1);
-    stringToJSON(string2); // Más larga
+    processJSON();
     // ---------------------------------
 
 }
