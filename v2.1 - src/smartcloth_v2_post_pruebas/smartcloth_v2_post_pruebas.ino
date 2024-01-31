@@ -77,6 +77,12 @@ void setup() {
     /* ------ SCREEN --------- */
     setupScreen();  
     delay(100); 
+
+    /* ------ FICHERO TXT --------- */
+    bool dataToUpload;
+    if(!falloCriticoSD){ // Si falló la SD, no se puede chequear el fichero txt
+        dataToUpload = checkFileESP32();
+    }
     
 
     /*------- ESTADO INICIAL --------- */
@@ -84,6 +90,7 @@ void setup() {
     // de entrada ni de salida. Te obliga a reiniciar SM para intentar subsanar el fallo.
     // Si no falla la SD, se inicia en el primer estado funcional.
     if (falloCriticoSD) state_actual = STATE_CRITIC_FAILURE_SD; // Estado sin salida
+    else if(dataToUpload) state_actual = STATE_UPLOAD_DATA; // Estado para subir data a database
     else state_actual = STATE_Init; // Estado inicial de la Máquina de Estados
     //state_actual = STATE_Init;
 

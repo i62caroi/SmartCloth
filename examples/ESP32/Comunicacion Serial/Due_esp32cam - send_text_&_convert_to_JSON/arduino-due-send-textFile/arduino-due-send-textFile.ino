@@ -31,7 +31,10 @@ void setup()
     }
     delay(100);
 
-    SerialPC.println("ENVIAME \"go\" PARA COMENZAR");
+    //SerialPC.println("ENVIAME \"go\" PARA COMENZAR");
+
+    if(checkWifiConnection()) SerialPC.println("HAY WIFI");
+    else SerialPC.println("NO HAY WIFI");
 }
 
 
@@ -52,7 +55,7 @@ void loop()
         if(idString == "1") sendStringSimulationToEsp32(string1);
         else if(idString == "2") sendStringSimulationToEsp32(string2);
     }*/
-
+/*
     // Lectura y envío real del fichero txt 
     if (SerialPC.available() > 0) { // Si se recibe algo desde el PC
         String msgPC = SerialPC.readStringUntil('\n');
@@ -87,7 +90,7 @@ void loop()
     
     }
     // -----------------------------------------------------------
-
+*/
 }
 
 

@@ -69,7 +69,8 @@ void setup()
 
 void loop() 
 {
-    if (SerialESP32Due.available() > 0) 
+    // -------- Recibir lineas y generar JSON -------
+    /*if (SerialESP32Due.available() > 0) 
     {
         String line = SerialESP32Due.readStringUntil('\n');
         line.trim();
@@ -78,6 +79,29 @@ void loop()
 
         //addLineToJSON_ONE(line);
         addLineToJSON(line);
+    }*/
+    // -----------------------------------------------
+
+
+    // ------ Comprobar Wifi y avisar al Due ---------
+    if (SerialESP32Due.available() > 0) 
+    {
+        String line = SerialESP32Due.readStringUntil('\n');
+        line.trim();
+
+        SerialPC.print("Linea recibida: "); SerialPC.println(line);
+
+        if (line == "CHECK-WIFI"){
+            if(hayConexionWiFi()){
+                SerialPC.println("Tengo Wifi");
+                SerialESP32Due.println("WIFI");
+            }
+            else { 
+                SerialPC.println("No tengo wifi");
+                SerialESP32Due.println("NO-WIFI");
+            }
+        }
     }
+    // -----------------------------------------------
 
 }

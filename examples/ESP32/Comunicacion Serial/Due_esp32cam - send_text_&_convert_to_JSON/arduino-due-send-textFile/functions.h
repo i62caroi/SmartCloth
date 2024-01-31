@@ -79,5 +79,50 @@ void sendStringSimulationToEsp32(String fileContent)
 
 
 
+/*---------------------------------------------------------------------------------------------------------*/
+/**
+ * @brief Comprueba la conexión WiFi del ESP32.
+ * 
+ * @return true si hay conexión WiFi, false si no la hay.
+ */
+/*---------------------------------------------------------------------------------------------------------*/
+bool checkWifiConnection() {
+    SerialPC.println("Comprobando la conexión WiFi del ESP32...");
+
+    String command = "CHECK-WIFI";
+    SerialPC.print("Cadena enviada al esp32: "); SerialPC.println(command);
+    SerialDueESP32.print(command); //Envía la cadena al esp32
+
+    unsigned long timeout = 10000;  // Espera máxima de 10 segundos
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+
+    while (true) { // Bloquea el arduino en este bucle hasta que se reciba respuesta o se pase el TIMEOUT
+        // Comprueba si hay datos disponibles en el puerto serie del ESP32
+        if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
+            String responseFromESP32 = SerialDueESP32.readStringUntil('\n');
+            SerialPC.print("Respuesta del ESP32: ");  SerialPC.println(responseFromESP32);
+
+            if (responseFromESP32 == "WIFI") {
+                // Respuesta OK, hay conexión WiFi
+                return true;
+            } 
+            else if (responseFromESP32 == "NO-WIFI") {
+                // Respuesta NO-WIFI, no hay conexión WiFi
+                return false;
+            }
+        }
+
+        // Comprueba si ha pasado un tiempo límite sin respuesta del esp32
+        if (millis() - startTime > timeout) {
+            // Tiempo de espera agotado, se considera que no hay conexión WiFi
+            return false;
+        }
+    }
+
+    // Si sale del while (no debería), se considera que no hay conexión WiFi
+    return false;
+}
+
+
 
 #endif
