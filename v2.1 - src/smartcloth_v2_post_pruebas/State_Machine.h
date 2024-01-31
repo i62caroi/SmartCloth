@@ -3,7 +3,7 @@
  * @brief Máquina de Estados (State Machine) de SmartCloth
  *
  * @author Irene Casares Rodríguez
- * @date 17/07/23
+ * @date 31/01/24
  * @version 1.0
  *
  *  Este archivo contiene las definiciones de los estados y eventos, además de las funciones
@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 134   // 7 SON DE BORRAR CSV EN PRUEBAS
+#define RULES 135   // 7 SON DE BORRAR CSV EN PRUEBAS
 
 
 #include "SD_functions.h"
@@ -115,30 +115,35 @@ bool doneState;       // Flag para que solo se realicen una vez las actividades 
  * @brief Enumeración de los diferentes estados de la Máquina de Estados.
  */
 typedef enum {
-              STATE_Init          =   (1),    // Estado inicial para colocar plato
-              STATE_Plato         =   (2),    // Estado para escoger grupo
-              STATE_groupA        =   (3),    // grupo A
-              STATE_groupB        =   (4),    // grupo B
-              STATE_raw           =   (5),    // crudo
-              STATE_cooked        =   (6),    // cocinado
-              STATE_weighted      =   (7),    // alimento pesado
-              STATE_add_check     =   (8),    // Comprobar que se quiere añadir plato
-              STATE_added         =   (9),    // plato añadido
-              STATE_delete_check  =   (10),   // Comprobar que se quiere eliminar plato
-              STATE_deleted       =   (11),   // plato eliminado
-              STATE_save_check    =   (12),   // Comprobar que se quiere guardar comida
-              STATE_saved         =   (13),   // comida guardada
-              STATE_ERROR         =   (14),   // Estado ficticio de error (acción incorrecta)
-              STATE_CANCEL        =   (15),   // Estado ficticio de Cancelación
-              STATE_AVISO         =   (16),   // Estado ficticio de Aviso
+                STATE_Init          =   (1),    // Estado inicial para colocar plato
+                STATE_Plato         =   (2),    // Estado para escoger grupo
+                STATE_groupA        =   (3),    // grupo A
+                STATE_groupB        =   (4),    // grupo B
+                STATE_raw           =   (5),    // crudo
+                STATE_cooked        =   (6),    // cocinado
+                STATE_weighted      =   (7),    // alimento pesado
+                STATE_add_check     =   (8),    // Comprobar que se quiere añadir plato
+                STATE_added         =   (9),    // plato añadido
+                STATE_delete_check  =   (10),   // Comprobar que se quiere eliminar plato
+                STATE_deleted       =   (11),   // plato eliminado
+                STATE_save_check    =   (12),   // Comprobar que se quiere guardar comida
+                STATE_saved         =   (13),   // comida guardada
+                STATE_ERROR         =   (14),   // Estado ficticio de error (acción incorrecta)
+                STATE_CANCEL        =   (15),   // Estado ficticio de Cancelación
+                STATE_AVISO         =   (16),   // Estado ficticio de Aviso
 
-              STATE_DELETE_CSV_CHECK    =   (17),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.
-              STATE_DELETED_CSV         =   (18),   // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
-                                                    //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
+                STATE_DELETE_CSV_CHECK    =   (17),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.
+                STATE_DELETED_CSV         =   (18),   // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
+                                                      //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
 
-              STATE_CRITIC_FAILURE_SD   =   (19)    // La SD ha fallado en el setup o no se encuentra --> no se permite usar SM
-                                                    // Este estado no tiene transiciones de entrada ni de salida. Solo sirve para mostrar
-                                                    // la pantalla de fallo crítico.
+                STATE_CRITIC_FAILURE_SD   =   (19),     // La SD ha fallado en el setup o no se encuentra --> no se permite usar SM
+                                                        // Este estado no tiene transiciones de entrada ni de salida. Solo sirve para mostrar
+                                                        // la pantalla de fallo crítico. Se entra manualmente por código, no por acciones del usuario.
+
+                STATE_UPLOAD_DATA = (20)        // Hay datos en el fichero data-esp.txt y hay que subirlos a la base de datos.
+                                                // Solo se pasaría a este estado al iniciar el dispositivo para guardar la info acumulada en el fichero.
+                                                // Se entra manualmente por código, no por acciones del usuario, por eso no tiene transiciones de entrada.
+                                                // Sí tiene una transición de salida a Init cuando se suben o no los datos.
 } state_t;
 
 
@@ -181,7 +186,7 @@ typedef enum {
               GO_TO_SAVE_CHECK      =   (26),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
               GO_TO_SAVED           =   (27),   // Evento ficticio para volver a STATE_saved porque saltó un error 
               GO_TO_CANCEL          =   (28),   // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
-              DELETE_CSV            =   (29)    // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
+              DELETE_CSV            =   (29),   // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
 } event_t;
 
 
@@ -216,11 +221,11 @@ typedef struct{
  * @brief Array de reglas de transición para la Máquina de Estados.
  */
 static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
-                                        {STATE_Init,STATE_Init,TARAR},                 // Tara inicial
-                                        {STATE_Init,STATE_Init,DECREMENTO},            // Por si se inicia SM con un recipiente ya puesto y luego se retira
-                                        {STATE_Init,STATE_Plato,INCREMENTO},           // Colocar recipiente
-                                        {STATE_Init,STATE_save_check,GUARDAR},         // Guardar comida directamente (comidaActual no está vacía)
-                                        {STATE_Init,STATE_ERROR,ERROR},                // Acción incorrecta
+                                        {STATE_Init,STATE_Init,TARAR},                  // Tara inicial
+                                        {STATE_Init,STATE_Init,DECREMENTO},             // Por si se inicia SM con un recipiente ya puesto y luego se retira
+                                        {STATE_Init,STATE_Plato,INCREMENTO},            // Colocar recipiente
+                                        {STATE_Init,STATE_save_check,GUARDAR},          // Guardar comida directamente (comidaActual no está vacía)
+                                        {STATE_Init,STATE_ERROR,ERROR},                 // Acción incorrecta
                                         // ----------------------------
 
                                         // --- Recipiente colocado ---
@@ -408,7 +413,11 @@ static transition_rule rules[RULES] = { // --- Esperando Recipiente ---
                                         // --------------------------
 
                                         // --- FICHERO CSV BORRADO ---
-                                        {STATE_DELETED_CSV,STATE_Init,GO_TO_INIT}         // Regresar a STATE_Init tras BORRAR CSV (siempre iniciado desde STATE_Init)
+                                        {STATE_DELETED_CSV,STATE_Init,GO_TO_INIT},         // Regresar a STATE_Init tras BORRAR CSV (siempre iniciado desde STATE_Init)
+                                        // ---------------------
+
+                                        // --- UPLOAD DATA TO DATABASE ---
+                                        {STATE_UPLOAD_DATA,STATE_Init,GO_TO_INIT}          // Regresar a STATE_Init tras subir o no la info acumulada
                                         // ---------------------
                                       };
 
@@ -493,11 +502,11 @@ void    actGruposAlimentos();                          // Actividades STATE_grou
 void    actStateRaw();                                 // Actividades STATE_raw
 void    actStateCooked();                              // Actividades STATE_cooked
 void    actStateWeighted();                            // Actividades STATE_weighted
-void    actStateAddCheck();                            // Actividade STATE_add_check
+void    actStateAddCheck();                            // Actividades STATE_add_check
 void    actStateAdded();                               // Actividades STATE_added
-void    actStateDeleteCheck();                         // Actividade STATE_delete_check
+void    actStateDeleteCheck();                         // Actividades STATE_delete_check
 void    actStateDeleted();                             // Actividades STATE_deleted
-void    actStateSaveCheck();                           // Actividade STATE_save_check
+void    actStateSaveCheck();                           // Actividades STATE_save_check
 void    actStateSaved();                               // Actividades STATE_saved
 void    actStateERROR();                               // Actividades STATE_ERROR
 void    actStateCANCEL();                              // Actividades STATE_CANCEL
@@ -507,6 +516,7 @@ void    actState_DELETE_CSV_CHECK();       // Actividades STATE_DELETE_CSV_CHECK
 void    actState_DELETED_CSV();            // Actividades STATE_DELETED_CSV
 
 void    actState_CRITIC_FAILURE_SD();                  // Actividades STATE_CRITIC_FAILURE_SD
+void    actState_UPLOAD_DATA();                        // Actividades STATE_UPLOAD_DATA
 
 // --- Actividades estado actual ---
 void    doStateActions();                              // Actividades según estado actual
@@ -598,6 +608,7 @@ void printStateName(state_t state) {
         case STATE_DELETE_CSV_CHECK:    SerialPC.print("STATE_DELETE_CSV_CHECK");     break;
         case STATE_DELETED_CSV:         SerialPC.print("STATE_DELETED_CSV");          break;
         case STATE_CRITIC_FAILURE_SD:   SerialPC.print("STATE_CRITIC_FAILURE_SD");    break;
+        case STATE_UPLOAD_DATA:         SerialPC.print("STATE_UPLOAD_DATA");          break;
         
         default:                        SerialPC.print("Estado desconocido");         break;
     }
@@ -836,7 +847,7 @@ void actStatePlato(){
             // está vacía porque se ha reiniciado tras guardarla, al colocar recipiente se entiende que va a comenzar una nueva,
             // por lo que se debe reiniciar también la copia.
             // De esta forma, si se retira el plato y se regresa a Init, ya no vuelve a aparecer la info de la comida guardada antes, 
-            // sino qye ya se está haciendo la nueva comida, que aún está a 0.
+            // sino que ya se está haciendo la nueva comida, que aún está a 0.
             // 
             if((comidaActual.isComidaEmpty() == true) and (comidaActualCopia.isComidaEmpty() == false)) comidaActualCopia.restoreComida();   
 
@@ -920,6 +931,8 @@ void actGruposAlimentos(){
             tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
         else if((state_prev != STATE_ERROR) and (state_prev != STATE_groupA) and (state_prev != STATE_groupB) and (pesoBascula != 0.0)){ 
+        // ¿Podría cambiarlo por esto?:
+        // else if ((lastValidState == STATE_weighted) and (pesoBascula != 0.0)){
 
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
                 // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
@@ -984,7 +997,7 @@ void actGruposAlimentos(){
     // ----- PANTALLAS CON MOVIMIENTO -------------------------
     blinkGrupoyProcesamiento(NO_MSG);               // Zona 2 - Parpadea (procesamiento sin escoger)
     if(alternateButtonsProcesamiento()) return;     // Zonas 3 y 4 - Alternar botones de crudo y cocinado. Las formas colores y texto ya están (formGraphicsPedirProcesamiento())
-                                                    // Si hay interrupción, mientras se alternan botones, se sale de la función --> en loop() se chequea la interrupción.
+                                                    // Si hay interrupción mientras se alternan botones, se sale de la función --> en loop() se chequea la interrupción.
     // --------------------------------------------------------
 
 
@@ -1222,8 +1235,7 @@ void actStateAdded(){
             SerialPC.println(F("Añadiendo plato a la comida..."));
 
             /* ----- ACTUALIZAR PLATO  ----- */
-            if(pesoBascula != 0.0){   // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado,
-                                                                        //     debe incluirse en el plato. 
+            if(pesoBascula != 0.0){   // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado, debe incluirse en el plato. 
                                                                     // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
                                                                     // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar el plato, pues no se habría modificado.
@@ -1236,7 +1248,7 @@ void actStateAdded(){
                 
 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
-                Alimento alimento(grupoEscogido, pesoBascula);        // Cálculo automático de valores nutricionales. 
+                Alimento alimento(grupoEscogido, pesoBascula);      // Cálculo automático de valores nutricionales. 
                                                                     // Usamos 'grupoEscogido' porque no se ha modificado. 
                 
                 platoActual.addAlimentoPlato(alimento);                       // Alimento ==> Plato
@@ -1342,7 +1354,7 @@ void actStateDeleted(){
           
 
             // ----- BORRAR PLATO DE LISTA--------------------------------
-            // Borrar desde el final de la lista hasta la última aparición de "INICIO-PLATO".
+            // Borrar desde la última aparición de "INICIO-PLATO" hasta el final de la lista
             listaComidaESP32.borrarLastPlato();
             listaComidaESP32.leerLista();
             // -----------------------------------------------------------
@@ -1536,7 +1548,7 @@ void actStateSaved(){
 
                 // --- COMIDA A DIARIO Y FICHEROS ---
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
-                saveComidaSD();                             // Comida ==> fichero CSV y fichero ESP32 en SD
+                saveComidaSD();                             // Comida ==> fichero CSV y fichero ESP32 en SD (también escribe FIN-COMIDA en lista)
                 readFileESP32();                            // Se lee el fichero en lugar de la lista porque tras guardar la comida, la lista ya está vacía
                 //responseFromESP32 = saveComidaDatabase();   // Comida ==> esp32 ==> base de datos
                 // -----------------------------------
@@ -2284,7 +2296,7 @@ void actState_DELETED_CSV(){
 
         SerialPC.println(F("\nBORRANDO CONTENIDO DEL FICHERO CSV Y FICHERO ESP32. LIMPIANDO ACUMULADO...")); 
 
-        if(borrarFicheroCSV() && borrarFicheroESP32()) showAcumuladoBorrado(true); // true = éxito en el borrado
+        if(deleteFileCSV() && deleteFileESP32()) showAcumuladoBorrado(true); // true = éxito en el borrado
         else showAcumuladoBorrado(false); // false = error en el borrado
 
         flagFicheroCSVBorrado = true;
@@ -2328,6 +2340,80 @@ void actState_CRITIC_FAILURE_SD(){
     // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
     // NO SE ATIENDE A NINGÚN EVENTO PORQUE SE IMPIDE USAR SMARTCLOTH
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   actState_UPLOAD_DATA(): Acciones del STATE_UPLOAD_DATA
+----------------------------------------------------------------------------------------------------------*/
+void actState_UPLOAD_DATA(){ 
+    // En este caso sí podemos usar delay (espera bloqueante) porque no atenderemos a las acciones del usuario,
+    // por lo que no hay que estar pendiente de interrupciones. 
+
+    if(!doneState){
+        if (!checkWifiConnection()) { // No hay WiFi (preguntado al esp32 y responde NO-WIFI)
+            SerialPC.println("NO HAY WIFI");
+            SerialPC.println("\nPaso a Init porque no hay WiFi...");
+            // El GO_TO_INIT se hace al final para todos los casos
+        }
+        else{ // Hay WiFi 
+            // ---- Indicar envío de datos con "SAVE" ------------------------------------
+            SerialPC.println("HAY WIFI");
+            SerialPC.println("\nIndicando que se quiere guardar...");
+            SerialDueESP32.println("SAVE"); // Indicar al ESP32 que se le va a enviar información
+            // ---------------------------------------------------------------------------
+
+            // ---- Esperar a que el ESP32 responda "WAITING-FOR-DATA" -------------------
+            String responseFromESP32 = "";
+            while (responseFromESP32 != "WAITING-FOR-DATA") {
+                if (SerialDueESP32.available() > 0) {
+                    responseFromESP32 = SerialDueESP32.readStringUntil('\n');
+                    responseFromESP32.trim();
+                    SerialPC.println("Respuesta del ESP32: " + responseFromESP32); 
+                }
+            }
+            // ---------------------------------------------------------------------------
+
+            // ---- Enviar fichero TXT linea a linea al esp32 ----------------------------
+            sendFileToESP32(); // Enviar el fichero TXT línea a línea y terminar con FIN-TRANSMISION
+            // ---------------------------------------------------------------------------
+
+            // ---- Esperar a que el ESP32 responda "SAVED-OK" o "HTTP-ERROR:<error>" ----
+            responseFromESP32 = "";
+            while (responseFromESP32 != "SAVED-OK" && !responseFromESP32.startsWith("ERROR-HTTP:")) {
+                if (SerialDueESP32.available() > 0) {
+                    responseFromESP32 = SerialDueESP32.readStringUntil('\n');
+                    responseFromESP32.trim();
+                    SerialPC.println("Respuesta del ESP32: " + responseFromESP32); 
+                }
+            }
+
+            if (responseFromESP32 == "SAVED-OK") { // JSON subido a la base de datos
+                SerialPC.println("JSON ok y borrando fichero TXT...");
+                //deleteFileESP32(); 
+                delay(3000);
+                SerialPC.println("\nPaso a Init tras subir la info y borrar TXT...");
+                // El GO_TO_INIT se hace al final para todos los casos
+            } else if (responseFromESP32.startsWith("ERROR-HTTP:")) {
+                // Hubo un error al subir el JSON
+                SerialPC.println("Error al subir JSON: " + responseFromESP32);
+                delay(3000);
+                SerialPC.println("\nPaso a Init tras ERROR al subir la info...");
+                // El GO_TO_INIT se hace al final para todos los casos
+            }
+            // ---------------------------------------------------------------------------
+        }
+
+        // Pasar a Init si no había WiFi, si había WiFi y se subió OK o 
+        // si había WiFi pero falló la subida
+        addEventToBuffer(GO_TO_INIT);
+        flagEvent = true;
+        
+
+        doneState = true;               // Solo realizar una vez las actividades del estado por cada vez que se active y no
+                                        // cada vez que se entre a esta función debido al loop de Arduino.
+    }
+    
 }
 
 

@@ -76,15 +76,17 @@
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
-bool    setupSDcard();                   // Inicializar tarjeta SD
-void    writeHeaderFileSD();             // Crear fichero CSV y escribir header 
-void    saveComidaSD();                  // Guardar valores de la comida en fichero CSV
-void    getAcumuladoHoyFromSD();         // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
+bool    setupSDcard();              // Inicializar tarjeta SD
+void    writeHeaderFileSD();        // Crear fichero CSV y escribir header 
+void    saveComidaSD();             // Guardar valores de la comida en fichero CSV
+void    getAcumuladoHoyFromSD();    // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 
-bool    borrarFicheroCSV();              // Borrar contenido del fichero CSV
+bool    deleteFileCSV();            // Borrar contenido del fichero CSV
 
-bool    borrarFicheroESP32();            // Borrar contenido del fichero TXT del ESP32
-void    readFileESP32();                 // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
+bool    checkFileESP32();           // Comprobar si el fichero TXT del ESP32 está vacío o si hay algo que subir
+void    readFileESP32();            // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
+void    sendFileToESP32();          // Enviar fichero TXT al ESP32 línea a línea     
+bool    deleteFileESP32();          // Borrar contenido del fichero TXT del ESP32
 /*-----------------------------------------------------------------------------*/
 
 
@@ -92,8 +94,9 @@ void    readFileESP32();                 // Leer contenido del fichero TXT del E
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Inicializar la tarjeta SD.
- * @return true: inicialización correcta  false: fallo al inicializar la SD
+ * @brief Inicializa la tarjeta SD y realiza la configuración necesaria para su uso.
+ * 
+ * @return true si la tarjeta SD se inicializa correctamente, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
 bool setupSDcard(){
@@ -119,7 +122,8 @@ bool setupSDcard(){
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Crear un nuevo archivo CSV en la tarjeta SD y escribir el encabezado.
+ * @brief Escribe el encabezado del archivo en la tarjeta SD.
+ * El encabezado contiene los nombres de las columnas separados por ';'.
  */
 /*-----------------------------------------------------------------------------*/
 void writeHeaderFileSD(){
@@ -145,7 +149,8 @@ void writeHeaderFileSD(){
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Guardar los valores de la comida actual en el archivo CSV en la tarjeta SD.
+ * @brief Guarda la información de la comida en la tarjeta SD.
+ * La información se guarda en un archivo CSV y en un archivo TXT para el ESP32.
  */
 /*-----------------------------------------------------------------------------*/
 void saveComidaSD(){
@@ -167,7 +172,7 @@ void saveComidaSD(){
     File myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
     if (myFile){
         myFile.println(dataString);
-        myFile.close(); // close the file
+        myFile.close(); 
         SerialPC.println("Comida guardada correctamente en la SD");
     }
     else{
@@ -194,7 +199,7 @@ void saveComidaSD(){
         // Cierra el archivo
         myFile.close();
 
-        // Limpia el vector para la próxima comida
+        // Limpia la lista para la próxima comida
         listaComidaESP32.clearList();
 
         SerialPC.println("Comida guardada correctamente en fichero TXT");
@@ -211,8 +216,12 @@ void saveComidaSD(){
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Leer las comidas guardadas en el día actual desde el archivo CSV en 
- * la tarjeta SD y calcular el total acumulado.
+ * @brief Obtiene los valores acumulados de hoy desde una tarjeta SD.
+ * 
+ * Esta función lee un archivo CSV en una tarjeta SD y suma los valores nutricionales correspondientes al día actual.
+ * Los valores acumulados incluyen carbohidratos, lípidos, proteínas, kilocalorías y peso.
+ * 
+ * @note Esta función asume que el archivo CSV tiene un formato específico y que la tarjeta SD está correctamente configurada.
  */
 /*-----------------------------------------------------------------------------*/
 void getAcumuladoHoyFromSD(){
@@ -296,12 +305,14 @@ void getAcumuladoHoyFromSD(){
 
 
 
-// ----------------------------------------------------------------------------
-// borrarFicheroCSV(): borrar contenido del fichero csv --> limpiar acumulado
-//        Return:     true - éxito en el borrado
-//                    false - error en el borrado
-// -----------------------------------------------------------------------------
-bool borrarFicheroCSV(){
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Borra el fichero CSV existente y crea uno nuevo con el mismo nombre.
+ * 
+ * @return true si se borra y crea el fichero correctamente, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool deleteFileCSV(){
     // Borrar contenido borrando fichero y creándolo de nuevo no se debe hacer, 
     // especialmente si se va a repetir muchas veces, pero creo que para las 
     // pruebas no habrá problema.
@@ -331,12 +342,95 @@ bool borrarFicheroCSV(){
 
 
 
-// ----------------------------------------------------------------------------
-// borrarFicheroESP32(): borrar contenido del fichero TXT 
-//        Return:     true - éxito en el borrado
-//                    false - error en el borrado
-// -----------------------------------------------------------------------------
-bool borrarFicheroESP32(){
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Comprueba si el archivo TXT del ESP32 contiene contenido.
+ * 
+ * @return true si el archivo tiene contenido, false si está vacío o no se puede abrir.
+ */
+/*-----------------------------------------------------------------------------*/
+bool checkFileESP32(){
+    SerialPC.println(F("\n\nComprobando contenido del fichero TXT del ESP32...\n"));
+    File myFile = SD.open(fileESP32, FILE_READ);
+    if (myFile){
+        if (myFile.size() > 0) { // Si el tamaño del archivo es mayor que 0, tiene contenido (true)
+            myFile.close();
+            return true;
+        } 
+        else { // Si el tamaño del archivo es 0, está vacío (false)
+            myFile.close();
+            return false;
+        }
+    }
+    else{
+        SerialPC.println("Error abriendo fichero TXT!");
+        return false; // Si hubo error, lo tratamos como vacío para que no intente acceder 
+    }
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Lee un archivo de texto del ESP32 y muestra su contenido en el monitor serie.
+ */
+/*-----------------------------------------------------------------------------*/
+void readFileESP32(){
+    SerialPC.println(F("\n\nLeyendo fichero TXT del ESP32...\n"));
+    File myFile = SD.open(fileESP32, FILE_READ);
+    if (myFile){
+        while (myFile.available()) {
+            SerialPC.write(myFile.read());
+        }
+        myFile.close();
+    }
+    else{
+        SerialPC.println("Error abriendo fichero TXT!");
+    }
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Envía el archivo TXT al ESP32 línea por línea a través de Serial.
+ * 
+ */
+/*-----------------------------------------------------------------------------*/
+void sendFileToESP32(){
+    File dataFile = SD.open(fileESP32);
+
+    if (dataFile) {
+        // Lee el archivo línea por línea y envía cada línea al ESP32
+        while (dataFile.available()){
+            String line = dataFile.readStringUntil('\n');
+            line.trim();
+
+            // Envía la línea al ESP32 a través de Serial
+            SerialDueESP32.println(line);
+        }
+        dataFile.close();
+
+        SerialDueESP32.println("FIN-TRANSMISION");
+
+        SerialPC.println("\nFichero completo enviado");
+    }
+    else {
+        SerialPC.println("\nError al abrir el archivo data-ESP.txt");
+    }
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Borra un fichero en el ESP32.
+ * 
+ * Esta función borra un fichero en el ESP32 utilizando la tarjeta SD.
+ * 
+ * @return true si el fichero se borra correctamente, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool deleteFileESP32(){
 
     // -------- BORRAR FICHERO ESP32 ------------------------
     SerialPC.println("Borrando fichero ESP32...");
@@ -357,23 +451,8 @@ bool borrarFicheroESP32(){
 }
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Lee el contenido del archivo del ESP32 en la tarjeta SD.
- */
-/*-----------------------------------------------------------------------------*/
-void readFileESP32(){
-    SerialPC.println(F("\n\nLeyendo fichero TXT del ESP32...\n"));
-    File myFile = SD.open(fileESP32, FILE_READ);
-    if (myFile){
-        while (myFile.available()) {
-            SerialPC.write(myFile.read());
-        }
-        myFile.close();
-    }
-    else{
-        SerialPC.println("Error abriendo fichero TXT!");
-    }
-}
+
+
+
 
 #endif
