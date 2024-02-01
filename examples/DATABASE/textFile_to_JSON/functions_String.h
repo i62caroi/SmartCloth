@@ -3,33 +3,26 @@
  * @brief Este archivo contiene funciones auxiliares para convertir un String que simula el fichero TXT en un JSON.
  * 
  * @author Irene Casares Rodríguez
- * @date 10/01/2024
+ * @date 01/02/2024
  */
 
 #ifndef FUNCTIONS_STRING_H
 #define FUNCTIONS_STRING_H
 
 #include <TimeLib.h>
-
 #include <ArduinoJson.h>
-
+#include "functions.h" // Para convertTimeToUnix()
 #include "cadenas.h"
 
-
-String MAC = "08:D1:F9:CB:A1:EC";
-
-
-
-/*-----------------------------------------------------------------------------*/
-void    processJSON();
-void    stringToJSON(DynamicJsonDocument& doc, const String& fileContent);
-void    stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent);
-void    stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent);
-
-time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex);
-/*-----------------------------------------------------------------------------*/
-
 #define JSON_SIZE_LIMIT 4096
+
+
+/*-----------------------------------------------------------------------------*/
+void    processJSON();                                                                  // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar  
+void    stringToJSON(DynamicJsonDocument& doc, const String& fileContent);              // Generar JSON con todo lo que entre, aunque una comida se quede a mitad
+void    stringToJSON_lastState(DynamicJsonDocument& doc, const String& fileContent);    // Generar JSON solo comidas completas, restaurando el último estado
+void    stringToJSON_lastState_v2(DynamicJsonDocument& doc, const String& fileContent); // Intento de generar varios JSON solo con comidas completas y que no se pasen de tamaño
+/*-----------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -39,7 +32,8 @@ time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaInd
 /*-----------------------------------------------------------------------------*/
 void  processJSON()
 {
-    // ------------------------------------------------------------
+    // ---------- DECLARAR DOCUMENTO JSON -------------------------
+    // ------------------------------
     // Versión 6.21.5 de ArduinoJson
     // ------------------------------
     // Se reservan 4KB de RAM para el JSON, aunque acabe siendo más pequeño.
@@ -50,9 +44,9 @@ void  processJSON()
     //
     // Si se declarara como global, solo se podría liberar su memoria reiniciando el dispositivo.
     DynamicJsonDocument doc(JSON_SIZE_LIMIT); 
-    // ------------------------------------------------------------
+    // ------------------------------
 
-    // ------------------------------------------------------------
+    // ------------------------------
     // Versión 7 de ArduinoJson
     // ------------------------------
     // Hay una nueva versión 7 de ArduinoJson que se supone que permite trabajar con documentos JSON
@@ -63,36 +57,46 @@ void  processJSON()
     //      In constructor 'ArduinoJson::V701PB2::JsonDocument::JsonDocument(ArduinoJson::V701PB2::JsonDocument&&)':
     //      error: no matching function for call to 'ArduinoJson::V701PB2::JsonDocument::JsonDocument()'
     // Daba ese error aunque no se creara ningún 'JsonDocument'
+    // ------------------------------
     // ------------------------------------------------------------
 
 
+    // ------------- GENERAR JSON ---------------------------------
     // Convertir la String (simulación del fichero txt) a JSON pasando la cadena y el documento 
-    // donde guardar el JSON:
+    // donde guardar el JSON. Mete todo lo que puede en el JSON, aunque alguna comida se quede a medias:
     //stringToJSON(doc, string3); // Una sola comida con 10 platos de 10 alimentos cada uno (sobredimensionada)
     //stringToJSON(doc, string4); // Una sola comida con 10 platos de 10 alimentos cada uno (sobredimensionada)
 
     // Convertir la String a JSON convirtiendo solo comidas completas (sin superar JSON-JSON_SIZE_LIMIT)
-    stringToJSON_copia(doc, string4);
-    //stringToJSON_copia_v2(doc, string4); 
+    stringToJSON_lastState(doc, string4);       // Si hace falta, restaura el último estado del JSON solo con comidas completas
+    //stringToJSON_lastState_v2(doc, string4);  // Intento de generar varios JSON que no se pasen de tamaño y solo tengan comidas completas
+    // ------------------------------------------------------------
 
-    // Mostrar JSON 
-    Serial.println("\n\n********************\nContenido del JSON:\n********************");
+    // ------------- MOSTRAR JSON ---------------------------------
+    Serial.println(F("\n\n********************\nContenido del JSON:\n********************"));
     serializeJsonPretty(doc, Serial);
-    Serial.println("\n\n********************\nFin del contenido del JSON\n********************");
+    Serial.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+    // ------------------------------------------------------------
 
-    Serial.print("\n\nMemoria RAM usada: "); Serial.println(doc.memoryUsage());
+    // -------- MEMORIA RAM USADA POR EL JSON ---------------------
+    Serial.print(F("\n\nMemoria RAM usada: ")); Serial.println(doc.memoryUsage());
+    // ------------------------------------------------------------
 
 }
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Convierte el contenido del String en un JSON y lo almacena en 'doc'
+ * @brief Convierte el contenido del String en un JSON y lo almacena en 'doc'. 
+ * Incluye toda la info que quepa en el JSON, aunque alguna comida se quede a medias.
  * @param doc - documento tipo 'DynamicJsonDocument' donde guardar el JSON generado
  * @param fileContent - String (simulación de fichero txt) a convertir en en JSON
  */
 /*-----------------------------------------------------------------------------*/
 void stringToJSON(DynamicJsonDocument& doc, const String& fileContent)
 {
+    String MAC = "08:D1:F9:CB:A1:EC";
+
+    // Elementos del documento JSON
     JsonArray comidas = doc.createNestedArray("comidas");
     doc["MAC"] = MAC;
     JsonObject comida;
@@ -134,6 +138,7 @@ void stringToJSON(DynamicJsonDocument& doc, const String& fileContent)
             //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
             //comida["hora"] = line.substring(secondCommaIndex + 1);
             // ---
+            // Creo que el RTC está dando la hora GMT +0h
             time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
             comida["fecha"] = (int)timestamp;
             // ---
@@ -151,29 +156,17 @@ void stringToJSON(DynamicJsonDocument& doc, const String& fileContent)
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Convierte el contenido del String en un JSON 
- *        El String debe contener líneas que representen una comida, un plato o un alimento.
- *        Si el documento JSON se llena durante el procesamiento, se restaura al estado de la 
- *        última comida completa, es decir, que el JSON final solo incluya comidas completas.
+ * @brief Convierte el contenido del String en un JSON. Solo mantiene en el JSON
+ * comidas completas. Si se llena el JSON en mitad de una comida, restaura la 
+ * última versión que solo tenía comidas completas.
  * 
  * @param doc - documento tipo 'DynamicJsonDocument' donde guardar el JSON generado
  * @param fileContent - String (simulación de fichero txt) a convertir en en JSON
  */
 /*-----------------------------------------------------------------------------*/
-void stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent)
+void stringToJSON_lastState(DynamicJsonDocument& doc, const String& fileContent)
 {
-    // Si ArduinoJson ve que lo que va a meter en el JSON haría que superara su capacidad, no lo hace.
-    // Entonces, no podemos simplemente comprobar si el JSON se ha pasado de JSON_SIZE_LIMIT, porque nunca
-    // lo hará, sino que comprobamos si se va modificando la cantidad de memoria usada por el JSON, 
-    // lo que significaría que se están añadiendo elementos. En cuanto deje de aumentar la memoria usada,
-    // significará que el JSON ya no admite más elementos.
-    // En ese caso, si se ha quedado una comida a medias (no se ha alcanzado FIN-COMIDA), deberemos ignorarla
-    // y solo dejar en el JSON comidas completas porque así será más fácil saber qué información se ha subido
-    // a la base de datos y cuál está pendiente. De hecho, si se intenta subir una comida que no está completa,
-    // no creo que fuera posible guardar la información en la base de datos.
-    // Para "ignorar" la comida que se ha quedado a medias, la mejor forma es crear copias del JSON cuando
-    // se complete una comida, de forma que cuando haya que "ignorar" una comida no terminada, simplemente
-    // se restaure esa copia.
+    String MAC = "08:D1:F9:CB:A1:EC";
 
     // Último estado exitoso del JSON (solo comidas completas)
     String lastSuccessfulState;
@@ -228,6 +221,7 @@ void stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent)
             //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
             //comida["hora"] = line.substring(secondCommaIndex + 1);
             // ---
+            // Creo que el RTC está dando la hora GMT +0h
             time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
             comida["fecha"] = (int)timestamp;
             // ---
@@ -235,12 +229,12 @@ void stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent)
             size_t currentMemoryUsage = doc.memoryUsage();
             // Si el uso de memoria ha cambiado (se ha añadido algo al JSON), guarda una copia del estado del JSON
             if (currentMemoryUsage != lastMemoryUsage) {
-                Serial.println("\n\n::::::::::::::::::::::\nGenerando copia\n::::::::::::::::::::::");
+                Serial.println(F("\n\n::::::::::::::::::::::\nGenerando copia\n::::::::::::::::::::::"));
                 // Guarda una copia del estado del JSON para restaurarla si se pasa de tamaño
                 lastSuccessfulState = "";
                 serializeJson(doc, lastSuccessfulState);
                 lastComidaIndex = lineIndex; // Actualiza el índice de la línea de fin de la última comida completa
-                Serial.print("Indice de fin de última comida: "); Serial.println(lastComidaIndex);
+                Serial.print(F("Indice de fin de última comida: ")); Serial.println(lastComidaIndex);
             }
         }
 
@@ -248,7 +242,7 @@ void stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent)
         size_t currentMemoryUsage = doc.memoryUsage();
         // Si el uso de memoria no ha cambiado (el JSON ya no admite más datos), restaura el JSON al estado de la última comida completa
         if (currentMemoryUsage == lastMemoryUsage) {
-            Serial.println("\n\n********************\nMemoria casi llena, no se pueden agregar más líneas\n********************");
+            Serial.println(F("\n\n********************\nMemoria casi llena, no se pueden agregar más líneas\n********************"));
             // Restaura el JSON al estado de la última comida completa
             doc.clear(); 
             deserializeJson(doc, lastSuccessfulState); // Restauramos último estado exitoso del JSON (solo comidas completas)
@@ -263,7 +257,7 @@ void stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent)
         // Si end es -1, estamos en la última línea
         if (end == -1) {
             lastComidaIndex = -1; // Se pone a -1 para indicar que se ha terminado, no quedarían comidas por enviar
-            Serial.print("Indice de fin de última comida: "); Serial.println(lastComidaIndex);
+            Serial.print(F("Indice de fin de última comida: ")); Serial.println(lastComidaIndex);
         }
     }
 
@@ -272,20 +266,18 @@ void stringToJSON_copia(DynamicJsonDocument& doc, const String& fileContent)
 
 
 
-void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Convierte una cadena de texto en formato JSON. Intento de generar varios JSON
+ * para que incluyan solo comidas completas y no se pasen de tamaño.
+ * 
+ * @param doc El documento JSON donde se almacenará la información.
+ * @param fileContent El contenido del archivo de texto a convertir.
+ */
+/*-----------------------------------------------------------------------------*/
+void stringToJSON_lastState_v2(DynamicJsonDocument& doc, const String& fileContent)
 {
-    // Si ArduinoJson ve que lo que va a meter en el JSON haría que superara su capacidad, no lo hace.
-    // Entonces, no podemos simplemente comprobar si el JSON se ha pasado de JSON_SIZE_LIMIT, porque nunca
-    // lo hará, sino que comprobamos si se va modificando la cantidad de memoria usada por el JSON, 
-    // lo que significaría que se están añadiendo elementos. En cuanto deje de aumentar la memoria usada,
-    // significará que el JSON ya no admite más elementos.
-    // En ese caso, si se ha quedado una comida a medias (no se ha alcanzado FIN-COMIDA), deberemos ignorarla
-    // y solo dejar en el JSON comidas completas porque así será más fácil saber qué información se ha subido
-    // a la base de datos y cuál está pendiente. De hecho, si se intenta subir una comida que no está completa,
-    // no creo que fuera posible guardar la información en la base de datos.
-    // Para "ignorar" la comida que se ha quedado a medias, la mejor forma es crear copias del JSON cuando
-    // se complete una comida, de forma que cuando haya que "ignorar" una comida no terminada, simplemente
-    // se restaure esa copia.
+    String MAC = "08:D1:F9:CB:A1:EC";
 
     // Último estado exitoso del JSON (solo comidas completas)
     String lastSuccessfulState;
@@ -350,6 +342,7 @@ void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
                 //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
                 //comida["hora"] = line.substring(secondCommaIndex + 1);
                 // ---
+                // Creo que el RTC está dando la hora GMT +0h
                 time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
                 comida["fecha"] = (int)timestamp;
                 // ---
@@ -358,16 +351,16 @@ void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
                 // Si el uso de memoria ha cambiado (se ha añadido algo al JSON), guarda una copia del estado del JSON
                 if (currentMemoryUsage != lastMemoryUsage) 
                 {
-                    Serial.println("\n\n::::::::::::::::::::::\nGenerando copia\n::::::::::::::::::::::");
+                    Serial.println(F("\n\n::::::::::::::::::::::\nGenerando copia\n::::::::::::::::::::::"));
                     // Guarda una copia del estado del JSON para restaurarla si se pasa de tamaño
                     lastSuccessfulState = "";
                     serializeJson(doc, lastSuccessfulState);
-                    Serial.println("\n\n********************\nContenido del JSON de copia:\n********************");
+                    Serial.println(F("\n\n********************\nContenido del JSON de copia:\n********************"));
                     serializeJsonPretty(doc, Serial);
-                    Serial.println("\n\n********************\nFin del contenido del JSON de copia\n********************");
+                    Serial.println(F("\n\n********************\nFin del contenido del JSON de copia\n********************"));
                     
                     lastComidaIndex = lineIndex; // Actualiza el índice de la línea de fin de la última comida completa
-                    Serial.print("Indice de fin de última comida: "); Serial.println(lastComidaIndex);
+                    Serial.print(F("Indice de fin de última comida: ")); Serial.println(lastComidaIndex);
                 }
             }
 
@@ -376,7 +369,7 @@ void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
             // Si el uso de memoria no ha cambiado (el JSON ya no admite más datos), restaura el JSON al estado de la última comida completa
             if (currentMemoryUsage == lastMemoryUsage) 
             {
-                Serial.println("\n\n********************\nMemoria casi llena, no se pueden agregar más líneas\n********************");
+                Serial.println(F("\n\n********************\nMemoria casi llena, no se pueden agregar más líneas\n********************"));
                 // Restaura el JSON al estado de la última comida completa
                 doc.clear(); 
                 //deserializeJson(doc, lastSuccessfulState); // Restauramos último estado exitoso del JSON (solo comidas completas)
@@ -388,9 +381,9 @@ void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
                 currentMemoryUsage = doc.memoryUsage();
                 
                 // Imprime el contenido del JSON en el Serial Monitor
-                Serial.println("\n\n********************\nContenido del JSON:\n********************");
+                Serial.println(F("\n\n********************\nContenido del JSON:\n********************"));
                 serializeJsonPretty(doc, Serial);
-                Serial.println("\n\n********************\nFin del contenido del JSON\n********************");
+                Serial.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
 
                 nextJSON = true; // Se necesita otro JSON
                 
@@ -407,7 +400,7 @@ void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
             // Si end es -1, estamos en la última línea
             if (end == -1) {
                 lastComidaIndex = -100; // Se pone a -100 para indicar que se ha terminado, no quedarían comidas por enviar
-                Serial.print("Indice de fin de última comida: "); Serial.println(lastComidaIndex);
+                Serial.print(F("Indice de fin de última comida: ")); Serial.println(lastComidaIndex);
                 //return; // Salir de la función porque ya no hay más info que enviar
             }
 
@@ -421,37 +414,5 @@ void stringToJSON_copia_v2(DynamicJsonDocument& doc, const String& fileContent)
 
 
 
-/**
- * @brief Convierte una fecha y hora en formato de cadena a un valor de tiempo Unix.
- * 
- * @param firstCommaIndex Índice de la primera coma en la cadena.
- * @param secondCommaIndex Índice de la segunda coma en la cadena.
- * @return time_t Valor de tiempo Unix correspondiente a la fecha y hora especificadas.
- */
-time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex)
-{
-    String fecha = line.substring(firstCommaIndex + 1, secondCommaIndex);
-    String hora = line.substring(secondCommaIndex + 1);
-
-    int day = fecha.substring(0,2).toInt();
-    int month = fecha.substring(3,5).toInt();
-    int year = fecha.substring(6,10).toInt();
-
-    int hour = hora.substring(0,2).toInt();
-    int minute = hora.substring(3,5).toInt();
-    int second = hora.substring(6,8).toInt();
-
-    tmElements_t tm;
-    tm.Day = day;
-    tm.Month = month;
-    tm.Year = year - 1970;
-    tm.Hour = hour;
-    tm.Minute = minute;
-    tm.Second = second;
-
-    time_t timestamp = makeTime(tm);
-
-    return timestamp;
-}
 
 #endif
