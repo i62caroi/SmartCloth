@@ -73,7 +73,7 @@ void loop()
         String line = SerialESP32Due.readStringUntil('\n');
         line.trim();
 
-        SerialPC.print("Linea recibida: "); SerialPC.println(line);
+        SerialPC.println("Linea recibida: " + line);
 
         //addLineToJSON_ONE(line);
         addLineToJSON(line);
@@ -88,7 +88,7 @@ void loop()
         String line = SerialESP32Due.readStringUntil('\n');
         line.trim();
 
-        SerialPC.print("Linea recibida: "); SerialPC.println(line);
+        SerialPC.println("Linea recibida: " + line); 
 
         if (line == "CHECK-WIFI"){
             if(hayConexionWiFi()){

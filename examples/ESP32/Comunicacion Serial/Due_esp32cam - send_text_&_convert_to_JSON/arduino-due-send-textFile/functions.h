@@ -90,7 +90,7 @@ bool checkWifiConnection() {
     SerialPC.println("Comprobando la conexión WiFi del ESP32...");
 
     String command = "CHECK-WIFI";
-    SerialPC.print("Cadena enviada al esp32: "); SerialPC.println(command);
+    SerialPC.println("Cadena enviada al esp32: " + command); 
     SerialDueESP32.print(command); //Envía la cadena al esp32
 
     unsigned long timeout = 10000;  // Espera máxima de 10 segundos
@@ -101,7 +101,7 @@ bool checkWifiConnection() {
         if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
             String responseFromESP32 = SerialDueESP32.readStringUntil('\n');
             responseFromESP32.trim();  // Elimina espacios en blanco al principio y al final
-            SerialPC.print("Respuesta del ESP32: ");  SerialPC.println(responseFromESP32);
+            SerialPC.println("Respuesta del ESP32: " + responseFromESP32);  
 
             if (responseFromESP32 == "WIFI") {
                 // Respuesta OK, hay conexión WiFi

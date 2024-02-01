@@ -194,7 +194,7 @@ void addLineToJSON_print(String line)
         serializeJsonPretty(JSONdoc, SerialPC); 
 
         // Avisar al Due de que ya se tiene el JSON completo
-        SerialESP32Due.println("JSON-OK");
+        SerialESP32Due.println("JSON completo");
         
     }
     else
