@@ -58,8 +58,8 @@ char fileESP32[30] = "data/data-esp.txt";
 -----------------------------------------------------------------------------*/
 bool    setupSDcard();           // Inicializar tarjeta SD
 void    readFileESP32();         // Leer fichero esp32 
-void    sendFileToEsp32ONE();       // Enviar fichero al esp32 
-int     sendFileToEsp32();       // Enviar fichero al esp32 contando comidas enviadas
+void    sendFileToESP32();       // Enviar fichero al esp32 
+int     sendFileToESP32_counting();       // Enviar fichero al esp32 contando comidas enviadas
 /*-----------------------------------------------------------------------------*/
 
 
@@ -111,7 +111,7 @@ void readFileESP32(){
  * @brief Envía el fichero por Serial al esp32
  */
 /*-----------------------------------------------------------------------------*/
-void sendFileToEsp32ONE()
+void sendFileToESP32()
 {
     File dataFile = SD.open(fileESP32);
 
@@ -128,13 +128,13 @@ void sendFileToEsp32ONE()
         }
         dataFile.close();
 
-        SerialDueESP32.println("FIN-TRANSMISION");
+        SerialDueESP32.println(F("FIN-TRANSMISION"));
 
-        SerialPC.println("\nFichero completo enviado");
+        SerialPC.println(F("\nFichero completo enviado"));
     }
     else 
     {
-        SerialPC.println("\nError al abrir el archivo data-ESP.txt");
+        SerialPC.println(F("\nError al abrir el archivo data-ESP.txt"));
     }
 }
 
@@ -148,7 +148,7 @@ void sendFileToEsp32ONE()
  *          ha podido subir todas
  */
 /*-----------------------------------------------------------------------------*/
-int sendFileToEsp32()
+int sendFileToESP32_counting()
 {
     int nComidas = 0;
 

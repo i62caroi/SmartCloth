@@ -86,10 +86,10 @@ void loop()
         else if (msgFromDUE == "SAVE"){
             SerialPC.println("Esperando data...");
             SerialESP32Due.println("WAITING-FOR-DATA");
+            processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION
         }
         else{
-            SerialPC.println("Añadiendo lineas al JSON...");
-            processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION
+            // Otras
         }
     }
     // -----------------------------------------------

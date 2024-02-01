@@ -105,6 +105,7 @@ void  processJSON()
 
 
     // ------------- GENERAR JSON ---------------------------------
+    SerialPC.println("Añadiendo lineas al JSON...");
     String line = "";
     while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
         if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
