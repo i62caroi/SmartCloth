@@ -9,16 +9,19 @@
 #ifndef FUNCTIONS_STRING_H
 #define FUNCTIONS_STRING_H
 
-#include <TimeLib.h>
 #include <ArduinoJson.h>
+#include <TimeLib.h>
 #include "functions.h" // Para convertTimeToUnix()
 #include "cadenas.h"
 
 #define JSON_SIZE_LIMIT 4096
 
 
-/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
 void    processJSON();                                                                  // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar  
+void  processJSON(DynamicJsonDocument& doc);
 void    stringToJSON(DynamicJsonDocument& doc, const String& fileContent);              // Generar JSON con todo lo que entre, aunque una comida se quede a mitad
 void    stringToJSON_lastState(DynamicJsonDocument& doc, const String& fileContent);    // Generar JSON solo comidas completas, restaurando el último estado
 void    stringToJSON_lastState_v2(DynamicJsonDocument& doc, const String& fileContent); // Intento de generar varios JSON solo con comidas completas y que no se pasen de tamaño
@@ -83,6 +86,45 @@ void  processJSON()
     // ------------------------------------------------------------
 
 }
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Crea el documento JSON en un ámbito cerrado para poder liberar la memoria 
+ *        RAM que ocupe al salir del mismo (al salir de la función)
+ */
+/*-----------------------------------------------------------------------------*/
+void  processJSON(DynamicJsonDocument& doc)
+{
+    // ---------- DECLARAR DOCUMENTO JSON -------------------------
+    // Se declara en el loop y se pasa por referencia
+    // ------------------------------------------------------------
+
+
+    // ------------- GENERAR JSON ---------------------------------
+    // Convertir la String (simulación del fichero txt) a JSON pasando la cadena y el documento 
+    // donde guardar el JSON. Mete todo lo que puede en el JSON, aunque alguna comida se quede a medias:
+    //stringToJSON(doc, string3); // Una sola comida con 10 platos de 10 alimentos cada uno (sobredimensionada)
+    //stringToJSON(doc, string4); // Una sola comida con 10 platos de 10 alimentos cada uno (sobredimensionada)
+
+    // Convertir la String a JSON convirtiendo solo comidas completas (sin superar JSON-JSON_SIZE_LIMIT)
+    stringToJSON_lastState(doc, string4);       // Si hace falta, restaura el último estado del JSON solo con comidas completas
+    //stringToJSON_lastState_v2(doc, string4);  // Intento de generar varios JSON que no se pasen de tamaño y solo tengan comidas completas
+    // ------------------------------------------------------------
+
+    // ------------- MOSTRAR JSON ---------------------------------
+    Serial.println(F("\n\n********************\nContenido del JSON:\n********************"));
+    serializeJsonPretty(doc, Serial);
+    Serial.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+    // ------------------------------------------------------------
+
+    // -------- MEMORIA RAM USADA POR EL JSON ---------------------
+    Serial.print(F("\n\nMemoria RAM usada: ")); Serial.println(doc.memoryUsage());
+    // ------------------------------------------------------------
+
+}
+
+
 
 /*-----------------------------------------------------------------------------*/
 /**

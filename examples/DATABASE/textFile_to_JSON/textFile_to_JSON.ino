@@ -9,6 +9,7 @@
 #include "functions.h"
 #include "functions_String.h"
 
+bool crearJson = true;
 
 void setup()
 {
@@ -17,7 +18,7 @@ void setup()
      
     // ---- TARJETA SD -----------------
     // Inicializar SD
-    if (!setupSDcard()){
+    /*if (!setupSDcard()){
         Serial.println("Card failed, or not present");
         return;
     }
@@ -28,11 +29,11 @@ void setup()
     
     // Convertir fichero TXT a JSON y guardar .jsn en SD
     processJSON_txtFile();
-    
+    */
     // ---------------------------------
 
     // ---- NO SD (STRING) -------------
-    //processJSON();
+    processJSON();
     // ---------------------------------
 
 }
@@ -42,6 +43,12 @@ void setup()
 
 void loop() {
     
+    /*if(crearJson){
+        DynamicJsonDocument doc(JSON_SIZE_LIMIT);
+        processJSON(doc);
+        crearJson = false;
+    }*/
+
    delay(100);
 }
 

@@ -18,7 +18,9 @@ DynamicJsonDocument doc(1024);
 #define JSON_SIZE_LIMIT 4096
 
 
-/*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
 void    processJSON_txtFile();                      // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar  
 void    textFileToJSON(DynamicJsonDocument& doc);   // Generar JSON con todo lo que entre, aunque una comida se quede a mitad
 void    saveJSON(DynamicJsonDocument& doc);         // Guardar JSON generado en un fichero .jsn en la SD

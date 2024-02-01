@@ -9,40 +9,69 @@
 #ifndef FUNCTIONS_H
 #define FUNCTIONS_H
 
-#include "defines.h" // Seriales
+#include "cadenas.h"
+
+#define SerialPC Serial
+#define SerialDueESP32 Serial1
 
 
-// Simular la lectura del archivo
-String string1 = "INICIO-COMIDA\n"
-                "INICIO-PLATO\n"
-                "ALIMENTO,15,53.50\n"
-                "ALIMENTO,9,53.50\n"
-                "FIN-COMIDA,19.01.2024,17:55:36\n"
-                "INICIO-COMIDA\n"
-                "INICIO-PLATO\n"
-                "ALIMENTO,15,24.40\n"
-                "FIN-COMIDA,19.01.2024,18:25:25\n";
-                
-                
 
-String string2 = "INICIO-COMIDA\n"
-                "INICIO-PLATO\n"
-                "ALIMENTO,15,53.50\n"
-                "ALIMENTO,9,53.50\n"
-                "FIN-COMIDA,19.01.2024,17:55:36\n"
-                "INICIO-COMIDA\n"
-                "INICIO-PLATO\n"
-                "ALIMENTO,15,24.40\n"
-                "FIN-COMIDA,19.01.2024,18:25:25\n"
-                "INICIO-COMIDA\n"
-                "INICIO-PLATO\n"
-                "ALIMENTO,15,53.50\n"
-                "ALIMENTO,9,53.50\n"
-                "INICIO-PLATO\n"
-                "ALIMENTO,3,32.07\n"
-                "ALIMENTO,27,46.65\n"
-                "ALIMENTO,10,16.23\n"
-                "FIN-COMIDA,19.01.2024,10:39:36\n";
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
+bool    checkWifiConnection();                              // Preguntar al esp32 si tiene conexión WiFi
+void    sendStringSimulationToEsp32(String fileContent);    // Enviar String al esp32 simulando el fichero TXT
+/*-----------------------------------------------------------------------------*/
+
+
+
+/*---------------------------------------------------------------------------------------------------------*/
+/**
+ * @brief Comprueba la conexión WiFi del ESP32.
+ * 
+ * @return true si hay conexión WiFi, false si no la hay.
+ */
+/*---------------------------------------------------------------------------------------------------------*/
+bool checkWifiConnection() {
+    SerialPC.println(F("Comprobando la conexión WiFi del ESP32..."));
+
+    SerialPC.println(F("Cadena enviada al esp32: CHECK-WIFI")); 
+    SerialDueESP32.print(F("CHECK-WIFI")); //Envía la cadena al esp32
+
+    unsigned long timeout = 10000;  // Espera máxima de 10 segundos
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+
+    while (true) { // Bloquea el arduino en este bucle hasta que se reciba respuesta o se pase el TIMEOUT
+        // Comprueba si hay datos disponibles en el puerto serie del ESP32
+        if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
+            String msgFromESP32 = SerialDueESP32.readStringUntil('\n');
+            msgFromESP32.trim();  // Elimina espacios en blanco al principio y al final
+            SerialPC.println("Respuesta del ESP32: " + msgFromESP32);  
+
+            if (msgFromESP32 == "WIFI-OK") {
+                // Respuesta OK, hay conexión WiFi
+                SerialPC.println(F("Dice que hay wifi"));
+                return true;
+            } 
+            else if (msgFromESP32 == "NO-WIFI") {
+                // Respuesta NO-WIFI, no hay conexión WiFi
+                SerialPC.println(F("Dice que NO hay wifi"));
+                return false;
+            }
+        }
+
+        // Comprueba si ha pasado un tiempo límite sin respuesta del esp32
+        if (millis() - startTime > timeout) {
+            // Tiempo de espera agotado, se considera que no hay conexión WiFi
+            SerialPC.println(F("Timeout"));
+            return false;
+        }
+    }
+
+    // Si sale del while (no debería), se considera que no hay conexión WiFi
+    return false;
+}
+
 
 
 /*-----------------------------------------------------------------------------*/
@@ -74,58 +103,11 @@ void sendStringSimulationToEsp32(String fileContent)
         SerialDueESP32.println(line);
     }
 
-    SerialDueESP32.println("FIN-TRANSMISION");
+    SerialDueESP32.println(F("FIN-TRANSMISION"));
 }
 
 
 
-/*---------------------------------------------------------------------------------------------------------*/
-/**
- * @brief Comprueba la conexión WiFi del ESP32.
- * 
- * @return true si hay conexión WiFi, false si no la hay.
- */
-/*---------------------------------------------------------------------------------------------------------*/
-bool checkWifiConnection() {
-    SerialPC.println("Comprobando la conexión WiFi del ESP32...");
-
-    String command = "CHECK-WIFI";
-    SerialPC.println("Cadena enviada al esp32: " + command); 
-    SerialDueESP32.print(command); //Envía la cadena al esp32
-
-    unsigned long timeout = 10000;  // Espera máxima de 10 segundos
-    unsigned long startTime = millis();  // Obtenemos el tiempo actual
-
-    while (true) { // Bloquea el arduino en este bucle hasta que se reciba respuesta o se pase el TIMEOUT
-        // Comprueba si hay datos disponibles en el puerto serie del ESP32
-        if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
-            String responseFromESP32 = SerialDueESP32.readStringUntil('\n');
-            responseFromESP32.trim();  // Elimina espacios en blanco al principio y al final
-            SerialPC.println("Respuesta del ESP32: " + responseFromESP32);  
-
-            if (responseFromESP32 == "WIFI") {
-                // Respuesta OK, hay conexión WiFi
-                SerialPC.println("Dice que hay wifi");
-                return true;
-            } 
-            else if (responseFromESP32 == "NO-WIFI") {
-                // Respuesta NO-WIFI, no hay conexión WiFi
-                SerialPC.println("Dice que NO hay wifi");
-                return false;
-            }
-        }
-
-        // Comprueba si ha pasado un tiempo límite sin respuesta del esp32
-        if (millis() - startTime > timeout) {
-            // Tiempo de espera agotado, se considera que no hay conexión WiFi
-            SerialPC.println("Timeout");
-            return false;
-        }
-    }
-
-    // Si sale del while (no debería), se considera que no hay conexión WiFi
-    return false;
-}
 
 
 

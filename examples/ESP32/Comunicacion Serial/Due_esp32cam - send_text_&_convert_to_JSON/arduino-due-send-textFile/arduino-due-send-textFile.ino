@@ -6,13 +6,15 @@
     que lo convierta a JSON y lo suba a la base de datos
  */
 
-#include "functions.h" // incluye "defines.h" de Seriales
+#include "functions.h" 
 #include "SD_functions.h"
+
+#define SerialPC Serial
+#define SerialDueESP32 Serial1
 
 int nComidasToSend = -1;
 int nComidasUploaded = -2;
 
-bool checkWifi = true;
 
 void setup()
 {
@@ -24,13 +26,13 @@ void setup()
     while (!SerialDueESP32);
      
     // Inicializar SD
-    if (!setupSDcard()){
-        SerialPC.println("Card failed, or not present");
+    /*if (!setupSDcard()){
+        SerialPC.println(F("Card failed, or not present"));
         return;
     }
-    delay(100);
+    delay(100);*/
 
-    SerialPC.println("ENVIAME \"go\" PARA COMENZAR");
+    SerialPC.println(F("ENVIAME \"go\" PARA COMENZAR"));
 
 }
 
@@ -39,20 +41,15 @@ void loop()
 
     // ---------------- ENVIO ------------------------------------
     // Simulacion de lectura de fichero enviando String estática
-    if (SerialPC.available() > 0) { // Si se recibe algo desde el PC
-        if(checkWifi){
-            checkWifi = false;
-            if(checkWifiConnection()){ 
-                SerialPC.println("HAY WIFI");
-                SerialPC.println("\nIndicando que se quiere guardar...");
-                SerialDueESP32.println("SAVE");
-            }
-            else{ 
-                SerialPC.println("NO HAY WIFI");
+    if (SerialPC.available() > 0) { // Si se recibe algo desde el PC ("go")
+        String msg = SerialPC.readStringUntil('\n');
+        msg.trim();
+        if(msg == "go"){ 
+            if(checkWifiConnection()){ // Pregunta al esp32 si hay conexión y espera su respuesta
+                SerialPC.println(F("\nIndicando que se quiere guardar..."));
+                SerialDueESP32.println(F("SAVE"));
             }
         }
-
-        
     }
 
     // -----------------------------------------------------------

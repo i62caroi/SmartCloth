@@ -57,9 +57,6 @@ void setup()
     // para obtener la MAC correcta para este modo.
     WiFi.mode(WIFI_MODE_STA);
 
-    // Obtener y almacenar la dirección MAC una vez al inicio
-    macAddress = WiFi.macAddress();
-
     // Intentar conectarse a la red WiFi
     connectToWiFi();
 }
@@ -67,8 +64,43 @@ void setup()
 
 void loop() 
 {
+
+    // ------ Comprobar Wifi y avisar al Due ---------
+    if (SerialESP32Due.available() > 0) 
+    {
+        String msgFromDUE = SerialESP32Due.readStringUntil('\n');
+        msgFromDUE.trim();
+
+        SerialPC.println("Mensaje recibido: " + msgFromDUE); 
+
+        if (msgFromDUE == "CHECK-WIFI"){
+            if(hayConexionWiFi()){
+                SerialPC.println("Tengo Wifi");
+                SerialESP32Due.println("WIFI-OK");
+            }
+            else { 
+                SerialPC.println("No tengo wifi");
+                SerialESP32Due.println("NO-WIFI");
+            }
+        }
+        else if (msgFromDUE == "SAVE"){
+            SerialPC.println("Esperando data...");
+            SerialESP32Due.println("WAITING-FOR-DATA");
+        }
+        else{
+            SerialPC.println("Añadiendo lineas al JSON...");
+            processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION
+        }
+    }
+    // -----------------------------------------------
+
+}
+
+
+/*void loop() 
+{
     // -------- Recibir lineas y generar JSON -------
-    /*if (SerialESP32Due.available() > 0) 
+    if (SerialESP32Due.available() > 0) 
     {
         String line = SerialESP32Due.readStringUntil('\n');
         line.trim();
@@ -77,38 +109,6 @@ void loop()
 
         //addLineToJSON_ONE(line);
         addLineToJSON(line);
-    }*/
-    // -----------------------------------------------
-
-    bool guardando;
-
-    // ------ Comprobar Wifi y avisar al Due ---------
-    if (SerialESP32Due.available() > 0) 
-    {
-        String line = SerialESP32Due.readStringUntil('\n');
-        line.trim();
-
-        SerialPC.println("Linea recibida: " + line); 
-
-        if (line == "CHECK-WIFI"){
-            if(hayConexionWiFi()){
-                SerialPC.println("Tengo Wifi");
-                SerialESP32Due.println("WIFI");
-            }
-            else { 
-                SerialPC.println("No tengo wifi");
-                SerialESP32Due.println("NO-WIFI");
-            }
-        }
-        else if (line == "SAVE"){
-            SerialPC.println("Esperando data...");
-            SerialESP32Due.println("WAITING-FOR-DATA");
-        }
-        else{
-            SerialPC.println("Añadiendo linea al JSON...");
-            addLineToJSON_print(line);
-        }
     }
     // -----------------------------------------------
-
-}
+}*/

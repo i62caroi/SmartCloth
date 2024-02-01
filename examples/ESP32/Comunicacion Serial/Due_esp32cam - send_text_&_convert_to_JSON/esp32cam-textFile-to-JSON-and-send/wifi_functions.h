@@ -1,6 +1,6 @@
 /**
  * @file wifi_functions.h
- * @brief Este archivo contiene funciones auxiliares para convertir enviar el JSON a la database.
+ * @brief Este archivo contiene funciones para enviar el JSON a la database.
  * 
  * @author Irene Casares Rodríguez
  * @date 13/01/2024
@@ -43,12 +43,19 @@ const char* ssid = "UCOTEAM";
 const char* password = "-polonio210alfileres-";
 
 
-// Variable global para almacenar la dirección MAC
-String macAddress;
-
-
 // URL del servidor donde enviar el JSON
 const char* serverName = "http://smartcloth.site/post-esp32-data-json.php"; 
+
+
+
+/*-----------------------------------------------------------------------------
+                           DEFINICIONES FUNCIONES
+-----------------------------------------------------------------------------*/
+bool    hayConexionWiFi();  // Comprobar si hay conexión WiFi
+void    connectToWiFi();    // Conectar a la red WiFi
+
+void    sendJsonToDatabase(DynamicJsonDocument& JSONdoc);    // Enviar el JSON generado al servidor
+/*-----------------------------------------------------------------------------*/
 
 
 
@@ -119,7 +126,7 @@ void connectToWiFi()
  * @param JSONdoc - documento JSON a enviar
  */
 /*-----------------------------------------------------------------------------*/
-void sendJsonDocToDatabase(DynamicJsonDocument& JSONdoc)
+void sendJsonToDatabase(DynamicJsonDocument& JSONdoc)
 {
     if(hayConexionWiFi())
     {

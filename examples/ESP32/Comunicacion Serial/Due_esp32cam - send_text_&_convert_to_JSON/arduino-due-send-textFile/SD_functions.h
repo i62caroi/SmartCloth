@@ -41,20 +41,20 @@
 //
 // "/Applications/Arduino.app/Contents/Java/libraries/SD/src"
 
-#include "defines.h" // Seriales
-
 
 #define SD_CARD_SCS  4 ///< Define el pin CS para la tarjeta SD
 
 // Fichero donde ir escribiendo la info para cuando haya wifi
 char fileESP32[30] = "data/data-esp.txt";
 
+#define SerialPC Serial
+#define SerialDueESP32 Serial1
 
 
 
 
 /*-----------------------------------------------------------------------------
-                            DEFINICIONES
+                           DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
 bool    setupSDcard();           // Inicializar tarjeta SD
 void    readFileESP32();         // Leer fichero esp32 
