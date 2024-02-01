@@ -8,7 +8,7 @@
         - MEDICION: id_medicion, fecha_hora
         - INSULINA: valor
         - INDICE_GLUCEMICO: valor
-        - COMIDA: id_comida, fecha, hora
+        - COMIDA: id_comida, fecha 
         - PLATO: id_plato
         - ALIMENTO: id_alimento, peso
         - TIPO_ALIMENTO: id_tipo
@@ -66,7 +66,7 @@
     - IND_GLUCEMICO (id_medicion, valor)
         MEDICION.id_medicion --> IND_GLUCEMICO.id_medicion
     
-    - COMIDA(id_comida, fecha, hora) 
+    - COMIDA(id_comida, fecha) 
     
     - PLATO(id_plato, id_comida) 
         COMIDA.id_comida --> PLATO.id_comida
@@ -97,7 +97,7 @@
     - `Medicion`: Almacena mediciones asociadas a cada usuario en fechas concretas.
     - `Insulina`: Almacena valores de insulina relacionados con mediciones concretas.
     - 'IndGlucemico': Almacena valores de índice glucémico relacionados con mediciones concretas.
-    - `Comida`: Almacena información sobre las comidas, incluyendo la fecha y la hora.
+    - `Comida`: Almacena información sobre las comidas, incluyendo la fecha de realización.
     - `Plato`: Almacena información sobre los platos, que están asociados a una comida.
     - `TipoAlimento`: Almacena información sobre los tipos de alimentos, incluyendo su contenido nutricional, que pueden estar asociados a un grupo de alimentos o a un barcode.
     - `GrupoAlimento`: Almacena información sobre los diferentes grupos de alimentos, que están asociados a un tipo de alimento.
@@ -200,10 +200,9 @@ CREATE TABLE IndiceGlucemico (
 -- ---------- COMIDA --------------------------------------------------
 CREATE TABLE Comida (
     id_comida INT AUTO_INCREMENT PRIMARY KEY,
-    -- 'fecha' y 'hora' como VARCHAR porque así se envían desde el RTC
-    -- Se podrían transformar a DATETIME en el servidor
-    fecha VARCHAR(12) NOT NULL, 
-    hora VARCHAR(12) NOT NULL
+    -- La 'fecha' se envía como timestamp Unix desde el mantel, pero en el 
+    -- servidor se convierte a TIMESTAMP
+    fecha TIMESTAMP NOT NULL
 );
 -- --------------------------------------------------------------------
 

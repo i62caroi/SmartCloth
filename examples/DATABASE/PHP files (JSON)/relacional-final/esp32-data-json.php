@@ -49,7 +49,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 } 
 
-$sql = "SELECT um.dni, m.MAC, c.id_comida, c.fecha, c.hora, p.id_plato, a.id_alimento, g.grupo, a.peso 
+$sql = "SELECT um.dni, m.MAC, c.id_comida, c.fecha, p.id_plato, a.id_alimento, g.grupo, a.peso 
         FROM UsuarioMantel um
         JOIN Mantel m ON um.id_mantel = m.id_mantel
         JOIN Alimento a ON um.dni = a.dni
@@ -67,7 +67,6 @@ echo '<h1>ESP32 Database</h1>
         <td>MAC Mantel</td>
         <td>ID Comida</td> 
         <td>Fecha</td> 
-        <td>Hora</td> 
         <td>ID Plato</td> 
         <td>ID Alimento</td> 
         <td>Grupo Alimento</td> 
@@ -80,7 +79,6 @@ if ($result = $conn->query($sql)) {
         $mac = $row["MAC"];
         $id_comida = $row["id_comida"];
         $fecha = $row["fecha"];
-        $hora = $row["hora"];
         $id_plato = $row["id_plato"];
         $id_alimento = $row["id_alimento"];
         $grupo = $row["grupo"];
@@ -91,7 +89,6 @@ if ($result = $conn->query($sql)) {
                 <td>' . $mac . '</td> 
                 <td>' . $id_comida . '</td> 
                 <td>' . $fecha . '</td> 
-                <td>' . $hora . '</td> 
                 <td>' . $id_plato . '</td> 
                 <td>' . $id_alimento . '</td> 
                 <td>' . $grupo . '</td> 

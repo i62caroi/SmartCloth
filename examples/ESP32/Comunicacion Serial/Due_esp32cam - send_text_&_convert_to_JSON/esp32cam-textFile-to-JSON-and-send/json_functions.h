@@ -112,7 +112,10 @@ void  processJSON()
             line = SerialESP32Due.readStringUntil('\n'); 
             line.trim();
             SerialPC.println("Linea recibida: " + line); 
-            addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
+            // Si solo se quiere imprimir:
+            //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
+            // Si se quiere enviar:
+            addLineToJSON(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
         }
     }
     // ------------------------------------------------------------

@@ -154,7 +154,9 @@ void sendJsonToDatabase(DynamicJsonDocument& JSONdoc)
         if(httpResponseCode > 0)
         {
             String response = http.getString(); // Obtener la respuesta del servidor
-            SerialPC.println("\n" + httpResponseCode); // Imprimir el código de respuesta HTTP
+            SerialPC.println();
+            SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+            // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
             SerialPC.println(response);         // Imprimir la respuesta del servidor
 
             if((httpResponseCode >= 200) && (httpResponseCode < 300)){
