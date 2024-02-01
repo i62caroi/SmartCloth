@@ -1,5 +1,7 @@
-#include <JSON.h>
-#include <JSONVar.h>
+
+
+//#include <JSON.h>
+//#include <JSONVar.h>
 
 /**
  * @file text_to_JSON.ino

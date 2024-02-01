@@ -15,6 +15,7 @@
 #include "wifi_functions.h"
 
 #include <ArduinoJson.h>
+#include <TimeLib.h>
 
 
 // El JSONdoc debe crearse fuera de la función para no crear uno nuevo cada vez que se procese
@@ -29,6 +30,15 @@ JsonObject comida;
 JsonArray platos;
 JsonObject plato;
 JsonArray alimentos;
+
+
+/*-----------------------------------------------------------------------------*/
+void    addLineToJSON_ONE(String line); // Todo en un JSON, aunque se quede a mitad, y se envía
+
+
+time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex); // Convertir fecha de String a formato Unix timestamp
+/*-----------------------------------------------------------------------------*/
+
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -53,15 +63,19 @@ void addLineToJSON_ONE(String line)
         // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        alimento["peso"] = line.substring(secondCommaIndex + 1);
+        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
+        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
     } 
     else if (line.startsWith("FIN-COMIDA")) 
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        comida["hora"] = line.substring(secondCommaIndex + 1);
+        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
+        //comida["hora"] = line.substring(secondCommaIndex + 1);
+        // ---
+        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
+        comida["fecha"] = (int)timestamp;
+        // ---
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
     {
@@ -116,15 +130,19 @@ void addLineToJSON(String line)
         // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        alimento["peso"] = line.substring(secondCommaIndex + 1);
+        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
+        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
     } 
     else if (line.startsWith("FIN-COMIDA")) 
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        comida["hora"] = line.substring(secondCommaIndex + 1);
+        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
+        //comida["hora"] = line.substring(secondCommaIndex + 1);
+        // ---
+        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
+        comida["fecha"] = (int)timestamp;
+        // ---
 
         // Agregar la dirección MAC del ESP32 al objeto JSON
         JSONdoc["MAC"] = macAddress;
@@ -175,15 +193,19 @@ void addLineToJSON_print(String line)
         // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        alimento["peso"] = line.substring(secondCommaIndex + 1);
+        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
+        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
     } 
     else if (line.startsWith("FIN-COMIDA")) 
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        comida["hora"] = line.substring(secondCommaIndex + 1);
+        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
+        //comida["hora"] = line.substring(secondCommaIndex + 1);
+        // ---
+        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
+        comida["fecha"] = (int)timestamp;
+        // ---
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
     {
@@ -201,6 +223,43 @@ void addLineToJSON_print(String line)
     {
         SerialESP32Due.println("línea desconocida");
     }
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Convierte una fecha y hora en formato de cadena a un valor de tiempo Unix.
+ * 
+ * @param firstCommaIndex Índice de la primera coma en la cadena.
+ * @param secondCommaIndex Índice de la segunda coma en la cadena.
+ * @return time_t Valor de tiempo Unix correspondiente a la fecha y hora especificadas.
+ */
+/*-----------------------------------------------------------------------------*/
+time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex)
+{
+    String fecha = line.substring(firstCommaIndex + 1, secondCommaIndex);
+    String hora = line.substring(secondCommaIndex + 1);
+
+    int day = fecha.substring(0,2).toInt();
+    int month = fecha.substring(3,5).toInt();
+    int year = fecha.substring(6,10).toInt();
+
+    int hour = hora.substring(0,2).toInt();
+    int minute = hora.substring(3,5).toInt();
+    int second = hora.substring(6,8).toInt();
+
+    tmElements_t tm;
+    tm.Day = day;
+    tm.Month = month;
+    tm.Year = year - 1970;
+    tm.Hour = hour;
+    tm.Minute = minute;
+    tm.Second = second;
+
+    time_t timestamp = makeTime(tm);
+
+    return timestamp;
 }
 
 

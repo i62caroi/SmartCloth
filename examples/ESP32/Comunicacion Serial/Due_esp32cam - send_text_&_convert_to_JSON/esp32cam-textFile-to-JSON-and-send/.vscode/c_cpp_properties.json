@@ -221,6 +221,7 @@
                 "/Users/irenecasares/Library/Arduino15/packages/esp32/hardware/esp32/2.0.14/libraries/HTTPClient/src",
                 "/Users/irenecasares/Library/Arduino15/packages/esp32/hardware/esp32/2.0.14/libraries/WiFiClientSecure/src",
                 "/Users/irenecasares/Documents/Arduino/libraries/ArduinoJson/src",
+                "/Users/irenecasares/Documents/Arduino/libraries/Time",
                 "/Users/irenecasares/Library/Arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32-elf/include/c++/8.4.0",
                 "/Users/irenecasares/Library/Arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32-elf/include/c++/8.4.0/xtensa-esp32-elf",
                 "/Users/irenecasares/Library/Arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/esp-2021r2-patch5-8.4.0/xtensa-esp32-elf/include/c++/8.4.0/backward",
