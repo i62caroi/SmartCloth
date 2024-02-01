@@ -151,5 +151,58 @@ void addLineToJSON(String line)
 
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Añade la línea al JSON según su contenido. Un solo JSON para toda la info.
+ *        Esta función solo imprime el JSON por terminal, no lo envía.
+ */
+/*-----------------------------------------------------------------------------*/
+void addLineToJSON_print(String line)
+{    
+    if (line == "INICIO-COMIDA") 
+    {
+        comida = comidas.createNestedObject();
+        platos = comida.createNestedArray("platos");
+    } 
+    else if (line == "INICIO-PLATO") 
+    {
+        plato = platos.createNestedObject();
+        alimentos = plato.createNestedArray("alimentos");
+    } 
+    else if (line.startsWith("ALIMENTO")) 
+    {
+        JsonObject alimento = alimentos.createNestedObject();
+        // Aquí asumimos que los datos del alimento están separados por comas
+        int firstCommaIndex = line.indexOf(',');
+        int secondCommaIndex = line.lastIndexOf(',');
+        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
+        alimento["peso"] = line.substring(secondCommaIndex + 1);
+    } 
+    else if (line.startsWith("FIN-COMIDA")) 
+    {
+        int firstCommaIndex = line.indexOf(',');
+        int secondCommaIndex = line.lastIndexOf(',');
+        comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
+        comida["hora"] = line.substring(secondCommaIndex + 1);
+    }
+    else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
+    {
+        // Agregar la dirección MAC del ESP32 al objeto JSON
+        JSONdoc["MAC"] = macAddress;
+
+        // Mostrar JSON 
+        serializeJsonPretty(JSONdoc, SerialPC); 
+
+        // Avisar al Due de que ya se tiene el JSON completo
+        SerialESP32Due.println("JSON-OK");
+        
+    }
+    else
+    {
+        SerialESP32Due.println("línea desconocida");
+    }
+}
+
+
 
 #endif

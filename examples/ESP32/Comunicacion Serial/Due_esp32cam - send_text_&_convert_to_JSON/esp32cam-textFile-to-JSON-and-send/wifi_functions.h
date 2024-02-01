@@ -94,7 +94,7 @@ void connectToWiFi()
             SerialPC.println("");
             SerialPC.print("Conectado a red WiFi con IP: ");
             SerialPC.println(WiFi.localIP());
-            SerialESP32Due.println("Conexion WiFi correcta");
+            SerialESP32Due.println("WIFI");
 
             return; // Salir del bucle de reintento
         } 
@@ -107,7 +107,7 @@ void connectToWiFi()
 
     // Si tras 30 segundos, reintentándolo cada 10s, no se ha establecido la conexión:
     SerialPC.println("Unable to establish WiFi connection.");
-    SerialESP32Due.println("NO WIFI");
+    SerialESP32Due.println("NO-WIFI");
 
 }
 
@@ -147,23 +147,21 @@ void sendJsonDocToDatabase(DynamicJsonDocument& JSONdoc)
         if(httpResponseCode > 0)
         {
             String response = http.getString(); // Obtener la respuesta del servidor
-            SerialPC.println(); SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+            SerialPC.println("\n" + httpResponseCode); // Imprimir el código de respuesta HTTP
             SerialPC.println(response);         // Imprimir la respuesta del servidor
 
             if((httpResponseCode >= 200) && (httpResponseCode < 300)){
-                SerialESP32Due.println("JSON - OK");
+                SerialESP32Due.println("SAVED-OK");
             }
             else{
-                SerialESP32Due.println("Error al enviar el JSON (servidor)");
+                SerialESP32Due.println("ERROR-HTTP:" + httpResponseCode);
             }
         }
         else
         {
-            SerialPC.print("\nError en la petición HTTP POST: ");
-            SerialPC.println(httpResponseCode);
+            SerialPC.println("\nError en la petición HTTP POST: " + httpResponseCode);
 
-            SerialESP32Due.print("Error en la petición HTTP POST: ");
-            SerialESP32Due.println(httpResponseCode);
+            SerialESP32Due.println("\nERROR-HTTP: " + httpResponseCode);
         }
 
         // Cerrar la conexión
@@ -171,8 +169,8 @@ void sendJsonDocToDatabase(DynamicJsonDocument& JSONdoc)
     }
     else
     {
-        SerialPC.println("WiFi desconectado");
-        SerialESP32Due.println("WiFi desconectado");
+        SerialPC.println("WiFi desconectad");
+        SerialESP32Due.println("NO-WIFI");
     }
 }
 

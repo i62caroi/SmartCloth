@@ -100,14 +100,17 @@ bool checkWifiConnection() {
         // Comprueba si hay datos disponibles en el puerto serie del ESP32
         if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
             String responseFromESP32 = SerialDueESP32.readStringUntil('\n');
+            responseFromESP32.trim();  // Elimina espacios en blanco al principio y al final
             SerialPC.print("Respuesta del ESP32: ");  SerialPC.println(responseFromESP32);
 
             if (responseFromESP32 == "WIFI") {
                 // Respuesta OK, hay conexión WiFi
+                SerialPC.println("Dice que hay wifi");
                 return true;
             } 
             else if (responseFromESP32 == "NO-WIFI") {
                 // Respuesta NO-WIFI, no hay conexión WiFi
+                SerialPC.println("Dice que NO hay wifi");
                 return false;
             }
         }
@@ -115,6 +118,7 @@ bool checkWifiConnection() {
         // Comprueba si ha pasado un tiempo límite sin respuesta del esp32
         if (millis() - startTime > timeout) {
             // Tiempo de espera agotado, se considera que no hay conexión WiFi
+            SerialPC.println("Timeout");
             return false;
         }
     }

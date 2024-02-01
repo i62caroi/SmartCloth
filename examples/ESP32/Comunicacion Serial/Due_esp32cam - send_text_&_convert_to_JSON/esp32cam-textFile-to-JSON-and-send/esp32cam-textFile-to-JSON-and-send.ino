@@ -51,8 +51,6 @@ void setup()
     SerialESP32Due.begin(115200, SERIAL_8N1, RXD1, TXD1);
     while (!SerialESP32Due);
 
-    SerialPC.println("HOLA PC DESDE ESP32");
-    SerialESP32Due.println("HOLA DUE");
 
     // Configurar el módulo WiFi en modo estación (STA) para que pueda conectarse a una red WiFi
     // existente, pero no pueda aceptar conexiones entrantes como punto de acceso. Esto es necesario
@@ -82,6 +80,7 @@ void loop()
     }*/
     // -----------------------------------------------
 
+    bool guardando;
 
     // ------ Comprobar Wifi y avisar al Due ---------
     if (SerialESP32Due.available() > 0) 
@@ -100,6 +99,14 @@ void loop()
                 SerialPC.println("No tengo wifi");
                 SerialESP32Due.println("NO-WIFI");
             }
+        }
+        else if (line == "SAVE"){
+            SerialPC.println("Esperando data...");
+            SerialESP32Due.println("WAITING-FOR-DATA");
+        }
+        else{
+            SerialPC.println("Añadiendo linea al JSON...");
+            addLineToJSON_print(line);
         }
     }
     // -----------------------------------------------
