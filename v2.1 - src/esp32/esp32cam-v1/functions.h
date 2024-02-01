@@ -19,6 +19,7 @@
 #define JSON_SIZE_LIMIT 4096
 
 
+
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
@@ -33,11 +34,6 @@ void    addLineToJSON_print(DynamicJsonDocument& JSONdoc,                       
                             JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
                             JsonObject& comida, JsonObject& plato, 
                             String& line);
-
-void    addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,                                  // Genera y envía un JSON por comida. PUEDE SATURAR EL SERVIDOR!!!
-                                    JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
-                                    JsonObject& comida, JsonObject& plato, 
-                                    String& line);
 
 time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex); // Convertir fecha de String a formato Unix timestamp
 /*-----------------------------------------------------------------------------*/
@@ -54,9 +50,6 @@ time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaInd
 void  processJSON()
 {
     // ---------- DECLARAR DOCUMENTO JSON -------------------------
-    // ------------------------------
-    // Versión 6.21.5 de ArduinoJson
-    // ------------------------------
     // Se reservan 4KB de RAM para el JSON, aunque acabe siendo más pequeño.
     //
     // La única forma de liberar esa memoria (sin reiniciar el dispositivo) es declarando 
@@ -72,20 +65,6 @@ void  processJSON()
     JsonArray platos;
     JsonObject plato;
     JsonArray alimentos;
-    // ------------------------------
-
-    // ------------------------------
-    // Versión 7 de ArduinoJson
-    // ------------------------------
-    // Hay una nueva versión 7 de ArduinoJson que se supone que permite trabajar con documentos JSON
-    // sin necesidad de indicar el tamaño, sino que el fichero ocupa más memoria conforme va creciendo.
-    // He intentado adaptar este programa a esa versión, pero tras muchos fallos me he dado cuenta
-    // de que no es que no supiera adaptarlo bien, es que incluso con todo comentado excepto la 
-    // linea de #include <ArduinoJson.h>, el programa siempre daba el mismo error de compilación:
-    //      In constructor 'ArduinoJson::V701PB2::JsonDocument::JsonDocument(ArduinoJson::V701PB2::JsonDocument&&)':
-    //      error: no matching function for call to 'ArduinoJson::V701PB2::JsonDocument::JsonDocument()'
-    // Daba ese error aunque no se creara ningún 'JsonDocument'
-    // ------------------------------
     // ------------------------------------------------------------
 
 
@@ -101,15 +80,8 @@ void  processJSON()
             //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
             // Si se quiere enviar:
             addLineToJSON(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
-            // La línea "FIN-TRANSMISION" también la procesa esta función, cerrando el JSON y enviándolo
         }
     }
-    // ------------------------------------------------------------
-
-    // ------------- MOSTRAR JSON ---------------------------------
-    SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
-    serializeJsonPretty(JSONdoc, SerialPC);
-    SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
     // ------------------------------------------------------------
 
     // -------- MEMORIA RAM USADA POR EL JSON ---------------------
@@ -168,8 +140,11 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         String macAddress = WiFi.macAddress();
         JSONdoc["MAC"] = macAddress;
 
-        // Mostrar JSON 
-        serializeJsonPretty(JSONdoc, SerialPC); 
+        // --- Mostrar JSON ---
+        SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
+        serializeJsonPretty(JSONdoc, SerialPC);
+        SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+        // --------------------
 
         // Avisar al Due de que ya se tiene el JSON completo
         SerialESP32Due.println("JSON completo");
@@ -233,8 +208,13 @@ void addLineToJSON_print(DynamicJsonDocument& JSONdoc,
         String macAddress = WiFi.macAddress();
         JSONdoc["MAC"] = macAddress;
 
-        // Mostrar JSON 
-        serializeJsonPretty(JSONdoc, SerialPC); 
+        // --- Mostrar JSON ---
+        SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
+        serializeJsonPretty(JSONdoc, SerialPC);
+        SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+        // --------------------
+
+        // No se envía
 
         // Avisar al Due de que ya se tiene el JSON completo
         SerialESP32Due.println("JSON completo");
@@ -248,79 +228,6 @@ void addLineToJSON_print(DynamicJsonDocument& JSONdoc,
 
 
 
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Crea un JSON para cada comida, añade su información y lo envía.
- *        De esta forma divide la información en varios paquetes, para no
- *        tener que crear un JSON extremadamente grande para guardar todo
- *        el fichero txt.
- * 
- *        ESTA OPCION PUEDE SATURAR EL SERVIDOR!!!!!
- */
-/*-----------------------------------------------------------------------------*/
-void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
-                                JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
-                                JsonObject& comida, JsonObject& plato, 
-                                String& line)
-{
-    if (line == "INICIO-COMIDA") 
-    {
-        // Limpiar el DynamicJsonDocument antes de reutilizarlo para otra comida
-        JSONdoc.clear();
-
-        comidas = JSONdoc.createNestedArray("comidas");
-        comida = comidas.createNestedObject();
-        platos = comida.createNestedArray("platos");
-    } 
-    else if (line == "INICIO-PLATO") 
-    {
-        plato = platos.createNestedObject();
-        alimentos = plato.createNestedArray("alimentos");
-    } 
-    else if (line.startsWith("ALIMENTO")) 
-    {
-        JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
-        int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
-        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
-        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
-    } 
-    else if (line.startsWith("FIN-COMIDA")) 
-    {
-        int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
-        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        //comida["hora"] = line.substring(secondCommaIndex + 1);
-        // ---
-        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
-        comida["fecha"] = (int)timestamp;
-        // ---
-
-        // Agregar la dirección MAC del ESP32 al objeto JSON
-        String macAddress = WiFi.macAddress();
-        JSONdoc["MAC"] = macAddress;
-
-        // Mostrar JSON 
-        serializeJsonPretty(JSONdoc, SerialPC); 
-
-        // Finalizar el DynamicJsonDocument actual y enviarlo a la base de datos
-        // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
-        // enviará otro JSON y así hasta recibir FIN-TRANSMISION
-        sendJsonToDatabase(JSONdoc);
-    }
-    else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
-    {
-        SerialESP32Due.println("Transmisión completa");
-    }
-    else
-    {
-        SerialESP32Due.println("línea desconocida");
-    }
-}
 
 
 

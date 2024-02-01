@@ -65,7 +65,7 @@ void loop()
         if(msg == "WAITING-FOR-DATA"){
             SerialPC.println("\nEnviando data...");
             // Enviar al ESP32-CAM la cadena 
-            sendStringSimulationToEsp32(string1);
+            sendStringSimulationToEsp32(string2);
         }
     }
     // -----------------------------------------------------------

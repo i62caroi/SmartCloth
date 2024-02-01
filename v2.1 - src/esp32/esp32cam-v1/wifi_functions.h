@@ -111,7 +111,7 @@ void connectToWiFi()
         {
             SerialPC.println(F("\nNo se pudo establecer la conexion. Reintentando..."));
             // Eliminar esta linea en el programa final:
-            SerialESP32Due.println("Fallo en conexión WiFi. Reintentando...");
+            //SerialESP32Due.println("Fallo en conexión WiFi. Reintentando...");
         }
     }
 
