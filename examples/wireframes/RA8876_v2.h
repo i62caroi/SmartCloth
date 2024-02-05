@@ -27,6 +27,8 @@ Version   : v2.0
 #include <SD.h>
 #include "COLORS.h"
 
+#define SerialPC Serial
+
 
 //#define RA8876_DEBUG // Uncomment to enable debug messaging
 
