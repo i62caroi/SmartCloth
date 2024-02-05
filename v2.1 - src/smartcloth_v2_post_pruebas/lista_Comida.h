@@ -50,7 +50,12 @@
 #include "RTC.h"
 
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
+#define SerialDueESP32 Serial1
 
 
 // **************************************************************************************************************************
@@ -119,8 +124,13 @@ class Lista
         void iniciarPlato(); ///< Inicia un plato.
         void addAlimento(int grupo, float peso); ///< Añade un alimento a la lista.
         void borrarLastPlato(); ///< Borra el último plato de la lista.
-        void saveComida(); ///< Guarda la comida.
+        void finishComida(); ///< Finaliza la comida añadiendo la fecha y hora
+        void sendListToESP32(); ///< Envía la lista elemento a elemento al ESP32 por Serial
+
+        #if defined(SM_DEBUG)
         void leerLista(); ///< Lee la lista.
+        #endif //SM_DEBUG
+
 };
 
 
@@ -138,13 +148,17 @@ void Lista::iniciarComida()
     // de nuevo.
 
     if (isListEmpty()) {
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\nIniciando comida..."));
+        #endif 
         
         // Añadir cadena a la lista
         addLineToList("INICIO-COMIDA");
     }
     else{
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\nLa COMIDA ya ha comenzado"));
+        #endif 
     }
 }
 
@@ -159,13 +173,17 @@ void Lista::iniciarPlato()
 {
     // Comprobar si el último elemento no es "INICIO-PLATO"   
     if (getLastItem() != "INICIO-PLATO") {
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\nIniciando plato..."));
+        #endif
         
         // Añadir cadena a la lista
         addLineToList("INICIO-PLATO"); 
     }
     else {
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\nEl PLATO ya ha comenzado"));
+        #endif
     }
 }
 
@@ -190,7 +208,9 @@ void Lista::iniciarPlato()
 /*-----------------------------------------------------------------------------*/
 void Lista::addAlimento(int grupo, float peso) 
 {
+    #if defined(SM_DEBUG)
     SerialPC.println(F("Guardando alimento y peso...\n"));
+    #endif
     
     // Obtener cadena "ALIMENTO,<grupo>,<peso>"
     String parGrupoPeso = "ALIMENTO," + String(grupo) + "," + String(peso);
@@ -230,18 +250,20 @@ void Lista::borrarLastPlato()
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Guarda la comida actual.
+ * @brief Finaliza la comida actual.
  *
  * Añade una línea "FIN-COMIDA,<fecha>,<hora>" al final de la lista para indicar 
  * el final de la comida.
  */
 /*-----------------------------------------------------------------------------*/
-void Lista::saveComida() 
+void Lista::finishComida() 
 {
     // No se comprueba si la comida está vacía (último escrito es INICIO-COMIDA),
     // porque si lo estuviera, no se llegaría a hacer el guardado.
 
+    #if defined(SM_DEBUG)
     SerialPC.println(F("\nFinalizando y guardando comida...\n"));
+    #endif 
 
     char *today = rtc.getDateStr();
     char *time = rtc.getTimeStr();
@@ -256,11 +278,37 @@ void Lista::saveComida()
 
 /*-----------------------------------------------------------------------------*/
 /**
+ * @brief Envia el contenido de la lista al ESP32.
+ *
+ * Recorre la lista y envía cada línea a través de SerialDueESP32.
+ */
+/*-----------------------------------------------------------------------------*/
+void Lista::sendListToESP32() 
+{
+    for (int i = 0; i < getListSize(); i++) {
+        SerialDueESP32.println(getItem(i));
+    }
+
+    SerialDueESP32.println(F("FIN-TRANSMISION"));
+
+    #if defined(SM_DEBUG)
+    SerialPC.println(F("\nLista completo enviado"));
+    SerialPC.println(F("Limpiando la lista..."));
+    #endif
+
+    // Limpiar la lista para la próxima comida
+    clearList();       
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
  * @brief Imprime el contenido de la lista.
  *
  * Recorre la lista e imprime cada línea en la consola SerialPC.
  */
 /*-----------------------------------------------------------------------------*/
+#if defined(SM_DEBUG)
 void Lista::leerLista() 
 {
     SerialPC.println(F("\n\nContenido de la Lista:\n"));
@@ -271,6 +319,7 @@ void Lista::leerLista()
 
     SerialPC.println("\n");
 }
+#endif
 
 
 

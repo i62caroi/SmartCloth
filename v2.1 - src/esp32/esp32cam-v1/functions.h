@@ -9,7 +9,12 @@
 #ifndef JSON_FUNCTIONS_H
 #define JSON_FUNCTIONS_H
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
+
 #define SerialESP32Due Serial1
 
 #include <ArduinoJson.h>
@@ -69,13 +74,17 @@ void  processJSON()
 
 
     // ------------- GENERAR JSON ---------------------------------
+    #if defined(SM_DEBUG)
     SerialPC.println("Añadiendo lineas al JSON...");
+    #endif
     String line = "";
     while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
         if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
             line = SerialESP32Due.readStringUntil('\n'); 
             line.trim();
+            #if defined(SM_DEBUG)
             SerialPC.println("Linea recibida: " + line); 
+            #endif
             // Si solo se quiere imprimir:
             //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
             // Si se quiere enviar:
@@ -85,7 +94,9 @@ void  processJSON()
     // ------------------------------------------------------------
 
     // -------- MEMORIA RAM USADA POR EL JSON ---------------------
+    #if defined(SM_DEBUG)
     SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
+    #endif
     // ------------------------------------------------------------
 
 }
@@ -141,13 +152,18 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         JSONdoc["MAC"] = macAddress;
 
         // --- Mostrar JSON ---
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
         serializeJsonPretty(JSONdoc, SerialPC);
         SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+        #endif
         // --------------------
 
         // Avisar al Due de que ya se tiene el JSON completo
-        SerialESP32Due.println("JSON completo");
+        //SerialESP32Due.println("JSON completo");
+        #if defined(SM_DEBUG)
+        SerialPC.println("JSON completo");
+        #endif
 
         // Enviar JSON a database
         sendJsonToDatabase(JSONdoc);
@@ -155,7 +171,10 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     }
     else
     {
-        SerialESP32Due.println("Línea desconocida");
+        //SerialESP32Due.println("Línea desconocida");
+        #if defined(SM_DEBUG)
+        SerialPC.println("Línea desconocida");
+        #endif
     }
 }
 
@@ -209,20 +228,28 @@ void addLineToJSON_print(DynamicJsonDocument& JSONdoc,
         JSONdoc["MAC"] = macAddress;
 
         // --- Mostrar JSON ---
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
         serializeJsonPretty(JSONdoc, SerialPC);
         SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+        #endif
         // --------------------
 
         // No se envía
 
         // Avisar al Due de que ya se tiene el JSON completo
-        SerialESP32Due.println("JSON completo");
+        //SerialESP32Due.println("JSON completo");
+        #if defined(SM_DEBUG)
+        SerialPC.println("JSON completo");
+        #endif
         
     }
     else
     {
-        SerialESP32Due.println("línea desconocida");
+        //SerialESP32Due.println("línea desconocida");
+        #if defined(SM_DEBUG)
+        SerialPC.println("Línea desconocida");
+        #endif
     }
 }
 

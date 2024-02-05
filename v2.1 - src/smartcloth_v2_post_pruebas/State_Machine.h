@@ -16,7 +16,11 @@
 #define STATE_MACHINE_H
 
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
 
 /**
  * @def MAX_EVENTS
@@ -52,13 +56,6 @@
 #define  SAVE_ESP32_TIMEOUT                       6
 #define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
 
-// --- RESPUESTAS AL GUARDAR EN DATABASE ---
-#define  SAVED_OK     1
-#define  ERROR_HTTP   2
-#define  NO_WIFI      3
-#define  TIMEOUT      4
-#define  UNKNOWN      5
-
 // --- MENSAJE DE AVISO ---
 #define  WARNING_NOT_ADDED      1
 #define  WARNING_NOT_DELETED    2
@@ -79,10 +76,6 @@
 #define  ERROR_STATE_CANCEL          12
 #define  ERROR_STATE_AVISO           13
 
-// --- PARPADEO DE ZONAS 1 Y 2 CUANDO NO ESCOGIDO ---
-//#define  BLINK_AMBAS_ZONAS true
-//#define  BLINK_SOLO_ZONA2  false
-
 // --- MENSAJE MOSTRADO CUANDO ZONA 1 VACÍA ---
 #define  NO_MSG             0
 #define  MSG_SIN_RECIPIENTE 1
@@ -90,8 +83,7 @@
 
 
 
-// Para usar las funciones definidas en otros ficheros, se deben declarar aquí también,
-// no basta con incluir esos otros ficheros, por cuestión de inclusiones múltiples.
+// Declaraciones adelantadas para evitar las inclusiones circulares.
 void    tareScale();
 void    reiniciarPesos();
 void    checkAllButtons(); 
@@ -490,8 +482,10 @@ procesado_t procesamiento;
 /*-----------------------------------------------------------------------------
                             DEFINICIONES
 -----------------------------------------------------------------------------*/
+#if defined(SM_DEBUG)
 void printEventName(event_t event);
 void printStateName(state_t state);
+#endif
 // --- Reglas transición ---
 bool    checkStateConditions();                        // Comprobar reglas de transición de estados
 
@@ -545,74 +539,78 @@ void    addEventToBuffer(event_t evento);              // Añadir evento al buff
           Parámetros: 
                   event - ID del evento 
 ----------------------------------------------------------------------------------------------------------*/
+#if defined(SM_DEBUG)
 void printEventName(event_t event) {
     switch (event) {
-        case NONE:                  SerialPC.print("NONE");                     break;
-        case TIPO_A:                SerialPC.print("TIPO_A");                   break;
-        case TIPO_B:                SerialPC.print("TIPO_B");                   break;
-        case CRUDO:                 SerialPC.print("CRUDO");                    break;
-        case COCINADO:              SerialPC.print("COCINADO");                 break;
-        case ADD_PLATO:             SerialPC.print("ADD_PLATO");                break;
-        case DELETE_PLATO:          SerialPC.print("DELETE_PLATO");             break;
-        case GUARDAR:               SerialPC.print("GUARDAR");                  break;
-        case INCREMENTO:            SerialPC.print("INCREMENTO");               break;
-        case DECREMENTO:            SerialPC.print("DECREMENTO");               break;
-        case TARAR:                 SerialPC.print("TARAR");                    break;
-        case LIBERAR:               SerialPC.print("LIBERAR");                  break;
-        case ERROR:                 SerialPC.print("ERROR");                    break;
-        case CANCELAR:              SerialPC.print("CANCELAR");                 break;
-        case AVISO:                 SerialPC.print("AVISO");                    break;
-        case GO_TO_INIT:            SerialPC.print("GO_TO_INIT");               break;
-        case GO_TO_PLATO:           SerialPC.print("GO_TO_PLATO");              break;
-        case GO_TO_GROUP_A:         SerialPC.print("GO_TO_GROUP_A");            break;
-        case GO_TO_GROUP_B:         SerialPC.print("GO_TO_GROUP_B");            break;
-        case GO_TO_RAW:             SerialPC.print("GO_TO_RAW");                break;
-        case GO_TO_COOKED:          SerialPC.print("GO_TO_COOKED");             break;
-        case GO_TO_WEIGHTED:        SerialPC.print("GO_TO_WEIGHTED");           break;
-        case GO_TO_ADD_CHECK:       SerialPC.print("GO_TO_ADD_CHECK");          break;
-        case GO_TO_ADDED:           SerialPC.print("GO_TO_ADDED");              break;
-        case GO_TO_DELETE_CHECK:    SerialPC.print("GO_TO_DELETE_CHECK");       break;
-        case GO_TO_DELETED:         SerialPC.print("GO_TO_DELETED");            break;
-        case GO_TO_SAVE_CHECK:      SerialPC.print("GO_TO_SAVE_CHECK");         break;
-        case GO_TO_SAVED:           SerialPC.print("GO_TO_SAVED");              break;
-        case GO_TO_CANCEL:          SerialPC.print("GO_TO_CANCEL");             break;
-        case DELETE_CSV:            SerialPC.print("DELETE_CSV");               break;
+        case NONE:                  SerialPC.print(F("NONE"));                     break;
+        case TIPO_A:                SerialPC.print(F("TIPO_A"));                   break;
+        case TIPO_B:                SerialPC.print(F("TIPO_B"));                   break;
+        case CRUDO:                 SerialPC.print(F("CRUDO"));                    break;
+        case COCINADO:              SerialPC.print(F("COCINADO"));                 break;
+        case ADD_PLATO:             SerialPC.print(F("ADD_PLATO"));                break;
+        case DELETE_PLATO:          SerialPC.print(F("DELETE_PLATO"));             break;
+        case GUARDAR:               SerialPC.print(F("GUARDAR"));                  break;
+        case INCREMENTO:            SerialPC.print(F("INCREMENTO"));               break;
+        case DECREMENTO:            SerialPC.print(F("DECREMENTO"));               break;
+        case TARAR:                 SerialPC.print(F("TARAR"));                    break;
+        case LIBERAR:               SerialPC.print(F("LIBERAR"));                  break;
+        case ERROR:                 SerialPC.print(F("ERROR"));                    break;
+        case CANCELAR:              SerialPC.print(F("CANCELAR"));                 break;
+        case AVISO:                 SerialPC.print(F("AVISO"));                    break;
+        case GO_TO_INIT:            SerialPC.print(F("GO_TO_INIT"));               break;
+        case GO_TO_PLATO:           SerialPC.print(F("GO_TO_PLATO"));              break;
+        case GO_TO_GROUP_A:         SerialPC.print(F("GO_TO_GROUP_A"));            break;
+        case GO_TO_GROUP_B:         SerialPC.print(F("GO_TO_GROUP_B"));            break;
+        case GO_TO_RAW:             SerialPC.print(F("GO_TO_RAW"));                break;
+        case GO_TO_COOKED:          SerialPC.print(F("GO_TO_COOKED"));             break;
+        case GO_TO_WEIGHTED:        SerialPC.print(F("GO_TO_WEIGHTED"));           break;
+        case GO_TO_ADD_CHECK:       SerialPC.print(F("GO_TO_ADD_CHECK"));          break;
+        case GO_TO_ADDED:           SerialPC.print(F("GO_TO_ADDED"));              break;
+        case GO_TO_DELETE_CHECK:    SerialPC.print(F("GO_TO_DELETE_CHECK"));       break;
+        case GO_TO_DELETED:         SerialPC.print(F("GO_TO_DELETED"));            break;
+        case GO_TO_SAVE_CHECK:      SerialPC.print(F("GO_TO_SAVE_CHECK"));         break;
+        case GO_TO_SAVED:           SerialPC.print(F("GO_TO_SAVED"));              break;
+        case GO_TO_CANCEL:          SerialPC.print(F("GO_TO_CANCEL"));             break;
+        case DELETE_CSV:            SerialPC.print(F("DELETE_CSV"));               break;
         
-        default:                    SerialPC.print("Evento desconocido");       break;
+        default:                    SerialPC.print(F("Evento desconocido"));       break;
     }
 }
+#endif //SM_DEBUG
 
 /*---------------------------------------------------------------------------------------------------------
    printStateName(): Imprime el nombre del estado cuyo ID se pasa como argumento
           Parámetros: 
                   state - ID del estado 
 ----------------------------------------------------------------------------------------------------------*/
+#if defined(SM_DEBUG)
 void printStateName(state_t state) {
     switch (state) {
-        case STATE_Init:                SerialPC.print("STATE_Init");                 break;
-        case STATE_Plato:               SerialPC.print("STATE_Plato");                break;
-        case STATE_groupA:              SerialPC.print("STATE_groupA");               break;
-        case STATE_groupB:              SerialPC.print("STATE_groupB");               break;
-        case STATE_raw:                 SerialPC.print("STATE_raw");                  break;
-        case STATE_cooked:              SerialPC.print("STATE_cooked");               break;
-        case STATE_weighted:            SerialPC.print("STATE_weighted");             break;
-        case STATE_add_check:           SerialPC.print("STATE_add_check");            break;
-        case STATE_added:               SerialPC.print("STATE_added");                break;
-        case STATE_delete_check:        SerialPC.print("STATE_delete_check");         break;
-        case STATE_deleted:             SerialPC.print("STATE_deleted");              break;
-        case STATE_save_check:          SerialPC.print("STATE_save_check");           break;
-        case STATE_saved:               SerialPC.print("STATE_saved");                break;
-        case STATE_ERROR:               SerialPC.print("STATE_ERROR");                break;
-        case STATE_CANCEL:              SerialPC.print("STATE_CANCEL");               break;
-        case STATE_AVISO:               SerialPC.print("STATE_AVISO");                break;
-        case STATE_DELETE_CSV_CHECK:    SerialPC.print("STATE_DELETE_CSV_CHECK");     break;
-        case STATE_DELETED_CSV:         SerialPC.print("STATE_DELETED_CSV");          break;
-        case STATE_CRITIC_FAILURE_SD:   SerialPC.print("STATE_CRITIC_FAILURE_SD");    break;
-        case STATE_UPLOAD_DATA:         SerialPC.print("STATE_UPLOAD_DATA");          break;
+        case STATE_Init:                SerialPC.print(F("STATE_Init"));                 break;
+        case STATE_Plato:               SerialPC.print(F("STATE_Plato"));                break;
+        case STATE_groupA:              SerialPC.print(F("STATE_groupA"));               break;
+        case STATE_groupB:              SerialPC.print(F("STATE_groupB"));               break;
+        case STATE_raw:                 SerialPC.print(F("STATE_raw"));                  break;
+        case STATE_cooked:              SerialPC.print(F("STATE_cooked"));               break;
+        case STATE_weighted:            SerialPC.print(F("STATE_weighted"));             break;
+        case STATE_add_check:           SerialPC.print(F("STATE_add_check"));            break;
+        case STATE_added:               SerialPC.print(F("STATE_added"));                break;
+        case STATE_delete_check:        SerialPC.print(F("STATE_delete_check"));         break;
+        case STATE_deleted:             SerialPC.print(F("STATE_deleted"));              break;
+        case STATE_save_check:          SerialPC.print(F("STATE_save_check"));           break;
+        case STATE_saved:               SerialPC.print(F("STATE_saved"));                break;
+        case STATE_ERROR:               SerialPC.print(F("STATE_ERROR"));                break;
+        case STATE_CANCEL:              SerialPC.print(F("STATE_CANCEL"));               break;
+        case STATE_AVISO:               SerialPC.print(F("STATE_AVISO"));                break;
+        case STATE_DELETE_CSV_CHECK:    SerialPC.print(F("STATE_DELETE_CSV_CHECK"));     break;
+        case STATE_DELETED_CSV:         SerialPC.print(F("STATE_DELETED_CSV"));          break;
+        case STATE_CRITIC_FAILURE_SD:   SerialPC.print(F("STATE_CRITIC_FAILURE_SD"));    break;
+        case STATE_UPLOAD_DATA:         SerialPC.print(F("STATE_UPLOAD_DATA"));          break;
         
-        default:                        SerialPC.print("Estado desconocido");         break;
+        default:                        SerialPC.print(F("Estado desconocido"));         break;
     }
 }
+#endif //SM_DEBUG
 
 
 
@@ -628,8 +626,11 @@ void printStateName(state_t state) {
 ----------------------------------------------------------------------------------------------------------*/
 bool checkStateConditions(){
     for (int i = 0; i < RULES; i++){
-       // SerialPC.print("state_act = "); SerialPC.print(rules[i].state_i); SerialPC.print("  --  state_new = "); SerialPC.print(rules[i].state_j);
-       // SerialPC.print("  --  condition = "); SerialPC.println(rules[i].condition);
+        //#if defined(SM_DEBUG)
+        // SerialPC.print("state_act = "); SerialPC.print(rules[i].state_i); SerialPC.print("  --  state_new = "); SerialPC.print(rules[i].state_j);
+        // SerialPC.print("  --  condition = "); SerialPC.println(rules[i].condition);
+        //#endif
+        
         if(rules[i].state_i == state_actual){
             if(rules[i].condition == lastEvent){    
                 state_new = rules[i].state_j;     // Nuevo estado
@@ -687,13 +688,17 @@ void actStateInit(){
         // ----------------------------------------------------------------------------------
 
         else if(state_prev != STATE_Init){ 
+            #if defined(SM_DEBUG)
             SerialPC.println(F("\nSTATE_Init...")); 
+            #endif
 
             // ----- INICIAR COMIDA --------------------------------------
             // Si lo último escrito no es INICIO-COMIDA (la lista está vacía), 
             // se añade a la lista "INICIO-COMIDA"
             listaComidaESP32.iniciarComida();
-            listaComidaESP32.leerLista();
+            #if defined(SM_DEBUG)
+                listaComidaESP32.leerLista();
+            #endif
             // -----------------------------------------------------------
 
             // ----- RESETEAR COPIA SI SE HA BORRADO CSV -----------------
@@ -728,7 +733,9 @@ void actStateInit(){
                 // ----- BORRAR PLATO --------------------------------------
                 // Eliminar info del plato de la lista
                 listaComidaESP32.borrarLastPlato();
-                listaComidaESP32.leerLista();
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif
                 // -----------------------------------------------------------
 
                 comidaActual.deletePlato(platoActual);    // Borrar plato actual
@@ -833,13 +840,17 @@ void actStatePlato(){
 
     if(!doneState){
         if(state_prev != STATE_Plato){
+            #if defined(SM_DEBUG)
             SerialPC.println(F("\nPlato colocado")); 
+            #endif
 
             // ----- INICIAR PLATO --------------------------------------
             // Si lo último escrito no es INICIO-PLATO (la comida está vacía o se está empezando otro plato), 
             // se añade a la lista "INICIO-PLATO"
             listaComidaESP32.iniciarPlato();
-            listaComidaESP32.leerLista();
+            #if defined(SM_DEBUG)
+                listaComidaESP32.leerLista();
+            #endif //SM_DEBUG
             // -----------------------------------------------------------
 
             // ----- REINICIAR COPIA DE COMIDA GUARDADA -------------------------
@@ -916,14 +927,15 @@ void actStatePlato(){
 }
 
 
-
 /*---------------------------------------------------------------------------------------------------------
    actGruposAlimentos(): Acciones del STATE_groupA o STATE_groupB
 ----------------------------------------------------------------------------------------------------------*/
 void actGruposAlimentos(){ 
 
     if(!doneState){        
+        #if defined(SM_DEBUG)
         SerialPC.println(F("Grupo de alimentos..."));
+        #endif
         
         // ----- ACCIONES ------------------------------
         if(lastValidState == STATE_Plato){ // Si se acaba de colocar el recipiente
@@ -937,11 +949,15 @@ void actGruposAlimentos(){
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
                 // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
                 listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
-                listaComidaESP32.leerLista();
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif //SM_DEBUG
                 // -----------------------------------------------------------
                 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
+                #if defined(SM_DEBUG)
                 SerialPC.println(F("Añadiendo alimento al plato..."));
+                #endif
 
                 Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
                                                                             // Al escoger un nuevo grupo se guarda el alimento del grupo anterior
@@ -1006,7 +1022,6 @@ void actGruposAlimentos(){
 
 
 
-
 /*---------------------------------------------------------------------------------------------------------
    actStateRaw(): Acciones del STATE_raw
 ----------------------------------------------------------------------------------------------------------*/
@@ -1024,7 +1039,9 @@ void actStateRaw(){
     if(!doneState){
         // ----- ACCIONES ------------------------------
         if(state_prev != STATE_raw){
+            #if defined(SM_DEBUG)
             SerialPC.println(F("\nAlimento crudo...")); 
+            #endif
             procesamiento = ALIMENTO_CRUDO;
         }
         // ----- FIN ACCIONES --------------------------
@@ -1084,7 +1101,9 @@ void actStateCooked(){
     if(!doneState){
         // ----- ACCIONES ------------------------------
         if(state_prev != STATE_cooked){
-            SerialPC.println(F("\nAlimento cocinado..."));        
+            #if defined(SM_DEBUG)
+            SerialPC.println(F("\nAlimento cocinado..."));   
+            #endif     
             procesamiento = ALIMENTO_COCINADO;
         }
         // ----- FIN ACCIONES --------------------------
@@ -1142,7 +1161,9 @@ void actStateWeighted(){
     static bool showing_sugerir_acciones;
 
     if(!doneState){
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\nAlimento pesado...")); 
+        #endif
 
         // ----- INFO DE PANTALLA -------------------------
         // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria (sugerencia acciones). 
@@ -1194,7 +1215,9 @@ void actStateAddCheck(){
     if(!doneState){
         previousTimeCancel = millis(); 
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\n¿Seguro que quiere añadir un plato?")); 
+        #endif
         
         pedirConfirmacion(ASK_CONFIRMATION_ADD);                            // Mostrar pregunta de confirmación para añadir plato
         
@@ -1205,13 +1228,14 @@ void actStateAddCheck(){
 
     // --- CANCELACIÓN AUTOMÁTICA ---
     if ((millis() - previousTimeCancel) > 10000) {    // Tras 10 segundos de inactividad, se cancela automáticamente la acción añadir plato
+        #if defined(SM_DEBUG)
         SerialPC.print(F("\nTIME-OUT. Cancelando añadir plato..."));
+        #endif
         addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició añadir plato
         flagEvent = true;
     }
     // --- FIN CANCELACIÓN AUTOMÁTICA ---
 }
-
 
 /*---------------------------------------------------------------------------------------------------------
    actStateAdded(): Acciones del STATE_added
@@ -1232,7 +1256,9 @@ void actStateAdded(){
                                                                     // que no se ha podido crear otro.
                                                                     // *****
             
+            #if defined(SM_DEBUG)
             SerialPC.println(F("Añadiendo plato a la comida..."));
+            #endif
 
             /* ----- ACTUALIZAR PLATO  ----- */
             if(pesoBascula != 0.0){   // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado, debe incluirse en el plato. 
@@ -1243,7 +1269,9 @@ void actStateAdded(){
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
                 // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
                 listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
-                listaComidaESP32.leerLista();
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif
                 // -----------------------------------------------------------
                 
 
@@ -1281,8 +1309,8 @@ void actStateAdded(){
                                                             // siempre se marcaría aviso de plato vacío, porque se acaba de limpiar. Por eso se comprueba no venir
                                                             // de error, para no marcar aviso.
                 errorPlatoWasEmpty = true; 
-                 addEventToBuffer(AVISO); 
-                 flagEvent = true;
+                addEventToBuffer(AVISO); 
+                flagEvent = true;
             }
             /* --------------------------------------- */
 
@@ -1320,7 +1348,9 @@ void actStateDeleteCheck(){
     if(!doneState){
         previousTimeCancel = millis(); 
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\n¿Seguro que quiere eliminar el plato?")); 
+        #endif
         
         pedirConfirmacion(ASK_CONFIRMATION_DELETE);                         // Mostrar pregunta de confirmación para eliminar plato
         
@@ -1331,7 +1361,9 @@ void actStateDeleteCheck(){
 
     // --- CANCELACIÓN AUTOMÁTICA ---
     if ((millis() - previousTimeCancel) > 10000) {    // Tras 10 segundos de inactividad, se cancela automáticamente la acción eliminar plato
+        #if defined(SM_DEBUG)
         SerialPC.print(F("\nTIME-OUT. Cancelando eliminar plato..."));
+        #endif
         addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició eliminar plato
         flagEvent = true;
     }
@@ -1356,12 +1388,16 @@ void actStateDeleted(){
             // ----- BORRAR PLATO DE LISTA--------------------------------
             // Borrar desde la última aparición de "INICIO-PLATO" hasta el final de la lista
             listaComidaESP32.borrarLastPlato();
-            listaComidaESP32.leerLista();
+            #if defined(SM_DEBUG)
+                listaComidaESP32.leerLista();
+            #endif
             // -----------------------------------------------------------
             
 
             // ----- BORRAR PLATO DE COMIDA ------------------------------
+            #if defined(SM_DEBUG)
             SerialPC.println(F("\nEliminando plato..."));
+            #endif
 
             /* ----- PESO ÚLTIMO ALIMENTO  ----- */
             if(pesoBascula != 0.0){           // ==> Si se ha colocado algo nuevo en la báscula (pesoBascula marca algo) y no se ha retirado,
@@ -1449,7 +1485,9 @@ void actStateSaveCheck(){
     if(!doneState){
         previousTimeCancel = millis(); 
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\n¿Seguro que quiere guardar la comida?")); 
+        #endif
         
         pedirConfirmacion(ASK_CONFIRMATION_SAVE);                           // Mostrar pregunta de confirmación para guardar comida
         
@@ -1461,7 +1499,9 @@ void actStateSaveCheck(){
 
     // --- CANCELACIÓN AUTOMÁTICA ---
     if ((millis() - previousTimeCancel) > 10000) {    // Tras 10 segundos de inactividad, se cancela automáticamente la acción guardar comida
+        #if defined(SM_DEBUG)
         SerialPC.print(F("\nTIME-OUT. Cancelando guardar comida..."));
+        #endif
         addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició guardar comida
         flagEvent = true;
     }
@@ -1483,9 +1523,6 @@ void actStateSaved(){
                                            // o un mensaje de aviso indicando no se ha guardado la comida porque  
                                            // está vacía.
 
-    //int responseFromESP32;
-
-
     if(!doneState){
       
         if(state_prev != STATE_saved){        // ==> Si no se viene del propio STATE_saved, para evitar que se vuelva 
@@ -1497,7 +1534,9 @@ void actStateSaved(){
                                               // que no se ha podido guardar.   
                                               // *****                  
           
+            #if defined(SM_DEBUG)
             SerialPC.println(F("\nGuardando comida..."));  
+            #endif
 
             /* ----- ACTUALIZAR PLATO  ----------------------------------- */
             if(pesoBascula != 0.0){               // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado,
@@ -1509,7 +1548,9 @@ void actStateSaved(){
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
                 // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
                 listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
-                listaComidaESP32.leerLista();
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif
                 // -----------------------------------------------------------
                 
 
@@ -1548,9 +1589,10 @@ void actStateSaved(){
 
                 // --- COMIDA A DIARIO Y FICHEROS ---
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
-                saveComidaSD();                             // Comida ==> fichero CSV y fichero ESP32 en SD (también escribe FIN-COMIDA en lista)
+                saveComida();                               // Comida ==> fichero CSV y fichero TXT en SD o directamente a database 
+                #if defined(SM_DEBUG)
                 readFileESP32();                            // Se lee el fichero en lugar de la lista porque tras guardar la comida, la lista ya está vacía
-                //responseFromESP32 = saveComidaDatabase();   // Comida ==> esp32 ==> base de datos
+                #endif
                 // -----------------------------------
 
                 // --- ACTUALIZAR COPIA COMIDA -------
@@ -1627,7 +1669,9 @@ void actStateSaved(){
                 // que no estaba vacía.
             currentTime = millis();
             if ((currentTime - previousTimeComidaSaved) > 3000) {    // Tras 3 segundos mostrando confirmación de haber guardado...
+                #if defined(SM_DEBUG)
                 SerialPC.print(F("\nGO_TO_INIT forzada. Regreso a INI..."));
+                #endif
                 addEventToBuffer(GO_TO_INIT);
                 flagEvent = true;
             }
@@ -1652,7 +1696,10 @@ void actStateERROR(){
     if(!doneState){
         previousTimeError = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de error, regresar al estado anterior.
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("Mensaje de error")); 
+        #endif
+
         // Mensaje de error según estado en el que se ha cometido el error (state_prev)
         switch (state_prev){
           case STATE_Init:          showError(ERROR_STATE_INIT);           break;  // Init
@@ -1709,36 +1756,141 @@ void actStateERROR(){
         if ((currentTime - previousTimeError) > 3000) {    // Tras 3 segundos mostrando error...
             // Regresar al estado anterior desde donde se cometió el error
             switch (state_prev){ 
-              case STATE_Init:         SerialPC.print(F("\nRegreso a Init tras ERROR..."));         addEventToBuffer(GO_TO_INIT);            break;  // Init
-              case STATE_Plato:         SerialPC.print(F("\nRegreso a Plato tras ERROR..."));         addEventToBuffer(GO_TO_PLATO);            break;  // Plato
-              case STATE_groupA:        SerialPC.print(F("\nRegreso a groupA tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_A);          break;  // grupoA 
-              case STATE_groupB:        SerialPC.print(F("\nRegreso a groupB tras ERROR..."));        addEventToBuffer(GO_TO_GROUP_B);          break;  // grupoB
-              case STATE_raw:           SerialPC.print(F("\nRegreso a raw tras ERROR..."));           addEventToBuffer(GO_TO_RAW);              break;  // Crudo
-              case STATE_cooked:        SerialPC.print(F("\nRegreso a cooked tras ERROR..."));        addEventToBuffer(GO_TO_COOKED);           break;  // Cocinado
-              case STATE_weighted:      SerialPC.print(F("\nRegreso a weighted tras ERROR..."));      addEventToBuffer(GO_TO_WEIGHTED);         break;  // Pesado
-              case STATE_add_check:     SerialPC.print(F("\nRegreso a add_check tras ERROR..."));     addEventToBuffer(GO_TO_ADD_CHECK);        break;  // add_check
-              case STATE_added:         SerialPC.print(F("\nRegreso a added tras ERROR..."));         addEventToBuffer(GO_TO_ADDED);            break;  // Added
-              case STATE_delete_check:  SerialPC.print(F("\nRegreso a delete_check tras ERROR..."));  addEventToBuffer(GO_TO_DELETE_CHECK);     break;  // delete_check
-              case STATE_deleted:       SerialPC.print(F("\nRegreso a deleted tras ERROR..."));       addEventToBuffer(GO_TO_DELETED);          break;  // Deleted
-              case STATE_save_check:    SerialPC.print(F("\nRegreso a save_check tras ERROR..."));    addEventToBuffer(GO_TO_SAVE_CHECK);       break;  // save_check
-              case STATE_saved:         SerialPC.print(F("\nRegreso a saved tras ERROR..."));         addEventToBuffer(GO_TO_SAVED);            break;  // Saved
+              case STATE_Init:          
+                                        #if defined(SM_DEBUG) 
+                                        SerialPC.print(F("\nRegreso a Init tras ERROR...")); 
+                                        #endif         
+                                        addEventToBuffer(GO_TO_INIT);            break;  // Init
+
+              case STATE_Plato:         
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a Plato tras ERROR..."));        
+                                        #endif 
+                                        addEventToBuffer(GO_TO_PLATO);            break;  // Plato
+
+              case STATE_groupA:        
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a groupA tras ERROR..."));        
+                                        #endif
+                                        addEventToBuffer(GO_TO_GROUP_A);          break;  // grupoA 
+
+              case STATE_groupB:        
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a groupB tras ERROR..."));        
+                                        #endif
+                                        addEventToBuffer(GO_TO_GROUP_B);          break;  // grupoB
+
+              case STATE_raw:           
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a raw tras ERROR..."));           
+                                        #endif 
+                                        addEventToBuffer(GO_TO_RAW);              break;  // Crudo
+
+              case STATE_cooked:        
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a cooked tras ERROR..."));        
+                                        #endif 
+                                        addEventToBuffer(GO_TO_COOKED);           break;  // Cocinado
+
+              case STATE_weighted:      
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a weighted tras ERROR..."));      
+                                        #endif 
+                                        addEventToBuffer(GO_TO_WEIGHTED);         break;  // Pesado
+
+              case STATE_add_check:     
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a add_check tras ERROR..."));     
+                                        #endif 
+                                        addEventToBuffer(GO_TO_ADD_CHECK);        break;  // add_check
+
+              case STATE_added:         
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a added tras ERROR..."));         
+                                        #endif 
+                                        addEventToBuffer(GO_TO_ADDED);            break;  // Added
+
+              case STATE_delete_check:  
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a delete_check tras ERROR..."));  
+                                        #endif 
+                                        addEventToBuffer(GO_TO_DELETE_CHECK);     break;  // delete_check
+
+              case STATE_deleted:       
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a deleted tras ERROR..."));       
+                                        #endif 
+                                        addEventToBuffer(GO_TO_DELETED);          break;  // Deleted
+
+              case STATE_save_check:    
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a save_check tras ERROR..."));    
+                                        #endif 
+                                        addEventToBuffer(GO_TO_SAVE_CHECK);       break;  // save_check
+
+              case STATE_saved:         
+                                        #if defined(SM_DEBUG)
+                                        SerialPC.print(F("\nRegreso a saved tras ERROR..."));         
+                                        #endif 
+                                        addEventToBuffer(GO_TO_SAVED);            break;  // Saved
+
               
               case STATE_CANCEL:   // No se regresa a STATE_CANCEL, sino al último estado válido desde donde se inició la acción que se ha cancelado previo al error.
                   switch (lastValidState){
-                    case STATE_Init:     SerialPC.print(F("\nRegreso a Init tras ERROR durante CANCELACION..."));       addEventToBuffer(GO_TO_INIT);       break;  // Init
-                    case STATE_raw:       SerialPC.print(F("\nRegreso a raw tras ERROR durante CANCELACION..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
-                    case STATE_cooked:    SerialPC.print(F("\nRegreso a cooked tras ERROR durante CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
-                    case STATE_weighted:  SerialPC.print(F("\nRegreso a weighted tras ERROR durante CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+                    case STATE_Init:     
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a Init tras ERROR durante CANCELACION..."));       
+                                            #endif 
+                                            addEventToBuffer(GO_TO_INIT);       break;  // Init
+
+                    case STATE_raw:       
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a raw tras ERROR durante CANCELACION..."));         
+                                            #endif 
+                                            addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+
+                    case STATE_cooked:    
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a cooked tras ERROR durante CANCELACION..."));      
+                                            #endif 
+                                            addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+
+                    case STATE_weighted:    
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a weighted tras ERROR durante CANCELACION..."));    
+                                            #endif 
+                                            addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+
                     default:  break;  
                   }
                   break;
 
               case STATE_AVISO:   // No se regresa a STATE_AVISO, sino al último estado válido desde donde se inició la acción que se ha cancelado previo al error.
                   switch (lastValidState){
-                    case STATE_Init:     SerialPC.print(F("\nRegreso a Init tras ERROR durante AVISO..."));       addEventToBuffer(GO_TO_INIT);       break;  // Init
-                    case STATE_raw:       SerialPC.print(F("\nRegreso a raw tras ERROR durante AVISO..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
-                    case STATE_cooked:    SerialPC.print(F("\nRegreso a cooked tras ERROR durante AVISO..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
-                    case STATE_weighted:  SerialPC.print(F("\nRegreso a weighted tras ERROR durante AVISO..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+                    case STATE_Init:     
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a Init tras ERROR durante AVISO..."));       
+                                            #endif 
+                                            addEventToBuffer(GO_TO_INIT);       break;  // Init
+
+                    case STATE_raw:       
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a raw tras ERROR durante AVISO..."));         
+                                            #endif 
+                                            addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+
+                    case STATE_cooked:      
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a cooked tras ERROR durante AVISO..."));      
+                                            #endif 
+                                            addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+
+                    case STATE_weighted:  
+                                            #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nRegreso a weighted tras ERROR durante AVISO..."));    
+                                            #endif 
+                                            addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+
                     default:  break;  
                   }
                   break;
@@ -1765,7 +1917,10 @@ void actStateERROR(){
               case STATE_Init:              
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == INCREMENTO){ // Se ha colocado el recipiente mientras se estaba en error
-                          SerialPC.print(F("\nRecipiente colocado durante ERROR en STATE_Init..."));            addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRecipiente colocado durante ERROR en STATE_Init..."));            
+                            #endif 
+                            addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
                       }
                   }
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
@@ -1783,7 +1938,10 @@ void actStateERROR(){
                                           // reglas de transición será el último marcado aquí.
 
                       if(eventoMain == GUARDAR){ // Se ha pulsado "Guardar comida" mientras se estaba en error. Se pasa a STATE_save_check para confirmar acción.
-                          SerialPC.print(F("\nGuardar comida durante ERROR en STATE_Init..."));                  addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGuardar comida durante ERROR en STATE_Init..."));                  
+                            #endif 
+                            addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
                       }
                   }
                 
@@ -1793,19 +1951,31 @@ void actStateERROR(){
               case STATE_Plato:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){
-                          SerialPC.print(F("\nRecolocando recipiente durante ERROR en STATE_Plato..."));          addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRecolocando recipiente durante ERROR en STATE_Plato..."));          
+                            #endif 
+                            addEventToBuffer(GO_TO_PLATO);        flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nRecipiente retirado durante ERROR en STATE_Plato..."));             addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRecipiente retirado durante ERROR en STATE_Plato..."));             
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
                       }
                   }
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado
                       if(eventoGrande == TIPO_A){ 
-                          SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_Plato..."));           addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_Plato..."));           
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoGrande == TIPO_B){ 
-                          SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_Plato..."));           addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_Plato..."));           
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                   }
                   break;  
@@ -1814,25 +1984,43 @@ void actStateERROR(){
               case STATE_groupA:   
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == DECREMENTO){
-                          SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_grupoA..."));             addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_grupoA..."));             
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_grupoA..."));                 addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nPlato retirado durante ERROR en STATE_grupoA..."));                 
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
                       }
                   }
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado
                       if(eventoGrande == TIPO_A){
-                          SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoA..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoA..."));          
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoGrande == TIPO_B){ 
-                          SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoA..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoA..."));          
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                       else if(eventoMain == CRUDO){
-                          SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_grupoA..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_grupoA..."));                 
+                            #endif 
+                            addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
                       }
                       else if(eventoMain == COCINADO){ 
-                          SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoA..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoA..."));              
+                            #endif 
+                            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
                       }
                   }
                   break;  
@@ -1841,25 +2029,43 @@ void actStateERROR(){
               case STATE_groupB:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == DECREMENTO){
-                          SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_grupoB..."));             addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_grupoB..."));             
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_grupoB..."));                 addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nPlato retirado durante ERROR en STATE_grupoB..."));                 
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
                       }
                   }
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado => deshabilita flag de interrupcion
                       if(eventoGrande == TIPO_A){ 
-                          SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoB..."));          addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_grupoB..."));          
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoGrande == TIPO_B){ 
-                          SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoB..."));          addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_grupoB..."));          
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                       else if(eventoMain == CRUDO){ 
-                          SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_grupoB..."));                 addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_grupoB..."));                 
+                            #endif 
+                            addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
                       }
                       else if(eventoMain == COCINADO){ 
-                          SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoB..."));              addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_grupoB..."));              
+                            #endif 
+                            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
                       }
                   }
                   break;
@@ -1868,34 +2074,61 @@ void actStateERROR(){
               case STATE_raw:  case STATE_cooked:   // STATE_raw o STATE_cooked
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == INCREMENTO){
-                          SerialPC.print(F("\nColocando alimento durante ERROR en STATE_raw o STATE_cooked..."));       addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nColocando alimento durante ERROR en STATE_raw o STATE_cooked..."));       
+                            #endif 
+                            addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_raw o STATE_cooked..."));           addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nPlato retirado durante ERROR en STATE_raw o STATE_cooked..."));           
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
                       }
                   }
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado
                       if(eventoGrande == TIPO_A){ 
-                          SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_raw o STATE_cooked..."));    addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_raw o STATE_cooked..."));    
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoGrande == TIPO_B){ 
-                          SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_raw o STATE_cooked..."));    addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_raw o STATE_cooked..."));    
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                       else if(eventoMain == CRUDO){ 
-                          SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_raw o STATE_cooked..."));           addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_raw o STATE_cooked..."));           
+                            #endif 
+                            addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
                       }
                       else if(eventoMain == COCINADO){ 
-                          SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_raw o STATE_cooked..."));        addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_raw o STATE_cooked..."));        
+                            #endif 
+                            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
                       }
                       else if(eventoMain == ADD_PLATO){ 
-                          SerialPC.print(F("\nAñadir plato durante ERROR en STATE_raw o STATE_cooked..."));             addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nAñadir plato durante ERROR en STATE_raw o STATE_cooked..."));             
+                            #endif 
+                            addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
                       }
                       else if(eventoMain == DELETE_PLATO){
-                          SerialPC.print(F("\nBorrar plato durante ERROR en STATE_raw o STATE_cooked..."));             addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nBorrar plato durante ERROR en STATE_raw o STATE_cooked..."));             
+                            #endif 
+                            addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
                       }
                       else if(eventoMain == GUARDAR){
-                          SerialPC.print(F("\nGuardar comida durante ERROR en STATE_raw o STATE_cooked..."));           addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGuardar comida durante ERROR en STATE_raw o STATE_cooked..."));           
+                            #endif 
+                            addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
                       }
                   }
                   break;
@@ -1904,34 +2137,61 @@ void actStateERROR(){
               case STATE_weighted:   
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if((eventoBascula == INCREMENTO) or (eventoBascula == DECREMENTO)){
-                          SerialPC.print(F("\nColocando/retirando alimento durante ERROR en STATE_weighted...")); addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nColocando/retirando alimento durante ERROR en STATE_weighted...")); 
+                            #endif 
+                            addEventToBuffer(GO_TO_WEIGHTED);     flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nPlato retirado durante ERROR en STATE_weighted..."));               
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);        flagEvent = true;  break;
                       }
                   }
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado
                       if(eventoGrande == TIPO_A){ 
-                          SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_weighted..."));        addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo A escogido durante ERROR en STATE_weighted..."));        
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_A);      flagEvent = true;  break;
                       }
                       else if(eventoGrande == TIPO_B){ 
-                          SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_weighted..."));        addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGrupo tipo B escogido durante ERROR en STATE_weighted..."));        
+                            #endif 
+                            addEventToBuffer(GO_TO_GROUP_B);      flagEvent = true;  break;
                       }
                       else if(eventoMain == CRUDO){ 
-                          SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCRUDO escogido durante ERROR en STATE_weighted..."));               
+                            #endif 
+                            addEventToBuffer(GO_TO_RAW);          flagEvent = true;  break;
                       }
                       else if(eventoMain == COCINADO){ 
-                          SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_weighted..."));            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCOCINADO escogido durante ERROR en STATE_weighted..."));            
+                            #endif 
+                            addEventToBuffer(GO_TO_COOKED);       flagEvent = true;  break;
                       }
                       else if(eventoMain == ADD_PLATO){ 
-                          SerialPC.print(F("\nAñadir plato durante ERROR en STATE_weighted..."));                 addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nAñadir plato durante ERROR en STATE_weighted..."));                 
+                            #endif 
+                            addEventToBuffer(GO_TO_ADD_CHECK);    flagEvent = true;  break;
                       }
                       else if(eventoMain == DELETE_PLATO){
-                          SerialPC.print(F("\nBorrar plato durante ERROR en STATE_weighted..."));                 addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nBorrar plato durante ERROR en STATE_weighted..."));                 
+                            #endif 
+                            addEventToBuffer(GO_TO_DELETE_CHECK); flagEvent = true;  break;
                       }
                       else if(eventoMain == GUARDAR){
-                          SerialPC.print(F("\nGuardar comida durante ERROR en STATE_weighted..."));               addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGuardar comida durante ERROR en STATE_weighted..."));               
+                            #endif 
+                            addEventToBuffer(GO_TO_SAVE_CHECK);   flagEvent = true;  break;
                       }
                   }
                   break;
@@ -1942,12 +2202,18 @@ void actStateERROR(){
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado 
                       if(eventoMain == ADD_PLATO){ 
-                          SerialPC.print(F("\nConfirmando añadir plato durante ERROR en STATE_add_check..."));    addEventToBuffer(GO_TO_ADDED);  flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nConfirmando añadir plato durante ERROR en STATE_add_check..."));    
+                            #endif 
+                            addEventToBuffer(GO_TO_ADDED);  flagEvent = true;  break;
                       }
                       else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == DELETE_PLATO) or(eventoMain == GUARDAR)){ 
                           // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_add_check. Nunca va a ocurrir en STATE_ERROR, 
                           // aunque se cometiera el error desde add_check, porque tras 3 segundos se regresaría a STATE_add_check y allí ya se comprobaría el time-out.
-                          SerialPC.print(F("\nCancelando añadir plato durante ERROR en STATE_add_check..."));     addEventToBuffer(GO_TO_CANCEL);  flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCancelando añadir plato durante ERROR en STATE_add_check..."));     
+                            #endif 
+                            addEventToBuffer(GO_TO_CANCEL);  flagEvent = true;  break;
                       }
                   }
                   break;
@@ -1956,10 +2222,16 @@ void actStateERROR(){
               case STATE_added:   
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == INCREMENTO){
-                          SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_added..."));              addEventToBuffer(GO_TO_ADDED);   flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_added..."));              
+                            #endif 
+                            addEventToBuffer(GO_TO_ADDED);   flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_added..."));                  addEventToBuffer(GO_TO_INIT);   flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nPlato retirado durante ERROR en STATE_added..."));                  
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);   flagEvent = true;  break;
                       }
                   }
                   // No se chequean botones porque si se pulsan, se deben ignorar
@@ -1970,12 +2242,18 @@ void actStateERROR(){
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado
                       if(eventoMain == DELETE_PLATO){ 
-                          SerialPC.print(F("\nConfirmando borrar plato durante ERROR en STATE_delete_check...")); addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nConfirmando borrar plato durante ERROR en STATE_delete_check...")); 
+                            #endif 
+                            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
                       }
                       else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == ADD_PLATO) or(eventoMain == GUARDAR)){ 
                           // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_delete_check. Nunca va a ocurrir en STATE_ERROR, 
                           // aunque se cometiera el error desde delete_check, porque tras 3 segundos se regresaría a STATE_delete_check y allí ya se comprobaría el time-out.
-                          SerialPC.print(F("\nCancelando borrar plato durante ERROR en STATE_delete_check..."));  addEventToBuffer(GO_TO_CANCEL);   flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nCancelando borrar plato durante ERROR en STATE_delete_check..."));  
+                            #endif 
+                            addEventToBuffer(GO_TO_CANCEL);   flagEvent = true;  break;
                       }
                   }
                   break;
@@ -1984,10 +2262,16 @@ void actStateERROR(){
               case STATE_deleted:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == INCREMENTO){
-                          SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_deleted..."));            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_deleted..."));            
+                            #endif 
+                            addEventToBuffer(GO_TO_DELETED);  flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_deleted..."));                addEventToBuffer(GO_TO_INIT);    flagEvent = true;  break;
+                          #if defined(SM_DEBUG)
+                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_deleted..."));                
+                          #endif 
+                          addEventToBuffer(GO_TO_INIT);    flagEvent = true;  break;
                       }
                   }
                   // No se chequean botones porque si se pulsan, se deben ignorar
@@ -1998,12 +2282,18 @@ void actStateERROR(){
                   if(buttonInterruptOccurred()){ // Ha habido pulsación
                       checkAllButtons(); // Qué botón se ha pulsado
                       if(eventoMain == GUARDAR){ 
-                          SerialPC.print(F("\nConfirmando guardar comida durante ERROR en STATE_save_check...")); addEventToBuffer(GO_TO_SAVED);    flagEvent = true;  break;
+                          #if defined(SM_DEBUG)
+                          SerialPC.print(F("\nConfirmando guardar comida durante ERROR en STATE_save_check...")); 
+                          #endif 
+                          addEventToBuffer(GO_TO_SAVED);    flagEvent = true;  break;
                       }
                       else if((eventoGrande == TIPO_A) or (eventoGrande == TIPO_B) or (eventoMain == CRUDO) or (eventoMain == COCINADO) or (eventoMain == ADD_PLATO) or(eventoMain == DELETE_PLATO)){ 
                           // No se incluye la cancelación por time-out porque eso solo ocurre si no hay actividad en STATE_save_check. Nunca va a ocurrir en STATE_ERROR, 
                           // aunque se cometiera el error desde save_check, porque tras 3 segundos se regresaría a STATE_save_check y allí ya se comprobaría el time-out.
-                          SerialPC.print(F("\nCancelando guardar comida durante ERROR en STATE_save_check...")); addEventToBuffer(GO_TO_CANCEL);    flagEvent = true;  break;
+                          #if defined(SM_DEBUG)
+                          SerialPC.print(F("\nCancelando guardar comida durante ERROR en STATE_save_check...")); 
+                          #endif 
+                          addEventToBuffer(GO_TO_CANCEL);    flagEvent = true;  break;
                       }
                   }
                   break;
@@ -2012,10 +2302,16 @@ void actStateERROR(){
               case STATE_saved:  
                   if(hasScaleEventOccurred()){ // Ha habido evento en báscula
                       if(eventoBascula == INCREMENTO){
-                          SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_saved..."));             addEventToBuffer(GO_TO_SAVED);     flagEvent = true;  break;
+                          #if defined(SM_DEBUG)
+                          SerialPC.print(F("\nRetirando alimento durante ERROR en STATE_saved..."));             
+                          #endif 
+                          addEventToBuffer(GO_TO_SAVED);     flagEvent = true;  break;
                       }
                       else if(eventoBascula == LIBERAR){ // Esto es menos probable porque se tendría que detectar la retirada completa en una sola medida
-                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_saved..."));                 addEventToBuffer(GO_TO_INIT);     flagEvent = true;  break;
+                          #if defined(SM_DEBUG)
+                          SerialPC.print(F("\nPlato retirado durante ERROR en STATE_saved..."));                 
+                          #endif 
+                          addEventToBuffer(GO_TO_INIT);     flagEvent = true;  break;
                       }
                   }
                   // No se chequean botones porque si se pulsan, se deben ignorar
@@ -2055,14 +2351,18 @@ void actStateERROR(){
               checkAllButtons(); // Qué botón se ha pulsado
               if((eventoMain == CRUDO) or (eventoMain == COCINADO)){
                   if(eventoMain == CRUDO){
-                      SerialPC.print(F("\nCRUDO escogido durante ERROR por PESO en ")); printStateName(state_prev); SerialPC.print(F("...")); // STATE_groupA o STATE_groupB
-                      SerialPC.println(F("\nAlimento crudo..."));        
-                      procesamiento = ALIMENTO_CRUDO;         
+                        #if defined(SM_DEBUG)
+                        SerialPC.print(F("\nCRUDO escogido durante ERROR por PESO en ")); printStateName(state_prev); SerialPC.print(F("...")); // STATE_groupA o STATE_groupB
+                        SerialPC.println(F("\nAlimento crudo..."));       
+                        #endif 
+                        procesamiento = ALIMENTO_CRUDO;         
                   }
                   else if(eventoMain == COCINADO){ 
-                      SerialPC.print(F("\nCOCINADO escogido durante ERROR por PESO en ")); printStateName(state_prev); SerialPC.print(F("...")); // STATE_groupA o STATE_groupB  
-                      SerialPC.println(F("\nAlimento cocinado..."));        
-                      procesamiento = ALIMENTO_COCINADO;  
+                        #if defined(SM_DEBUG)
+                        SerialPC.print(F("\nCOCINADO escogido durante ERROR por PESO en ")); printStateName(state_prev); SerialPC.print(F("...")); // STATE_groupA o STATE_groupB  
+                        SerialPC.println(F("\nAlimento cocinado..."));        
+                        #endif
+                        procesamiento = ALIMENTO_COCINADO;  
                   }
                   addEventToBuffer(GO_TO_WEIGHTED);   // Pasar directamente a STATE_weighted para mostrar la info de lo pesado según la cocción (crudo o cocinado)
                                                       // Si se pasara a STATE_raw o STATE_cooked, el sistema esperaría un incremento de peso para pasar a STATE_weighted,
@@ -2078,7 +2378,6 @@ void actStateERROR(){
 }
 
 
-
 /*---------------------------------------------------------------------------------------------------------
    actStateCANCEL(): Acciones del STATE_CANCEL
 ----------------------------------------------------------------------------------------------------------*/
@@ -2090,7 +2389,9 @@ void actStateCANCEL(){
     if(!doneState){ 
         previousTimeCancel = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de acción cancelada, regresar al estado anterior.
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("Acción cancelada")); 
+        #endif
 
         showAccionCancelada();        // Mostrar info de acción cancelada
 
@@ -2110,10 +2411,30 @@ void actStateCANCEL(){
         // Ultimo estado válido puede ser Init, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
         // cancelable (add/delete/save).
         switch (lastValidState){
-          case STATE_Init:      SerialPC.print(F("\nRegreso a Init tras CANCELACION..."));       addEventToBuffer(GO_TO_INIT);       break;  // Init
-          case STATE_raw:       SerialPC.print(F("\nRegreso a raw tras CANCELACION..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
-          case STATE_cooked:    SerialPC.print(F("\nRegreso a cooked tras CANCELACION..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
-          case STATE_weighted:  SerialPC.print(F("\nRegreso a weighted tras CANCELACION..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+          case STATE_Init:      
+                                #if defined(SM_DEBUG)
+                                SerialPC.print(F("\nRegreso a Init tras CANCELACION..."));       
+                                #endif 
+                                addEventToBuffer(GO_TO_INIT);       break;  // Init
+
+          case STATE_raw:       
+                                #if defined(SM_DEBUG)
+                                SerialPC.print(F("\nRegreso a raw tras CANCELACION..."));         
+                                #endif 
+                                addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+
+          case STATE_cooked:    
+                                #if defined(SM_DEBUG)
+                                SerialPC.print(F("\nRegreso a cooked tras CANCELACION..."));      
+                                #endif 
+                                addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+
+          case STATE_weighted:  
+                                #if defined(SM_DEBUG)
+                                SerialPC.print(F("\nRegreso a weighted tras CANCELACION..."));    
+                                #endif 
+                                addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+
           default:  break;  
         }
 
@@ -2130,7 +2451,9 @@ void actStateCANCEL(){
     else if(buttonInterruptOccurred()){ // Evento de interrupción por botonera durante pantalla de cancelación. 
         checkAllButtons(); // Qué botón se ha pulsado
         if(buttonGrande == 1){ // Se ha pulsado grupo1
+            #if defined(SM_DEBUG)
             SerialPC.print(F("\ngrupo1 pulsado durante CANCELAR. Entrando a menú de BORRAR CSV..."));   
+            #endif
             addEventToBuffer(DELETE_CSV);      
             flagEvent = true;  
         }
@@ -2151,9 +2474,24 @@ void actStateAVISO(){
         previousTimeWarning = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de aviso, regresar al estado anterior.
 
         switch(state_prev){ // En este caso sí es el estado previo, pues solo se puede pasar a STATE_AVISO desde added/deleted/saved.
-            case STATE_added:     showWarning(WARNING_NOT_ADDED);    SerialPC.println(F("No se ha creado otro plato porque el actual está vacío"));  break;  // added                    
-            case STATE_deleted:   showWarning(WARNING_NOT_DELETED);  SerialPC.println(F("No se ha borrado el plato porque está vacío"));             break;  // deleted
-            case STATE_saved:     showWarning(WARNING_NOT_SAVED);    SerialPC.println(F("No se ha guardado la comida porque está vacía"));           break;  // saved
+            case STATE_added:       showWarning(WARNING_NOT_ADDED);    
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.println(F("No se ha creado otro plato porque el actual está vacío"));  
+                                    #endif 
+                                    break;  // added     
+
+            case STATE_deleted:     showWarning(WARNING_NOT_DELETED);  
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.println(F("No se ha borrado el plato porque está vacío"));             
+                                    #endif 
+                                    break;  // deleted
+
+            case STATE_saved:       showWarning(WARNING_NOT_SAVED);    
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.println(F("No se ha guardado la comida porque está vacía"));           
+                                    #endif 
+                                    break;  // saved
+
             default:  break;  
         }
 
@@ -2171,16 +2509,26 @@ void actStateAVISO(){
         // Ultimo estado válido puede ser Init, groupA o groupB. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
         // que pueda marcar aviso (add/delete/save).
         switch (lastValidState){
-          case STATE_Init:    SerialPC.print(F("\nGO_TO_INIT forzada. Regreso a INI..."));    addEventToBuffer(GO_TO_INIT);       break;  // Init
+          case STATE_Init:    
+                            #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nGO_TO_INIT forzada. Regreso a INI..."));    
+                            #endif 
+                            addEventToBuffer(GO_TO_INIT);       break;  // Init
 
           case STATE_raw: case STATE_cooked:   
               // Se regresa a STATE_groupA o STATE_groupB, según el último grupo escogido. 
               //  Allí se resetea procesamiento. Se mantiene peso del recipiente.
               if(eventoGrande == TIPO_A) {
-                  addEventToBuffer(GO_TO_GROUP_A);  SerialPC.print(F("\nTIPO_A forzada. Regreso a GRUPOS..."));
+                  addEventToBuffer(GO_TO_GROUP_A);  
+                  #if defined(SM_DEBUG)
+                  SerialPC.print(F("\nTIPO_A forzada. Regreso a GRUPOS..."));
+                  #endif
               }
               else if(eventoGrande == TIPO_B){
-                  addEventToBuffer(GO_TO_GROUP_B);  SerialPC.print(F("\nTIPO_A forzada. Regreso a GRUPOS..."));      
+                  addEventToBuffer(GO_TO_GROUP_B);  
+                  #if defined(SM_DEBUG)
+                  SerialPC.print(F("\nTIPO_A forzada. Regreso a GRUPOS..."));    
+                  #endif  
               }
               break;  // groupB
 
@@ -2221,7 +2569,9 @@ void actState_DELETE_CSV_CHECK(){
     if(!doneState){
         previousTimeCancelDeleteCSV = millis(); 
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\n¿SEGURO QUE QUIERE BORRAR EL FICHERO CSV?")); 
+        #endif
         
         pedirConfirmacion_DELETE_CSV();       // Mostrar pregunta de confirmación para BORRAR CSV
                                               //    No se ha incluido esta pantalla en pedirConfirmacion(option) porque interesa
@@ -2240,7 +2590,9 @@ void actState_DELETE_CSV_CHECK(){
     if(buttonInterruptOccurred()){ // Pulsación de botón
         checkAllButtons(); // Qué botón se ha pulsado
         if(buttonGrande == 20){ // Se ha pulsado grupo20
+            #if defined(SM_DEBUG)
             SerialPC.print(F("\ngrupo20 pulsado durante DELETE_CSV_CHECK. Iniciando borrado..."));   
+            #endif
             addEventToBuffer(DELETE_CSV);      
             flagEvent = true; 
         }
@@ -2257,10 +2609,30 @@ void actState_DELETE_CSV_CHECK(){
             // Ultimo estado válido puede ser Init, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
             // cancelable (add/delete/save), tras cuya cancelación se habría entrado a este menú.
             switch (lastValidState){
-              case STATE_Init:     SerialPC.print(F("\nRegreso a Init tras cancelar BORRAR CSV..."));       addEventToBuffer(GO_TO_INIT);       break;  // Init
-              case STATE_raw:       SerialPC.print(F("\nRegreso a raw tras cancelar BORRAR CSV..."));         addEventToBuffer(GO_TO_RAW);         break;  // Crudo
-              case STATE_cooked:    SerialPC.print(F("\nRegreso a cooked tras cancelar BORRAR CSV..."));      addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
-              case STATE_weighted:  SerialPC.print(F("\nRegreso a weighted tras cancelar BORRAR CSV..."));    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+              case STATE_Init:     
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.print(F("\nRegreso a Init tras cancelar BORRAR CSV..."));       
+                                    #endif 
+                                    addEventToBuffer(GO_TO_INIT);       break;  // Init
+
+              case STATE_raw:       
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.print(F("\nRegreso a raw tras cancelar BORRAR CSV..."));         
+                                    #endif 
+                                    addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+
+              case STATE_cooked:        
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.print(F("\nRegreso a cooked tras cancelar BORRAR CSV..."));      
+                                    #endif 
+                                    addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+
+              case STATE_weighted:  
+                                    #if defined(SM_DEBUG)
+                                    SerialPC.print(F("\nRegreso a weighted tras cancelar BORRAR CSV..."));    
+                                    #endif 
+                                    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+
               default:  break;  
             }
 
@@ -2294,7 +2666,9 @@ void actState_DELETED_CSV(){
     if(!doneState){
         previousTimeDeleted = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de borrado, regresar a Init
 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("\nBORRANDO CONTENIDO DEL FICHERO CSV Y FICHERO ESP32. LIMPIANDO ACUMULADO...")); 
+        #endif
 
         if(deleteFileCSV() && deleteFileESP32()) showAcumuladoBorrado(true); // true = éxito en el borrado
         else showAcumuladoBorrado(false); // false = error en el borrado
@@ -2315,7 +2689,9 @@ void actState_DELETED_CSV(){
     // hacemos el regreso directamente a Init.
     currentTime = millis();
     if ((currentTime - previousTimeDeleted) > 2000) {    // Tras 3 segundos mostrando warning...
-        SerialPC.print(F("\nRegreso a Init tras BORRAR CSV..."));       
+        #if defined(SM_DEBUG)
+        SerialPC.print(F("\nRegreso a Init tras BORRAR CSV..."));     
+        #endif  
         addEventToBuffer(GO_TO_INIT);
         flagEvent = true; 
     }
@@ -2330,7 +2706,9 @@ void actState_CRITIC_FAILURE_SD(){
 
     // -----  INFORMACIÓN MOSTRADA  ------------------------
     if(!doneState){ 
+        #if defined(SM_DEBUG)
         SerialPC.println(F("FALLO CRÍTICO EN LA SD")); 
+        #endif
 
         showCriticFailureSD();        // Mostrar info de fallo crítico en SD
 
@@ -2351,61 +2729,49 @@ void actState_UPLOAD_DATA(){
     // por lo que no hay que estar pendiente de interrupciones. 
 
     if(!doneState){
+        // -----  INFORMACIÓN MOSTRADA  ------------------------
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("DATA EN EL TXT")); 
+        #endif
+        
+        showDataToUpload(DATA_TO_UPLOAD);  // Mostrar aviso de data en TXT para sincronizar con web
+        delay(3000); // 3 segundos para leer mensaje
+        // Podemos hacer espera bloqueante porque, en este estado, no queremos atender a interrupciones del usuario
+        // ----- FIN INFORMACIÓN MOSTRADA -----------------------
+
         if (!checkWifiConnection()) { // No hay WiFi (preguntado al esp32 y responde NO-WIFI)
-            SerialPC.println("NO HAY WIFI");
-            SerialPC.println("\nPaso a Init porque no hay WiFi...");
-            // El GO_TO_INIT se hace al final para todos los casos
+            // -----  INFORMACIÓN MOSTRADA  ------------------------
+            #if defined(SM_DEBUG)
+            SerialPC.println(F("\nPaso a Init porque no hay WiFi..."));
+            #endif
+
+            showDataToUpload(NO_INTERNET_CONECTION); // No hay conexión, no se puede sincronizar SM con web
+            // El delay y el GO_TO_INIT se hace al final para todos los casos
+            // ----- FIN INFORMACIÓN MOSTRADA -----------------------
         }
         else{ // Hay WiFi 
-            // ---- Indicar envío de datos con "SAVE" ------------------------------------
-            SerialPC.println("HAY WIFI");
-            SerialPC.println("\nIndicando que se quiere guardar...");
-            SerialDueESP32.println("SAVE"); // Indicar al ESP32 que se le va a enviar información
-            // ---------------------------------------------------------------------------
+            // -----  INFORMACIÓN MOSTRADA  -------------------------
+            showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web
+            delay(2000);
+            // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
-            // ---- Esperar a que el ESP32 responda "WAITING-FOR-DATA" -------------------
-            String responseFromESP32 = "";
-            while (responseFromESP32 != "WAITING-FOR-DATA") {
-                if (SerialDueESP32.available() > 0) {
-                    responseFromESP32 = SerialDueESP32.readStringUntil('\n');
-                    responseFromESP32.trim();
-                    SerialPC.println("Respuesta del ESP32: " + responseFromESP32); 
-                }
+            // -----  ENVIAR INFORMACION AL ESP32  ------------------
+            if(prepareSaving()){ // Indicar al ESP32 que se le va a enviar info (SAVE) y esperar su respuesta (WAITING-FOR-DATA)
+                sendFileToESP32(); // Enviar el fichero TXT línea a línea al ESP32 y terminar con FIN-TRANSMISION            
+                handleResponseFromESP32(SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta y mostrar mensaje acorde
             }
-            // ---------------------------------------------------------------------------
-
-            // ---- Enviar fichero TXT linea a linea al esp32 ----------------------------
-            sendFileToESP32(); // Enviar el fichero TXT línea a línea y terminar con FIN-TRANSMISION
-            // ---------------------------------------------------------------------------
-
-            // ---- Esperar a que el ESP32 responda "SAVED-OK" o "HTTP-ERROR:<error>" ----
-            responseFromESP32 = "";
-            while (responseFromESP32 != "SAVED-OK" && !responseFromESP32.startsWith("ERROR-HTTP:")) {
-                if (SerialDueESP32.available() > 0) {
-                    responseFromESP32 = SerialDueESP32.readStringUntil('\n');
-                    responseFromESP32.trim();
-                    SerialPC.println("Respuesta del ESP32: " + responseFromESP32); 
-                }
+            else{ // El ESP32 no respondió en 30 segundos. Actuamos como si no hubiera WiFi
+                showDataToUpload(NO_INTERNET_CONECTION); // No hay conexión, no se puede sincronizar SM con web
+                // El delay y el GO_TO_INIT se hace al final para todos los casos
             }
-
-            if (responseFromESP32 == "SAVED-OK") { // JSON subido a la base de datos
-                SerialPC.println("JSON ok y borrando fichero TXT...");
-                //deleteFileESP32(); 
-                delay(3000);
-                SerialPC.println("\nPaso a Init tras subir la info y borrar TXT...");
-                // El GO_TO_INIT se hace al final para todos los casos
-            } else if (responseFromESP32.startsWith("ERROR-HTTP:")) {
-                // Hubo un error al subir el JSON
-                SerialPC.println("Error al subir JSON: " + responseFromESP32);
-                delay(3000);
-                SerialPC.println("\nPaso a Init tras ERROR al subir la info...");
-                // El GO_TO_INIT se hace al final para todos los casos
-            }
-            // ---------------------------------------------------------------------------
+            // ------------------------------------------------------
         }
 
-        // Pasar a Init si no había WiFi, si había WiFi y se subió OK o 
-        // si había WiFi pero falló la subida
+        // Pasar a Init para todos los casos:
+        // - No había WiFi (NO_INTERNET_CONECTION)
+        // - Había WiFi y se subió OK (UPLOADED_DATA)
+        // - Había WiFi pero falló la subida (HTTP_ERROR)
+        delay(3000);
         addEventToBuffer(GO_TO_INIT);
         flagEvent = true;
         
@@ -2424,27 +2790,29 @@ void actState_UPLOAD_DATA(){
 ----------------------------------------------------------------------------------------------------------*/
 void doStateActions(){
     switch (state_actual){
-      case STATE_Init:          actStateInit();         break;  // Init
-      case STATE_Plato:         actStatePlato();        break;  // Plato
-      case STATE_groupA:        // Misma función para groupA y groupB
-      case STATE_groupB:        actGruposAlimentos();   break;  // groupB
-      case STATE_raw:           actStateRaw();          break;  // raw
-      case STATE_cooked:        actStateCooked();       break;  // cooked
-      case STATE_weighted:      actStateWeighted();     break;  // weighted
-      case STATE_add_check:     actStateAddCheck();     break;  // add_check
-      case STATE_added:         actStateAdded();        break;  // added
-      case STATE_delete_check:  actStateDeleteCheck();  break;  // delete_check
-      case STATE_deleted:       actStateDeleted();      break;  // deleted
-      case STATE_save_check:    actStateSaveCheck();    break;  // save_check
-      case STATE_saved:         actStateSaved();        break;  // saved
-      case STATE_ERROR:         actStateERROR();        break;  // ERROR
-      case STATE_CANCEL:        actStateCANCEL();       break;  // CANCEL
-      case STATE_AVISO:         actStateAVISO();        break; // AVISO
+        case STATE_Init:          actStateInit();         break;  // Init
+        case STATE_Plato:         actStatePlato();        break;  // Plato
+        case STATE_groupA:        // Misma función para groupA y groupB
+        case STATE_groupB:        actGruposAlimentos();   break;  // groupB
+        case STATE_raw:           actStateRaw();          break;  // raw
+        case STATE_cooked:        actStateCooked();       break;  // cooked
+        case STATE_weighted:      actStateWeighted();     break;  // weighted
+        case STATE_add_check:     actStateAddCheck();     break;  // add_check
+        case STATE_added:         actStateAdded();        break;  // added
+        case STATE_delete_check:  actStateDeleteCheck();  break;  // delete_check
+        case STATE_deleted:       actStateDeleted();      break;  // deleted
+        case STATE_save_check:    actStateSaveCheck();    break;  // save_check
+        case STATE_saved:         actStateSaved();        break;  // saved
+        case STATE_ERROR:         actStateERROR();        break;  // ERROR
+        case STATE_CANCEL:        actStateCANCEL();       break;  // CANCEL
+        case STATE_AVISO:         actStateAVISO();        break; // AVISO
 
-      case STATE_DELETE_CSV_CHECK:  actState_DELETE_CSV_CHECK();   break; // delete_csv_check
-      case STATE_DELETED_CSV:       actState_DELETED_CSV();        break; // deleted_csv
+        case STATE_DELETE_CSV_CHECK:  actState_DELETE_CSV_CHECK();   break; // delete_csv_check
+        case STATE_DELETED_CSV:       actState_DELETED_CSV();        break; // deleted_csv
 
-      case STATE_CRITIC_FAILURE_SD: actState_CRITIC_FAILURE_SD();  break; // Fallo crítico en SD
+        case STATE_CRITIC_FAILURE_SD: actState_CRITIC_FAILURE_SD();  break; // Fallo crítico en SD
+
+        case STATE_UPLOAD_DATA:       actState_UPLOAD_DATA();         break; // Hay data en el TXT por subir a database
 
       default: break;
     }
@@ -2460,7 +2828,9 @@ void actEventError(){
     // Tras 3 segundos con la pantalla de error, se marca el evento GO_TO_<estado> correspondiente para 
     // regresar al estado previo.
 
+    #if defined(SM_DEBUG)
     SerialPC.print(F("\nERROR..."));
+    #endif
     addEventToBuffer(ERROR);    
     flagError = true;
 }

@@ -13,7 +13,12 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h> // Para serializar el JSON y enviarlo
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
+
 #define SerialESP32Due Serial1
 
 /*
@@ -45,6 +50,7 @@ const char* password = "-polonio210alfileres-";
 
 // URL del servidor donde enviar el JSON
 const char* serverName = "http://smartcloth.site/post-esp32-data-json.php"; 
+//const char* serverName = "https://smartclothweb.org/api/comidas"; // URL del servidor smartcloth.web oficial
 
 
 
@@ -86,7 +92,9 @@ void connectToWiFi()
 
     while ((!hayConexionWiFi()) && (millis() - startTime < timeout_Reintento)) 
     {
+        #if defined(SM_DEBUG)
         SerialPC.print(F("Conectando a WiFi..."));
+        #endif
         WiFi.begin(ssid, password);
 
         // Esperar hasta que se establezca la conexión o se agote el tiempo
@@ -95,29 +103,37 @@ void connectToWiFi()
         while ((!hayConexionWiFi()) && (millis() - auxStartTime < timeout_waitConexion)) 
         {
             delay(500);
+            #if defined(SM_DEBUG)
             SerialPC.print(F("."));
+            #endif
         }
 
         // Comprobar si se estableció la conexión
         if (hayConexionWiFi()) 
         {
+            #if defined(SM_DEBUG)
             SerialPC.println();
             SerialPC.print(F("Conectado a red WiFi con IP: ")); SerialPC.println(WiFi.localIP());
-            SerialESP32Due.println(F("WIFI"));
+            #endif
+            //SerialESP32Due.println(F("WIFI")); // No hace falta, se pregunta después
 
             return; // Salir del bucle de reintento
         } 
         else 
         {
+            #if defined(SM_DEBUG)
             SerialPC.println(F("\nNo se pudo establecer la conexion. Reintentando..."));
+            #endif
             // Eliminar esta linea en el programa final:
-            //SerialESP32Due.println("Fallo en conexión WiFi. Reintentando...");
+            //SerialESP32Due.println("Fallo en conexión WiFi. Reintentando..."); // No hace falta, se pregunta después
         }
     }
 
     // Si tras 30 segundos, reintentándolo cada 10s, no se ha establecido la conexión:
+    #if defined(SM_DEBUG)
     SerialPC.println(F("Unable to establish WiFi connection."));
-    SerialESP32Due.println(F("NO-WIFI"));
+    #endif
+    //SerialESP32Due.println(F("NO-WIFI")); // No hace falta, se pregunta después
 
 }
 
@@ -156,25 +172,32 @@ void sendJsonToDatabase(DynamicJsonDocument& JSONdoc)
         // Comprobar el código de respuesta HTTP
         if(httpResponseCode > 0)
         {
+            #if defined(SM_DEBUG)
             SerialPC.println();
             SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+            #endif
             // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
 
             String response = http.getString(); // Obtener la respuesta del servidor
+            #if defined(SM_DEBUG)
             SerialPC.println(response);         // Imprimir la respuesta del servidor
+            #endif
 
             if((httpResponseCode >= 200) && (httpResponseCode < 300)){
                 SerialESP32Due.println(F("SAVED-OK"));
             }
             else{
-                SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+                String errorResponse = "ERROR-HTTP: " + String(httpResponseCode);
+                SerialESP32Due.println(errorResponse); 
             }
         }
         else
         {
+            #if defined(SM_DEBUG)
             SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
-
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
+            #endif
+            String errorResponse = "ERROR-HTTP: " + String(httpResponseCode);
+            SerialESP32Due.println(errorResponse);
         }
 
         // Cerrar la conexión
@@ -182,7 +205,9 @@ void sendJsonToDatabase(DynamicJsonDocument& JSONdoc)
     }
     else
     {
-        SerialPC.println(F("WiFi desconectad"));
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("WiFi desconectado"));
+        #endif
         SerialESP32Due.println(F("NO-WIFI"));
     }
 }

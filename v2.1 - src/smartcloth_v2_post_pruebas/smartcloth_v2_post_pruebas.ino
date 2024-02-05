@@ -50,42 +50,60 @@ int falloCriticoSD = false;
    \brief Función para inicializar el RTC, la SD, la pantalla, la báscula, las botoneras y las interrupciones
 ----------------------------------------------------------------------------------------------------------*/
 void setup() {
-    /* ------ COMUNICACIÓN SERIAL ------------ */
+    // ------ COMUNICACIÓN SERIAL --------------
+    #if defined(SM_DEBUG)
     // Inicializar comunicación con PC (Serial)
     SerialPC.begin(115200); //115200
-    while (!Serial);
+    while (!SerialPC); // Eliminar en programa final, cuando el PC no esté conectado
     delay(100);
-    // Inicializar comunicación con ESP32-CAM (Serial1)
-    //SerialDueESP32.begin(115200);
-    //while (!SerialDueESP32);
-    delay(100); 
+    #endif // SM_DEBUG
 
-    /* ------ RTC ------------ */
+    // Inicializar comunicación con ESP32-CAM (Serial1)
+    SerialDueESP32.begin(115200);
+    while (!SerialDueESP32);
+    delay(100); 
+    // -----------------------------------------
+
+
+    // ------ RTC ------------------------------
     setupRTC(); 
     delay(100); 
+    // -----------------------------------------
 
-    /* ------ SD card -------- */
+
+    // ------ SD card --------------------------
     // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
     if (!setupSDcard()) falloCriticoSD = true; // Si la SD falla o no se encuentra, no se permitirá usar SM
     //setupSDcard();
     delay(100); 
+    // -----------------------------------------
 
-    /* ------ SCALE --------- */
+
+    // ------ SCALE ----------------------------
     setupScale();   
     delay(100); 
+    // -----------------------------------------
     
-    /* ------ SCREEN --------- */
+    
+    // ------ SCREEN ---------------------------
     setupScreen();  
     delay(100); 
+    // -----------------------------------------
 
-    /* ------ FICHERO TXT --------- */
+    // ------ FICHERO TXT ----------------------
     bool dataToUpload;
     if(!falloCriticoSD){ // Si falló la SD, no se puede chequear el fichero txt
         dataToUpload = checkFileESP32();
+        if(dataToUpload) {
+            #if defined(SM_DEBUG)
+            SerialPC.println(F("Hay data para subir\n"));
+            #endif //SM_DEBUG
+        }
     }
+    // -----------------------------------------
     
 
-    /*------- ESTADO INICIAL --------- */
+    // ------- ESTADO INICIAL ------------------
     // Si falla la SD, se inicia en el estado STATE_CRITIC_FAILURE_SD que no tiene transiciones
     // de entrada ni de salida. Te obliga a reiniciar SM para intentar subsanar el fallo.
     // Si no falla la SD, se inicia en el primer estado funcional.
@@ -93,9 +111,10 @@ void setup() {
     else if(dataToUpload) state_actual = STATE_UPLOAD_DATA; // Estado para subir data a database
     else state_actual = STATE_Init; // Estado inicial de la Máquina de Estados
     //state_actual = STATE_Init;
+    // -----------------------------------------
 
 
-    /* ---------- BUTTONS PINS --------------- */
+    // ---------- BUTTONS PINS ----------------- 
     //  -----   Grande    -----
     for (byte c = 0; c < countColumns; c++){
         pinMode(columnsPins[c], OUTPUT);
@@ -111,9 +130,10 @@ void setup() {
     pinMode(intPinAddPlato, INPUT);
     pinMode(intPinDeletePlato, INPUT);
     pinMode(intPinGuardar, INPUT);
+    // -----------------------------------------
 
   
-    /* --------- INTERRUPTIONS ----------------- */
+    // --------- INTERRUPTIONS -----------------
     //  -----   MAIN    -----
     attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinCocinado), ISR_cocinado, RISING);
@@ -127,13 +147,15 @@ void setup() {
     //  -----   Scale   ------
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");
     ISR_Timer.setInterval(TIMER_INTERVAL_5MS,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 100 ms
+    // -----------------------------------------
 
 
-    /* ------- BIENVENIDA ------------------------ */
+    // ------- BIENVENIDA ----------------------
     // Si no falla la SD, cargar las imágenes y mostrar pantalla de bienvenida.
     // Si falla, directamente se mostrará la pantalla de "FALLO EN MEMORIA"
-    if (!falloCriticoSD) Welcome();  // Cargar imágenes y mostrar logo de SmartCloth
-    //Welcome();
+    if (!falloCriticoSD) welcome();  // Cargar imágenes y mostrar logo de SmartCloth
+    //welcome();
+    // -----------------------------------------
 
 }
 

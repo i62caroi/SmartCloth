@@ -971,7 +971,9 @@ bool RA8876::init(void)
 
     if (!_calcClocks())
     {
+      #if defined(SM_DEBUG)
       SerialPC.println("_calcClocks failed");
+      #endif
       return false;
     }
 
@@ -985,19 +987,25 @@ bool RA8876::init(void)
 
     if (!_initPLL())
     {
+      #if defined(SM_DEBUG)
       SerialPC.println("_initPLL failed");
+      #endif
       return false;
     }
 
     if (!_initMemory(_sdramInfo))
     {
+      #if defined(SM_DEBUG)
       SerialPC.println("_initMemory failed");
+      #endif
       return false;
     }
 
     if (!_initDisplay())
     {
+      #if defined(SM_DEBUG)
       SerialPC.println("_initDisplay failed");
+      #endif
       return false;
     }
 
@@ -1869,7 +1877,11 @@ void RA8876::sdCardDraw16bppBIN8bits(uint16_t x,uint16_t y,uint16_t width, uint1
       }
       dataFile.close();
     }   
-    else SerialPC.println(F("Fichero no encontrado"));
+    else {
+      #if defined(SM_DEBUG)
+      SerialPC.println(F("Fichero no encontrado"));
+      #endif
+    }
     setCanvasWindow(0,0,_width,_height);
 
     _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
@@ -1912,7 +1924,11 @@ void RA8876::sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint
       }
       dataFile.close();
     }   
-    else SerialPC.println(F("Fichero no encontrado"));
+    else {
+      #if defined(SM_DEBUG)
+      SerialPC.println(F("Fichero no encontrado"));
+      #endif
+    }
     setCanvasWindow(0,0,_width,_height);
 
     _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz
@@ -1959,7 +1975,11 @@ void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uin
       }
       dataFile.close();
     }   
-    else SerialPC.println(F("Fichero no encontrado"));
+    else {
+      #if defined(SM_DEBUG)
+      SerialPC.println(F("Fichero no encontrado"));
+      #endif
+    }
     setCanvasWindow(0,0,_width,_height);
 
     _spiSettings = SPISettings(RA8876_SPI_SPEED, MSBFIRST, SPI_MODE3); //Decremento velocidad SPI para texto => 3MHz

@@ -1,9 +1,11 @@
 /*
-  Irene Casares Rodríguez
-  12/01/2024
+    Irene Casares Rodríguez
+    12/01/2024
 
-  Este programa recibe el contenido del fichero TXT por Serial desde el Due, lo convierte
-  en JSON y lo envía a la base de datos para guardar su información.
+    PROGRAMA PRINCIPAL DEL ESP32
+      
+    Este programa recibe el contenido del fichero TXT por Serial desde el Due, lo convierte
+    en JSON y lo envía a la base de datos para guardar su información.
   
       --------------------------------------------
       |    ESP32-CAM   |    FTDI (Serial al PC)  |
@@ -82,17 +84,11 @@
 
  */
 
- 
-
-// DEBE TENER LA MISMA VELOCIDAD EN BAUDIOS QUE EL ARDUINO (p.ej. 115200)
 
 
 
 #define RXD1 14
 #define TXD1 15
-
-#define SerialPC Serial
-#define SerialESP32Due Serial1
 
 
 #include "functions.h" // ya incluye "wifi_functions.h"
@@ -101,13 +97,17 @@
 
 void setup() {
     // --- Serial esp32-PC ---
+    #if defined(SM_DEBUG)
     SerialPC.begin(115200);
     while (!SerialPC);
+    delay(100);
+    #endif
     
     // --- Serial esp32-Due ---
     // DEBE TENER LA MISMA VELOCIDAD EN BAUDIOS QUE EL ARDUINO (p.ej. 115200)
     SerialESP32Due.begin(115200, SERIAL_8N1, RXD1, TXD1);
     while (!SerialESP32Due);
+    delay(100);
 
     // Configurar el módulo WiFi en modo estación (STA) para que pueda conectarse a una red WiFi
     // existente, pero no pueda aceptar conexiones entrantes como punto de acceso. Esto es necesario
@@ -128,23 +128,31 @@ void loop() {
         String msgFromDUE = SerialESP32Due.readStringUntil('\n');
         msgFromDUE.trim();
 
+        #if defined(SM_DEBUG)
         SerialPC.println("Mensaje recibido: " + msgFromDUE); 
+        #endif
 
         // ------ Comprobar Wifi y avisar al Due ---------
         if (msgFromDUE == "CHECK-WIFI"){
             if(hayConexionWiFi()){
+                #if defined(SM_DEBUG)
                 SerialPC.println(F("Tengo Wifi"));
+                #endif
                 SerialESP32Due.println("WIFI-OK");
             }
             else { 
+                #if defined(SM_DEBUG)
                 SerialPC.println(F("No tengo wifi"));
+                #endif
                 SerialESP32Due.println("NO-WIFI");
             }
         }
         // -----------------------------------------------
         // ------ Procesar líneas y generar JSON ---------
         else if (msgFromDUE == "SAVE"){
+            #if defined(SM_DEBUG)
             SerialPC.println(F("Esperando data..."));
+            #endif
             SerialESP32Due.println("WAITING-FOR-DATA");
             processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION,
                            // entonces cierra el JSON y lo envía
@@ -152,7 +160,9 @@ void loop() {
         // -----------------------------------------------
         else{ 
             // Otras (p.ej. BARCODE)
+            #if defined(SM_DEBUG)
             SerialPC.println(F("Comando desconocido"));
+            #endif
         }
     }
 

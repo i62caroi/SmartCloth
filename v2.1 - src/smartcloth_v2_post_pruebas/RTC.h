@@ -44,7 +44,11 @@
 
 #include <DS3231.h>
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
 
 
 // RTC object 
@@ -81,19 +85,27 @@ void setupRTC(){
     // ----- AJUSTAR HORA, SI ES NECESARIO ---------
     // Comprobar si es momento de cambiar la hora
     if (checkSummerTime()) {
+        #if defined(SM_DEBUG)
         SerialPC.println(F("SUMMER TIME"));
+        #endif //SM_DEBUG
         adjustSummerTime();
     }
     else if (checkWinterTime()) {
+        #if defined(SM_DEBUG)
         SerialPC.println(F("WINTER TIME"));
+        #endif //SM_DEBUG
         adjustWinterTime();
     }
     // --------------------------------------
 
+    #if defined(SM_DEBUG)
     SerialPC.print(F("RTC initialized"));
+    #endif //SM_DEBUG
 
     char *today = rtc.getDateStr();
+    #if defined(SM_DEBUG)
     SerialPC.print(F(" => Hoy es ")); SerialPC.print(today); SerialPC.print(F(" y son las ")); SerialPC.println(rtc.getTimeStr());
+    #endif //SM_DEBUG
 }
 
 

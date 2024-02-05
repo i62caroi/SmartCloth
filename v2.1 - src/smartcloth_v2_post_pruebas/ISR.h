@@ -21,7 +21,11 @@
 #ifndef ISR_H
 #define ISR_H
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
 
 
 /*  ----- SCALE ISR ----- */
@@ -218,7 +222,9 @@ void TimerHandler() { ISR_Timer.run(); }
 
     // Número del timer utilizado
     uint16_t timerNumber = dueTimerInterrupt.getTimerNumber();
-    SerialPC.print(TimerName); SerialPC.print(F(" attached to Timer(")); SerialPC.print(timerNumber); SerialPC.println(F(")"));
+    #if defined(SM_DEBUG)
+    SerialPC.print(TimerName); SerialPC.print(F(" attached to Timer(" + timerNumber)); SerialPC.println(F(")"));
+    #endif 
     return timerNumber;
 }
 

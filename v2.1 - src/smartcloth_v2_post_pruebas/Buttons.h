@@ -47,7 +47,11 @@ const byte intPinGuardar      = 27;   // Morado
 #ifndef BUTTONS_H
 #define BUTTONS_H
 
+#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+
+#if defined(SM_DEBUG)
 #define SerialPC Serial
+#endif
 
 /* Keyboards variables */
 byte iRow = 0, iCol = 0;//, keyMain = 0;
@@ -171,7 +175,9 @@ void checkAllButtons(){
         if (pulsandoGrande){ // Se está pulsando una tecla
             readButtonsGrande(); // Qué tecla se está pulsando 
             buttonGrande = buttons[iRow][iCol];
-            SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande);
+            #if defined(SM_DEBUG)
+            SerialPC.println(F("Grupo: " + buttonGrande)); 
+            #endif 
             /* ----- EVENTO ------- */ 
             if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
                 (buttons[iRow][iCol] <= 18))){
