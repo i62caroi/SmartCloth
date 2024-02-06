@@ -74,11 +74,12 @@ void loop()
 
         // ------ Comprobar Wifi y avisar al Due ---------
         if (msgFromDUE == "CHECK-WIFI"){
-            if(hayConexionWiFi()){
+            if(hayConexionWiFi()){ // Si hay WiFi 
                 SerialPC.println(F("Tengo Wifi"));
                 SerialESP32Due.println("WIFI-OK");
             }
-            else { 
+            else { // Si no se obtuvo el token, no se podrá subir info,
+                    // así que actuamos como si no hubiera WiFi
                 SerialPC.println(F("No tengo wifi"));
                 SerialESP32Due.println("NO-WIFI");
             }

@@ -35,11 +35,6 @@ void    addLineToJSON(DynamicJsonDocument& JSONdoc,                             
                         JsonObject& comida, JsonObject& plato, 
                         String& line);                                              
 
-void    addLineToJSON_print(DynamicJsonDocument& JSONdoc,                                           // Todo en un JSON, aunque se quede a mitad, y solo se imprime
-                            JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
-                            JsonObject& comida, JsonObject& plato, 
-                            String& line);
-
 time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex); // Convertir fecha de String a formato Unix timestamp
 /*-----------------------------------------------------------------------------*/
 
@@ -85,9 +80,7 @@ void  processJSON()
             #if defined(SM_DEBUG)
             SerialPC.println("Linea recibida: " + line); 
             #endif
-            // Si solo se quiere imprimir:
-            //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
-            // Si se quiere enviar:
+            // Enviar JSON
             addLineToJSON(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
         }
     }
@@ -149,7 +142,7 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     {
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
-        JSONdoc["MAC"] = macAddress;
+        JSONdoc["mac"] = macAddress;
 
         // --- Mostrar JSON ---
         #if defined(SM_DEBUG)
@@ -166,7 +159,13 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         #endif
 
         // Enviar JSON a database
-        sendJsonToDatabase(JSONdoc);
+        //sendJsonToDatabase(JSONdoc);
+
+        // Enviar JSON a database:
+        //  1. Pedir token
+        //  2. Enviar JSON
+        //  3. Cerrar sesión
+        sendJsonToDatabase_fullProcess(JSONdoc);
         
     }
     else
@@ -178,80 +177,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     }
 }
 
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Añade la línea al JSON según su contenido. Un solo JSON para toda la info.
- *        Esta función solo imprime el JSON por terminal, no lo envía.
- */
-/*-----------------------------------------------------------------------------*/
-void addLineToJSON_print(DynamicJsonDocument& JSONdoc, 
-                        JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
-                        JsonObject& comida, JsonObject& plato, 
-                        String& line)
-{    
-    if (line == "INICIO-COMIDA") 
-    {
-        comida = comidas.createNestedObject();
-        platos = comida.createNestedArray("platos");
-    } 
-    else if (line == "INICIO-PLATO") 
-    {
-        plato = platos.createNestedObject();
-        alimentos = plato.createNestedArray("alimentos");
-    } 
-    else if (line.startsWith("ALIMENTO")) 
-    {
-        JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
-        int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
-        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
-        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
-    } 
-    else if (line.startsWith("FIN-COMIDA")) 
-    {
-        int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
-        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        //comida["hora"] = line.substring(secondCommaIndex + 1);
-        // ---
-        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
-        comida["fecha"] = (int)timestamp;
-        // ---
-    }
-    else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
-    {
-        // Agregar la dirección MAC del ESP32 al objeto JSON
-        String macAddress = WiFi.macAddress();
-        JSONdoc["MAC"] = macAddress;
-
-        // --- Mostrar JSON ---
-        #if defined(SM_DEBUG)
-        SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
-        serializeJsonPretty(JSONdoc, SerialPC);
-        SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
-        #endif
-        // --------------------
-
-        // No se envía
-
-        // Avisar al Due de que ya se tiene el JSON completo
-        //SerialESP32Due.println("JSON completo");
-        #if defined(SM_DEBUG)
-        SerialPC.println("JSON completo");
-        #endif
-        
-    }
-    else
-    {
-        //SerialESP32Due.println("línea desconocida");
-        #if defined(SM_DEBUG)
-        SerialPC.println("Línea desconocida");
-        #endif
-    }
-}
 
 
 

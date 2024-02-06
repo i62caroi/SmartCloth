@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
-    "port": "/dev/tty.usbmodem1122401",
+    "port": "/dev/tty.usbmodem1121401",
     "sketch": "arduino-due-send-textFile.ino"
 }

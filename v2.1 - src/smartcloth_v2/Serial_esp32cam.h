@@ -283,7 +283,7 @@ void handleResponseFromESP32(int option){
     String msgFromESP32 = waitResponseFromESP32(FASE_2_AL_SUBIR); // En la fase 2, sale del while si recibe SAVED-OK, HTTP-ERROR: o NO-WIFI
 
     if (msgFromESP32 == "SAVED-OK"){ // JSON subido a la base de datos
-        deleteFileESP32(); // Borrar fichero porque ya se ha subido su info
+        //deleteFileESP32(); // Borrar fichero porque ya se ha subido su info
         if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(UPLOADED_DATA);
 
         #if defined(SM_DEBUG)
@@ -292,27 +292,27 @@ void handleResponseFromESP32(int option){
         #endif
     } 
     else if (msgFromESP32.startsWith("ERROR-HTTP:")){ 
+        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(HTTP_ERROR);
+
         #if defined(SM_DEBUG)
         SerialPC.println("Error al subir JSON: " + msgFromESP32);
         SerialPC.println(F("\nPaso a Init tras ERROR al subir la info..."));
         #endif
-        
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(HTTP_ERROR);
     }
     else if (msgFromESP32 == "NO-WIFI"){ // Se ha cortado la conexión (no debería ocurrir si ya se ha comprobado antes)
+        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONECTION);
+
         #if defined(SM_DEBUG)
         SerialPC.println(F("Se ha cortado la conexión a Internet..."));
         SerialPC.println(F("\nPaso a Init tras fallo de conexión..."));
-        #endif
-        
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONECTION);
+        #endif        
     }
     else if (msgFromESP32 == "TIMEOUT"){ // El ESP32 no respondió en 30 segundos. Actuamos como si no hubiera WiFi
+        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONECTION);
+
         #if defined(SM_DEBUG)
         SerialPC.println(F("No se ha subido por TIMEOUT"));
-        #endif
-        
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONECTION);
+        #endif        
     }
     // ------------------------------------------------ 
 }

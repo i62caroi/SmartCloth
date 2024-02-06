@@ -45,7 +45,7 @@ void loop()
         String msg = SerialPC.readStringUntil('\n');
         msg.trim();
         if(msg == "go"){ 
-            if(checkWifiConnection()){ // Pregunta al esp32 si hay conexión y espera su respuesta
+            if(checkWifiConnection()){ // Pregunta al esp32 si hay conexión (CHECK-WIFI) y espera su respuesta
                 SerialPC.println(F("\nIndicando que se quiere guardar..."));
                 SerialDueESP32.println(F("SAVE"));
             }

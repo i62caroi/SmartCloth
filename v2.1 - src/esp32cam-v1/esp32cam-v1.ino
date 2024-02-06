@@ -129,20 +129,20 @@ void loop() {
         msgFromDUE.trim();
 
         #if defined(SM_DEBUG)
-        SerialPC.println("Mensaje recibido: " + msgFromDUE); 
+        SerialPC.println("\nMensaje recibido: " + msgFromDUE); 
         #endif
 
         // ------ Comprobar Wifi y avisar al Due ---------
         if (msgFromDUE == "CHECK-WIFI"){
             if(hayConexionWiFi()){
                 #if defined(SM_DEBUG)
-                SerialPC.println(F("Tengo Wifi"));
+                SerialPC.println(F("\nTengo Wifi"));
                 #endif
                 SerialESP32Due.println("WIFI-OK");
             }
             else { 
                 #if defined(SM_DEBUG)
-                SerialPC.println(F("No tengo wifi"));
+                SerialPC.println(F("\nNo tengo wifi"));
                 #endif
                 SerialESP32Due.println("NO-WIFI");
             }
@@ -151,7 +151,7 @@ void loop() {
         // ------ Procesar líneas y generar JSON ---------
         else if (msgFromDUE == "SAVE"){
             #if defined(SM_DEBUG)
-            SerialPC.println(F("Esperando data..."));
+            SerialPC.println(F("\nEsperando data..."));
             #endif
             SerialESP32Due.println("WAITING-FOR-DATA");
             processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION,

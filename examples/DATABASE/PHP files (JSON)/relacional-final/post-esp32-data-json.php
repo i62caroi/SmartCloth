@@ -18,7 +18,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         die("Connection failed: " . $conn->connect_error);
     } 
 
-    $mac = $data->MAC;
+    $mac = $data->mac;
 
     $sql = "SELECT dni FROM UsuarioMantel UM INNER JOIN Mantel M ON UM.id_mantel = M.id_mantel WHERE M.MAC = '$mac'";
     $result = $conn->query($sql);

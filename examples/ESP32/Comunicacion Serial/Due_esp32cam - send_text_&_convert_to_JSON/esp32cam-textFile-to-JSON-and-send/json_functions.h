@@ -96,7 +96,7 @@ void  processJSON()
         if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
             line = SerialESP32Due.readStringUntil('\n'); 
             line.trim();
-            SerialPC.println("Linea recibida: " + line); 
+            //SerialPC.println("Linea recibida: " + line); 
             // Si solo se quiere imprimir:
             //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
             // Si se quiere enviar:
@@ -107,13 +107,14 @@ void  processJSON()
     // ------------------------------------------------------------
 
     // ------------- MOSTRAR JSON ---------------------------------
-    SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
+    /*SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
     serializeJsonPretty(JSONdoc, SerialPC);
     SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
+    */
     // ------------------------------------------------------------
 
     // -------- MEMORIA RAM USADA POR EL JSON ---------------------
-    SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
+    //SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
     // ------------------------------------------------------------
 
 }
@@ -166,16 +167,24 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     {
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
-        JSONdoc["MAC"] = macAddress;
+        JSONdoc["mac"] = macAddress;
 
         // Mostrar JSON 
-        serializeJsonPretty(JSONdoc, SerialPC); 
+        //serializeJsonPretty(JSONdoc, SerialPC); 
 
         // Avisar al Due de que ya se tiene el JSON completo
         SerialESP32Due.println("JSON completo");
 
         // Enviar JSON a database
-        sendJsonToDatabase(JSONdoc);
+        //sendJsonToDatabase(JSONdoc);
+        // Cerrar sesión en el servidor
+        //logoutFromServer();
+
+        // Enviar JSON a database:
+        //  1. Pedir token
+        //  2. Enviar JSON
+        //  3. Cerrar sesión
+        sendJsonToDatabase_fullProcess(JSONdoc);
         
     }
     else
@@ -231,7 +240,7 @@ void addLineToJSON_print(DynamicJsonDocument& JSONdoc,
     {
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
-        JSONdoc["MAC"] = macAddress;
+        JSONdoc["mac"] = macAddress;
 
         // Mostrar JSON 
         serializeJsonPretty(JSONdoc, SerialPC); 
@@ -302,7 +311,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
 
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
-        JSONdoc["MAC"] = macAddress;
+        JSONdoc["mac"] = macAddress;
 
         // Mostrar JSON 
         serializeJsonPretty(JSONdoc, SerialPC); 

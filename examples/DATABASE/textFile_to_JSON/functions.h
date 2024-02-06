@@ -82,10 +82,10 @@ void textFileToJSON(DynamicJsonDocument& doc)
 
     if (dataFile) 
     {
-        String MAC = "08:D1:F9:CB:A1:EC";
+        String mac = "08:D1:F9:CB:A1:EC";
 
         JsonArray comidas = doc.createNestedArray("comidas");
-        doc["MAC"] = MAC;
+        doc["mac"] = mac;
         JsonObject comida;
         JsonArray platos;
         JsonObject plato;

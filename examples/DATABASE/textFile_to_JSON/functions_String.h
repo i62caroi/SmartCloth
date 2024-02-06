@@ -136,11 +136,11 @@ void  processJSON(DynamicJsonDocument& doc)
 /*-----------------------------------------------------------------------------*/
 void stringToJSON(DynamicJsonDocument& doc, const String& fileContent)
 {
-    String MAC = "08:D1:F9:CB:A1:EC";
+    String mac = "08:D1:F9:CB:A1:EC";
 
     // Elementos del documento JSON
     JsonArray comidas = doc.createNestedArray("comidas");
-    doc["MAC"] = MAC;
+    doc["mac"] = mac;
     JsonObject comida;
     JsonArray platos;
     JsonObject plato;
@@ -208,14 +208,14 @@ void stringToJSON(DynamicJsonDocument& doc, const String& fileContent)
 /*-----------------------------------------------------------------------------*/
 void stringToJSON_lastState(DynamicJsonDocument& doc, const String& fileContent)
 {
-    String MAC = "08:D1:F9:CB:A1:EC";
+    String mac = "08:D1:F9:CB:A1:EC";
 
     // Último estado exitoso del JSON (solo comidas completas)
     String lastSuccessfulState;
 
     // Elementos del documento JSON
     JsonArray comidas = doc.createNestedArray("comidas");
-    doc["MAC"] = MAC;
+    doc["mac"] = mac;
     JsonObject comida;
     JsonArray platos;
     JsonObject plato;
@@ -319,14 +319,14 @@ void stringToJSON_lastState(DynamicJsonDocument& doc, const String& fileContent)
 /*-----------------------------------------------------------------------------*/
 void stringToJSON_lastState_v2(DynamicJsonDocument& doc, const String& fileContent)
 {
-    String MAC = "08:D1:F9:CB:A1:EC";
+    String mac = "08:D1:F9:CB:A1:EC";
 
     // Último estado exitoso del JSON (solo comidas completas)
     String lastSuccessfulState;
 
     // Elementos del documento JSON
     JsonArray comidas = doc.createNestedArray("comidas");
-    doc["MAC"] = MAC;
+    doc["mac"] = mac;
     JsonObject comida;
     JsonArray platos;
     JsonObject plato;
