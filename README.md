@@ -16,11 +16,11 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios a 
 <img src="Docs/Diseño-SmartCloth/Interfaz/Dashboards/Dashboard2.png" width="600">
 
 ### Botonera de Grupos de Alimentos
-<img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X4_con_bordes.png" width="500">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X4_con_bordes.png" width="400">
 
 
 ### Botonera de Acciones
-<img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X1_con_bordes.png" width="500">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X1_con_bordes.png" width="400">
 
 ## Contacto
 
