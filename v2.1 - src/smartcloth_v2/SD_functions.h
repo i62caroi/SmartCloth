@@ -70,11 +70,22 @@
 
 bool    checkWifiConnection();
 bool    prepareSaving();
-void    handleResponseFromESP32(int option);
+int     handleResponseFromESP32(int option);
+void    showDataToUpload(int option);
 
 // --- Mostrar en pantalla que se ha subido (o no) info ---
 #define SHOW_SCREEN_UPLOAD_DATA   1
 #define NOT_SHOW_SCREEN_UPLOAD_DATA 0
+
+// Sincronización SmartCloth con web
+#define  UPLOADING_DATA         3
+
+// --- TIPO DE GUARDADO HECHO ---
+#define  SAVE_EXECUTED_FULL                       3  // Se ha guardado en local y en la database
+#define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4  // Solo se ha guardado en local. Fallo en petición HTTP
+#define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5  // Solo se ha guardado en local. No hay WiFi
+#define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6  // Solo se ha guardado en local. Timeout de respuesta del esp32
+#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7  // Solo se ha guardado en local. Error desconocido
 
 #define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
 
@@ -92,12 +103,13 @@ bool    setupSDcard();              // Inicializar tarjeta SD
 void    writeHeaderFileSD();        // Crear fichero CSV y escribir header 
 void    saveComidaInCSV();          // Guardar comida en el fichero CSV
 void    saveListInTXT();            // Guardar lista de la comida en el fichero TXT
-void    saveComida();               // Guardar valores de la comida en fichero CSV y TXT
+int     saveComida();               // Guardar valores de la comida en fichero CSV y TXT
 void    getAcumuladoHoyFromSD();    // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 
 bool    deleteFileCSV();            // Borrar contenido del fichero CSV
 
 bool    checkFileESP32();           // Comprobar si el fichero TXT del ESP32 está vacío o si hay algo que subir
+bool    isFileEsp32Empty();         // Comprobar si el fichero TXT del ESP32 está vacío
 
 #if defined(SM_DEBUG)
 void    readFileESP32();            // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
@@ -117,7 +129,8 @@ bool    deleteFileESP32();          // Borrar contenido del fichero TXT del ESP3
  * @return true si la tarjeta SD se inicializa correctamente, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
-bool setupSDcard(){
+bool setupSDcard()
+{
     if(!SD.begin(SD_CARD_SCS)){
         #if defined(SM_DEBUG)
         SerialPC.println(F("SD card failure!"));
@@ -150,7 +163,8 @@ bool setupSDcard(){
  * El encabezado contiene los nombres de las columnas separados por ';'.
  */
 /*-----------------------------------------------------------------------------*/
-void writeHeaderFileSD() {
+void writeHeaderFileSD() 
+{
     #if defined(SM_DEBUG)
     SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileCSV); SerialPC.println(F(" ...\n"));
     #endif
@@ -180,7 +194,8 @@ void writeHeaderFileSD() {
  * @note Guarda la información de forma "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso"
  */
 /*-----------------------------------------------------------------------------*/
-void saveComidaInCSV(){
+void saveComidaInCSV()
+{
     // Se ha utilizado un RTC para conocer la fecha a la que se guarda la comida
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
@@ -215,7 +230,8 @@ void saveComidaInCSV(){
  * @brief Guarda la lista de comida en el archivo TXT que se enviará al ESP32
  */
 /*-----------------------------------------------------------------------------*/
-void saveListInTXT(){
+void saveListInTXT()
+{
     File myFile = SD.open(fileESP32, FILE_WRITE);
 
     if (myFile) {
@@ -249,7 +265,7 @@ void saveListInTXT(){
  * La información se guarda en un archivo CSV y en un archivo TXT para el ESP32.
  */
 /*-----------------------------------------------------------------------------*/
-void saveComida(){
+int saveComida(){
     #if defined(SM_DEBUG)
     SerialPC.println(F("Guardando info...\n"));
     #endif
@@ -272,13 +288,23 @@ void saveComida(){
 
     if(checkWifiConnection() && prepareSaving()){ //Si hay WiFi, se sube directamente a database
                                                   // prepareSaving() indica al ESP32 que se le va a enviar info (SAVE) y espera su respuesta (WAITING-FOR-DATA)
+
+        // INDICAR EN PANTALLA QUE SE ESTÁ SUBIENDO LA INFORMACIÓN A LA WEB
+        showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web
+        delay(2000); // Esperar 2 segundos
+
         #if define SM_DEBUG
         SerialPC.println("Enviando lista al esp32 para subir la info");
         #endif
-        // Llega aquí porque ha recibido "WAITING-FOR-DATA"
-        listaComidaESP32.sendListToESP32(); // Envia la lista de la comida y la limpia 
 
-        handleResponseFromESP32(NOT_SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta y mostrar mensaje acorde
+        // Llega aquí porque ha recibido "WAITING-FOR-DATA"
+        listaComidaESP32.sendListToESP32(); // Envia al ESP32 la lista de la comida y la limpia 
+
+        int typeOfSavingDone = handleResponseFromESP32(NOT_SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta, pero no mostrar proceso en pantalla. Si la respuesta 
+                                                                                     // es alguna de error (NO-WIFI, HTTP-ERROR o TIMEOUT), se hace saveListInTXT()
+
+        return typeOfSavingDone; // Puede ser SAVE_EXECUTED_FULL, SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP, SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI, 
+                                 // SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT o SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR
     }
     else{ // Si no hay WiFi o si TIMEOUT, se guarda la lista en el TXT y se limpia la lista para la próxima comida
         #if define SM_DEBUG
@@ -286,6 +312,8 @@ void saveComida(){
         #endif
 
         saveListInTXT(); // Copia lista en TXT y la limpia
+
+        return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;
     }
     // --------------------------------------------------------------------------------
 }
@@ -454,11 +482,42 @@ bool checkFileESP32(){
             return false;
         }
     }
-    else{
+    else{ // Para distinguir entre un error real y que el archivo simplemente no existe porque se borró,
         #if defined(SM_DEBUG)
         SerialPC.println(F("Error abriendo fichero TXT!"));
         #endif
         return false; // Si hubo error, lo tratamos como vacío para que no intente acceder 
+    }
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Comprueba si el archivo TXT del ESP32 está vacío.
+ * 
+ * @return true si el archivo está vacío, false si tiene contenido.
+ */
+/*-----------------------------------------------------------------------------*/
+bool isFileEsp32Empty() {
+    #if defined(SM_DEBUG)
+    SerialPC.println(F("\nComprobando contenido del fichero TXT del ESP32..."));
+    #endif
+    File myFile = SD.open(fileESP32, FILE_READ);
+    if (myFile && myFile.size() > 0) { // Si el archivo se puede abrir y su tamaño es mayor que 0, tiene contenido (false)
+        myFile.close();
+        return false;
+    } 
+    else { // Si no se puede abrir el archivo o su tamaño es 0, está vacío (true)
+        #if defined(SM_DEBUG)
+        if (!myFile) {
+            SerialPC.println(F("Error abriendo fichero TXT! Puede que no exista\n"));
+        }
+        #endif
+        if (myFile) {
+            myFile.close();
+        }
+        return true;
     }
 }
 

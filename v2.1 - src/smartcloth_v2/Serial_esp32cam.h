@@ -86,8 +86,10 @@
 
 // Sincronización SmartCloth con web
 #define  NO_INTERNET_CONECTION  2
+#define  UPLOADING_DATA         3
 #define  UPLOADED_DATA          4
 #define  HTTP_ERROR             5
+
 
 #include "SD_functions.h"
 
@@ -114,7 +116,7 @@ String  waitResponseFromESP32(int phase);       // Espera la respuesta del ESP32
                                                 // pero en la fase 2 espera SAVED-OK, NO-WIFI o ERROR-HTTP:<codigo_error>
 bool    prepareSaving();                        // Indica al ESP32 que se le va a enviar info y espera su respuesta WAITING-FOR-DATA
 
-void    handleResponseFromESP32(int option);    // Maneja la respuesta del ESP32 y actúa acorde
+int    handleResponseFromESP32(int option);    // Maneja la respuesta del ESP32 y actúa acorde
 /*-----------------------------------------------------------------------------*/
 
 
@@ -126,7 +128,8 @@ void    handleResponseFromESP32(int option);    // Maneja la respuesta del ESP32
  * @return true si hay conexión WiFi, false si no la hay o por TIMEOUT.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-bool checkWifiConnection() {
+bool checkWifiConnection() 
+{
     #if defined(SM_DEBUG)
     SerialPC.println(F("Comprobando la conexión WiFi del ESP32..."));
     SerialPC.println(F("Cadena enviada al esp32: CHECK-WIFI")); 
@@ -151,6 +154,7 @@ bool checkWifiConnection() {
                 #if defined(SM_DEBUG)
                 SerialPC.println(F("Dice que hay wifi"));
                 #endif
+
                 return true;
             } 
             else if (msgFromESP32 == "NO-WIFI") {
@@ -189,7 +193,8 @@ bool checkWifiConnection() {
  * @return La respuesta recibida del ESP32.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-String waitResponseFromESP32(int phase){
+String waitResponseFromESP32(int phase)
+{
     String msgFromESP32 = "";
     unsigned long startTime = millis();
 
@@ -244,7 +249,8 @@ String waitResponseFromESP32(int phase){
  * HAY QUE MODIFICAR EL WHILE CON UN TIMEOUT POR SI SE HA PERDIDO LA COMUNICACIÓN CON EL ESP32
  */
 /*---------------------------------------------------------------------------------------------------------*/
-bool prepareSaving(){
+bool prepareSaving()
+{
     // ---- Indicar envío de datos con "SAVE" ------------------------------------
     #if defined(SM_DEBUG)
     SerialPC.println(F("\nIndicando que se quiere guardar..."));
@@ -278,43 +284,86 @@ bool prepareSaving(){
  *               cualquier otro valor para no mostrar los datos.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-void handleResponseFromESP32(int option){
-    // ----- HANDLE RESPUESTA DEL ESP32 ---------------               
+int handleResponseFromESP32(int option)
+{
     String msgFromESP32 = waitResponseFromESP32(FASE_2_AL_SUBIR); // En la fase 2, sale del while si recibe SAVED-OK, HTTP-ERROR: o NO-WIFI
 
-    if (msgFromESP32 == "SAVED-OK"){ // JSON subido a la base de datos
-        //deleteFileESP32(); // Borrar fichero porque ya se ha subido su info
+    if (msgFromESP32 == "SAVED-OK") // JSON subido a la base de datos
+    {
+        deleteFileESP32(); // Borrar fichero porque ya se ha subido su info
         if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(UPLOADED_DATA);
 
         #if defined(SM_DEBUG)
         SerialPC.println(F("JSON ok y borrando fichero TXT..."));
         SerialPC.println(F("\nPaso a Init tras subir la info y borrar TXT..."));
         #endif
+
+        return SAVE_EXECUTED_FULL;
     } 
-    else if (msgFromESP32.startsWith("ERROR-HTTP:")){ 
+    else if (msgFromESP32.startsWith("ERROR-HTTP:")) // La subida no ha sido exitosa 
+    { 
         if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(HTTP_ERROR);
+        else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
+                                                        // Si se ha intentado enviar la lista de la comida pero ha habido error.
+            #if define SM_DEBUG
+            SerialPC.println("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+            #endif
+
+            saveListInTXT(); // Copia lista en TXT y la limpia
+        }
 
         #if defined(SM_DEBUG)
         SerialPC.println("Error al subir JSON: " + msgFromESP32);
         SerialPC.println(F("\nPaso a Init tras ERROR al subir la info..."));
         #endif
+
+        return SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP;
     }
-    else if (msgFromESP32 == "NO-WIFI"){ // Se ha cortado la conexión (no debería ocurrir si ya se ha comprobado antes)
+    else if (msgFromESP32 == "NO-WIFI") // Se ha cortado la conexión (no debería ocurrir si ya se ha comprobado antes)
+    {
         if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONECTION);
+        else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
+                                                        // Si se ha intentado enviar la lista de la comida pero no hay WiFi.
+            #if define SM_DEBUG
+            SerialPC.println("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+            #endif
+
+            saveListInTXT(); // Copia lista en TXT y la limpia
+        }
 
         #if defined(SM_DEBUG)
         SerialPC.println(F("Se ha cortado la conexión a Internet..."));
         SerialPC.println(F("\nPaso a Init tras fallo de conexión..."));
         #endif        
+
+        return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;
     }
-    else if (msgFromESP32 == "TIMEOUT"){ // El ESP32 no respondió en 30 segundos. Actuamos como si no hubiera WiFi
+    else if (msgFromESP32 == "TIMEOUT") // El ESP32 no respondió en 30 segundos. Actuamos como si no hubiera WiFi
+    {
         if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONECTION);
+        else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
+                                                        // Si se ha intentado enviar la lista de la comida, pero ha habido error.
+            #if define SM_DEBUG
+            SerialPC.println("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+            #endif
+
+            saveListInTXT(); // Copia lista en TXT y la limpia
+        }
 
         #if defined(SM_DEBUG)
         SerialPC.println(F("No se ha subido por TIMEOUT"));
         #endif        
+
+        return SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT;
     }
-    // ------------------------------------------------ 
+    else
+    { 
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("No se ha subido por ERROR DESCONOCIDO"));
+        #endif   
+
+        return SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR;
+    }
 }
 
 

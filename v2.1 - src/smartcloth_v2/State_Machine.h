@@ -53,7 +53,7 @@
 #define  SAVE_EXECUTED_FULL                       3  
 #define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
 #define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
-#define  SAVE_ESP32_TIMEOUT                       6
+#define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6
 #define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
 
 // --- MENSAJE DE AVISO ---
@@ -1523,6 +1523,13 @@ void actStateSaved(){
                                            // o un mensaje de aviso indicando no se ha guardado la comida porque  
                                            // está vacía.
 
+    int typeOfSavingDone;   // Tipo de guardado que se ha podido hacer:
+                            //  - Completo (local y database)
+                            //  - Solo local, error HTTP
+                            //  - Solo local, sin WiFi
+                            //  - Solo local, timeout en respuesta del esp32
+                            //  - Solo local, error desconocido
+
     if(!doneState){
       
         if(state_prev != STATE_saved){        // ==> Si no se viene del propio STATE_saved, para evitar que se vuelva 
@@ -1589,7 +1596,11 @@ void actStateSaved(){
 
                 // --- COMIDA A DIARIO Y FICHEROS ---
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
-                saveComida();                               // Comida ==> fichero CSV y fichero TXT en SD o directamente a database 
+                typeOfSavingDone = saveComida();            // Comida ==> fichero CSV y fichero TXT en SD o directamente a database 
+                                                            //  Puede haberse guardado tanto en local como en la database (SAVE_EXECUTED_FULL) o solo en
+                                                            //  local con diferentes fallos (error HTTP, no WiFi, timeout o desconocido)+
+                                                            //  Necesitamos saber qué tipo de guardado se ha podido haber para mostrar un pequeño mensaje
+                                                            //  en la esquina de la pantalla
                 #if defined(SM_DEBUG)
                 readFileESP32();                            // Se lee el fichero en lugar de la lista porque tras guardar la comida, la lista ya está vacía
                 #endif
@@ -1624,14 +1635,8 @@ void actStateSaved(){
             /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */             
             if(!errorComidaWasEmpty){ 
                 // Se muestra si no ha habido aviso. 
-                /*switch (responseFromESP32){
-                  case SAVED_OK:       showAccionRealizada(SAVE_EXECUTED_FULL);                       break; // COMIDA GUARDADA EN LOCAL Y DATABASE
-                  case ERROR_HTTP:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);      break; // COMIDA GUARDADA SOLO LOCAL, FALLO EN SERVIDOR
-                  case NO_WIFI:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);         break; // COMIDA GUARDADA SOLO LOCAL, NO HAY WIFI
-                  case TIMEOUT:        showAccionRealizada(SAVE_ESP32_TIMEOUT);         break; // COMIDA GUARDADA SOLO LOCAL POR TIMEOUT EN RESPUESTA DE ESP32
-                  case UNKNOWN:        showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR);   break; // COMIDA GUARDADA SOLO LOCAL, ERROR DESCONOCIDO
-                }*/
-                showAccionRealizada(SAVE_EXECUTED_FULL);
+                // Si el guardado no ha sido completo (local y database), se muestra pequeño mensaje en la esquina según
+                showAccionRealizada(typeOfSavingDone);
 
                 if(lastValidState == STATE_Init) previousTimeComidaSaved = millis(); // Comida guardada desde Init
             }
@@ -2759,6 +2764,7 @@ void actState_UPLOAD_DATA(){
             if(prepareSaving()){ // Indicar al ESP32 que se le va a enviar info (SAVE) y esperar su respuesta (WAITING-FOR-DATA)
                 sendFileToESP32(); // Enviar el fichero TXT línea a línea al ESP32 y terminar con FIN-TRANSMISION            
                 handleResponseFromESP32(SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta y mostrar mensaje acorde
+                // En este caso, ignoramos el valor devuelto de handleResponseFromESP32() porque no lo necesitamos
             }
             else{ // El ESP32 no respondió en 30 segundos. Actuamos como si no hubiera WiFi
                 showDataToUpload(NO_INTERNET_CONECTION); // No hay conexión, no se puede sincronizar SM con web

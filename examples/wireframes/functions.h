@@ -1252,47 +1252,41 @@ void showAccionRealizada(int option){
       case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:  // GUARDADA SOLO EN LOCAL POR NO TENER WIFI
       case SAVE_ESP32_TIMEOUT:  // TIMEOUT EN LA RESPUESTA DEL ESP32. NO SABEMOS SI HA GUARDADO O NO, PERO ASUMIMOS QUE NO
       case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:  // GUARDADA SOLO EN LOCAL POR UN ERROR DESCONOCIDO AL GUARDAR EN DATABASE
-              // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
-              //if(lastValidState == STATE_Init){
-                  // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
-                  // la báscula estará vacía (pesoARetirar = 0).
-                  //tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
-                  //tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
-              //}
-              //else{ 
-                  // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
-                  // estando aún en la báscula.
-                  tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
-                  tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
-              //}
+                // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
+                //if(lastValidState == STATE_Init){
+                    // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
+                    // la báscula estará vacía (pesoARetirar = 0).
+                    //tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
+                    //tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
+                //}
+                //else{ 
+                    // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
+                    // estando aún en la báscula.
+                    tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
+                    tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
+                //}
 
-              // Mensaje de error al guardar en database
-              if (option != SAVE_EXECUTED_FULL){ // SOLO SE HA GUARDADO EN LOCAL
-                tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF);
-                // tft.setTextForegroundColor(WHITE); 
-                // tft.setTextBackgroundColor(RED);
-                // tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF);
                 tft.selectInternalFont(RA8876_FONT_SIZE_24);
                 tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-                
-                /*if (option != SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI){ 
-                    tft.setCursor(650,550); tft.println(" ERROR EN LA CONEXI\xD3""N A LA WEB "); 
-                }
-                else { 
-                    tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
-                }*/
+            
+                if (option == SAVE_EXECUTED_FULL) // SE HA GUARDADO LOCAL Y DATABASE
+                    tft.setTextColor(WHITE,DARKPURPLE,RA8876_TEXT_TRANS_OFF); // Texto blanco sobre fondo morado oscuro
+                else // SOLO SE HA GUARDADO EN LOCAL
+                    tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco sobre fondo rojo
+            
+
                 switch(option){
-                      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(785,550);   tft.println(" ERROR EN EL ENV\xCD""O ");  break;
-                      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
-                      case SAVE_ESP32_TIMEOUT:                        tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
-                      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
-                  }
-                
+                    case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(785,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
+                    case SAVE_ESP32_TIMEOUT:                        tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
+                }
 
                 // Eliminar "resaltado" del texto de aquí en adelante:
                 tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
-              }
-              break; 
+
+                break; 
 
     }
     // ----------------------------------------------------------------------------------------------------

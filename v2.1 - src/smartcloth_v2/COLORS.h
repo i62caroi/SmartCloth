@@ -47,6 +47,7 @@
 
 #define   RED_BUTTON                  0xB8C3  // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar y grupos
 
+#define   DARKPURPLE                  0x30C6  // Mini mensaje cuando guardado completo (local y database)
 // --------------------------------------------------------------
 
 

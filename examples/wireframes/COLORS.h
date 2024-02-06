@@ -32,6 +32,7 @@ En este enlace se puede obtener el código HEX de un color seleccionado: http://
 
 #define   RED_BUTTON                  0xB8C3  // (#BA1919) Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar y grupos
 
+#define   DARKPURPLE                  0x30C6  // Mini mensaje cuando guardado completo (local y database)
 // --------------------------------------------------------------
 
 

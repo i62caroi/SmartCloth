@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
     "sketch": "smartcloth_v2.ino",
-    "port": "/dev/tty.usbmodem1121401"
+    "port": "/dev/tty.usbmodem1122401"
 }

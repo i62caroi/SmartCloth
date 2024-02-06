@@ -2147,9 +2147,11 @@ void pedirConfirmacion(int option){
 /*-------------------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------------------
-   showAccionRealizada(): Confirmación general de acción (añadir, eliminar o guardar) 
+   showAccionRealizada(): Confirmación de haber realizado acción (añadir, eliminar o guardar) 
         Parámetros: 
-            - option -> 1: botón añadir   2: botón eliminar   3: botón guardar
+            - option -> 1: añadir                           2: eliminar                         3: guardar completo (local y database)      
+                        4: guardar solo local, error HTTP   5: guardar solo local, sin WiFi     6: guardar solo local, timeout      
+                        7: guardar solo local, error desconocido
 ----------------------------------------------------------------------------------------------------------*/
 void showAccionRealizada(int option){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
@@ -2166,14 +2168,15 @@ void showAccionRealizada(int option){
     tft.setTextForegroundColor(WHITE); 
 
     switch (option){
-      case ADD_EXECUTED:               tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");  break; // PLATO AÑADIDO
-      case DELETE_EXECUTED:            tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");    break; // PLATO ELIMINADO
-      case SAVE_EXECUTED_FULL:  
-      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   
-      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:    
-      case SAVE_ESP32_TIMEOUT:
-      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:
-                                       tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break; // COMIDA GUARDADA AL MENOS EN LOCAL
+        case ADD_EXECUTED:              tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");  break;  // PLATO AÑADIDO
+        case DELETE_EXECUTED:           tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");    break;  // PLATO ELIMINADO
+        case SAVE_EXECUTED_FULL:                                                                                      // GUARDADO EN LOCAL Y DATABASE
+        case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                     // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
+        case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                        // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
+        case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                        // TIMEOUT EN LA RESPUESTA DEL ESP32
+        case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                  // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
+                                        tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break;  // Comida guardada al menos en local
+        default: break;
     }
     // ----------------------------------------------------------------------------------------------------
     
@@ -2187,52 +2190,53 @@ void showAccionRealizada(int option){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
      switch (option){
-      case ADD_EXECUTED:    tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");                 break; // AÑADIDO
+      case ADD_EXECUTED:    tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");                 break;  // AÑADIDO
 
-      case DELETE_EXECUTED: tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break; // ELIMINADO
+      case DELETE_EXECUTED: tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break;  // ELIMINADO
               
-      case SAVE_EXECUTED_FULL:                      // GUARDADA EN LOCAL Y DATABASE
-      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:     // GUARDADA SOLO EN LOCAL POR FALLO EN PETICION HTTP
-      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:        // GUARDADA SOLO EN LOCAL POR NO TENER WIFI
-      case SAVE_ESP32_TIMEOUT:                      // TIMEOUT EN LA RESPUESTA DEL ESP32. NO SABEMOS SI HA GUARDADO O NO, PERO ASUMIMOS QUE NO
-      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:  // GUARDADA SOLO EN LOCAL POR UN ERROR DESCONOCIDO AL GUARDAR EN DATABASE
-              // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
-              if(lastValidState == STATE_Init){
-                  // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
-                  // la báscula estará vacía (pesoARetirar = 0).
-                  tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
-                  tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
-              }
-              else{ 
-                  // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
-                  // estando aún en la báscula.
-                  tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
-                  tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
-              }
+      case SAVE_EXECUTED_FULL:                                                                                                  // GUARDADO EN LOCAL Y DATABASE
+      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                                 // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
+      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                                    // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
+      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                                    // TIMEOUT EN LA RESPUESTA DEL ESP32
+      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                              // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
+                // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
+                if(lastValidState == STATE_Init){
+                    // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
+                    // la báscula estará vacía (pesoARetirar = 0).
+                    tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
+                    tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
+                }
+                else{ 
+                    // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
+                    // estando aún en la báscula.
+                    tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
+                    tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
+                }
 
-              // Mensaje de error al guardar en database
-              if (option != SAVE_EXECUTED_FULL){ // SOLO SE HA GUARDADO EN LOCAL
-                  // "Resaltar" texto:
-                  tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo rojo, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
-                  // La línea anterior es lo mismo que hacer las tres siguientes:
-                  //    tft.setTextForegroundColor(WHITE); 
-                  //    tft.setTextBackgroundColor(RED);
-                  //    tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_OFF);
-                  tft.selectInternalFont(RA8876_FONT_SIZE_24);
-                  tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+                // Tamaño de texto para mensaje en la esquina
+                tft.selectInternalFont(RA8876_FONT_SIZE_24);
+                tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+            
+                // Color de texto según mensaje
+                if (option == SAVE_EXECUTED_FULL) tft.setTextColor(WHITE,DARKPURPLE,RA8876_TEXT_TRANS_OFF); // SE HA GUARDADO LOCAL Y DATABASE --> Texto blanco sobre fondo morado oscuro
+                else tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // SOLO SE HA GUARDADO EN LOCAL --> Texto blanco sobre fondo rojo
+            
+                // Mensaje según tipo de guardado
+                switch(option){
+                    case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(750,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
+                    default: break;
+                }
 
-                  switch(option){
-                      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(750,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
-                      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
-                      case SAVE_ESP32_TIMEOUT:                        tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
-                      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
-                  }
+                // Eliminar "resaltado" del texto de aquí en adelante:
+                tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
 
-                  // Eliminar "resaltado" del texto de aquí en adelante:
-                  tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
-              }
-              break; 
+                break; 
 
+        default: break;
     }
     // ----------------------------------------------------------------------------------------------------
 

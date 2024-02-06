@@ -93,7 +93,8 @@ void setup() {
     // ------ FICHERO TXT ----------------------
     bool dataToUpload;
     if(!falloCriticoSD){ // Si falló la SD, no se puede chequear el fichero txt
-        dataToUpload = checkFileESP32();
+        //dataToUpload = checkFileESP32();
+        dataToUpload = !isFileEsp32Empty(); // Si el fichero no está vacío, hay data para subir
         if(dataToUpload) {
             #if defined(SM_DEBUG)
             SerialPC.println(F("Hay data para subir\n"));
