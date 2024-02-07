@@ -1597,10 +1597,10 @@ void actStateSaved(){
                 // --- COMIDA A DIARIO Y FICHEROS ---
                 diaActual.addComida(comidaActual);          // Comida ==> Diario
                 typeOfSavingDone = saveComida();            // Comida ==> fichero CSV y fichero TXT en SD o directamente a database 
-                                                            //  Puede haberse guardado tanto en local como en la database (SAVE_EXECUTED_FULL) o solo en
-                                                            //  local con diferentes fallos (error HTTP, no WiFi, timeout o desconocido)+
-                                                            //  Necesitamos saber qué tipo de guardado se ha podido haber para mostrar un pequeño mensaje
-                                                            //  en la esquina de la pantalla
+                                                            //  Puede haberse guardado en local y en la database (SAVE_EXECUTED_FULL) o solo en
+                                                            //  local con diferentes fallos (error HTTP, no WiFi, timeout o desconocido)
+                                                            //  Necesitamos saber qué tipo de guardado se ha podido haber para mostrar un mensaje en pantalla
+                                                            
                 #if defined(SM_DEBUG)
                 readFileESP32();                            // Se lee el fichero en lugar de la lista porque tras guardar la comida, la lista ya está vacía
                 #endif
@@ -1633,10 +1633,9 @@ void actStateSaved(){
 
 
             /* -----  INFORMACIÓN MOSTRADA  ------------------------------- */             
-            if(!errorComidaWasEmpty){ 
-                // Se muestra si no ha habido aviso. 
-                // Si el guardado no ha sido completo (local y database), se muestra pequeño mensaje en la esquina según
-                showAccionRealizada(typeOfSavingDone);
+            if(!errorComidaWasEmpty){ // Si no hubo aviso
+                showAccionRealizada(typeOfSavingDone); // Si el guardado fue completo (local y database), se indica "Subido a web" en la esquina inferior izquierda.
+                                                       // Si el guardado no fue completo, se indica por qué en la esquina inferior derecha (sin internet o error).
 
                 if(lastValidState == STATE_Init) previousTimeComidaSaved = millis(); // Comida guardada desde Init
             }

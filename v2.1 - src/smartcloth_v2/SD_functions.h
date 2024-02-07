@@ -108,7 +108,6 @@ void    getAcumuladoHoyFromSD();    // Sumar comidas del día desde CSV y mostra
 
 bool    deleteFileCSV();            // Borrar contenido del fichero CSV
 
-bool    checkFileESP32();           // Comprobar si el fichero TXT del ESP32 está vacío o si hay algo que subir
 bool    isFileEsp32Empty();         // Comprobar si el fichero TXT del ESP32 está vacío
 
 #if defined(SM_DEBUG)
@@ -459,39 +458,6 @@ bool deleteFileCSV(){
 
 
 
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Comprueba si el archivo TXT del ESP32 contiene contenido.
- * 
- * @return true si el archivo tiene contenido, false si está vacío o no se puede abrir.
- */
-/*-----------------------------------------------------------------------------*/
-bool checkFileESP32(){
-    #if defined(SM_DEBUG)
-    SerialPC.println(F("\nComprobando contenido del fichero TXT del ESP32..."));
-    #endif
-    File myFile = SD.open(fileESP32, FILE_READ);
-    if (myFile){
-        if (myFile.size() > 0) { // Si el tamaño del archivo es mayor que 0, tiene contenido (true)
-            myFile.close();
-            return true;
-        } 
-        else { // Si el tamaño del archivo es 0, está vacío (false)
-            myFile.close();
-            return false;
-        }
-    }
-    else{ // Para distinguir entre un error real y que el archivo simplemente no existe porque se borró,
-        #if defined(SM_DEBUG)
-        SerialPC.println(F("Error abriendo fichero TXT!"));
-        #endif
-        return false; // Si hubo error, lo tratamos como vacío para que no intente acceder 
-    }
-}
-
-
-
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Comprueba si el archivo TXT del ESP32 está vacío.
@@ -511,7 +477,7 @@ bool isFileEsp32Empty() {
     else { // Si no se puede abrir el archivo o su tamaño es 0, está vacío (true)
         #if defined(SM_DEBUG)
         if (!myFile) {
-            SerialPC.println(F("Error abriendo fichero TXT! Puede que no exista\n"));
+            SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacío\n"));
         }
         #endif
         if (myFile) {

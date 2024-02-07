@@ -429,8 +429,8 @@ void logoutFromServer(String &bearerToken)
             String message = doc["message"];     
             
             #if defined(SM_DEBUG)
-            if(status && message == "User logged out successfully") SerialPC.println("Cierre de sesión exitoso");
-            else  SerialPC.println("Error al cerrar la sesión\n");
+            if(status && message == "User logged out successfully") SerialPC.println("Cierre de sesion exitoso");
+            else  SerialPC.println("Error al cerrar la sesion\n");
             #endif
         }
         else{
