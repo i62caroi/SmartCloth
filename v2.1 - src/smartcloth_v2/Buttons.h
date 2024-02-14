@@ -63,15 +63,14 @@ const byte intPinGuardar      = 27;   // Morado
 #endif
 
 /**
- * Estructura que representa la posición de un botón.
+ * @brief Estructura que representa la posición de un botón.
  */
-/*struct ButtonPosition {
+struct ButtonPosition {
     byte row;
     byte col;
-};*/
+};
 
 /* Keyboards variables */
-byte iRow = 0, iCol = 0;//, keyMain = 0;
 const byte countRows = 4;
 const byte countColumns = 5;
 
@@ -91,18 +90,17 @@ const byte buttons[countRows][countColumns] = {{1,2,3,4,5},
 byte  buttonGrande = 0;                  //Botón pulsado en la botonera grande (checkAllButtons())
 
 
-// -- Debajo de la declaración de buttonGrande para que esté en el ámbito de State_Machine.h --
+// Debajo de la declaración de buttonGrande para que esté en el ámbito de State_Machine.h 
 #include "ISR.h" 
 #include "State_Machine.h"  
-// -- Tras las pruebas, volver a poner tras #ifndef BUTTONS_H
+
 
 
 
 /*-----------------------------------------------------------------------------
                           DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
-//ButtonPosition  readButtonsGrande();     // Polling de botonera grande tras saltar interrupción de pulsación
-void            readButtonsGrande();
+ButtonPosition  readButtonsGrande();     // Polling de botonera grande tras saltar interrupción de pulsación
 void            checkMainButton();
 void            checkGrandeButton();
 void            checkBarcodeButton();
@@ -117,10 +115,12 @@ void            checkAllButtons();       // Asignación de eventos según botón
  * 
  * Esta función realiza la lectura del botón pulsado en la botonera grande
  * utilizando el método de polling. Se busca el botón activo en cada fila y columna
- * y se actualizan las variables iRow e iCol con la posición del botón pulsado.
+ * y se devuelve la posición del botón pulsado.
+ * 
+ * @return ButtonPosition - Posición del botón pulsado en el teclado matricial
  */
 /*-----------------------------------------------------------------------------*/
-/*ButtonPosition readButtonsGrande(){
+ButtonPosition readButtonsGrande(){
     ButtonPosition position;
 
     for (byte c = 0; c < countColumns; c++){  
@@ -132,8 +132,6 @@ void            checkAllButtons();       // Asignación de eventos según botón
         digitalWrite(columnsPins[c], HIGH);
         for (byte r = 0; r < countRows; r++){
             if (digitalRead(rowsPins[r]) == HIGH){ // Activo en HIGH 
-                //iRow = r;
-                // iCol = c;
                 position.row = r;
                 position.col = c;
             }
@@ -147,30 +145,8 @@ void            checkAllButtons();       // Asignación de eventos según botón
     }
 
     return position;
-}*/
-
-void readButtonsGrande(){
-    for (byte c = 0; c < countColumns; c++){  
-        pinMode(columnsPins[c], INPUT); //Para proteger eléctricamente los puertos de los botones y que no llegue 0 y 1 a la vez
-    }
-    
-    for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], OUTPUT); 
-        digitalWrite(columnsPins[c], HIGH);
-        for (byte r = 0; r < countRows; r++){
-            if (digitalRead(rowsPins[r]) == HIGH){ // Activo en HIGH 
-                  iRow = r;
-                  iCol = c;
-            }
-        }
-        pinMode(columnsPins[c], INPUT); 
-    }
-    
-    for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], OUTPUT);
-        digitalWrite(columnsPins[c], HIGH);
-    }
 }
+
 
 
 void checkMainButton(){
@@ -192,11 +168,11 @@ void checkMainButton(){
 
     if(buttonMain != 0){
         switch (buttonMain) {
-            case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // AMARILLO  Crudo -> opción predeterminada
-            case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  // BLANCO 
-            case 3:   eventoMain = ADD_PLATO;       break;  // VERDE 
-            case 4:   eventoMain = DELETE_PLATO;    break;  // ROJO 
-            case 5:   eventoMain = GUARDAR;         break;  // NEGRO 
+            case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // Crudo -> opción predeterminada
+            case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  
+            case 3:   eventoMain = ADD_PLATO;       break;  
+            case 4:   eventoMain = DELETE_PLATO;    break;  
+            case 5:   eventoMain = GUARDAR;         break;  
         }
         
         addEventToBuffer(eventoMain);
@@ -209,32 +185,22 @@ void checkMainButton(){
 
 void checkGrandeButton(){
     if (pulsandoGrande){ // Se está pulsando una tecla
-        readButtonsGrande(); // Qué tecla se está pulsando 
-        buttonGrande = buttons[iRow][iCol];
-        //ButtonPosition position = readButtonsGrande(); // Posición del botón pulsado
-        //buttonGrande = buttons[position.row][position.col];
+        ButtonPosition position = readButtonsGrande(); // Posición del botón pulsado
+        buttonGrande = buttons[position.row][position.col];
         
         #if defined(SM_DEBUG)
         SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
         #endif 
         
         /* ----- EVENTO ------- */ 
-        if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
-            (buttons[iRow][iCol] <= 18))){
-                    eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
-        }
-        else if(((buttons[iRow][iCol] >= 1) and (buttons[iRow][iCol] <= 6)) or ((buttons[iRow][iCol] >= 10) and 
-                (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] >=19)){
-                    eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-        }
-        /*if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
+        if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
             (buttons[position.row][position.col] <= 18))){
                     eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
         }
         else if(((buttons[position.row][position.col] >= 1) and (buttons[position.row][position.col] <= 6)) or ((buttons[position.row][position.col] >= 10) and 
                 (buttons[position.row][position.col] <= 15)) or (buttons[position.row][position.col] >=19)){
                     eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-        }*/
+        }
 
         addEventToBuffer(eventoGrande);
         flagEvent = true;
@@ -303,11 +269,11 @@ void checkAllButtons(){
 
         if(buttonMain != 0){
             switch (buttonMain) {
-                case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // AMARILLO  Crudo -> opción predeterminada
-                case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  // BLANCO 
-                case 3:   eventoMain = ADD_PLATO;       break;  // VERDE 
-                case 4:   eventoMain = DELETE_PLATO;    break;  // ROJO 
-                case 5:   eventoMain = GUARDAR;         break;  // NEGRO 
+                case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // Crudo -> opción predeterminada
+                case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break; 
+                case 3:   eventoMain = ADD_PLATO;       break;  
+                case 4:   eventoMain = DELETE_PLATO;    break; 
+                case 5:   eventoMain = GUARDAR;         break; 
             }
             
             addEventToBuffer(eventoMain);
@@ -320,32 +286,22 @@ void checkAllButtons(){
 
         /* ---------------    TECLADO GRANDE   ----------------- */
         if (pulsandoGrande){ // Se está pulsando una tecla
-            readButtonsGrande(); // Qué tecla se está pulsando 
-            buttonGrande = buttons[iRow][iCol];
-            //ButtonPosition position = readButtonsGrande(); // Posición del botón pulsado
-            //buttonGrande = buttons[position.row][position.col];
+            ButtonPosition position = readButtonsGrande(); // Posición del botón pulsado
+            buttonGrande = buttons[position.row][position.col];
             
             #if defined(SM_DEBUG)
             SerialPC.print(F("\nGrupo: ")); SerialPC.println(buttonGrande); 
             #endif 
             
             /* ----- EVENTO ------- */ 
-            if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
-                (buttons[iRow][iCol] <= 18))){
-                       eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
-            }
-            else if(((buttons[iRow][iCol] >= 1) and (buttons[iRow][iCol] <= 6)) or ((buttons[iRow][iCol] >= 10) and 
-                   (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] >=19)){
-                       eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-            }
-            /*if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
+            if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
                 (buttons[position.row][position.col] <= 18))){
                        eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
             }
             else if(((buttons[position.row][position.col] >= 1) and (buttons[position.row][position.col] <= 6)) or ((buttons[position.row][position.col] >= 10) and 
                    (buttons[position.row][position.col] <= 15)) or (buttons[position.row][position.col] >=19)){
                        eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-            }*/
+            }
 
             addEventToBuffer(eventoGrande);
             flagEvent = true;
