@@ -37,7 +37,7 @@ class Comida{
 
   private:
   
-    int                   _nPlatos;                 /**< Número de platos en la comida. */
+    byte                  _nPlatos;                 /**< Número de platos en la comida. */
     float                 _peso;                    /**< Peso total de la comida. */
     ValoresNutricionales  _valoresComida;           /**< Valores nutricionales totales de la comida. */
 
@@ -51,14 +51,14 @@ class Comida{
      * 
      * @param num Número de platos a establecer
      */
-    inline void _setNumPlatos(int num){ _nPlatos = num; };
+    inline void _setNumPlatos(byte num){ _nPlatos = num; };
     
     /**
      * @brief Obtiene el número de platos de la comida.
      * 
      * @return El número de platos de la comida
      */
-    inline int _getNumPlatos(){ return _nPlatos; };
+    inline byte _getNumPlatos(){ return _nPlatos; };
   
   
 

@@ -37,9 +37,9 @@ class Plato{
 
   private:
   
-    int _nAlimentos;                      /**< Número de alimentos en el plato */
-    float _peso;                          /**< Peso total del plato */
-    ValoresNutricionales _valoresPlato;   /**< Valores nutricionales del plato */
+    byte                    _nAlimentos;     /**< Número de alimentos en el plato */
+    float                   _peso;           /**< Peso total del plato */
+    ValoresNutricionales    _valoresPlato;   /**< Valores nutricionales del plato */
 
 
     // ----------------------------------------------------------------------
@@ -51,14 +51,14 @@ class Plato{
      * 
      * @param num Número de alimentos a establecer
      */
-    inline void _setNumAlimentos(int num){ _nAlimentos = num; };
+    inline void _setNumAlimentos(byte num){ _nAlimentos = num; };
 
     /**
      * @brief Obtiene el número de alimentos del plato.
      * 
      * @return El número de alimentos del plato
      */
-    inline int _getNumAlimentos(){ return _nAlimentos; };
+    inline byte _getNumAlimentos(){ return _nAlimentos; };
 
 
 

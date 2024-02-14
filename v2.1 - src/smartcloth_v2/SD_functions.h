@@ -70,8 +70,8 @@
 
 bool    checkWifiConnection();
 bool    prepareSaving();
-int     handleResponseFromESP32(int option);
-void    showDataToUpload(int option);
+byte    handleResponseFromESP32(byte option);
+void    showDataToUpload(byte option);
 
 // --- Mostrar en pantalla que se ha subido (o no) info ---
 #define SHOW_SCREEN_UPLOAD_DATA   1
@@ -103,7 +103,7 @@ bool    setupSDcard();              // Inicializar tarjeta SD
 void    writeHeaderFileSD();        // Crear fichero CSV y escribir header 
 void    saveComidaInCSV();          // Guardar comida en el fichero CSV
 void    saveListInTXT();            // Guardar lista de la comida en el fichero TXT
-int     saveComida();               // Guardar valores de la comida en fichero CSV y TXT
+byte    saveComida();               // Guardar valores de la comida en fichero CSV y TXT
 void    getAcumuladoHoyFromSD();    // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 
 bool    deleteFileCSV();            // Borrar contenido del fichero CSV
@@ -235,7 +235,7 @@ void saveListInTXT()
 
     if (myFile) {
         // Escribe cada línea en el archivo
-        for (int i = 0; i < listaComidaESP32.getListSize(); i++) {
+        for (byte i = 0; i < listaComidaESP32.getListSize(); i++) {
             myFile.println(listaComidaESP32.getItem(i));
         }
         
@@ -264,7 +264,7 @@ void saveListInTXT()
  * La información se guarda en un archivo CSV y en un archivo TXT para el ESP32.
  */
 /*-----------------------------------------------------------------------------*/
-int saveComida(){
+byte saveComida(){
     #if defined(SM_DEBUG)
     SerialPC.println(F("Guardando info...\n"));
     #endif
@@ -292,21 +292,21 @@ int saveComida(){
         showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web
         delay(2000); // Esperar 2 segundos
 
-        #if define SM_DEBUG
-        SerialPC.println("Enviando lista al esp32 para subir la info");
+        #if defined SM_DEBUG
+        SerialPC.println(F("Enviando lista al esp32 para subir la info"));
         #endif
 
         // Llega aquí porque ha recibido "WAITING-FOR-DATA"
         listaComidaESP32.sendListToESP32(); // Envia al ESP32 la lista de la comida y la limpia 
 
-        int typeOfSavingDone = handleResponseFromESP32(NOT_SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta, pero no mostrar proceso en pantalla. Si la respuesta 
+        byte typeOfSavingDone = handleResponseFromESP32(NOT_SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta, pero no mostrar proceso en pantalla. Si la respuesta 
                                                                                      // es alguna de error (NO-WIFI, HTTP-ERROR o TIMEOUT), se hace saveListInTXT()
 
         return typeOfSavingDone; // Puede ser SAVE_EXECUTED_FULL, SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP, SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI, 
                                  // SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT o SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR
     }
     else{ // Si no hay WiFi o si TIMEOUT, se guarda la lista en el TXT y se limpia la lista para la próxima comida
-        #if define SM_DEBUG
+        #if defined SM_DEBUG
         SerialPC.println("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
         #endif
 
@@ -337,13 +337,13 @@ void getAcumuladoHoyFromSD(){
 
     // SUMAS
     float sumCarb = 0.0, sumLip = 0.0, sumProt = 0.0, sumKcal = 0.0, sumPeso = 0.0;    
-    int sumCarb_R = 0, sumLip_R = 0, sumProt_R = 0;
-    int nComidas = 0;
+    float sumCarb_R = 0, sumLip_R = 0, sumProt_R = 0;
+    byte nComidas = 0;
 
     char lineBuffer[128];  
 
     char *token;
-    int fieldIndex;
+    byte fieldIndex;
 
     bool msg = true;
 
@@ -363,26 +363,27 @@ void getAcumuladoHoyFromSD(){
             if(strcmp(today, token) == 0){ // si 'today' igual que primer token ==> comida guardada hoy
                 
                 if(msg){
+                    #if defined SM_DEBUG
                     SerialPC.println(F("Obteniendo Acumulado Hoy..."));
+                    #endif
                     msg = false; // Solo imprimir una vez y si hay algo que sumar
                 }
 
                 nComidas++; // Incrementar numero comidas guardadas hoy
 
-                float valueFloat;
-                int valueInt;
+                float value;
 
                 while (token != NULL) {
 
                     switch (fieldIndex){ // fieldIndex = 0 => fecha     fieldIndex = 1 => hora    fieldIndex = 2 => carb  ...
-                        case 2:   valueFloat = atof(token);     sumCarb   += valueFloat;     break;    // Carbohidratos
-                        case 3:   valueInt   = atoi(token);     sumCarb_R += valueInt;       break;    // Raciones de carbohidratos
-                        case 4:   valueFloat = atof(token);     sumLip    += valueFloat;     break;    // Lípidos (Grasas)
-                        case 5:   valueInt   = atoi(token);     sumLip_R  += valueInt;       break;    // Raciones de lípidos
-                        case 6:   valueFloat = atof(token);     sumProt   += valueFloat;     break;    // Proteínas
-                        case 7:   valueInt   = atoi(token);     sumProt_R += valueInt;       break;    // Raciones de proteínas
-                        case 8:   valueFloat = atof(token);     sumKcal   += valueFloat;     break;    // Kilocalorías
-                        case 9:   valueFloat = atof(token);     sumPeso   += valueFloat;     break;    // Peso
+                        case 2:   value = atof(token);     sumCarb   += value;     break;    // Carbohidratos
+                        case 3:   value = atof(token);     sumCarb_R += value;     break;    // Raciones de carbohidratos
+                        case 4:   value = atof(token);     sumLip    += value;     break;    // Lípidos (Grasas)
+                        case 5:   value = atof(token);     sumLip_R  += value;     break;    // Raciones de lípidos
+                        case 6:   value = atof(token);     sumProt   += value;     break;    // Proteínas
+                        case 7:   value = atof(token);     sumProt_R += value;     break;    // Raciones de proteínas
+                        case 8:   value = atof(token);     sumKcal   += value;     break;    // Kilocalorías
+                        case 9:   value = atof(token);     sumPeso   += value;     break;    // Peso
                         default:  break;
                     }
 
@@ -405,7 +406,9 @@ void getAcumuladoHoyFromSD(){
         
     }
     else{
-        SerialPC.println("Error abriendo archivo CSV!");
+        #if defined SM_DEBUG
+        SerialPC.println(F("Error abriendo archivo CSV!"));
+        #endif
     }
 
 }
@@ -477,7 +480,9 @@ bool isFileEsp32Empty() {
     else { // Si no se puede abrir el archivo o su tamaño es 0, está vacío (true)
         #if defined(SM_DEBUG)
         if (!myFile) {
-            SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacío\n"));
+            #if defined SM_DEBUG
+            SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacio\n"));
+            #endif
         }
         #endif
         if (myFile) {
@@ -518,8 +523,8 @@ void readFileESP32(){
  */
 /*-----------------------------------------------------------------------------*/
 void sendFileToESP32(){
-    #if define SM_DEBUG
-    SerialPC.println("Enviando TXT al esp32...");
+    #if defined SM_DEBUG
+    SerialPC.println(F("Enviando TXT al esp32..."));
     #endif
 
     File dataFile = SD.open(fileESP32);

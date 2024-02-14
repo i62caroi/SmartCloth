@@ -41,8 +41,8 @@ HX711 scale;
 
 
 // HX711 circuit wiring
-const int LOADCELL_DOUT_PIN = 3;
-const int LOADCELL_SCK_PIN = 2;
+const byte LOADCELL_DOUT_PIN = 3;
+const byte LOADCELL_SCK_PIN = 2;
 
 
 bool      scaleEventOccurred = false;

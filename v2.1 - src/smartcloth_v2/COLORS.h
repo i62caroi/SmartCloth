@@ -82,6 +82,8 @@
 #define   COLOR_G18             0xFACA    // NARANJA
 #define   COLOR_G19             0xFEE8    // AMARILLO
 #define   COLOR_G20             0xFF1A    // BEIGE
+
+#define   COLOR_G50             0xD6E9    // VERDE
 // -------------------------------------------------
 
 

@@ -244,8 +244,11 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 // Screen object 
 RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 
-int SCREEN_WIDTH; // X (1024)
-int SCREEN_HEIGHT; // Y (600)
+//int SCREEN_WIDTH; // X (1024)
+//int SCREEN_HEIGHT; // Y (600)
+
+#define SCREEN_WIDTH 1024
+#define SCREEN_HEIGHT 600
 
 
 
@@ -256,19 +259,19 @@ int SCREEN_HEIGHT; // Y (600)
 void    setupScreen();                    // Inicializar pantalla
 void    welcome();                        // Cargar imágenes (loadPicturesShowHourglass()) y mostrar wireframe de Arranque (logo SmartCloth)
 // --- DASHBOARD ---
-void    blinkGrupoyProcesamiento(int msg_option); // Mostrar zonas 1 y 2 parpadeando (msg de sin grupo o recipiente) o solo zona 2 (sin msg)
+void    blinkGrupoyProcesamiento(byte msg_option); // Mostrar zonas 1 y 2 parpadeando (msg de sin grupo o recipiente) o solo zona 2 (sin msg)
 void    printGrupoyEjemplos();            // Zona 1 => Mostrar nombre de grupo escogido y ejemplos
 void    printProcesamiento();             // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo => STATE_raw y STATE_cooked
-void    printZona3(int show_objeto);      // Zona 3 => Mostrar comida actual copiada (SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (SHOW_ALIMENTO_ACTUAL_ZONA3)
-void    printZona4(int show_objeto);      // Zona 4 => Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
-void    showValores(ValoresNutricionales &valores, int zona);  // Mostrar valores en la 'zona' correspondiente (SHOW_VALORES_ZONA3 O SHOW_VALORES_ZONA4).
-void    showRaciones(ValoresNutricionales &valores, int zona); // Mostrar raciones con decimales mínimos y centradas según la 'zona' (SHOW_RACIONES_ZONA3 o SHOW_RACIONES_ZONA4).
-void    showDashboardStyle1(int msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Init y STATE_Plato
+void    printZona3(byte show_objeto);      // Zona 3 => Mostrar comida actual copiada (SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (SHOW_ALIMENTO_ACTUAL_ZONA3)
+void    printZona4(byte show_objeto);      // Zona 4 => Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
+void    showValores(ValoresNutricionales &valores, byte zona);  // Mostrar valores en la 'zona' correspondiente (SHOW_VALORES_ZONA3 O SHOW_VALORES_ZONA4).
+void    showRaciones(ValoresNutricionales &valores, byte zona); // Mostrar raciones con decimales mínimos y centradas según la 'zona' (SHOW_RACIONES_ZONA3 o SHOW_RACIONES_ZONA4).
+void    showDashboardStyle1(byte msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Init y STATE_Plato
 void    showDashboardStyle2();                // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
 bool    showSemiDashboard_PedirProcesamiento(); // Mostrar medio dashboard (zonas 1 y 2). Las zonas 3 y 4 se tapan con pantalla de pedir procesamiento => STATE_groupA/B
 // --- PANTALLAS TRANSITORIAS ---
 // -- Info para sincronizar ---
-void    showDataToUpload(int option);     // Sincronizar memoria de SmartCloth con Web
+void    showDataToUpload(byte option);     // Sincronizar memoria de SmartCloth con Web
 // -- Recipiente ---------
 void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Init
 void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
@@ -285,19 +288,19 @@ void    pedirAlimento();                  // Pedir colocar alimento
 // -- Sugerir acción ----
 void    sugerirAccion();                  // Sugerir acción: añadir más alimento, escoger otro grupo, añadir otro plato, borrar plato actual o guardar comida.
 // -- Confirmar acción ---
-void    pedirConfirmacion(int option);        // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
+void    pedirConfirmacion(byte option);        // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 // -- Acción realizada ---
-void    showAccionRealizada(int option);  // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showAccionRealizada(byte option);  // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Acción cancelada ---
 void    showAccionCancelada();            // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
 // -- Fallo crítico en SD ---
 void    showCriticFailureSD();            // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
 // --- Errores o avisos ---
-void    showError(int option);            // Pantalla de error con mensaje según estado 
-void    showWarning(int option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showError(byte option);            // Pantalla de error con mensaje según estado 
+void    showWarning(byte option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Aparición/Desaparición imágenes --
-bool    slowAppearanceImage(int option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
-bool    slowAppearanceAndDisappareanceProcesamiento(int option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
+bool    slowAppearanceImage(byte option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
+bool    slowAppearanceAndDisappareanceProcesamiento(byte option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
 // --- CARGA DE IMÁGENES ---
 void    loadPicturesShowHourglass();      // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloj de arena (hourglass)
 void    putReloj1();
@@ -318,9 +321,9 @@ bool    eventOccurred();                  // Comprobar si ha habido interrupcion
 bool    doubleDelayAndCheckInterrupt(unsigned long period);  // El tiempo especificado se divide a la mitad y se comprueba interrupción tras cada espera
 /*-----------------------------------------------------------------------------*/
 // --- MOVIMIENTO PANTALLAS GRUPOS Y CONFIRMACIÓN ---
-bool    desplazar_mano(int option);   // Desplazar imagen de "mano" por la pantalla hasta el botón correspondiente. Devuelve bool para poder salir de pedirConfirmacion() si hay interrupción.
-void    sin_pulsacion(int option);    // Mano sobre botón sin pulsación 
-void    con_pulsacion(int option);    // Pulsación de mano en botón
+bool    desplazar_mano(byte option);   // Desplazar imagen de "mano" por la pantalla hasta el botón correspondiente. Devuelve bool para poder salir de pedirConfirmacion() si hay interrupción.
+void    sin_pulsacion(byte option);    // Mano sobre botón sin pulsación 
+void    con_pulsacion(byte option);    // Pulsación de mano en botón
 
 
 // --- PANTALLAS CHECK Y CONFIRMADO DEL BORRADO CSV ---
@@ -352,8 +355,8 @@ void setupScreen(){
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
     tft.clearScreen(BLACK); 
 
-    SCREEN_WIDTH = tft.getWidth(); // X
-    SCREEN_HEIGHT = tft.getHeight(); // Y
+    //SCREEN_WIDTH = tft.getWidth(); // X
+    //SCREEN_HEIGHT = tft.getHeight(); // Y
     #if defined(SM_DEBUG)
     SerialPC.println(F("Screen initialized"));
     #endif
@@ -556,9 +559,9 @@ void welcome(){
                                cocinado.
 
             Parámetros:
-                    msg_option - int   -->   0: sin mensaje     1: mensaje "no hay recipiente"    2: mensaje "no hay grupo"
+                    msg_option - byte   -->   0: sin mensaje     1: mensaje "no hay recipiente"    2: mensaje "no hay grupo"
 ----------------------------------------------------------------------------------------------------------*/
-void blinkGrupoyProcesamiento(int msg_option){
+void blinkGrupoyProcesamiento(byte msg_option){
     // Tiempos utilizados para alternar el resaltado de los recuadros:
     static unsigned long previousTime = 0;      // Variable estática para almacenar el tiempo anterior
     const unsigned long interval = 500;        // Intervalo de tiempo para alternar entre resaltar el recuadro o no (0.5 seg)
@@ -741,9 +744,9 @@ void printProcesamiento(){
 /*---------------------------------------------------------------------------------------------------------
    printZona3(): Zona 3 => Muestra los valores nutricionales según el caso.
           Parámetros:
-                        show_objeto - int -> 0: Comida actual copiada tras guardar     1: alimento actual
+                        show_objeto - byte -> 0: Comida actual copiada tras guardar     1: alimento actual
 ----------------------------------------------------------------------------------------------------------*/
-void printZona3(int show_objeto){ 
+void printZona3(byte show_objeto){ 
     float pesoMostrado = 0.0;
 
     // ---------- GRÁFICOS ---------------------------------------------------------------------------------------- 
@@ -823,9 +826,9 @@ void printZona3(int show_objeto){
 /*---------------------------------------------------------------------------------------------------------
    printZona4(): Zona 4 => Muestra los valores nutricionales según el caso.
           Parámetros:
-                        show_objeto - int -> 0: Comida actual real     1: acumulado hoy
+                        show_objeto - byte -> 0: Comida actual real     1: acumulado hoy
 ----------------------------------------------------------------------------------------------------------*/
-void printZona4(int show_objeto){ 
+void printZona4(byte show_objeto){ 
     float pesoMostrado = 0.0;
 
     // ---------- GRÁFICOS --------------------------------------------------------------------------------------
@@ -900,9 +903,9 @@ void printZona4(int show_objeto){
    showValores(): Mostrar los valores pasados en la ubicación correspondiente de la pantalla según la zona.
       Parámetros:
                   valores - ValoresNutricionales  --> objeto con los valores a mostrar
-                  zona - int    --> zona en la que se están mostrando, necesaria para saber la ubicación en pantalla.
+                  zona - byte    --> zona en la que se están mostrando, necesaria para saber la ubicación en pantalla.
 ----------------------------------------------------------------------------------------------------------*/
-void showValores(ValoresNutricionales &valores, int zona){
+void showValores(ValoresNutricionales &valores, byte zona){
 
     tft.selectInternalFont(RA8876_FONT_SIZE_32); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
@@ -941,9 +944,9 @@ void showValores(ValoresNutricionales &valores, int zona){
                    determinados casos y centrando el valor en el recuadro correspondiente.
       Parámetros:
                   valores - ValoresNutricionales  --> objeto con las raciones a mostrar
-                  zona - int    --> zona en la que se están mostrando, necesaria para saber la ubicación en pantalla.
+                  zona - byte    --> zona en la que se están mostrando, necesaria para saber la ubicación en pantalla.
 ----------------------------------------------------------------------------------------------------------*/
-void showRaciones(ValoresNutricionales &valores, int zona){
+void showRaciones(ValoresNutricionales &valores, byte zona){
     float raciones;
 
     // Texto "Raciones"
@@ -1062,9 +1065,9 @@ void showRaciones(ValoresNutricionales &valores, int zona){
 
                           Este dashboard solo se muestra en STATE_Init y STATE_Plato.
           Parámetros:
-                    msg_option - int   -->   0: sin mensaje   1: "no hay recipiente"    2: "no hay grupo"
+                    msg_option - byte   -->   0: sin mensaje   1: "no hay recipiente"    2: "no hay grupo"
 ----------------------------------------------------------------------------------------------------------*/
-void showDashboardStyle1(int msg_option){
+void showDashboardStyle1(byte msg_option){
     showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
 
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
@@ -1132,7 +1135,7 @@ bool showSemiDashboard_PedirProcesamiento(){
  * @param option La opción seleccionada: DATA_TO_UPLOAD, UPLOADING_DATA, NO_INTERNET_CONECTION o HTTP_ERROR
  */
 /*-----------------------------------------------------------------------------*/
-void showDataToUpload(int option){
+void showDataToUpload(byte option){
 
     tft.clearScreen(WHITE);
 
@@ -1436,7 +1439,7 @@ void pedirGrupoAlimentos(){
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(1000)) return;
 
-    for(int i = 0; i < 4; i++){
+    for(byte i = 0; i < 4; i++){
         if(pulsacion) con_pulsacion(MANO_Y_PULSACION_GRUPOS);
         else sin_pulsacion(MANO_Y_PULSACION_GRUPOS);
         if(doubleDelayAndCheckInterrupt(1000)) return;
@@ -1452,7 +1455,7 @@ void pedirGrupoAlimentos(){
             Devuelve bool para salir de la función que llamó de desplazar_mano() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
 
-bool desplazar_mano(int option){
+bool desplazar_mano(byte option){
     int alto, posY;
 
     switch(option){
@@ -1551,7 +1554,7 @@ bool desplazar_mano(int option){
    sin_pulsacion(): Mostrar la "mano" sobre el botón sin pulsación
 ----------------------------------------------------------------------------------------------------------*/
 
-void sin_pulsacion(int option){
+void sin_pulsacion(byte option){
     switch(option){
         case MANO_Y_PULSACION_GRUPOS: // Grupos
               // 1 - Borrar todo (grupo, mano y pulsación)
@@ -1602,7 +1605,7 @@ void sin_pulsacion(int option){
 /*---------------------------------------------------------------------------------------------------------
    con_pulsacion(): Simular pulsación causada por la "mano" sobre botón.
 ----------------------------------------------------------------------------------------------------------*/
-void con_pulsacion(int option){
+void con_pulsacion(byte option){
     int x1, y1, x2, y2;
 
     switch(option){
@@ -1617,7 +1620,7 @@ void con_pulsacion(int option){
               // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
               // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
               // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-              for (int i = 0; i <= 10; i++) {
+              for (byte i = 0; i <= 10; i++) {
                   x1 = 556 - i;   y1 = 288 - i;   
                   x2 = 680 + i;   y2 = 413 + i;
                   tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
@@ -1633,21 +1636,21 @@ void con_pulsacion(int option){
               // 5 - Rayitas pulsación
               // ------------ RAYITAS (PULSACION) ------------------
               // Línea izquierda
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 584 + i;   y1 = 355;   
                   x2 = 594 + i;   y2 = 375;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
 
               // Línea central
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 604 + i;   y1 = 350;   
                   x2 = 604 + i;   y2 = 370;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
 
               // Línea derecha
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 614 + i;   y1 = 375;   
                   x2 = 624 + i;   y2 = 355;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
@@ -1670,7 +1673,7 @@ void con_pulsacion(int option){
               // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
               // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
               // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-              for (int i = 0; i <= 10; i++) {
+              for (byte i = 0; i <= 10; i++) {
                   x1 = 425 - i;   y1 = 383 - i;   
                   x2 = 590 + i;   y2 = 505 + i;
                   tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de añadir
@@ -1686,21 +1689,21 @@ void con_pulsacion(int option){
               // 5 - Rayitas pulsación
               // ------------ RAYITAS (PULSACION) ------------------
               // Línea izquierda
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 448 + i;   y1 = 447;   
                   x2 = 458 + i;   y2 = 467;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
 
               // Línea central
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 468 + i;   y1 = 442;   
                   x2 = 468 + i;   y2 = 462;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
 
               // Línea derecha
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 478 + i;   y1 = 467;   
                   x2 = 488 + i;   y2 = 447;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
@@ -1721,7 +1724,7 @@ void con_pulsacion(int option){
               // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
               // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
               // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-              for (int i = 0; i <= 10; i++) {
+              for (byte i = 0; i <= 10; i++) {
                   x1 = 425 - i;   y1 = 403 - i;   
                   x2 = 590 + i;   y2 = 525 + i;
                   tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de añadir
@@ -1737,21 +1740,21 @@ void con_pulsacion(int option){
               // 5 - Rayitas pulsación
               // ------------ RAYITAS (PULSACION) ------------------
               // Línea izquierda
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 438 + i;   y1 = 467;   
                   x2 = 448 + i;   y2 = 487;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
 
               // Línea central
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 458 + i;   y1 = 462;   
                   x2 = 458 + i;   y2 = 482;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
 
               // Línea derecha
-              for (int i = 0; i <= 4; i++) {
+              for (byte i = 0; i <= 4; i++) {
                   x1 = 468 + i;   y1 = 487;   
                   x2 = 478 + i;   y2 = 467;
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
@@ -2027,7 +2030,7 @@ void sugerirAccion(){
         Parámetros: 
             - option -> 1: botón añadir   2: botón eliminar   3: botón guardar
 ----------------------------------------------------------------------------------------------------------*/
-void pedirConfirmacion(int option){
+void pedirConfirmacion(byte option){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
@@ -2125,7 +2128,7 @@ void pedirConfirmacion(int option){
 
     bool pulsacion = true;
 
-    for(int i = 0; i < 4; i++){
+    for(byte i = 0; i < 4; i++){
         if(pulsacion) con_pulsacion(option+1); // Simular pulsación (p.ej. option = ASK_CONFIRMATION_ADD = 1 --> con_pulsacion(2) --> añadir plato
         else sin_pulsacion(option+1);          // Eliminar pulsación 
         // ----- ESPERA E INTERRUPCION ----------------
@@ -2153,7 +2156,7 @@ void pedirConfirmacion(int option){
                         4: guardar solo local, error HTTP   5: guardar solo local, sin WiFi     6: guardar solo local, timeout      
                         7: guardar solo local, error desconocido
 ----------------------------------------------------------------------------------------------------------*/
-void showAccionRealizada(int option){
+void showAccionRealizada(byte option){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     tft.clearScreen(VERDE_PEDIR);
@@ -2288,7 +2291,7 @@ void showAccionCancelada(){
         Parámetros: 
             option  - 1: añadir   2: eliminar   3: guardar
 ----------------------------------------------------------------------------------------------------------*/
-void showWarning(int option){
+void showWarning(byte option){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
@@ -2404,7 +2407,7 @@ void showCriticFailureSD(){
                          6: Cocinado     7: Pesado         8: add_check    9: Added    10: delete_check     
                          11: Deleted     12: save_check    13: Saved
 ----------------------------------------------------------------------------------------------------------*/
-void showError(int option){ 
+void showError(byte option){ 
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // cruz
@@ -2452,7 +2455,7 @@ void showError(int option){
               // Puede que el mensaje actual no sea lo suficiente claro porque no indica específicamente qué se ha hecho mal.
               break;
 
-      case ERROR_STATE_GROUPS: // Grupos (grupoA o groupB)
+      case ERROR_STATE_GROUP: // Grupos (grupoA o groupB)
               if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
                   tft.setCursor(10, 420); tft.println("SELECCIONE COCINADO O CRUDO ANTES DE PESAR");  
                   /*
@@ -2539,7 +2542,7 @@ void showError(int option){
         Return:   true: ha habido interrupción    false: no ha habido interrupción
             Devuelve bool para salir de la función que llamó de slowAppearanceImage() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
-bool slowAppearanceImage(int option){
+bool slowAppearanceImage(byte option){
     uint8_t i;
     switch(option){
         case SLOW_APPEAR_COCINADO: // Cocinado
@@ -2741,7 +2744,7 @@ bool slowAppearanceImage(int option){
         Return:   true: ha habido interrupción    false: no ha habido interrupción
             Devuelve bool para salir de la función que llamó de slowAppearanceAndDisappareanceProcesamiento() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
-bool slowAppearanceAndDisappareanceProcesamiento(int option){
+bool slowAppearanceAndDisappareanceProcesamiento(byte option){
     uint8_t i,j;
     /*
     // PANTALLA COMPLETA:

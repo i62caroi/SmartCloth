@@ -42,8 +42,8 @@ SAMDUE_ISR_Timer ISR_Timer;
 
 
 
-/*  -----   MAIN  ----- */
-volatile int  buttonMain = 0; // Botón pulsado en Main (botonera B)
+//  -----   MAIN  --------------------------------------
+volatile byte  buttonMain = 0; // Botón pulsado en Main (botonera B)
 const byte intPinCocinado     = 33;   // Naranja 
 const byte intPinCrudo        = 31;   // Amarillo 
 const byte intPinAddPlato     = 29;   // Verde 
@@ -51,23 +51,34 @@ const byte intPinAddPlato     = 29;   // Verde
 // Los pines en las botoneras nuevas están B1 | B2 | B3 | B5 | B4
 // Intercambiamos los pines de borrar (B4) y guardar (B5)
 
-// ------ BOTONERAS ANTIGUAS ------------
+// -- BOTONERAS ANTIGUAS ------
 const byte intPinDeletePlato  = 27;   // Azul 
 const byte intPinGuardar      = 25;   // Morado 
 
-// ------ BOTONERAS NUEVAS --------------
+// -- BOTONERAS NUEVAS --------
 //const byte intPinDeletePlato  = 25;   // Azul 
 //const byte intPinGuardar      = 27;   // Morado 
+// ------------------------------------------------------
 
 
-/*  -----   GRANDE  ----- */
+//  -----   GRANDE  -------------------------------------
 const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
 volatile bool pulsandoGrande  = false;    // Flag de estar pulsando algo en Grande
+// ------------------------------------------------------
 
 
-/*  -----  BÁSCULA ------ */
+// ----- BOTÓN BARCODE ----------------------------------
+const byte intPinBarcode = 51;
+volatile bool pulsandoBarcode = false;
+// ------------------------------------------------------
+
+
+
+//  -----  BÁSCULA --------------------------------------
 volatile float  weight = 0.0;         ///< Peso real tomado por ISR
 volatile bool   pesado = false;       // Flag de haber pesado por ISR
+// ------------------------------------------------------
+
 
 
 #include "Scale.h" // Debajo de las variables para que estén disponibles en su ámbito
@@ -82,15 +93,21 @@ void ISR_addPlato();                      // ISR de botón de 'añadir plato'
 void ISR_deletePlato();                   // ISR de botón de 'eliminar plato'
 void ISR_guardar();                       // ISR de botón de 'guardar comida'
 void ISR_pulsandoButtonsGrande();         // ISR de botonera de grupos de alimentos
+void ISR_barcode();                       // ISR de botón de barcode
 void TimerHandler();                      // Activar timer de interrupción de la báscula
 void ISR_pesarBascula();                  // Activar báscula para pesar cuando salte timer de interrupción
 uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName);     // Adjuntar interrupción al timer
 
 bool interruptionOccurred();              // Devuelve true si se ha activado alguna interrupción en botoneras o evento en báscula
 bool buttonInterruptOccurred();           // Devuelve true si se ha activado alguna interrupción en botoneras 
+bool mainButtonInterruptOccurred();
+bool grandeButtonInterruptOccurred();
+bool barcodeButtonInterruptOccurred();
 bool hasScaleEventOccurred();             // Devuelve true si se ha activado algún evento en báscula
 /*-----------------------------------------------------------------------------*/
 /*-----------------------------------------------------------------------------*/
+
+
 
 
 
@@ -168,6 +185,7 @@ void ISR_guardar(){
 /*---------------------------------------------------------------------------------------------------------
 ---------------------------------------------------------------------------------------------------------*/
 
+
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief ISR de botonera de grupos de alimentos
@@ -181,9 +199,27 @@ void ISR_pulsandoButtonsGrande(){
 }
 
 
+/*---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------*/
 
 
-//--------------------------------------------------
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief ISR de botón de barcode
+ */
+/*-----------------------------------------------------------------------------*/
+void ISR_barcode(){ 
+    static unsigned long last_interrupt_time = 0;
+    unsigned long interrupt_time = millis();
+    if ((interrupt_time - last_interrupt_time) > 200) pulsandoBarcode = true;
+    last_interrupt_time = interrupt_time;
+}
+
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------*/
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -223,7 +259,7 @@ void TimerHandler() { ISR_Timer.run(); }
     // Número del timer utilizado
     uint16_t timerNumber = dueTimerInterrupt.getTimerNumber();
     #if defined(SM_DEBUG)
-    SerialPC.print(TimerName); SerialPC.print(F(" attached to Timer(" + timerNumber)); SerialPC.println(F(")"));
+    SerialPC.print(TimerName); SerialPC.print(F(" attached to Timer(")); SerialPC.print(timerNumber); SerialPC.println(F(")"));
     #endif 
     return timerNumber;
 }
@@ -240,19 +276,53 @@ void TimerHandler() { ISR_Timer.run(); }
  */
  /*-----------------------------------------------------------------------------*/
  bool interruptionOccurred(){
-    if((buttonMain != 0) or (pulsandoGrande) or (scaleEventOccurred)) return true;
+    if((buttonMain != 0) or (pulsandoGrande)  or (pulsandoBarcode) or (scaleEventOccurred)) return true;
     else return false;
  }
 
 
- /*-----------------------------------------------------------------------------*/
+/*-----------------------------------------------------------------------------*/
 /**
  * @brief Aviso de interrupción en botoneras 
  * @return 'true' si ha ocurrido alguna interrupción en botoneras 
  */
  /*-----------------------------------------------------------------------------*/
  bool buttonInterruptOccurred(){
-    if((buttonMain != 0) or (pulsandoGrande)) return true;
+    if((buttonMain != 0) or (pulsandoGrande) or (pulsandoBarcode)) return true;
+    else return false;
+ }
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de interrupción en botonera Main 
+ * @return 'true' si ha ocurrido alguna interrupción en botonera Main 
+ */
+ /*-----------------------------------------------------------------------------*/
+ bool mainButtonInterruptOccurred(){
+    if(buttonMain != 0) return true;
+    else return false;
+ }
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de interrupción en botonera Grande 
+ * @return 'true' si ha ocurrido alguna interrupción en botonera Grande 
+ */
+ /*-----------------------------------------------------------------------------*/
+ bool grandeButtonInterruptOccurred(){
+    if(pulsandoGrande) return true;
+    else return false;
+ }
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de interrupción en botón Barcode
+ * @return 'true' si ha ocurrido alguna interrupción en botón Barcode
+ */
+ /*-----------------------------------------------------------------------------*/
+ bool barcodeButtonInterruptOccurred(){
+    if(pulsandoBarcode) return true;
     else return false;
  }
 

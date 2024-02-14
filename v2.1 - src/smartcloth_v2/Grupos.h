@@ -21,7 +21,8 @@
 #ifndef GRUPOS_H
 #define GRUPOS_H
 
-#define NUM_GRUPOS 26
+#define NUM_GRUPOS 26 
+//#define NUM_GRUPOS 27 // 26 nuestros (crudos y cocinados) y el de barcode
 
 #include "COLORS.h" // Colores del texto de nombre de grupo y ejemplos
 
@@ -33,7 +34,7 @@
  * ejemplos y contenido nutricional por gramo.
  */
 typedef struct {
-    int           ID_grupo;         /**< ID del grupo */
+    byte          ID_grupo;         /**< ID del grupo */
     uint16_t      color_grupo;      /**< Color del texto del grupo */
     String        Nombre_grupo;     /**< Nombre del grupo */
     String        Ejemplos_grupo;   /**< Ejemplos del grupo */
@@ -108,6 +109,7 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche 
                                       {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca\x2F""buey, jam\xF3""n curado (sin\n   grasa), pescados grasos (at\xFA""n, sardina, trucha, boquer\xF3""n\x85""), v\xED""sceras, pato\n   sin piel, codorniz, etc.",1.321273973,0.205972603,0.054369863,0.001726027},
                                       {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, at\xFA""n o sardinas en aceite, caballa,\n   salm\xF3""n, jam\xF3""n curado con grasa, huevo, queso fresco, reques\xF3""n, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443}
                                     };
+                                    // {50,COLOR_G50,"NOMBRE PRODUCTO","",0.0,0.0,0.0,0.0}
 
 /**
  * @var grupoEscogido
@@ -128,9 +130,9 @@ Grupo grupoAnterior;
  * @brief Establece el grupo de alimentos seleccionado.
  * @param id ID del grupo a seleccionar.
  */
-void setGrupoAlimentos(int id){       // 'id' pasado es buttonGrande 
-    int posGrupo = 0;
-    for(int i = 0; i < NUM_GRUPOS; i++){
+void setGrupoAlimentos(byte id){       // 'id' pasado es buttonGrande 
+    byte posGrupo = 0;
+    for(byte i = 0; i < NUM_GRUPOS; i++){
         if(gruposAlimentos[i].ID_grupo == id){ 
             posGrupo = i;
             break;

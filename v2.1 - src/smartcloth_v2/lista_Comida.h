@@ -97,7 +97,7 @@ class Lista
          * @brief Borra elementos de la lista desde el índice 'fromIndex' hasta el final de la lista
          * @param fromIndex Índice de la lista desde donde borrar elementos
         */
-        inline void deleteItemsFrom(int& fromIndex) { _lines.erase(_lines.begin() + fromIndex, _lines.end()); };
+        inline void deleteItemsFrom(byte& fromIndex) { _lines.erase(_lines.begin() + fromIndex, _lines.end()); };
 
 
     public:
@@ -106,14 +106,14 @@ class Lista
          * @brief Obtiene el tamaño de la lista
          * @return El tamaño de la lista
         */
-        inline int getListSize() { return _lines.size(); };
+        inline byte getListSize() { return _lines.size(); };
 
         /**
          * @brief Obtiene el elemento de la lista en el índice 'index'
          * @param index El índice del elemento en la lista
          * @return El elemento en la lista según el índice
         */
-        inline String getItem(int& index) { return _lines[index]; };
+        inline String getItem(byte& index) { return _lines[index]; };
 
         /**
          * @brief Limpiar lista
@@ -122,7 +122,7 @@ class Lista
 
         void iniciarComida(); ///< Inicia una comida.
         void iniciarPlato(); ///< Inicia un plato.
-        void addAlimento(int grupo, float peso); ///< Añade un alimento a la lista.
+        void addAlimento(byte grupo, float peso); ///< Añade un alimento a la lista.
         void borrarLastPlato(); ///< Borra el último plato de la lista.
         void finishComida(); ///< Finaliza la comida añadiendo la fecha y hora
         void sendListToESP32(); ///< Envía la lista elemento a elemento al ESP32 por Serial
@@ -206,7 +206,7 @@ void Lista::iniciarPlato()
  * todo el Scale.h solo para eso.
  */
 /*-----------------------------------------------------------------------------*/
-void Lista::addAlimento(int grupo, float peso) 
+void Lista::addAlimento(byte grupo, float peso) 
 {
     #if defined(SM_DEBUG)
     SerialPC.println(F("Guardando alimento y peso...\n"));
@@ -231,8 +231,8 @@ void Lista::addAlimento(int grupo, float peso)
 void Lista::borrarLastPlato() 
 {
     // Buscar el último INICIO-PLATO en la lista
-    int lastPlatoIndex = -1;
-    for (int i = 0; i < getListSize(); i++) 
+    byte lastPlatoIndex = -1;
+    for (byte i = 0; i < getListSize(); i++) 
     {
         if (getItem(i) == "INICIO-PLATO"){
             lastPlatoIndex = i;
@@ -285,7 +285,7 @@ void Lista::finishComida()
 /*-----------------------------------------------------------------------------*/
 void Lista::sendListToESP32() 
 {
-    for (int i = 0; i < getListSize(); i++) {
+    for (byte i = 0; i < getListSize(); i++) {
         SerialDueESP32.println(getItem(i));
     }
 
@@ -313,7 +313,7 @@ void Lista::leerLista()
 {
     SerialPC.println(F("\n\nContenido de la Lista:\n"));
 
-    for (int i = 0; i < getListSize(); i++) {
+    for (byte i = 0; i < getListSize(); i++) {
         SerialPC.println(getItem(i));
     }
 

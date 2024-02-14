@@ -43,7 +43,7 @@ unsigned long         prevMillis = 0;
 unsigned long         tiempoPrevio = 0;
 
 // Error al inicializar la SD
-int falloCriticoSD = false;
+bool falloCriticoSD = false;
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -106,10 +106,12 @@ void setup() {
     // ------- ESTADO INICIAL ------------------
     // Si falla la SD, se inicia en el estado STATE_CRITIC_FAILURE_SD que no tiene transiciones
     // de entrada ni de salida. Te obliga a reiniciar SM para intentar subsanar el fallo.
+    //
     // Si no falla la SD, se inicia en el primer estado funcional.
-    if (falloCriticoSD) state_actual = STATE_CRITIC_FAILURE_SD; // Estado sin salida
-    else if(dataToUpload) state_actual = STATE_UPLOAD_DATA; // Estado para subir data a database
-    else state_actual = STATE_Init; // Estado inicial de la Máquina de Estados
+    if (falloCriticoSD) state_actual = STATE_CRITIC_FAILURE_SD;     // Estado sin salida
+    else if(dataToUpload) state_actual = STATE_UPLOAD_DATA;         // Estado para subir data a database
+    else state_actual = STATE_Init;                                 // Estado inicial de la Máquina de Estados
+
     //state_actual = STATE_Init;
     // -----------------------------------------
 
@@ -130,19 +132,28 @@ void setup() {
     pinMode(intPinAddPlato, INPUT);
     pinMode(intPinDeletePlato, INPUT);
     pinMode(intPinGuardar, INPUT);
+
+    //  ----- BARCODE  -----
+    //pinMode(intPinBarcode, INPUT_PULLUP); // Entrada con resistencia pull-up interna
     // -----------------------------------------
 
   
     // --------- INTERRUPTIONS -----------------
     //  -----   MAIN    -----
-    attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);
+    // RISING porque tienen resistencias pull-down que permiten activar al alza
+    attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);     
     attachInterrupt(digitalPinToInterrupt(intPinCocinado), ISR_cocinado, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinAddPlato), ISR_addPlato, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinDeletePlato), ISR_deletePlato, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinGuardar), ISR_guardar, RISING);
     
     //  -----   Grande    -----
+    // RISING porque las filas tienen resistencias pull-down que permiten activar al alza
     attachInterrupt(digitalPinToInterrupt(interruptPinGrande), ISR_pulsandoButtonsGrande, RISING);
+
+    //  -----   Barcode   -----
+    // FALLING porque su resistencia (la interna del Due) está modo pull-up, así que el botón se activa a la baja
+    //attachInterrupt(digitalPinToInterrupt(intPinBarcode), ISR_barcode, FALLING); // Interrupción en flanco de bajada
 
     //  -----   Scale   ------
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");
@@ -209,7 +220,7 @@ void loop() {
                     
                     if(state_prev != lastValidState){
                         switch(state_prev){ // Último estado válido 
-                            case STATE_Init: case STATE_Plato: case STATE_groupA: case STATE_groupB: case STATE_raw: case STATE_cooked: case STATE_weighted:
+                            case STATE_Init: case STATE_Plato: case STATE_Grupo: case STATE_raw: case STATE_cooked: case STATE_weighted:
                                 lastValidState = state_prev;
                                 break;
                             default: break;
@@ -217,11 +228,11 @@ void loop() {
                     }
                     SerialPC.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      SerialPC.println();
                     SerialPC.print(F("Nuevo estado: "));           printStateName(state_new);       SerialPC.println();
-                    SerialPC.print(F("Último estado válido: "));   printStateName(lastValidState);  SerialPC.println();
+                    SerialPC.print(F("Ultimo estado valido: "));   printStateName(lastValidState);  SerialPC.println();
                 }
                 else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
-                                                        // Para evitar seguir marcando error durante los 3 segundos que no se cumple
-                                                      // ninguna regla de transición porque se está en el estado de error.
+                        // Se hace esta comprobación para evitar seguir marcando error durante los 3 segundos que no se cumple
+                        // ninguna regla de transición porque se está en el estado de error.
                         // ¡¡¡ CHEQUEAR ESTO !!!! ¿HACE FALTA STATE_CANCEL Y STATE_AVISO?
                     //SerialPC.println(F("\nERROR DE EVENTO"));
                     actEventError();       // Mensaje de error por evento erróneo según el estado actual

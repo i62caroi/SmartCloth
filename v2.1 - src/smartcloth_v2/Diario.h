@@ -38,7 +38,7 @@ class Diario{
 
   private:
   
-    int                   _nComidas;        /**< Número de comidas en el diario. */
+    byte                  _nComidas;        /**< Número de comidas en el diario. */
     float                 _peso;            /**< Peso total del diario. */
     ValoresNutricionales  _valoresDiario;   /**< Valores nutricionales totales del diario. */
 
@@ -66,14 +66,14 @@ class Diario{
      * 
      * @param num Valor de número de comidas a establecer
      */
-    inline void setNumComidas(int num){ _nComidas = num; };
+    inline void setNumComidas(byte num){ _nComidas = num; };
 
     /**
      * @brief Obtiene el número de platos del diario.
      * 
      * @return El número de comidas del diario
      */
-    inline int getNumComidas(){ return _nComidas; };
+    inline byte getNumComidas(){ return _nComidas; };
 
 
 
