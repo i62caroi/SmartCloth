@@ -41,7 +41,8 @@ void setup() {
         
         Serial.println("Startup complete...");
 
-        loadPicturesShowHourglass();
+        //loadPicturesShowHourglass();
+        dashboard();
 
         Serial.println("Indique pantalla a mostrar: ");
     }
@@ -71,22 +72,23 @@ void loop() {
             case 5:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);          break;
             case 6:     showAccionRealizada(SAVE_ESP32_TIMEOUT);                        break;
             case 7:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR);    break;
-            case 8:     crudo_cocinado_sobre_dashboard();                               break; // sin transparencias ni alternancias, solo aparecer
-            case 9:     pantalla_inicial();                                             break;
-            case 10:    select_Grupo();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
-            case 11:    crudo_cocinado();                                               break; // Con 3º alternancia y aparición/desaparición paulatinas
-            case 12:    colocar_alimento();                                             break; // Con aparición paulatina
-            case 13:    add_Plato();                                                    break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 14:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 15:    save_Comida();                                                  break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 16:    pedirConfirmacion_DELETE_CSV();                                 break;
-            case 17:    suggestAction();                                                break;
-            case 18:    showCriticFailureSD();                                          break;
-            case 19:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
-            case 20:    showDataToUpload(NO_INTERNET_CONECTION);                        break;  // No hay WiFi
-            case 21:    showDataToUpload(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
-            case 22:    showDataToUpload(UPLOADED_DATA);                                break;  // Se ha completado la subida
-            case 23:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
+            case 8:     dashboard();                                                    break;
+            case 9:     crudo_cocinado_sobre_dashboard();                               break; // sin transparencias ni alternancias, solo aparecer
+            case 10:    pantalla_inicial();                                             break;
+            case 11:    select_Grupo();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
+            case 12:    crudo_cocinado();                                               break; // Con 3º alternancia y aparición/desaparición paulatinas
+            case 13:    colocar_alimento();                                             break; // Con aparición paulatina
+            case 14:    add_Plato();                                                    break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+            case 15:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+            case 16:    save_Comida();                                                  break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+            case 17:    pedirConfirmacion_DELETE_CSV();                                 break;
+            case 18:    suggestAction();                                                break;
+            case 19:    showCriticFailureSD();                                          break;
+            case 20:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
+            case 21:    showDataToUpload(NO_INTERNET_CONECTION);                        break;  // No hay WiFi
+            case 22:    showDataToUpload(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
+            case 23:    showDataToUpload(UPLOADED_DATA);                                break;  // Se ha completado la subida
+            case 24:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
 
             default:    Serial.println("Opción desconocida: " + String(input));         break;
         }

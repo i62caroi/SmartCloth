@@ -1428,12 +1428,11 @@ void dashboard(){ // OK ==> HECHO
 
     // Cambiamos el tamaño de texto para los valores de Raciones. 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
     // Raciones de Carbohidratos
-    raciones = 1.0;
+    /*raciones = 1.0;
     integerPart = abs((int)raciones);
-    if((integerPart == 0) or ((integerPart/10) == 0)){ // Una cifra entera
+    if((integerPart == 0) or ((integerPart/10) == 0)){ // 1 cifra entera
       tft.setCursor(426,293);
     }
     else{ // 2 cifras enteras
@@ -1445,7 +1444,7 @@ void dashboard(){ // OK ==> HECHO
     // Raciones de Proteinas
     raciones = 10.0;
     integerPart = abs((int)raciones);
-    if((integerPart == 0) or ((integerPart/10) == 0)){ // Una cifra entera
+    if((integerPart == 0) or ((integerPart/10) == 0)){ // 1 cifra entera
       tft.setCursor(426,370);
     }
     else{ // 2 cifras enteras
@@ -1458,7 +1457,70 @@ void dashboard(){ // OK ==> HECHO
     tft.setCursor(416,447);
     tft.setTextForegroundColor(WHITE); 
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X2); 
-    tft.print("0.5"); // 24 escale x2
+    tft.print("0.5"); // 24 escale x2*/
+
+    // ------------ Raciones de Carbohidratos ------------
+    /*
+        CARB: 22.2 --> 2.20
+        PROT: 38.3 --> 3.80
+        LIP: 43.6 --> 4.40
+
+        CARB: 1.3 --> 0.10
+        PROT: 0.4 --> 0.00
+        LIP: 9.9 --> 1.00
+    */
+    raciones = 50.50;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+        tft.setCursor(406,293);
+    } 
+    else { // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(416,293); 
+        tft.setCursor(408,291);
+    }         
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
+    
+
+
+
+    // ------------ Raciones de Proteinas ------------ 
+    raciones = 0.00;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(406,370);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(416,370); 
+        tft.setCursor(408,368);        
+    } 
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+
+
+
+    // ---------- Raciones de Grasas ------------
+    raciones = 1.00;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(406,447);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(416,447);  
+        tft.setCursor(408,445);         
+    }   
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+
     // ---- FIN RACIONES ----
 
     // ---- RACIONES ------ 
@@ -1543,23 +1605,76 @@ void dashboard(){ // OK ==> HECHO
     tft.print("Raciones"); // 32 escale x1
 
     // Cambiamos el tamaño de texto para los valores de Raciones. 
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    //tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    //tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
+    // ------------ Raciones de Carbohidratos ------------
+    /*
     // Raciones de Carbohidratos
     tft.setCursor(906,293);
     tft.setTextForegroundColor(WHITE); 
     tft.print("10"); // 24 escale x2
+    */
+    raciones = 20.50;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(896,293);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(906,293); 
+        tft.setCursor(898,291);
+    }          
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
+    
 
+    // ------------ Raciones de Proteinas ------------ 
+    /*
     // Raciones de Proteinas
     tft.setCursor(916,370);
     tft.setTextForegroundColor(WHITE); 
     tft.print("7"); // 24 escale x2
+    */
+    raciones = 7.60;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(896,370);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(906,370);
+        tft.setCursor(898,368);        
+    } 
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
 
+    
+    // ---------- Raciones de Grasas ------------
+    /*
     // Raciones de Grasas
     tft.setCursor(916,447);
     tft.setTextForegroundColor(WHITE); 
     tft.print("5"); // 24 escale x2
+    */
+    raciones = 1.00;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(896,447);
+    } 
+    else{ // 2 cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(906,447);  
+        tft.setCursor(898,445);         
+    }   
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
     // ---- FIN RACIONES ----
     // -------- FIN TEXTO --------------------
     // -------------- FIN ACUMULADO HOY ---------------------------------------
@@ -1567,6 +1682,7 @@ void dashboard(){ // OK ==> HECHO
 
 
 }
+
 
 
 

@@ -946,7 +946,9 @@ void showValores(ValoresNutricionales &valores, byte zona){
                   valores - ValoresNutricionales  --> objeto con las raciones a mostrar
                   zona - byte    --> zona en la que se están mostrando, necesaria para saber la ubicación en pantalla.
 ----------------------------------------------------------------------------------------------------------*/
-void showRaciones(ValoresNutricionales &valores, byte zona){
+// Esta versión de la función mostraba los valores para la versión anterior de calcular las raciones, que
+// redondeaba al entero más cercano y quedaba el valor como .0 o .5
+/*void showRaciones(ValoresNutricionales &valores, byte zona){
     float raciones;
 
     // Texto "Raciones"
@@ -966,7 +968,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
     raciones = valores.getCarbRaciones();
     if (fmod(raciones, 1.0) == 0){ // Termina en .0
         // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){  // Una cifra entera
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){  // 1 cifra entera
             if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(426,293);
             else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(916,293); 
         } 
@@ -978,7 +980,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
     }  
     else{ // Termina en .5
         // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // 1 cifra entera
             if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(406,293);
             else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(896,293);
         } 
@@ -997,7 +999,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
     raciones = valores.getProtRaciones();
     if (fmod(raciones, 1.0) == 0){ // Termina en .0
         // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){  // Una cifra entera
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){  // 1 cifra entera
             if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(426,370); 
             else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(916,370); 
         } 
@@ -1009,7 +1011,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
     } 
     else{ // Termina en .5
         // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // 1 cifra entera
             if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(406,370);
             else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(896,370);
         } 
@@ -1028,7 +1030,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
     raciones = valores.getLipRaciones();
     if (fmod(raciones, 1.0) == 0){ // Termina en .0
         // Cursor según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){  // Una cifra entera
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){  // 1 cifra entera
             if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(426,447); 
             else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(916,447);
         } 
@@ -1041,7 +1043,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
     } 
     else{ // Termina en .5
         // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
-        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // Una cifra entera
+        if((abs((int)raciones) == 0) or ((abs((int)raciones)/10) == 0)){   // 1 cifra entera
             if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(406,447);
             else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(896,447);
         } 
@@ -1052,7 +1054,82 @@ void showRaciones(ValoresNutricionales &valores, byte zona){
         }   
         tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
     } 
+}*/
+
+// Esta versión de la función muestra los valores para la nueva forma de calcular las raciones, que
+// redondeaba al decimal más cercano y siempre mantiene 1 decimal, aunque sea .0
+void showRaciones(ValoresNutricionales &valores, byte zona){
+    float raciones;
+
+    // Texto "Raciones"
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE);
+    if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(370,243);
+    else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(860,243);
+    tft.print("Raciones"); // 16x32 escale x1
+
+
+    // ------------ Raciones de Carbohidratos ------------
+    raciones = valores.getCarbRaciones();
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(406,293);
+        else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(896,293);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(408,291); 
+        else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(898,291); 
+    }          
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    // --------------------------------------------------- 
+
+
+
+    // ------------ Raciones de Proteinas ---------------- 
+    raciones = valores.getProtRaciones();
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+        if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(406,370);
+        else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(896,370);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(408,368);    
+        else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(898,368);
+    } 
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    // ---------------------------------------------------  
+
+
+
+    // ---------- Raciones de Grasas ---------------------
+    raciones = valores.getLipRaciones();
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+        if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(406,447);
+        else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(896,447);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(408,445); 
+        else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(898,445);
+    }   
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+    // --------------------------------------------------- 
+
 }
+
 
 
 /***************************************************************************************************/
