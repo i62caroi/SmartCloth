@@ -171,11 +171,7 @@
 #ifndef SCREEN_H
 #define SCREEN_H
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
+#include "debug.h" // SM_DEBUG --> SerialPC
 
 void    checkBascula();           // Está en Scale.h, pero hay que declararla aquí también para que esté en este ámbito
 bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aquí también para que esté en este ámbito
@@ -228,10 +224,10 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO  2   // Desaparecer cociGra y aparecer crudoGra
 
 // Movimiento de mano y pulsación botones:
-#define   MANO_Y_PULSACION_GRUPOS     1  
-#define   MANO_Y_PULSACION_ANADIR     2
-#define   MANO_Y_PULSACION_ELIMINAR   3
-#define   MANO_Y_PULSACION_GUARDAR    4
+#define   MANO_Y_PULSACION_ANADIR     1
+#define   MANO_Y_PULSACION_ELIMINAR   2
+#define   MANO_Y_PULSACION_GUARDAR    3
+#define   MANO_Y_PULSACION_GRUPOS     4  
 
 // Sincronización SmartCloth con web
 #define  DATA_TO_UPLOAD         1
@@ -432,7 +428,7 @@ void welcome(){
     // 2 - Mostrar Logo SmartCloth
     //tft.canvasImageStartAddress(PAGE1_START_ADDR);  // YA ESTÁ
     tft.clearScreen(WHITE); // Fondo blanco en PAGE1
-    delay(300);
+    delay(200);
 
     // S M A R T C L O T H ==> S T O T M L R A C H (orden de aparición)
 
@@ -443,7 +439,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,40,150,95,159);       // S (95x159) 
-    delay(200);
+    delay(80);
 
     // ----------- LETRA T1 ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -452,7 +448,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,428,150,104,159);   // T1 (104x159)
-    delay(200);
+    delay(80);
 
     // ----------- LETRA O ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -461,7 +457,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,669,0,PAGE1_START_ADDR,SCREEN_WIDTH,702,150,85,159);    // O (85x159)
-    delay(200);
+    delay(80);
     
     // ----------- LETRA T2 ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -470,7 +466,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,787,150,104,159);   // T2 (104x159) 
-    delay(200);
+    delay(80);
 
     // ----------- LETRA M ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -479,7 +475,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,96,0,PAGE1_START_ADDR,SCREEN_WIDTH,135,150,104,159);    // M (104x154) 
-    delay(200);
+    delay(80);
     
     // ----------- LETRA L ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -488,7 +484,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,583,0,PAGE1_START_ADDR,SCREEN_WIDTH,617,150,85,159);    // L (85x159) 
-    delay(200);
+    delay(80);
 
     // ----------- LETRA R ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -497,7 +493,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,306,0,PAGE1_START_ADDR,SCREEN_WIDTH,343,150,85,159);    // R (85x159) 
-    delay(200);
+    delay(80);
 
     // ----------- LETRA A ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -506,7 +502,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,201,0,PAGE1_START_ADDR,SCREEN_WIDTH,239,150,104,159);   // A (104x159) 
-    delay(200);
+    delay(80);
 
     // ----------- LETRA C ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -515,7 +511,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,497,0,PAGE1_START_ADDR,SCREEN_WIDTH,532,150,85,159);    // C (85x159) 
-    delay(200);
+    delay(80);
 
     // ----------- LETRA H ----------------------
     for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
@@ -524,7 +520,7 @@ void welcome(){
         delay(10);
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,755,0,PAGE1_START_ADDR,SCREEN_WIDTH,891,150,85,159);    // H (85x159) 
-    delay(200);   
+    delay(80);   
 
     
     // ----------- LOGO ----------------------
@@ -535,7 +531,7 @@ void welcome(){
     }
     tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,841,0,PAGE1_START_ADDR,SCREEN_WIDTH,417,350,162,169);   // Logo (162x169) ==> debajo
     
-    delay(2000);
+    delay(500);
 }
 
 
@@ -1229,12 +1225,14 @@ void showDataToUpload(byte option){
     // ----------------------------------------------------------------------------------------------------
 
 
-    // ----- TEXTO (ACCION REALIZADA) ---------------------------------------------------------------------
+    // ----- TEXTO (INFORMACIÓN) ---------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
     tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO);
 
     switch (option){
+        // CREO QUE ES MEJOR HACERLO EN UN SEGUNDO PLANO Y SOLO MOSTRAR INFO DE LA SINCRONIZACIÓN SI OCURRE,
+        // OSEA SI HAY ALGO QUE SUBIR, HAY WIFI Y SE SUBE.
         case DATA_TO_UPLOAD:            tft.setCursor(80, 158);     tft.println("SINCRONIZACI\xD3""N NECESARIA");           break; 
         case NO_INTERNET_CONECTION:     tft.setCursor(300, 158);    tft.println("SIN CONEXI\xD3""N");                       break;
         case UPLOADING_DATA:            tft.setCursor(220, 158);    tft.println("SINCRONIZANDO...");                        break; 
@@ -1536,37 +1534,6 @@ bool desplazar_mano(byte option){
     int alto, posY;
 
     switch(option){
-        case MANO_Y_PULSACION_GRUPOS: // Grupos
-              // 1 - MANO por el camino
-              alto = 127; posY = 480;
-              while(posY >= 410){
-                  // manoGppt
-                  tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
-                  delay(50);
-                  if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del grupo3 que está debajo
-                  tft.clearArea(556,posY,690,posY + alto+5,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
-                  posY -= 10; // Subimos verticalmente la imagen 10 píxeles
-                  // -------- INT -------------------
-                  if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
-              }
-              posY = 400;
-              while(posY >= 380){
-                  // Mostrar grupo3 (130x125). Para superponerse a la mano, que aún se está "moviendo"
-                  tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
-                  
-                  // Mostrar mano (manoGppt)
-                  tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
-                  
-                  delay(50);
-                  // -------- INT -------------------
-                  if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
-
-                  if(posY == 400) tft.clearArea(556,413,690,528,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del botón. Solo se borra en la primera iteración del bucle
-                  posY -= 20;
-              }
-
-              break;
-
         case MANO_Y_PULSACION_ANADIR: // Añadir
         case MANO_Y_PULSACION_ELIMINAR: // Eliminar
               // 1 - MANO por el camino
@@ -1620,6 +1587,38 @@ bool desplazar_mano(byte option){
               
               break;
 
+
+        case MANO_Y_PULSACION_GRUPOS: // Grupos
+              // 1 - MANO por el camino
+              alto = 127; posY = 480;
+              while(posY >= 410){
+                  // manoGppt
+                  tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+                  delay(50);
+                  if(posY < 413) posY = 413; // Solo afecta al penúltimo movimiento de la mano, para evitar que se borre parte del grupo3 que está debajo
+                  tft.clearArea(556,posY,690,posY + alto+5,VERDE_PEDIR); // Desaparece de esa zona para aparecer en otra --> se mueve
+                  posY -= 10; // Subimos verticalmente la imagen 10 píxeles
+                  // -------- INT -------------------
+                  if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
+              }
+              posY = 400;
+              while(posY >= 380){
+                  // Mostrar grupo3 (130x125). Para superponerse a la mano, que aún se está "moviendo"
+                  tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
+                  
+                  // Mostrar mano (manoGppt)
+                  tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,posY,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+                  
+                  delay(50);
+                  // -------- INT -------------------
+                  if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula) 
+
+                  if(posY == 400) tft.clearArea(556,413,690,528,VERDE_PEDIR); // Se borra desde y = 413 para no borrar parte del botón. Solo se borra en la primera iteración del bucle
+                  posY -= 20;
+              }
+
+              break;
+
         default: break;
     }
 
@@ -1633,19 +1632,6 @@ bool desplazar_mano(byte option){
 
 void sin_pulsacion(byte option){
     switch(option){
-        case MANO_Y_PULSACION_GRUPOS: // Grupos
-              // 1 - Borrar todo (grupo, mano y pulsación)
-              tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
-
-              // 2 - Mostrar grupo3 (130x125)
-              tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
-
-              // 3 - Mostrar mano (manoGppt)
-              tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
-
-              break;
-
-
         case MANO_Y_PULSACION_ANADIR: // Añadir
         case MANO_Y_PULSACION_ELIMINAR: // Eliminar
               // 1 - Borrar todo (botón, mano y pulsación)
@@ -1674,6 +1660,19 @@ void sin_pulsacion(byte option){
               
               break;
 
+
+        case MANO_Y_PULSACION_GRUPOS: // Grupos
+              // 1 - Borrar todo (grupo, mano y pulsación)
+              tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+
+              // 2 - Mostrar grupo3 (130x125)
+              tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
+
+              // 3 - Mostrar mano (manoGppt)
+              tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+
+              break;
+
         default: break;
     }
 
@@ -1686,57 +1685,6 @@ void con_pulsacion(byte option){
     int x1, y1, x2, y2;
 
     switch(option){
-        case MANO_Y_PULSACION_GRUPOS: // Grupos
-              // 1 - Borrar todo (grupo, mano y pulsación)
-              tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
-              
-              // 2 - Volver a mostrar grupo3 (130x125)
-              tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
-              
-              // 3 - Pulsación
-              // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
-              // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
-              // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
-              for (byte i = 0; i <= 10; i++) {
-                  x1 = 556 - i;   y1 = 288 - i;   
-                  x2 = 680 + i;   y2 = 413 + i;
-                  tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
-              }
-              // ----------------------------------------------------------------------------------------------------
-
-              // 4 - Mano
-              // ------------ MANO (120x129) ------------------------------------------------------------------------
-              // Mano final pulsando (manoGppt)
-              tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
-              // ----------------------------------------------------------------------------------------------------
-
-              // 5 - Rayitas pulsación
-              // ------------ RAYITAS (PULSACION) ------------------
-              // Línea izquierda
-              for (byte i = 0; i <= 4; i++) {
-                  x1 = 584 + i;   y1 = 355;   
-                  x2 = 594 + i;   y2 = 375;
-                  tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
-              }
-
-              // Línea central
-              for (byte i = 0; i <= 4; i++) {
-                  x1 = 604 + i;   y1 = 350;   
-                  x2 = 604 + i;   y2 = 370;
-                  tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
-              }
-
-              // Línea derecha
-              for (byte i = 0; i <= 4; i++) {
-                  x1 = 614 + i;   y1 = 375;   
-                  x2 = 624 + i;   y2 = 355;
-                  tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
-              }
-              // ---------------------------------------------------
-
-              break;
-
-
         case MANO_Y_PULSACION_ANADIR: // Añadir
         case MANO_Y_PULSACION_ELIMINAR: // Eliminar
               // 1 - Borrar todo (botón, mano y pulsación)
@@ -1837,6 +1785,57 @@ void con_pulsacion(byte option){
                   tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
               }
               // ---------------------------------------------------
+              break;
+
+
+        case MANO_Y_PULSACION_GRUPOS: // Grupos
+              // 1 - Borrar todo (grupo, mano y pulsación)
+              tft.clearArea(546,278,690,528,VERDE_PEDIR); // Empieza en la esquina superior izquierda de la pulsación y termina al final de la mano
+              
+              // 2 - Volver a mostrar grupo3 (130x125)
+              tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); 
+              
+              // 3 - Pulsación
+              // ------------ CUADRADO ESQUINADO (PULSACION) --------------------------------------------------------   
+              // No se puede modificar el grosor de las líneas ni de los bordes de las figuras. Por eso se dibujan varios
+              // cuadrados normales, separados por 1 píxel en cada dirección, para simular un grosor mayor.
+              for (byte i = 0; i <= 10; i++) {
+                  x1 = 556 - i;   y1 = 288 - i;   
+                  x2 = 680 + i;   y2 = 413 + i;
+                  tft.drawRect(x1,y1,x2,y2,RED_BUTTON); // Alrededor de grupo3
+              }
+              // ----------------------------------------------------------------------------------------------------
+
+              // 4 - Mano
+              // ------------ MANO (120x129) ------------------------------------------------------------------------
+              // Mano final pulsando (manoGppt)
+              tft.bteMemoryCopyWithChromaKey(PAGE3_START_ADDR,SCREEN_WIDTH,525,1,PAGE1_START_ADDR,SCREEN_WIDTH,566,380,119,127,VERDE_PEDIR); // Transparencia manoGppt (120x128)
+              // ----------------------------------------------------------------------------------------------------
+
+              // 5 - Rayitas pulsación
+              // ------------ RAYITAS (PULSACION) ------------------
+              // Línea izquierda
+              for (byte i = 0; i <= 4; i++) {
+                  x1 = 584 + i;   y1 = 355;   
+                  x2 = 594 + i;   y2 = 375;
+                  tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+              }
+
+              // Línea central
+              for (byte i = 0; i <= 4; i++) {
+                  x1 = 604 + i;   y1 = 350;   
+                  x2 = 604 + i;   y2 = 370;
+                  tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+              }
+
+              // Línea derecha
+              for (byte i = 0; i <= 4; i++) {
+                  x1 = 614 + i;   y1 = 375;   
+                  x2 = 624 + i;   y2 = 355;
+                  tft.drawLine(x1, y1, x2, y2, RED_BUTTON);
+              }
+              // ---------------------------------------------------
+
               break;
 
         default: break;
@@ -2029,7 +2028,7 @@ void sugerirAccion(){
     // 30 pixeles entre cuadro y cuadro
     // Mostrar en PAGE1 (copiar de PAGE3 a PAGE1)
 
-    // ***** MÁS ALIMENTO *************************************************
+    // ----- MÁS ALIMENTO -------------------------------------------------
     // Añadir más cantidad de alimento --> scaleG (150x150) 
     tft.setCursor(90, 377);                                       tft.println("A\xD1""ADIR");
     tft.setCursor(115, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("M\xC1""S");
@@ -2038,10 +2037,10 @@ void sugerirAccion(){
     if(slowAppearanceImage(SLOW_APPEAR_SCALE_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(1000)) return;
-    // ********************************************************************
+    // --------------------------------------------------------------------
 
 
-    // ***** NUEVO GRUPO **************************************************
+    // ----- NUEVO GRUPO --------------------------------------------------
     // Escoger nuevo grupo --> grupo1 (130x1125) 
     tft.setCursor(250, 377);                                       tft.println("ESCOGER");
     tft.setCursor(275, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("OTRO");
@@ -2050,10 +2049,10 @@ void sugerirAccion(){
     if(slowAppearanceImage(SLOW_APPEAR_GRUPO1_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(1000)) return;
-    // ********************************************************************
+    // --------------------------------------------------------------------
 
 
-    // ***** AÑADIR PLATO *************************************************
+    // ----- AÑADIR PLATO -------------------------------------------------
     // Añadir plato --> anadir (172x130) 
     tft.setCursor(430, 377);                                       tft.println("A\xD1""ADIR");
     tft.setCursor(445, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("OTRO");
@@ -2062,10 +2061,10 @@ void sugerirAccion(){
     if(slowAppearanceImage(SLOW_APPEAR_ANADIR_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(1000)) return;
-    // ********************************************************************
+    // --------------------------------------------------------------------
 
 
-    // ***** BORRAR PLATO *************************************************
+    // ----- BORRAR PLATO -------------------------------------------------
     // Borrar plato --> borrar (172x130) 
     tft.setCursor(617, 377);                                       tft.println("BORRAR");
     tft.setCursor(627, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("PLATO");
@@ -2074,10 +2073,10 @@ void sugerirAccion(){
     if(slowAppearanceImage(SLOW_APPEAR_BORRAR_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
     if(doubleDelayAndCheckInterrupt(1000)) return;
-    // ********************************************************************
+    // --------------------------------------------------------------------
 
 
-    // ***** GUARDAR COMIDA ***********************************************
+    // ----- GUARDAR COMIDA -----------------------------------------------
     // Guardar comida --> guardar (172x130) 
     tft.setCursor(795, 377);                                       tft.println("GUARDAR");
     tft.setCursor(800, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("COMIDA");
@@ -2085,7 +2084,7 @@ void sugerirAccion(){
     if(slowAppearanceImage(SLOW_APPEAR_GUARDAR_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
     //if(doubleDelayAndCheckInterrupt(1000)) return;
-    // ********************************************************************
+    // --------------------------------------------------------------------
 
     // **************************************************************************************************** 
 
@@ -2112,19 +2111,6 @@ void pedirConfirmacion(byte option){
 
     // ----- TEXTO (PREGUNTA) ----------------------------------------------------------------------------
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
-    
-    // ----- SIN INTERNET -----
-    if ((option == ASK_CONFIRMATION_SAVE) and (!checkWifiConnection())){ // Se quiere guardar pero ESP32 dice que no hay WiFi, se indica en una esquina
-        // "Resaltar" texto:
-        tft.selectInternalFont(RA8876_FONT_SIZE_24);
-        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-        tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo rojo, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
-        // Texto
-        tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
-        // Eliminar "resaltado" del texto de aquí en adelante:
-        tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
-    }
-    // ------------------------
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
@@ -2154,7 +2140,7 @@ void pedirConfirmacion(byte option){
     }
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return; 
+    if(doubleDelayAndCheckInterrupt(800)) return; 
     // ----------------------------------------------------------------------------------------------------
 
     // ------------ LINEA --------------------------------------------------------------------------------
@@ -2187,15 +2173,45 @@ void pedirConfirmacion(byte option){
         default: break;       
     }
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return; 
+    //if(doubleDelayAndCheckInterrupt(800)) return; 
     // ----------------------------------------------------------------------------------------------------
-    
+
+    // ----- CONEXION A INTERNET O NO ---------------------------------------------------------------------
+    if(option == ASK_CONFIRMATION_SAVE){
+        bool hayConexion = checkWifiConnection();
+        if(hayConexion){ 
+            // ----- CON WIFI -----
+            // "Resaltar" texto:
+            tft.selectInternalFont(RA8876_FONT_SIZE_24);
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+            tft.setTextColor(WHITE,VERDE_PEDIR,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo morado oscuro, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
+            // Texto
+            tft.setCursor(20,550);    tft.println(" CONECTADO A INTERNET ");
+            // Eliminar "resaltado" del texto de aquí en adelante:
+            tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
+            // ------------------------
+        }
+        else{
+            // ----- SIN INTERNET -----
+            // "Resaltar" texto:
+            tft.selectInternalFont(RA8876_FONT_SIZE_24);
+            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+            tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo rojo, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
+            // Texto
+            tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
+            // Eliminar "resaltado" del texto de aquí en adelante:
+            tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
+            // ------------------------
+        }
+    }    
+    // ----------------------------------------------------------------------------------------------------
+
 
     // ------------ DESPLAZAR MANO PARA SIMULAR MOVIMIENTO ------------------------------------------------
-    // MANO por el camino
-    desplazar_mano(option+1); // P.ej. option = ASK_CONFIRMATION_ADD = 1 --> desplazar_mano(2) --> añadir plato
+    // MANO por el camino hasta alcanzar botón
+    if(desplazar_mano(option)) return; // Si ha ocurrido interrupción mientras se desplazaba la mano, se sale de la función.
     // ----------------------------------------------------------------------------------------------------
-  
+    
 
     // ******** ALTERNANCIA 2 PULSACIONES *****************************************************************
     // Tras trasladar la mano, no hay pulsación. Se van a hacer dos alternancias de pulsación,
@@ -2205,9 +2221,9 @@ void pedirConfirmacion(byte option){
 
     bool pulsacion = true;
 
-    for(byte i = 0; i < 4; i++){
-        if(pulsacion) con_pulsacion(option+1); // Simular pulsación (p.ej. option = ASK_CONFIRMATION_ADD = 1 --> con_pulsacion(2) --> añadir plato
-        else sin_pulsacion(option+1);          // Eliminar pulsación 
+    for(byte i = 0; i < 10; i++){ // Da para 5 pulsar/despulsar mientras no se cancele o confirme la acción
+        if(pulsacion) con_pulsacion(option); // Simular pulsación 
+        else sin_pulsacion(option);          // Eliminar pulsación 
         // ----- ESPERA E INTERRUPCION ----------------
         if(doubleDelayAndCheckInterrupt(1000)) return; 
         pulsacion = !pulsacion;
@@ -2242,6 +2258,9 @@ void showAccionRealizada(byte option){
     tft.fillRoundRect(252,150,764,158,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 
+    // -------- INT -------------------
+    if(eventOccurred()) return; // Evento de interrupción (botonera o báscula) 
+
     // ----- TEXTO (ACCION REALIZADA) ---------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
@@ -2263,6 +2282,9 @@ void showAccionRealizada(byte option){
     // ------------ LINEA ---------------------------------------------------------------------------------
     tft.fillRoundRect(252,330,764,338,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(400)) return; 
 
 
     // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
@@ -2288,7 +2310,7 @@ void showAccionRealizada(byte option){
                 }
                 else{ 
                     // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
-                    // estando aún en la báscula.
+                    // estando aún en la báscula, indicando que se retire
                     tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
                     tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
                 }
@@ -2305,7 +2327,7 @@ void showAccionRealizada(byte option){
                 switch(option){
                     case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break;
                     case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(750,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" NO SUBIDO A WEB ");                        break;
                     case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
                     case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
                     default: break;
@@ -2534,15 +2556,16 @@ void showError(byte option){
 
       case ERROR_STATE_GROUP: // Grupos (grupoA o groupB)
               if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
-                  tft.setCursor(10, 420); tft.println("SELECCIONE COCINADO O CRUDO ANTES DE PESAR");  
+                  tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  
                   /*
                   tft.selectInternalFont(RA8876_FONT_SIZE_32);
                   tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
                   tft.setCursor(200,tft.getCursorY() + tft.getTextSizeY()); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
-                  */
+                  
                   tft.selectInternalFont(RA8876_FONT_SIZE_32);
                   tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
                   tft.setCursor(130,tft.getCursorY() + tft.getTextSizeY()); tft.println("TAMBI\xC9""N PUEDE RETIRAR EL PLATO PARA COMENZAR DE NUEVO"); 
+                  */
               }
               else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar)
                   tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 

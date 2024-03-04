@@ -67,6 +67,7 @@
 #include "Diario.h" // incluye Comida.h
 #include "Files.h"
 #include "lista_Comida.h"
+#include "debug.h" // SM_DEBUG --> SerialPC
 
 bool    checkWifiConnection();
 bool    prepareSaving();
@@ -87,13 +88,12 @@ void    showDataToUpload(byte option);
 #define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6  // Solo se ha guardado en local. Timeout de respuesta del esp32
 #define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7  // Solo se ha guardado en local. Error desconocido
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
-
-#define SD_CARD_SCS  4
+// ------- ChipSelect de SD --------------
+// SmartCloth v2.1
+//#define SD_CARD_SCS  4 
+// SmartCloth v2.2
+#define SD_CARD_SCS  13 
+// ---------------------------------------
 
 
 /*-----------------------------------------------------------------------------

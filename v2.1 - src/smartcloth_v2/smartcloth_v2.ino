@@ -12,7 +12,7 @@
  */
 
 
-
+#include "debug.h" // SM_DEBUG --> SerialPC
 #include "Serial_esp32cam.h" //Comunicación con ESP32-CAM
 
 #include "Buttons.h"       /**< Buttons.h 

@@ -50,11 +50,7 @@
 #include "RTC.h"
 
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
+#include "debug.h" // SM_DEBUG --> SerialPC
 #define SerialDueESP32 Serial1
 
 

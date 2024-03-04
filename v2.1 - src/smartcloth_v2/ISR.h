@@ -21,11 +21,7 @@
 #ifndef ISR_H
 #define ISR_H
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
+#include "debug.h" // SM_DEBUG --> SerialPC
 
 
 /*  ----- SCALE ISR ----- */
@@ -44,31 +40,20 @@ SAMDUE_ISR_Timer ISR_Timer;
 
 //  -----   MAIN  --------------------------------------
 volatile byte  buttonMain = 0; // Botón pulsado en Main (botonera B)
-const byte intPinCocinado     = 33;   // Naranja 
-const byte intPinCrudo        = 31;   // Amarillo 
-const byte intPinAddPlato     = 29;   // Verde 
-
-// Los pines en las botoneras nuevas están B1 | B2 | B3 | B5 | B4
-// Intercambiamos los pines de borrar (B4) y guardar (B5)
-
-// -- BOTONERAS ANTIGUAS ------
-const byte intPinDeletePlato  = 27;   // Azul 
-const byte intPinGuardar      = 25;   // Morado 
-
-// -- BOTONERAS NUEVAS --------
-//const byte intPinDeletePlato  = 25;   // Azul 
-//const byte intPinGuardar      = 27;   // Morado 
 // ------------------------------------------------------
 
 
 //  -----   GRANDE  -------------------------------------
-const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
+// SmartCloth v2.1
+//const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
+// SmartCloth v2.2
+const byte interruptPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
 volatile bool pulsandoGrande  = false;    // Flag de estar pulsando algo en Grande
 // ------------------------------------------------------
 
 
 // ----- BOTÓN BARCODE ----------------------------------
-const byte intPinBarcode = 51;
+const byte intPinBarcode = 53;
 volatile bool pulsandoBarcode = false;
 // ------------------------------------------------------
 
@@ -189,12 +174,14 @@ void ISR_guardar(){
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief ISR de botonera de grupos de alimentos
+ * Tiempo de debouncing aumentado a 0.5 seg porque si se pulsa "mucho" rato, al soltar
+ * se detecta pulsación en otro botón debido al rebote.
  */
 /*-----------------------------------------------------------------------------*/
 void ISR_pulsandoButtonsGrande(){
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) pulsandoGrande = true;
+    if ((interrupt_time - last_interrupt_time) > 500) pulsandoGrande = true;
     last_interrupt_time = interrupt_time;
 }
 

@@ -22,6 +22,7 @@
       | 3.3 | GND |  37 | 44 | 46 | 48 | 50 | 52 | 26 | 28 | 30 | 32 |       
       ----------------------------------------------------------------
 
+
   BOTONERA MAIN conectada de la siguiente forma (conexiones hacia arriba
   y de iquierda a derecha):
       ----------------------------------------------------------------------------
@@ -30,14 +31,6 @@
       ----------------------------------------------------------------------------
       | 3.3 |   33    |     31     |    29    |    27    |     25    |  -  | GND |       
       ----------------------------------------------------------------------------
-
-// ------ BOTONERAS ANTIGUAS ------------
-const byte intPinDeletePlato  = 27;   // Azul 
-const byte intPinGuardar      = 25;   // Morado 
-
-// ------ BOTONERAS NUEVAS --------------
-const byte intPinDeletePlato  = 25;   // Azul 
-const byte intPinGuardar      = 27;   // Morado 
 
 
     BOTON BARCODE conectada de la siguiente forma (con el botón derecho, botones 
@@ -56,15 +49,28 @@ const byte intPinGuardar      = 27;   // Morado
 #ifndef BUTTONS_H
 #define BUTTONS_H
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
+#include "debug.h" // SM_DEBUG --> SerialPC
 
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
 
-/**
- * @brief Estructura que representa la posición de un botón.
- */
+//  -----   MAIN  --------------------------------------
+// SmartCloth v2.1
+/*const byte intPinCocinado     = 33;   
+const byte intPinCrudo        = 31;    
+const byte intPinAddPlato     = 29;   
+const byte intPinDeletePlato  = 27;   
+const byte intPinGuardar      = 25;   
+*/
+// SmartCloth v2.2
+const byte intPinCocinado     = 26;   
+const byte intPinCrudo        = 27;    
+const byte intPinAddPlato     = 28; 
+const byte intPinGuardar      = 29;  
+const byte intPinDeletePlato  = 30;   
+// ------------------------------------------------------
+
+
+//  -----   GRANDE  -------------------------------------
+/* Estructura que representa la posición de un botón. */
 struct ButtonPosition {
     byte row;
     byte col;
@@ -74,10 +80,13 @@ struct ButtonPosition {
 const byte countRows = 4;
 const byte countColumns = 5;
 
-
 /* Buttons */
-const byte rowsPins[countRows] = {26,28,30,32};
-const byte columnsPins[countColumns] = {44,46,48,50,52};
+// SmartCloth v2.1
+//const byte rowsPins[countRows] = {26,28,30,32}; // F1, F2, F3, F4
+//const byte columnsPins[countColumns] = {44,46,48,50,52}; // C1, C2, C3, C4, C5
+// SmartCloth v2.2
+const byte rowsPins[countRows] = {44,45,46,47}; // F1, F2, F3, F4
+const byte columnsPins[countColumns] = {39,40,41,42,43}; // C1, C2, C3, C4, C5
 
 
 /* Buttons info => IDs de grupo (crudo) */
@@ -88,6 +97,7 @@ const byte buttons[countRows][countColumns] = {{1,2,3,4,5},
 
 
 byte  buttonGrande = 0;                  //Botón pulsado en la botonera grande (checkAllButtons())
+// ------------------------------------------------------
 
 
 // Debajo de la declaración de buttonGrande para que esté en el ámbito de State_Machine.h 

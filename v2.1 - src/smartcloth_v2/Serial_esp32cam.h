@@ -93,11 +93,7 @@
 
 #include "SD_functions.h"
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
+#include "debug.h" // SM_DEBUG --> SerialPC
 #define SerialDueESP32 Serial1
 
 // --- Fases en las respuestas del ESP32 ---
@@ -137,7 +133,7 @@ bool checkWifiConnection()
     
     SerialDueESP32.print(F("CHECK-WIFI")); //Envía la cadena al esp32
 
-    unsigned long timeout = 10000;  // Espera máxima de 10 segundos
+    unsigned long timeout = 3000;        // Espera máxima de 3 segundos
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
 
     while (true) { // Bloquea el arduino en este bucle hasta que se reciba respuesta o se pase el TIMEOUT
@@ -149,28 +145,15 @@ bool checkWifiConnection()
             SerialPC.print(F("Respuesta del ESP32: ")); SerialPC.println(msgFromESP32);  
             #endif
 
-            if (msgFromESP32 == "WIFI-OK") {
-                // Respuesta OK, hay conexión WiFi
-                #if defined(SM_DEBUG)
-                SerialPC.println(F("Dice que hay wifi"));
-                #endif
-
-                return true;
-            } 
-            else if (msgFromESP32 == "NO-WIFI") {
-                // Respuesta NO-WIFI, no hay conexión WiFi
-                #if defined(SM_DEBUG)
-                SerialPC.println(F("Dice que NO hay wifi"));
-                #endif
-                return false;
-            }
+            if (msgFromESP32 == "WIFI-OK")      return true;
+            else if (msgFromESP32 == "NO-WIFI") return false;
         }
 
         // Comprueba si ha pasado un tiempo límite sin respuesta del esp32
         if (millis() - startTime > timeout) {
             // Tiempo de espera agotado, se considera que no hay conexión WiFi
             #if defined(SM_DEBUG)
-            SerialPC.println(F("El ESP32 no ha respondido en 30 segundos. TIMEOUT..."));
+            SerialPC.println(F("El ESP32 no ha respondido en 3 segundos. TIMEOUT..."));
             #endif
             return false;
         }

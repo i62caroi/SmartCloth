@@ -31,18 +31,19 @@
 #include "ISR.h" 
 #include "HX711.h"
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
+#include "debug.h" // SM_DEBUG --> SerialPC
 
 HX711 scale;
 
 
-// HX711 circuit wiring
-const byte LOADCELL_DOUT_PIN = 3;
-const byte LOADCELL_SCK_PIN = 2;
+// ------ HX711 circuit wiring -----------
+// SmartCloth v2.1
+//const byte LOADCELL_DOUT_PIN = 3;
+//const byte LOADCELL_SCK_PIN = 2;
+// SmartCloth v2.2
+const byte LOADCELL_DOUT_PIN = 2;
+const byte LOADCELL_SCK_PIN = 3;
+// ---------------------------------------
 
 
 bool      scaleEventOccurred = false;
@@ -82,7 +83,8 @@ void    checkBascula();
 /*-----------------------------------------------------------------------------*/
 void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-    scale.set_scale(1093.48); // bad calibration!
+    //scale.set_scale(1093.48); // bad calibration!
+    scale.set_scale(939.51); // para celda de carga que pesa 30 gr
     scale.tare();  
     //scale.get_units(10);
     #if defined(SM_DEBUG)
