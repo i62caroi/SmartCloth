@@ -88,11 +88,11 @@ bool hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); }
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Hace varios intentos de conexión a WiFi, uno cada 10 segundos, 
- *        hasta que pasan 30 segundos.
+ * @brief Hace varios intentos de conexión a WiFi, uno cada 30 segundos, 
+ *        hasta que pasan 120 segundos.
  */
 /*-----------------------------------------------------------------------------*/
-void connectToWiFi() 
+/*void connectToWiFi() 
 {
     #if defined(SM_DEBUG)
     SerialPC.println();
@@ -149,6 +149,62 @@ void connectToWiFi()
     SerialPC.println(F("Unable to establish WiFi connection.\n"));
     #endif
     //SerialESP32Due.println(F("NO-WIFI")); // No hace falta, se pregunta después
+
+}*/
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Hace un solo intento de conexión a WiFi, con una espera máxima
+ *        de 10 segundos.
+ */
+/*-----------------------------------------------------------------------------*/
+void connectToWiFi() 
+{
+    #if defined(SM_DEBUG)
+    SerialPC.println();
+    #endif
+
+    // Inicializar startTime
+    unsigned long startTime = millis();
+
+    // Esperar hasta que se establezca la conexión o se agote el tiempo
+    unsigned long timeout_waitConexion = 10000; // 10 segundos
+
+    #if defined(SM_DEBUG)
+    SerialPC.print(F("Conectando a WiFi..."));
+    #endif
+    WiFi.begin(ssid, password);
+
+    // Mientras no se haya conectado a WiFi y mientras no hayan pasado 10 segundos.
+    // Si se conecta o si pasan los 10 segundos, sale del while.
+    while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
+    {
+        delay(500);
+        #if defined(SM_DEBUG)
+        SerialPC.print(F("."));
+        #endif
+    }
+
+    // Comprobar si se estableció la conexión
+    if (hayConexionWiFi()) 
+    {
+        #if defined(SM_DEBUG)
+        SerialPC.println();
+        SerialPC.print(F("Conectado a red WiFi con IP: ")); SerialPC.println(WiFi.localIP());
+        SerialPC.println();
+        #endif
+        //SerialESP32Due.println(F("WIFI")); // No hace falta, se pregunta después
+    } 
+    else 
+    {
+        // Si tras 10 segundos no se ha establecido la conexión:
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("\nNo se pudo establecer la conexion WiFi."));
+        #endif
+        //SerialESP32Due.println(F("NO-WIFI")); // No hace falta, se pregunta después
+    }
 
 }
 
