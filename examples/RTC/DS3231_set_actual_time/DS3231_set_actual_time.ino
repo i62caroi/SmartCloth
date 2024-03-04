@@ -105,7 +105,7 @@ void loop()
 void adjustTime(int& second, int& minute, int& hour) 
 {
   // Corregir el desfase de segundos
-  second += 14;
+  second += 20;
   if (second >= 60) {
     second -= 60;
     minute++;
