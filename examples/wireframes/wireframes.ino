@@ -41,8 +41,8 @@ void setup() {
         
         Serial.println("Startup complete...");
 
-        //loadPicturesShowHourglass();
-        dashboard();
+        loadPicturesShowHourglass();
+        //dashboard();
 
         Serial.println("Indique pantalla a mostrar: ");
     }
@@ -80,15 +80,17 @@ void loop() {
             case 13:    colocar_alimento();                                             break; // Con aparición paulatina
             case 14:    add_Plato();                                                    break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
             case 15:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 16:    save_Comida();                                                  break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 17:    pedirConfirmacion_DELETE_CSV();                                 break;
-            case 18:    suggestAction();                                                break;
-            case 19:    showCriticFailureSD();                                          break;
-            case 20:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
-            case 21:    showDataToUpload(NO_INTERNET_CONECTION);                        break;  // No hay WiFi
-            case 22:    showDataToUpload(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
-            case 23:    showDataToUpload(UPLOADED_DATA);                                break;  // Se ha completado la subida
-            case 24:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
+            case 16:    save_Comida(true);                                              break; // Guardar con WiFi (tb a database)
+            case 17:    save_Comida(false);                                             break; // Guardar sin WiFi (solo local)
+            case 18:    pedirConfirmacion_DELETE_CSV();                                 break;
+            case 19:    suggestAction();                                                break;
+            case 20:    showCriticFailureSD();                                          break;
+            case 21:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
+            case 22:    showDataToUpload(NO_INTERNET_CONECTION);                        break;  // No hay WiFi
+            case 23:    showDataToUpload(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
+            case 24:    showDataToUpload(UPLOADED_DATA);                                break;  // Se ha completado la subida
+            case 25:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
+            case 26:    showError(ERROR_STATE_GROUP);                                   break;  // Error: se puso alimento sin crudo/cocinado 
 
             default:    Serial.println("Opción desconocida: " + String(input));         break;
         }
