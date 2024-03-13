@@ -42,20 +42,24 @@ void setup()
   char month[4];
   int day, year;
   sscanf(compileDate, "%s %d %d", month, &day, &year);
+
   // Hora de compilacion
   int hour, minute, second;
   sscanf(compileTime, "%d:%d:%d", &hour, &minute, &second);
 
-  // Corregir desfase de segundos (iba 26 segundos por detrás)
+
+  // Corregir desfase de segundos 
   adjustTime(second, minute, hour);
 
   // Convertir el mes a un número
   int monthNumber = convertMonthToNumber(month);
   
-
-  // Establecer la fecha y hora en el RTC
+  // Obtener día de la semana
   int dow = getDOW(day, monthNumber, year);
   Serial.print("Día de la semana: "); Serial.println(dow);
+  
+
+  // Establecer la fecha y hora en el RTC
   rtc.setDOW(dow);                        // Establecer el día de la semana Lunes-Domingo (1 - 7)
   rtc.setDate(day, monthNumber, year);   // Establecer fecha a día (1 - 31), mes (1 - 12), año (2000 - 2099) actuales
   rtc.setTime(hour, minute, second);     // Establecer la hora (formato 24hr) => hora (0 - 23), min (0 - 59), seg (0 - 59)
