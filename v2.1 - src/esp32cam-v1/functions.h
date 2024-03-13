@@ -9,11 +9,7 @@
 #ifndef JSON_FUNCTIONS_H
 #define JSON_FUNCTIONS_H
 
-#define SM_DEBUG // Descomentar para habilitar mensajes de depuración entre Due y PC
-
-#if defined(SM_DEBUG)
-#define SerialPC Serial
-#endif
+#include "debug.h" // SM_DEBUG --> SerialPC
 
 #define SerialESP32Due Serial1
 
@@ -121,7 +117,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     else if (line.startsWith("ALIMENTO")) 
     {
         JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
@@ -131,12 +126,8 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        //comida["hora"] = line.substring(secondCommaIndex + 1);
-        // ---
         time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
         comida["fecha"] = (int)timestamp;
-        // ---
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
     {
@@ -152,19 +143,17 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         #endif
         // --------------------
 
-        // Avisar al Due de que ya se tiene el JSON completo
-        //SerialESP32Due.println("JSON completo");
+        // Avisar de que ya se tiene el JSON completo
+        SerialESP32Due.println("JSON-OK");
+
         #if defined(SM_DEBUG)
         SerialPC.println("JSON completo");
         #endif
 
-        // Enviar JSON a database
-        //sendJsonToDatabase(JSONdoc);
-
         // Enviar JSON a database:
         //  1. Pedir token
         //  2. Enviar JSON
-        //  3. Cerrar sesión
+        //  3. Cerrar sesión con token
         sendJsonToDatabase_fullProcess(JSONdoc);
         
     }

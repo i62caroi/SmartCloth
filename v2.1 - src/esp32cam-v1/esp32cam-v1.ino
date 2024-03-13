@@ -92,6 +92,7 @@
 
 
 #include "functions.h" // ya incluye "wifi_functions.h"
+#include "debug.h" // SM_DEBUG --> SerialPC
 
 
 
