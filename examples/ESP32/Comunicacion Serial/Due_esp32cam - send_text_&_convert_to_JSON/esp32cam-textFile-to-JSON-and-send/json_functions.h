@@ -114,7 +114,7 @@ void  processJSON()
     // ------------------------------------------------------------
 
     // -------- MEMORIA RAM USADA POR EL JSON ---------------------
-    //SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
+    SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
     // ------------------------------------------------------------
 
 }
@@ -177,8 +177,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
 
         // Enviar JSON a database
         //sendJsonToDatabase(JSONdoc);
-        // Cerrar sesión en el servidor
-        //logoutFromServer();
 
         // Enviar JSON a database:
         //  1. Pedir token
@@ -194,66 +192,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
 }
 
 
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Añade la línea al JSON según su contenido. Un solo JSON para toda la info.
- *        Esta función solo imprime el JSON por terminal, no lo envía.
- */
-/*-----------------------------------------------------------------------------*/
-void addLineToJSON_print(DynamicJsonDocument& JSONdoc, 
-                        JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
-                        JsonObject& comida, JsonObject& plato, 
-                        String& line)
-{    
-    if (line == "INICIO-COMIDA") 
-    {
-        comida = comidas.createNestedObject();
-        platos = comida.createNestedArray("platos");
-    } 
-    else if (line == "INICIO-PLATO") 
-    {
-        plato = platos.createNestedObject();
-        alimentos = plato.createNestedArray("alimentos");
-    } 
-    else if (line.startsWith("ALIMENTO")) 
-    {
-        JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
-        int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
-        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
-        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
-    } 
-    else if (line.startsWith("FIN-COMIDA")) 
-    {
-        int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
-        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        //comida["hora"] = line.substring(secondCommaIndex + 1);
-        // ---
-        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
-        comida["fecha"] = (int)timestamp;
-        // ---
-    }
-    else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
-    {
-        // Agregar la dirección MAC del ESP32 al objeto JSON
-        String macAddress = WiFi.macAddress();
-        JSONdoc["mac"] = macAddress;
-
-        // Mostrar JSON 
-        serializeJsonPretty(JSONdoc, SerialPC); 
-
-        // Avisar al Due de que ya se tiene el JSON completo
-        SerialESP32Due.println("JSON completo");
-        
-    }
-    else
-    {
-        SerialESP32Due.println("línea desconocida");
-    }
-}
 
 
 
@@ -319,7 +257,12 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         // Finalizar el DynamicJsonDocument actual y enviarlo a la base de datos
         // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
         // enviará otro JSON y así hasta recibir FIN-TRANSMISION
-        sendJsonToDatabase(JSONdoc);
+        //sendJsonToDatabase(JSONdoc);
+        // Enviar JSON a database:
+        //  1. Pedir token
+        //  2. Enviar JSON
+        //  3. Cerrar sesión
+        sendJsonToDatabase_fullProcess(JSONdoc);
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
     {
@@ -330,6 +273,68 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         SerialESP32Due.println("línea desconocida");
     }
 }
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Añade la línea al JSON según su contenido. Un solo JSON para toda la info.
+ *        Esta función solo imprime el JSON por terminal, no lo envía.
+ */
+/*-----------------------------------------------------------------------------*/
+void addLineToJSON_print(DynamicJsonDocument& JSONdoc, 
+                        JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
+                        JsonObject& comida, JsonObject& plato, 
+                        String& line)
+{    
+    if (line == "INICIO-COMIDA") 
+    {
+        comida = comidas.createNestedObject();
+        platos = comida.createNestedArray("platos");
+    } 
+    else if (line == "INICIO-PLATO") 
+    {
+        plato = platos.createNestedObject();
+        alimentos = plato.createNestedArray("alimentos");
+    } 
+    else if (line.startsWith("ALIMENTO")) 
+    {
+        JsonObject alimento = alimentos.createNestedObject();
+        // Aquí asumimos que los datos del alimento están separados por comas
+        int firstCommaIndex = line.indexOf(',');
+        int secondCommaIndex = line.lastIndexOf(',');
+        alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
+        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
+    } 
+    else if (line.startsWith("FIN-COMIDA")) 
+    {
+        int firstCommaIndex = line.indexOf(',');
+        int secondCommaIndex = line.lastIndexOf(',');
+        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
+        //comida["hora"] = line.substring(secondCommaIndex + 1);
+        // ---
+        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
+        comida["fecha"] = (int)timestamp;
+        // ---
+    }
+    else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
+    {
+        // Agregar la dirección MAC del ESP32 al objeto JSON
+        String macAddress = WiFi.macAddress();
+        JSONdoc["mac"] = macAddress;
+
+        // Mostrar JSON 
+        serializeJsonPretty(JSONdoc, SerialPC); 
+
+        // Avisar al Due de que ya se tiene el JSON completo
+        SerialESP32Due.println("JSON completo");
+        
+    }
+    else
+    {
+        SerialESP32Due.println("línea desconocida");
+    }
+}
+
 
 
 

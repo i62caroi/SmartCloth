@@ -5,66 +5,63 @@
           {
             "alimentos": [
               {
-                "grupo": "15",
-                "peso": "53.50"
+                "grupo": 15,
+                "peso": 53.50
               },
               {
-                "grupo": "9",
-                "peso": "53.50"
+                "grupo": 9,
+                "peso": 53.50
               }
             ]
           }
         ],
-        "fecha": "05.12.2023",
-        "hora": "17:55:36"
+        "fecha": 1701795336
       },
       {
         "platos": [
           {
             "alimentos": [
               {
-                "grupo": "15",
-                "peso": "24.40"
+                "grupo": 15,
+                "peso": 24.40
               }
             ]
           }
         ],
-        "fecha": "05.12.2023",
-        "hora": "20:25:25"
+        "fecha": 1701804325
       },
       {
         "platos": [
           {
             "alimentos": [
               {
-                "grupo": "15",
-                "peso": "53.50"
+                "grupo": 15,
+                "peso": 53.50
               },
               {
-                "grupo": "9",
-                "peso": "53.50"
+                "grupo": 9,
+                "peso": 53.50
               }
             ]
           },
           {
             "alimentos": [
               {
-                "grupo": "3",
-                "peso": "32.07"
+                "grupo": 3,
+                "peso": 32.07
               },
               {
-                "grupo": "27",
-                "peso": "46.65"
+                "grupo": 27,
+                "peso": 46.65
               },
               {
-                "grupo": "10",
-                "peso": "16.23"
+                "grupo": 10,
+                "peso": 16.23
               }
             ]
           }
         ],
-        "fecha": "20.12.2023",
-        "hora": "10:39:36"
+        "fecha": 1703065176
       }
     ],
     "MAC": "08:D1:F9:CB:A1:EC"
