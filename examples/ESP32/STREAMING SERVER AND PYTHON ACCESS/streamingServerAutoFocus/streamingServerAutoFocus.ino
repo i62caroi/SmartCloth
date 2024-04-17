@@ -28,8 +28,8 @@
 #include "ESP32_OV5640_AF.h"
 
 //Replace with your network credentials
-const char* ssid = "Irene";
-const char* password = "icradeba5050";
+const char* ssid = "UCOTEAM";
+const char* password = "-polonio210alfileres-";
 
 
 #define PWDN_GPIO_NUM     32
