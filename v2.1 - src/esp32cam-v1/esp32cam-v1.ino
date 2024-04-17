@@ -23,6 +23,15 @@
       |      GND       |        GND              | 
       --------------------------------------------
 
+      -------------------------------------------------
+      |    ESP32-CAM PLUS   |  Arduino Due (Serial1)  |
+      -------------------------------------------------
+      |    IO17 (Tx1)       |      pin 19 (Rx1)       |    
+      |    IO16 (Rx1)       |      pin 18 (Tx1)       |
+      |      3V3            |        3V3              |
+      |      GND            |        GND              | 
+      -------------------------------------------------
+
       CARGAR Y EJECUTAR PROGRAMA:
         1. Puentear IO0 a GND (3º por la derecha de la camara)
         2. Resetear
