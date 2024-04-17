@@ -37,6 +37,7 @@
 SAMDUE_ISR_Timer ISR_Timer;
 
 
+#define DEBOUNCE_TIME 200
 
 //  -----   MAIN  --------------------------------------
 volatile byte  buttonMain = 0; // Botón pulsado en Main (botonera B)
@@ -104,7 +105,7 @@ bool hasScaleEventOccurred();             // Devuelve true si se ha activado alg
 void ISR_crudo(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 1;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 1;
     last_interrupt_time = interrupt_time;
 }
 
@@ -118,7 +119,7 @@ void ISR_crudo(){
 void ISR_cocinado(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 2;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 2;
     last_interrupt_time = interrupt_time;
 }
 
@@ -132,7 +133,7 @@ void ISR_cocinado(){
 void ISR_addPlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 3;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 3;
     last_interrupt_time = interrupt_time;
 }
 
@@ -146,7 +147,7 @@ void ISR_addPlato(){
 void ISR_deletePlato(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 4;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 4;
     last_interrupt_time = interrupt_time;
 }
 
@@ -160,7 +161,7 @@ void ISR_deletePlato(){
 void ISR_guardar(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) buttonMain = 5;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 5;
     last_interrupt_time = interrupt_time;
 }
 
@@ -181,7 +182,7 @@ void ISR_guardar(){
 void ISR_pulsandoButtonsGrande(){
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 500) pulsandoGrande = true;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoGrande = true;
     last_interrupt_time = interrupt_time;
 }
 
@@ -198,7 +199,7 @@ void ISR_pulsandoButtonsGrande(){
 void ISR_barcode(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > 200) pulsandoBarcode = true;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }
 

@@ -62,7 +62,6 @@ char    fileGrupo1[30]      = "bin/grupo/grupo1.bin";
 char    fileGrupo2[30]      = "bin/grupo/grupo2.bin";
 char    fileGrupo3[30]      = "bin/grupo/grupo3.bin";
 char    fileGrupo4[30]      = "bin/grupo/grupo4.bin";
-//char    fileManoGreen[30]   = "bin/grupo/manoG.bin";
 
 // --- IMAGENES BOTONES ---
 char    fileBotonAnadir[30]     = "bin/botones/anadir.bin";
@@ -70,24 +69,21 @@ char    fileBotonEliminar[30]   = "bin/botones/borrar.bin";
 char    fileBotonGuardar[30]    = "bin/botones/guardar.bin";
 char    fileCocinadoGrande[30]  = "bin/botones/coci_gra.bin";
 char    fileCrudoGrande[30]     = "bin/botones/cru_gra.bin";
-//char    fileManoYellow[30]      = "bin/botones/manoY.bin";
 
 // --- IMAGEN BASCULA ---
-//char   fileScale[30]  = "bin/alimento/scale.bin";
 char   fileScale[30]  = "bin/alimento/scale_g.bin";
 
 
 // --- IMAGENES DASHBOARD ---
 char    fileCocinadoPeq[30]     = "bin/dash/coci_peq.bin";
 char    fileCrudoPeq[30]        = "bin/dash/cru_peq.bin";
-char    fileKcal[30]          = "bin/dash/kcal.bin"; // kcal_20
+char    fileKcal[30]            = "bin/dash/kcal.bin"; // kcal_20
 
 // --- IMAGENES ERROR ---
 char    fileCruz[30]          = "bin/error/cruz.bin";
 
 // --- IMAGENES AVISO ---
 char    fileAvisoYellow[30]   = "bin/aviso/aviso_y.bin";
-//char    fileAvisoDarkOrange[30]   = "bin/aviso/aviso_o.bin";
 
 
 
