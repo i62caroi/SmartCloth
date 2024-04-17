@@ -29,7 +29,11 @@ void setup()
   // Inicializar el objeto RTC
   rtc.begin();
 
-  Serial.print("1 - Hoy es "); Serial.print(rtc.getDateStr()); Serial.print(F(" y son las ")); Serial.println(rtc.getTimeStr());
+  //Serial.print("1 - Hoy es "); Serial.print(rtc.getDateStr()); Serial.print(F(" y son las ")); Serial.println(rtc.getTimeStr());
+
+  char *today = rtc.getDateStr();
+  char *actualTime = rtc.getTimeStr();
+  Serial.print(F("1 - Hoy es ")); Serial.print(today); Serial.print(F(" y son las ")); Serial.println(actualTime);
 
 
   // Obtener la fecha y hora de compilación
@@ -97,7 +101,7 @@ void loop()
  * @brief Ajustar la hora para corregir el desfase.
  *
  * Esta función toma como entrada la hora, minuto y segundo por referencia y 
- * ajusta el tiempo sumando 14 segundos para corregir el desfase. Si los segundos 
+ * ajusta el tiempo sumando x segundos para corregir el desfase. Si los segundos 
  * son 60 o más, suma un minuto, y si los minutos son 60 o más, suma una hora. 
  * Si la hora es 24 o más, resta 24 para pasar al día siguiente.
  *
