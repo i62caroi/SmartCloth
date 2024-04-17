@@ -33,12 +33,11 @@
       ----------------------------------------------------------------------------
 
 
-    BOTON BARCODE conectada de la siguiente forma (con el botón derecho, botones 
-    hacia abajo):
+    BOTON BARCODE conectada de la siguiente forma (indistintamente):
         -----------------
         | GND | Barcode |
         -----------------
-        | GND |   51    |       
+        | GND |   53    |       
         -----------------
 
 ------------------------------------------------------------------
@@ -65,7 +64,18 @@ const byte intPinCocinado     = 26;
 const byte intPinCrudo        = 27;    
 const byte intPinAddPlato     = 28; 
 const byte intPinGuardar      = 29;  
-const byte intPinDeletePlato  = 30;   
+const byte intPinDeletePlato  = 30;  
+/*
+Botonera B	Arduino Due
+VCC	3.3 V
+B1 (cocinado)	pin 26 (digital)
+B2 (crudo)	pin 27 (digital)
+B3 (añadir plato)	pin 28 (digital)
+B4 (guardar comida)	pin 29 (digital)
+B5 (eliminar plato)	pin 30 (digital)
+-	-
+GND	GND
+*/ 
 // ------------------------------------------------------
 
 
