@@ -17,7 +17,7 @@
 #include <TimeLib.h>
 #include "wifi_functions.h" // Para la MAC
 
-#define JSON_SIZE_LIMIT 4096
+#define JSON_SIZE_LIMIT 20480 // 20k; 4k --> 4096
 
 
 
@@ -68,15 +68,27 @@ void  processJSON()
     #if defined(SM_DEBUG)
     SerialPC.println("Añadiendo lineas al JSON...");
     #endif
+    
     String line = "";
-    while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
+
+    //unsigned long lastReceivedTime = millis(); // Guarda el tiempo actual
+    //unsigned long timeout = 3000; // Espera máxima de 3 segundos
+    
+    // Mientras el Due no indique que ya leyó todo el fichero TXT
+    // Si pasan 3 segundos sin recibir mensaje, sale del bucle. Por si se corta la comunicación
+    // Serial con Arduino. Si se corta, addLineToJSON() no recibirá "FIN-TRANSMISION" y no subirá el JSON.
+    //while ((line != "FIN-TRANSMISION") && (millis() - lastReceivedTime <= timeout)) { 
+    while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT 
         if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
             line = SerialESP32Due.readStringUntil('\n'); 
             line.trim();
+            //lastReceivedTime = millis(); // Actualiza el tiempo de la última recepción
+
             #if defined(SM_DEBUG)
             SerialPC.println("Linea recibida: " + line); 
             #endif
-            // Enviar JSON
+
+            // Completar JSON y enviar
             addLineToJSON(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
         }
     }
@@ -85,6 +97,7 @@ void  processJSON()
     // -------- MEMORIA RAM USADA POR EL JSON ---------------------
     #if defined(SM_DEBUG)
     SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
+    //if(line != "FIN-TRANSMISION") SerialPC.println(F("\nTransmision con Arduino cortada. JSON no subido")); 
     #endif
     // ------------------------------------------------------------
 
