@@ -12,9 +12,11 @@
 #define SerialPC Serial
 #define SerialDueESP32 Serial1
 
-int nComidasToSend = -1;
-int nComidasUploaded = -2;
+//int nComidasToSend = -1;
+//int nComidasUploaded = -2;
 
+int     sendStringSimulationToEsp32_counting(String fileContent);
+void    updateStringSimulation(String successfulMeals, int nComidasContadas); 
 
 void setup()
 {
@@ -61,11 +63,17 @@ void loop()
         msg.trim();  
         SerialPC.print("Mensaje recibido: "); SerialPC.println(msg); 
 
+        int nComidasContadas;
+
         // Esperando datos a subir
         if(msg == "WAITING-FOR-DATA"){
             SerialPC.println("\nEnviando data...");
             // Enviar al ESP32-CAM la cadena 
-            sendStringSimulationToEsp32(string2);
+            //sendStringSimulationToEsp32(string2);
+            nComidasContadas = sendStringSimulationToEsp32_counting(string2);
+        }
+        else{ // Cadena con IDs de comidas subidas correctamente
+            updateStringSimulation(msg, nComidasContadas, string2);
         }
     }
     // -----------------------------------------------------------

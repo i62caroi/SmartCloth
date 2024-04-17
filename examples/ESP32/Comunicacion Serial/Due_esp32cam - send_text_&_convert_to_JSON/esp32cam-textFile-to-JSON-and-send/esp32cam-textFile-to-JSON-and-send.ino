@@ -33,11 +33,48 @@
         5. Resetear
 */
 
-#define RXD1 14
-#define TXD1 15
+/*
+// Nuevo ESP32
+#define PWDN_GPIO_NUM -1
+#define RESET_GPIO_NUM   5
+#define XCLK_GPIO_NUM    15
+#define SIOD_GPIO_NUM    22
+#define SIOC_GPIO_NUM    23
+
+#define Y2_GPIO_NUM 2
+#define Y3_GPIO_NUM 14
+#define Y4_GPIO_NUM 35
+#define Y5_GPIO_NUM 12
+#define Y6_GPIO_NUM 27
+#define Y7_GPIO_NUM 33
+#define Y8_GPIO_NUM 34
+#define Y9_GPIO_NUM 39
+
+#define VSYNC_GPIO_NUM    18
+#define HREF_GPIO_NUM    36
+#define PCLK_GPIO_NUM    26
+
+#define LED_GPIO_NUM 25
+*/
+
+/*
+  ARDUINO BOARD CONFIGURATION:
+  - Board: "ESP32 Dev Module"
+  - Partition Scheme: "Huge APP (3MB No OTA/1MB SPIFFS)"
+  - Flash Mode: "DIO"
+  - Upload Speed: "460800"
+
+  Con eso ya se puede subir el programa a la placa sin problemas y 
+  sin tener que presionar el botón de reset ni GIO0..
+
+*/
+
+// Anterior ESP32
+//#define RXD1 14
+//#define TXD1 15
 
 #define SerialPC Serial
-#define SerialESP32Due Serial1
+//#define SerialESP32Due Serial1
 
 #include "json_functions.h" // ya incluye "wifi_functions.h"
 

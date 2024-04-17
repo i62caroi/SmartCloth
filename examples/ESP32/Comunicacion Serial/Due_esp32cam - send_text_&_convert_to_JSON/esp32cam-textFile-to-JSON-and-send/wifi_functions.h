@@ -299,6 +299,44 @@ void sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
 
 
 
+/*void sendJsonToDatabase_justSend(DynamicJsonDocument& JSONdoc, String &bearerToken)
+{
+    if(hayConexionWiFi())
+    {
+        uploadJSON_part2(JSONdoc,bearerToken);  // 2. Enviar JSON
+    }
+    else
+    {
+        SerialPC.println(F("No tengo wifi"));
+        SerialESP32Due.println(F("NO-WIFI"));
+    }
+}*/
+
+
+bool sendJsonPerMealToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
+{
+    bool mealUploaded;
+
+    if(hayConexionWiFi())
+    {
+        String bearerToken;
+
+        fetchToken_part1(bearerToken);          // 1. Pedir token de autenticación
+        mealUploaded = uploadJSONPerMeal_part2(JSONdoc,bearerToken);  // 2. Enviar JSON
+        logout_part3(bearerToken);              // 3. Cerrar sesión
+    }
+    else
+    {
+        SerialPC.println(F("No tengo wifi"));
+        SerialESP32Due.println(F("NO-WIFI"));
+
+        mealUploaded = false;
+    }
+
+    return mealUploaded;
+}
+
+
 /*-----------------------------------------------------------------------------*/
 /**
  * Realiza una petición HTTP POST al servidor para obtener un token de autenticación.
@@ -417,6 +455,68 @@ void uploadJSON_part2(DynamicJsonDocument& JSONdoc, String &bearerToken)
 }
 
 
+bool uploadJSONPerMeal_part2(DynamicJsonDocument& JSONdoc, String &bearerToken)
+{
+    SerialPC.println("\n2. Subiendo JSON...");
+
+    bool mealUploaded;
+
+    // Convertir el documento JSON en una cadena
+    String jsonString;
+    serializeJson(JSONdoc, jsonString);
+
+    // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
+    HTTPClient http;
+    //http.begin(post_testServerName);
+    http.begin(post_ComidaServerName);
+    http.addHeader("Content-Type", "application/json");
+    http.addHeader("Authorization", "Bearer " + bearerToken); // Añadir el token de autenticación
+    /*  // Si se quisiera configurar opciones específicas de la conexión, se haría con un cliente WiFi
+        // y se pasaría como parámetro al crear la conexión:
+            WiFiClient client;
+            // ...configurar 'client'...
+            http.begin(client, serverName);
+        // Si no se configura explícitamente, al hacer 'http.begin(serverName)' la biblioteca HTTPClient
+        // ya se encargará de crear un cliente por defecto
+    */
+
+    // Enviar la petición HTTP
+    int httpResponseCode = http.POST(jsonString);
+
+    // Comprobar el código de respuesta HTTP
+    if(httpResponseCode > 0)
+    {
+        //SerialPC.println();
+        //SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+        // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
+
+        String response = http.getString(); // Obtener la respuesta del servidor
+        //SerialPC.println(response);         // Imprimir la respuesta del servidor
+
+        if((httpResponseCode >= 200) && (httpResponseCode < 300)){
+            //SerialESP32Due.println(F("SAVED-OK"));
+            mealUploaded = true;
+        }
+        else{
+            //SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+            mealUploaded = false;
+        }
+    }
+    else
+    {
+        SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
+
+        //SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
+
+        mealUploaded = false;
+    }
+
+    // Cerrar la conexión
+    http.end();
+
+    return mealUploaded; // Si se ha subido o no la comida
+}
+
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -449,10 +549,10 @@ void logout_part3(String &bearerToken)
             // Extraer mensaje de la respuesta recibida:
             DynamicJsonDocument doc(1024);
             deserializeJson(doc, response);
-            bool status = doc["status"];
+            bool success = doc["success"];
             String message = doc["message"];     
 
-            if(status && message == "User logged out successfully"){
+            if(success && message == "User logged out successfully"){
                 SerialPC.println("Cierre de sesión exitoso");
             }
             else {
@@ -577,10 +677,10 @@ void logoutFromServer()
                 // Extraer mensaje de la respuesta recibida:
                 DynamicJsonDocument doc(1024);
                 deserializeJson(doc, response);
-                bool status = doc["status"];
+                bool success = doc["success"];
                 String message = doc["message"];     
 
-                if(status && message == "User logged out successfully"){
+                if(success && message == "User logged out successfully"){
                     SerialPC.println("Cierre de sesión exitoso");
                 }
                 else {
