@@ -230,7 +230,7 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   MANO_Y_PULSACION_GRUPOS     4  
 
 // Sincronización SmartCloth con web
-#define  DATA_TO_UPLOAD         1
+//#define  DATA_TO_UPLOAD         1
 #define  NO_INTERNET_CONECTION  2
 #define  UPLOADING_DATA         3
 #define  UPLOADED_DATA          4
@@ -1233,7 +1233,7 @@ void showDataToUpload(byte option){
     switch (option){
         // CREO QUE ES MEJOR HACERLO EN UN SEGUNDO PLANO Y SOLO MOSTRAR INFO DE LA SINCRONIZACIÓN SI OCURRE,
         // OSEA SI HAY ALGO QUE SUBIR, HAY WIFI Y SE SUBE.
-        case DATA_TO_UPLOAD:            tft.setCursor(80, 158);     tft.println("SINCRONIZACI\xD3""N NECESARIA");           break; 
+        //case DATA_TO_UPLOAD:            tft.setCursor(80, 158);     tft.println("SINCRONIZACI\xD3""N NECESARIA");           break; 
         case NO_INTERNET_CONECTION:     tft.setCursor(300, 158);    tft.println("SIN CONEXI\xD3""N");                       break;
         case UPLOADING_DATA:            tft.setCursor(220, 158);    tft.println("SINCRONIZANDO...");                        break; 
 
@@ -1254,7 +1254,7 @@ void showDataToUpload(byte option){
     tft.setTextForegroundColor(BLACK);
     
     switch (option){
-        case DATA_TO_UPLOAD:            tft.setCursor(110, 358);                                        tft.println("COMPROBANDO CONEXI\xD3""N A INTERNET...");         break; 
+        //case DATA_TO_UPLOAD:            tft.setCursor(110, 358);                                        tft.println("COMPROBANDO CONEXI\xD3""N A INTERNET...");         break; 
         
         case NO_INTERNET_CONECTION:     tft.setCursor(200, 358);                                        tft.println("NO HAY CONEXI\xD3""N A INTERNET");
                                         tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println("NO SE PUEDE SINCRONIZAR LA INFORMACI\xD3""N");     break;
@@ -1354,7 +1354,8 @@ void pedirRecipiente(){
     // ****************************************************************************************************
     
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
     // ------------------------------------------------------------------------------------------------------
 
     // *********** BRAINS (120X108) *************************************************************************
@@ -1364,7 +1365,8 @@ void pedirRecipiente(){
     // *********************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
 
     // **** BRAIN 2 ********************************************
     // BRAIN2G (99x83) (verde)
@@ -1372,7 +1374,8 @@ void pedirRecipiente(){
     // *********************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
     // ****************************************************************************************************
     
 }
@@ -1452,7 +1455,9 @@ void pedirGrupoAlimentos(){
     tft.setCursor(255, tft.getCursorY() + tft.getTextSizeY()-10);     tft.print("DE ALIMENTOS"); 
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // ****************************************************************************************************
 
 
@@ -1461,7 +1466,9 @@ void pedirGrupoAlimentos(){
     tft.fillRoundRect(0,450,512,458,3,WHITE);
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return; // 800
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // ****************************************************************************************************
 
 
@@ -1477,28 +1484,32 @@ void pedirGrupoAlimentos(){
     // DE LAS IMÁGENES DE GRUPOS PARA TAPAR LAS SOMBRAS EN LAS ESQUINAS.
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
 
     // ------ Grupo 2 (130x125) ---------
     //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,131,0,PAGE1_START_ADDR,SCREEN_WIDTH,396,288,130,125); // x = <grupo1(236) + grupo1(130) + 30 = 396  ->  y = 288
     slowAppearanceImage(SLOW_APPEAR_GRUPO2);
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
 
     // ------ Grupo 3 (130x125) ---------
     //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,262,0,PAGE1_START_ADDR,SCREEN_WIDTH,556,288,130,125); // x = <grupo2(396) + grupo2(130) + 30 = 556  ->  y = 288
     slowAppearanceImage(SLOW_APPEAR_GRUPO3);
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
 
     // ------ Grupo 4 (130x125) ---------
     //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,393,0,PAGE1_START_ADDR,SCREEN_WIDTH,716,288,130,125); // x = <grupo3(556) + grupo3(130) + 30 = 716  ->  y = 288
     slowAppearanceImage(SLOW_APPEAR_GRUPO4);
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
     // ****************************************************************************************************
 
 
@@ -1512,12 +1523,16 @@ void pedirGrupoAlimentos(){
     // Tras trasladar la mano, no hay pulsación. Se van a hacer dos alternancias de pulsación,
     // es decir: pulsacion - no pulsacion - pulsacion - no pulsacion
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
 
     for(byte i = 0; i < 4; i++){
         if(pulsacion) con_pulsacion(MANO_Y_PULSACION_GRUPOS);
         else sin_pulsacion(MANO_Y_PULSACION_GRUPOS);
-        if(doubleDelayAndCheckInterrupt(1000)) return;
+        if(doubleDelayAndCheckInterrupt(400)) return;
+        if(doubleDelayAndCheckInterrupt(400)) return;
+        if(doubleDelayAndCheckInterrupt(200)) return;
         pulsacion = !pulsacion;
     }
     // ****************************************************************************************************
@@ -1971,13 +1986,17 @@ void pedirAlimento(){
     // ****************************************************************************************************
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
 
     // ************ LÍNEAS ********************************************************************************
     tft.fillRoundRect(0,270,276,278,3,WHITE);
     tft.fillRoundRect(748,517,1024,525,3,WHITE);
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // **************************************************************************************************** 
     
       
@@ -1987,7 +2006,9 @@ void pedirAlimento(){
     // **************************************************************************************************** 
     
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
 
 }
 
@@ -2017,7 +2038,9 @@ void sugerirAccion(){
     tft.println("\xBF""QU\xC9"" QUIERE HACER AHORA\x3F""");
     
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // **************************************************************************************************** 
 
 
@@ -2036,7 +2059,9 @@ void sugerirAccion(){
     // Apareciendo y recortando bordes de add/delete/save
     if(slowAppearanceImage(SLOW_APPEAR_SCALE_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // --------------------------------------------------------------------
 
 
@@ -2048,7 +2073,9 @@ void sugerirAccion(){
     // Apareciendo y recortando bordes de add/delete/save
     if(slowAppearanceImage(SLOW_APPEAR_GRUPO1_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // --------------------------------------------------------------------
 
 
@@ -2060,7 +2087,9 @@ void sugerirAccion(){
     // Apareciendo y recortando bordes de add/delete/save
     if(slowAppearanceImage(SLOW_APPEAR_ANADIR_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // --------------------------------------------------------------------
 
 
@@ -2072,7 +2101,9 @@ void sugerirAccion(){
     // Apareciendo y recortando bordes de add/delete/save
     if(slowAppearanceImage(SLOW_APPEAR_BORRAR_SUGERENCIA)) return;
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return;
     // --------------------------------------------------------------------
 
 
@@ -2082,8 +2113,6 @@ void sugerirAccion(){
     tft.setCursor(800, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("COMIDA");
     // Apareciendo y recortando bordes de add/delete/save
     if(slowAppearanceImage(SLOW_APPEAR_GUARDAR_SUGERENCIA)) return;
-    // ----- ESPERA E INTERRUPCION ----------------
-    //if(doubleDelayAndCheckInterrupt(1000)) return;
     // --------------------------------------------------------------------
 
     // **************************************************************************************************** 
@@ -2128,9 +2157,8 @@ void pedirConfirmacion(byte option){
       case ASK_CONFIRMATION_DELETE: tft.setCursor(110, tft.getCursorY() + tft.getTextSizeY()-40); tft.print("BORRAR EL PLATO ACTUAL\x3F""");     break; // BOTÓN ELIMINAR
       case ASK_CONFIRMATION_SAVE: // BOTÓN GUARDAR
               tft.setCursor(80, tft.getCursorY() + tft.getTextSizeY()-40);  tft.print("GUARDAR LA COMIDA ACTUAL\x3F""");
-              delay(500);
-              // -------- INT -------------------
-              if(eventOccurred()) return; // Evento de interrupción (botonera o báscula)  
+              // ----- ESPERA E INTERRUPCION ----------------
+              if(doubleDelayAndCheckInterrupt(400)) return; 
               // ----- TEXTO (COMENTARIO) ---------
               tft.selectInternalFont(RA8876_FONT_SIZE_32);
               tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
@@ -2140,7 +2168,8 @@ void pedirConfirmacion(byte option){
     }
 
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(800)) return; 
+    if(doubleDelayAndCheckInterrupt(400)) return; 
+    if(doubleDelayAndCheckInterrupt(400)) return;  
     // ----------------------------------------------------------------------------------------------------
 
     // ------------ LINEA --------------------------------------------------------------------------------
@@ -2172,12 +2201,10 @@ void pedirConfirmacion(byte option){
         case ASK_CONFIRMATION_SAVE:   tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,131,PAGE1_START_ADDR,SCREEN_WIDTH,420,400,172,130); break; // Mostrar BOTÓN GUARDAR (172x130) en PAGE1  
         default: break;       
     }
-    // ----- ESPERA E INTERRUPCION ----------------
-    //if(doubleDelayAndCheckInterrupt(800)) return; 
     // ----------------------------------------------------------------------------------------------------
 
     // ----- CONEXION A INTERNET O NO ---------------------------------------------------------------------
-    if(option == ASK_CONFIRMATION_SAVE){
+    /*if(option == ASK_CONFIRMATION_SAVE){
         bool hayConexion = checkWifiConnection();
         if(hayConexion){ 
             // ----- CON WIFI -----
@@ -2203,7 +2230,7 @@ void pedirConfirmacion(byte option){
             tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
             // ------------------------
         }
-    }    
+    }*/    
     // ----------------------------------------------------------------------------------------------------
 
 
@@ -2217,7 +2244,9 @@ void pedirConfirmacion(byte option){
     // Tras trasladar la mano, no hay pulsación. Se van a hacer dos alternancias de pulsación,
     // es decir: pulsacion - no pulsacion - pulsacion - no pulsacion
     // ----- ESPERA E INTERRUPCION ----------------
-    if(doubleDelayAndCheckInterrupt(1000)) return; 
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return; 
 
     bool pulsacion = true;
 
@@ -2225,7 +2254,9 @@ void pedirConfirmacion(byte option){
         if(pulsacion) con_pulsacion(option); // Simular pulsación 
         else sin_pulsacion(option);          // Eliminar pulsación 
         // ----- ESPERA E INTERRUPCION ----------------
-        if(doubleDelayAndCheckInterrupt(1000)) return; 
+        if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(400)) return;
+    if(doubleDelayAndCheckInterrupt(200)) return; 
         pulsacion = !pulsacion;
     }
     // ****************************************************************************************************
@@ -2327,7 +2358,7 @@ void showAccionRealizada(byte option){
                 switch(option){
                     case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break;
                     case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(750,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" NO SUBIDO A WEB ");                        break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
                     case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
                     case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
                     default: break;
@@ -3227,8 +3258,6 @@ void loadPicturesShowHourglass(){
 
       // aviso
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
-      // Imagen aviso con fondo naranja oscuro
-      //tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAvisoDarkOrange); // Cargar avisoO (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
       // Imagen aviso con fondo amarillo
       tft.sdCardDraw16bppBIN256bits(115,292,135,113,fileAvisoYellow); // Cargar avisoY (135x113) en PAGE3 =>  x  =  <cruz(0) + cruz(114) + 1 = 115  ->   y = 292
       
@@ -3239,7 +3268,6 @@ void loadPicturesShowHourglass(){
       //      la mano. Así no aparecen los píxeles de color, como sí ocurre con los píxeles amarillos de manoY.
       tft.canvasImageStartAddress(PAGE3_START_ADDR); // Regresar a PAGE3
       tft.sdCardDraw16bppBIN256bits(251,292,120,128,fileManoWhiteIcon);    // Cargar manoWppt (120x128) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
-      //tft.sdCardDraw16bppBIN256bits(251,292,120,129,fileManoYellow);    // Cargar manoY (120x129) en PAGE3  =>  x  =  <avisoY(115) + avisoY(135) + 1 = 251   ->   y = 292
 
       putReloj4(); // Mostrar reloj4 en PAGE1
 
