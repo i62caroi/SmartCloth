@@ -1,0 +1,97 @@
+
+
+¡¡¡¡¡ IMPORTANTE !!!!!
+
+USAR SIEMPRE EL HUB DE USB CON ALIMENTACIÓN PROPIA.
+
+
+--------------------------------------------------------------------
+--------------	CONEXION DUE Y PC 	--------------------------------
+--------------------------------------------------------------------
+
+      --------------------------------------------
+      |    ESP32-CAM   |    FTDI (Serial al PC)  |
+      --------------------------------------------
+      |    UOT (Tx)    |        RXD              |    
+      |    UOR (Rx)    |        TXD              |
+      --------------------------------------------
+
+      --------------------------------------------
+      |    ESP32-CAM   |  Arduino Due (Serial1)  |
+      --------------------------------------------
+      |    IO15 (Tx1)  |      pin 19 (Rx1)       |    
+      |    IO14 (Rx1)  |      pin 18 (Tx1)       |
+      |      3V3       |        3V3              |
+      |      GND       |        GND              | 
+      --------------------------------------------
+
+
+--------------------------------------------------------------------
+--------------	PINES 	--------------------------------------------
+--------------------------------------------------------------------
+
+  #define PWDN_GPIO_NUM     32
+  #define RESET_GPIO_NUM    -1
+  #define XCLK_GPIO_NUM      0
+  #define SIOD_GPIO_NUM     26
+  #define SIOC_GPIO_NUM     27
+
+  #define Y9_GPIO_NUM       35
+  #define Y8_GPIO_NUM       34
+  #define Y7_GPIO_NUM       39
+  #define Y6_GPIO_NUM       36
+  #define Y5_GPIO_NUM       21
+  #define Y4_GPIO_NUM       19
+  #define Y3_GPIO_NUM       18
+  #define Y2_GPIO_NUM        5
+
+  #define VSYNC_GPIO_NUM    25
+  #define HREF_GPIO_NUM     23
+  #define PCLK_GPIO_NUM     22
+
+
+
+--------------------------------------------------------------------
+--------------	CARGAR PROGRAMA 	--------------------------------
+--------------------------------------------------------------------
+
+  CARGAR Y EJECUTAR PROGRAMA:
+    1. Puentear IO0 a GND (3º por la derecha de la camara)
+    2. Resetear
+    3. Cargar programa
+    4. Retirar puente
+    5. Resetear
+
+
+
+
+--------------------------------------------------------------------
+--------------	¿LECTOR BARCODE? 	--------------------------------
+--------------------------------------------------------------------
+
+El enfoque de procesar y decodificar las imágenes en el ESP32-CAM tiene varias limitaciones. En primer lugar, el 
+procesamiento de imágenes y la decodificación de códigos de barras son tareas computacionalmente intensivas y pueden 
+no ser factibles en un microcontrolador con recursos limitados como el ESP32. En segundo lugar, necesitaría escribir 
+un algoritmo de decodificación de códigos de barras que sea lo suficientemente eficiente para ejecutarse en el ESP32.
+Digo "escribir" porque no he encontrado ninguna biblioteca con esa funcionalidad que se pueda utilizar en un ESP32. 
+
+Para escribir nuestro propio algoritmo de decodificación de códigos de barras, tendría que estudiar cómo funcionan los 
+códigos de barras 1D y cómo se decodifican, pero esto no es trivial y podría requerir un conocimiento considerable de 
+procesamiento de imágenes y codificación de información.
+
+Así que, la mejor opción sería usar un módulo de escáner externo (lector de barcode). De hecho, la mayoría de las 
+soluciones existentes para la lectura de códigos de barras en microcontroladores implican el uso de un módulo de escáner. 
+Sin embargo, al inicio del proyecto ya descartamos incluir un lector externo debido al tamaño y el precio.
+
+Otra opción sería utilizar un servicio en la nube para la decodificación, pero el coste en tiempo y en energía no lo 
+haría viable, sobre todo si se quiere un dispositivo que trabaje en tiempo real. El problema radica en todo el procedimiento
+de enviar streaming de vídeo continuo a alta calidad hasta recibir respuesta y, además, sin que el usuario pueda ver si está 
+colocando bien el código sobre la cámara.
+
+Por lo tanto, no queda otra opción que eliminar la funcionalidad de lector de códigos de barras porque, a día de hoy y 
+con los materiales y conocimientos que tenemos, NO SE PUEDE REALIZAR.
+
+
+. 
+
+
