@@ -53,6 +53,10 @@
 #include "debug.h" // SM_DEBUG --> SerialPC
 #define SerialDueESP32 Serial1
 
+String  waitResponseFromESP32(byte phase);
+// --- Fases en las respuestas del ESP32 ---
+#define FASE_2_RECEIVED   2   // JSON-OK
+
 
 // **************************************************************************************************************************
 // *****************      DECLARACIÓN CLASE 'LISTA'       *******************************************************************
@@ -121,7 +125,7 @@ class Lista
         void addAlimento(byte grupo, float peso); ///< Añade un alimento a la lista.
         void borrarLastPlato(); ///< Borra el último plato de la lista.
         void finishComida(); ///< Finaliza la comida añadiendo la fecha y hora
-        void sendListToESP32(); ///< Envía la lista elemento a elemento al ESP32 por Serial
+        bool sendListToESP32(); ///< Envía la lista elemento a elemento al ESP32 por Serial
 
         #if defined(SM_DEBUG)
         void leerLista(); ///< Lee la lista.
@@ -205,7 +209,7 @@ void Lista::iniciarPlato()
 void Lista::addAlimento(byte grupo, float peso) 
 {
     #if defined(SM_DEBUG)
-    SerialPC.println(F("Guardando alimento y peso...\n"));
+    SerialPC.println(F("Guardando alimento y peso en lista...\n"));
     #endif
     
     // Obtener cadena "ALIMENTO,<grupo>,<peso>"
@@ -258,7 +262,7 @@ void Lista::finishComida()
     // porque si lo estuviera, no se llegaría a hacer el guardado.
 
     #if defined(SM_DEBUG)
-    SerialPC.println(F("\nFinalizando y guardando comida...\n"));
+    SerialPC.println(F("\nFinalizando comida en lista...\n"));
     #endif 
 
     char *today = rtc.getDateStr();
@@ -279,22 +283,45 @@ void Lista::finishComida()
  * Recorre la lista y envía cada línea a través de SerialDueESP32.
  */
 /*-----------------------------------------------------------------------------*/
-void Lista::sendListToESP32() 
+bool Lista::sendListToESP32() 
 {
+    #if defined SM_DEBUG
+    SerialPC.println(F("Enviando lista al esp32 para subir la info"));
+    #endif
+
     for (byte i = 0; i < getListSize(); i++) {
         SerialDueESP32.println(getItem(i));
     }
 
     SerialDueESP32.println(F("FIN-TRANSMISION"));
 
-    #if defined(SM_DEBUG)
-    SerialPC.println(F("\nLista completo enviado"));
-    SerialPC.println(F("Limpiando la lista..."));
-    #endif
+    String msgFromESP32 = waitResponseFromESP32(FASE_2_RECEIVED); // En la fase 2, sale del while si recibe JSON-OK
 
-    // Limpiar la lista para la próxima comida
-    clearList();       
+    if (msgFromESP32 == "JSON-OK") // Info recibida y JSON formado correctamente
+    {
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("\nLista completa enviada"));
+        SerialPC.println(F("Limpiando la lista..."));
+        #endif
+
+        // Limpiar la lista para la próxima comida
+        clearList(); 
+
+        return true;
+    } 
+    else{ // TIMEOUT
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("\nProblema al crear JSON de la lista"));
+        #endif
+
+        return false;
+    }
+
+    return false;
+      
 }
+
+
 
 
 /*-----------------------------------------------------------------------------*/
@@ -307,7 +334,7 @@ void Lista::sendListToESP32()
 #if defined(SM_DEBUG)
 void Lista::leerLista() 
 {
-    SerialPC.println(F("\n\nContenido de la Lista:\n"));
+    SerialPC.println(F("\nContenido de la Lista:\n"));
 
     for (byte i = 0; i < getListSize(); i++) {
         SerialPC.println(getItem(i));
