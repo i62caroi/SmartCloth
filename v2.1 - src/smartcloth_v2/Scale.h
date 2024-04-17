@@ -14,8 +14,8 @@
       ------------
       |  Célula  |
       ------------------------------------------------
-      |   SCK    |   pin 2 (digital PWM Arduino Due) |   
-      |   DOUT   |   pin 3 (digital PWM Arduino Due) |
+      |   SCK    |   pin 3 (digital PWM Arduino Due) |   
+      |   DOUT   |   pin 2 (digital PWM Arduino Due) |
       |   VCC    |   3.3 V                           |
       |   GND    |   GND                             |
       ------------------------------------------------
@@ -85,7 +85,7 @@ void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
     //scale.set_scale(1093.48); // bad calibration!
     scale.set_scale(939.51); // para celda de carga que pesa 30 gr
-    scale.tare();  
+    scale.tare(1);  
     //scale.get_units(10);
     #if defined(SM_DEBUG)
     SerialPC.println(F("Scale initialized"));
