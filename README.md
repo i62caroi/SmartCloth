@@ -1,4 +1,4 @@
-![SmartCloth Logo](images/logFull.png)
+![SmartCloth Logo](images/smartLogo.png)
 
 ## Proyecto
 
