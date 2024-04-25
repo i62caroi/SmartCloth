@@ -22,8 +22,13 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios a 
 ### Botonera de Acciones
 <img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X1_con_bordes.png" width="400">
 
-### Aspecto externo SmartCloth 1.0
-<img src="Docs/Diseño-SmartCloth/SmartCloth-actual.jpg" width="400">
+
+## Aspecto externo
+### SmartCloth 1.0
+<img src="Docs/Diseño-SmartCloth/SmartCloth-v1.jpg" width="400">
+
+### SmartCloth 2.0
+<img src="Docs/Diseño-SmartCloth/SmartCloth-v2.jpeg" width="400">
 
 ## Contacto
 
