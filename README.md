@@ -1,6 +1,6 @@
 ![SmartCloth Logo](images/logFull.png)
 
-## Descripción del Proyecto
+## Proyecto
 
 SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios a realizar un seguimiento de su ingesta alimentaria y obtener información nutricional detallada. Este proyecto incluye tanto el hardware como el software necesarios para utilizar SmartCloth de manera efectiva.
 
@@ -21,6 +21,9 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios a 
 
 ### Botonera de Acciones
 <img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X1_con_bordes.png" width="400">
+
+### Aspecto externo SmartCloth 1.0
+<img src="Docs/Diseño-SmartCloth/SmartCloth-actual.jpg" width="400">
 
 ## Contacto
 
