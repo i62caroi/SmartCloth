@@ -3,16 +3,13 @@
  * @brief Este archivo contiene funciones auxiliares para convertir el mensaje a JSON.
  * 
  * @author Irene Casares Rodríguez
- * @date 13/01/2024
+ * @date 07/05/2024
  */
 
 /*
-El esp32 va contando las comidas que recibe del arduino y mete en un vector los ID de las comidas que sube correctamente. 
-Luego le envía ese vector al arduino. 
-
-El arduino también ha ido contando las comidas que enviaba al esp32. Si el vector tiene la misma cantidad de elementos 
-que cantidad de comidas ha contado el arduino, entonces borra el fichero TXT completo. Si no, entonces vuelve a recorrer 
-el fichero TXT contando las comidas y borra las que su ID (contador) coincida con algún elemento del vector.
+    El esp32 va conformando un JSON con la información que recibe del Due por Serial. Cuando recibe FIN-COMIDA,
+    cierra el JSON con la MAC del esp32 y lo envía a la base de datos. Repite el proceso con todas las comidas
+    que recibe hasta que reciba la línea FIN-TRANSMISION, entonces cierra sesión.
 */
 
 
@@ -22,10 +19,10 @@ el fichero TXT contando las comidas y borra las que su ID (contador) coincida co
 #define SerialPC Serial
 #define SerialESP32Due Serial1
 
-#include <ArduinoJson.h>
-#include <TimeLib.h>
-#include "wifi_functions.h" // Para la MAC
-#include <vector>
+#include <ArduinoJson.h>    // Trabajar con JSON
+#include <TimeLib.h>        // Convertir la fecha a UNIX
+#include "wifi_functions.h" // Obtener la MAC, pedir token, enviar JSON y cerrar sesión
+
 
 #define JSON_SIZE_LIMIT 20480 // 20k; 4k --> 4096
 
@@ -34,21 +31,28 @@ el fichero TXT contando las comidas y borra las que su ID (contador) coincida co
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
 void    processJSON();                                                                              // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar 
+void    processJSON_OnePerMeal();
 
 void    addLineToJSON(DynamicJsonDocument& JSONdoc,                                                 // Todo en un JSON, aunque se quede a mitad, y se envía
                         JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
                         JsonObject& comida, JsonObject& plato, 
                         String& line);                                              
 
+/*void    addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,                                  // Genera y envía un JSON por comida. PUEDE SATURAR EL SERVIDOR!!!
+                                    JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
+                                    JsonObject& comida, JsonObject& plato, 
+                                    String& line);*/
+
+void    addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,                                  
+                                    JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
+                                    JsonObject& comida, JsonObject& plato, 
+                                    String& line, String &bearerToken);
+
 void    addLineToJSON_print(DynamicJsonDocument& JSONdoc,                                           // Todo en un JSON, aunque se quede a mitad, y solo se imprime
                             JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
                             JsonObject& comida, JsonObject& plato, 
                             String& line);
 
-void    addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,                                  // Genera y envía un JSON por comida. PUEDE SATURAR EL SERVIDOR!!!
-                                    JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
-                                    JsonObject& comida, JsonObject& plato, 
-                                    String& line);
 
 time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex); // Convertir fecha de String a formato Unix timestamp
 /*-----------------------------------------------------------------------------*/
@@ -62,12 +66,8 @@ time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaInd
  *        RAM que ocupe al salir del mismo (al salir de la función)
  */
 /*-----------------------------------------------------------------------------*/
-void  processJSON()
+/*void  processJSON()
 {
-    // Crear una cadena donde concatenar los IDs de las comidas exitosas
-    // para enviarlos por Serial al Arduino fácilmente
-    //String successfulMeals = "";
-
 
     // ---------- DECLARAR DOCUMENTO JSON -------------------------
     // ------------------------------
@@ -104,81 +104,123 @@ void  processJSON()
     // ------------------------------
     // ------------------------------------------------------------
 
-
     // ------------- GENERAR JSON ---------------------------------
     SerialPC.println("Añadiendo lineas al JSON...");
     String line = "";
-    while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
-        if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
-            line = SerialESP32Due.readStringUntil('\n'); 
-            line.trim();
-            SerialPC.println("Linea recibida: " + line); 
-            
-            // Si solo se quiere imprimir:
-            //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
-            
-            // Si se quiere enviar:
-            addLineToJSON(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
-            // La línea "FIN-TRANSMISION" también la procesa esta función, cerrando el JSON y enviándolo
-        
-            // Enviar un JSON por comida
-            //addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line); 
-        
-            //addLineToJSON_oneJsonPerMeal_counting(successfulMeals, JSONdoc, comidas, platos, alimentos, comida, plato, line); 
-            
-        }
-    }
-    // ------------------------------------------------------------
 
-
-    // ------------- GENERAR JSON ---------------------------------
-    // JSON individuales por comida
-    /*SerialPC.println("Añadiendo lineas al JSON...");
-    String line = "";
+    //unsigned long lastReceivedTime = millis(); // Guarda el tiempo actual
+    //unsigned long timeout = 3000; // Espera máxima de 3 segundos
+    
+    // Mientras el Due no indique que ya leyó todo el fichero TXT
+    // Si pasan 3 segundos sin recibir mensaje, sale del bucle. Por si se corta la comunicación
+    // Serial con Arduino. Si se corta, addLineToJSON() no recibirá "FIN-TRANSMISION" y no subirá el JSON.
+    //while ((line != "FIN-TRANSMISION") && (millis() - lastReceivedTime <= timeout)) { 
     while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
         if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
             line = SerialESP32Due.readStringUntil('\n'); 
             line.trim();
             SerialPC.println("Linea recibida: " + line); 
 
-            // Si el Arduino ha terminado de enviar info, el ESP32 le envía una lista con los IDs de las 
-            // comidas que ha podido subir.
-            if(line == "FIN-TRANSMISION"){ 
-                SerialESP32Due.println(successfulMeals);
-                SerialPC.println(successfulMeals);
-                continue;
-            }
+            //lastReceivedTime = millis(); // Actualiza el tiempo de la última recepción
             
             // Si solo se quiere imprimir:
             //addLineToJSON_print(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
             
-            // Si se quiere enviar:
+            // Enviar un JSON con todo:
             //addLineToJSON(JSONdoc, comidas, platos, alimentos, comida, plato, line); // Aquí se procesa según la línea recibida
             // La línea "FIN-TRANSMISION" también la procesa esta función, cerrando el JSON y enviándolo
         
             // Enviar un JSON por comida
-            //addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line); 
-        
-            addLineToJSON_oneJsonPerMeal_counting(successfulMeals, JSONdoc, comidas, platos, alimentos, comida, plato, line); 
-            
+            addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line);             
         }
+    }
+    //}
+    // ------------------------------------------------------------
+
+}*/
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Crea el documento JSON en un ámbito cerrado para poder liberar la memoria 
+ *        RAM que ocupe al salir del mismo (al salir de la función)
+ *        En lugar de pedir token cuando vaya a subir la data, lo pide antes de procesar todas las líneas.
+ *        Así solo se pide una vez, luego se suben tantos JSON como haga falta y luego se cierra sesión.
+ *        De esta forma, no hay que pedir token, subir data y cerrar sesión con cada comida.
+ */
+/*-----------------------------------------------------------------------------*/
+void  processJSON_OnePerMeal()
+{
+
+    // ---------- DECLARAR DOCUMENTO JSON -------------------------
+    // Se reservan 20KB de RAM para el JSON, aunque acabe siendo más pequeño.
+    //
+    // La única forma de liberar esa memoria (sin reiniciar el dispositivo) es declarando 
+    // el documento JSON dentro de una función para que al terminar la función, al salir 
+    // del ámbito donde se declaró el 'doc', se libere su memoria.
+    //
+    // Si se declarara como global, solo se podría liberar su memoria reiniciando el dispositivo.
+    DynamicJsonDocument JSONdoc(JSON_SIZE_LIMIT); 
+
+    // Elementos del documento JSON
+    JsonArray comidas = JSONdoc.createNestedArray("comidas");
+    JsonObject comida;
+    JsonArray platos;
+    JsonObject plato;
+    JsonArray alimentos;
+    // ------------------------------------------------------------
+
+    // 1. Pedir token para subir datos
+    // 2. Subir todos los JSON que haga falta, uno por comida
+    // 3. Cerrar sesión
+
+    // Antes pedíamos token, subíamos data y cerrábamos sesión, todo con cada comida.
+    // Creo que es mejor pedir token una vez, subir toda la data que queramos y luego cerrar
+    // sesión una vez.
+
+
+    // ----- PEDIR TOKEN PARA USAR EN TODAS LAS SUBIDAS -----------
+    //if(hayConexionWiFi())
+    //{
+        // Token de autenticación pedido al servidor para poder subir información
+        String bearerToken;
+
+        fetchTokenFromServer(bearerToken);          // 1. Pedir token de autenticación
+        // Si falla la obtención de token, indica el error HTTP y no intenta subir la data
+
+        if(bearerToken != ""){ // Se ha obtenido token
+            // ------------- GENERAR JSON ---------------------------------
+            SerialPC.println("Añadiendo lineas al JSON...");
+            String line = "";
+            while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
+                if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje del Due
+                    line = SerialESP32Due.readStringUntil('\n'); 
+                    line.trim();
+                    SerialPC.println("Linea recibida: " + line); 
+
+                    // Enviar un JSON por comida
+                    addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line, bearerToken);           
+                    // Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
+                    // Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
+                }
+            }
+            // ------------------------------------------------------------
+        }
+        else{
+            SerialPC.println("Error al pedir token");
+        }
+    /*}
+    else
+    {
+        SerialPC.println(F("No tengo wifi"));
+        SerialESP32Due.println(F("NO-WIFI"));
     }*/
     // ------------------------------------------------------------
 
-    // ------------- MOSTRAR JSON ---------------------------------
-    /*SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
-    serializeJsonPretty(JSONdoc, SerialPC);
-    SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
-    */
-    // ------------------------------------------------------------
 
-    // -------- MEMORIA RAM USADA POR EL JSON ---------------------
-    SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
-    // ------------------------------------------------------------
+    
 
 }
-
-
 
 
 
@@ -230,12 +272,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         String macAddress = WiFi.macAddress();
         JSONdoc["mac"] = macAddress;
 
-        // --- Mostrar JSON ---
-        SerialPC.println(F("\n\n********************\nContenido del JSON:\n********************"));
-        serializeJsonPretty(JSONdoc, SerialPC);
-        SerialPC.println(F("\n\n********************\nFin del contenido del JSON\n********************"));
-        // --------------------
-
         // Avisar al Due de que ya se tiene el JSON completo
         SerialESP32Due.println("JSON-OK");
 
@@ -272,7 +308,7 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
  *        ESTA OPCION PUEDE SATURAR EL SERVIDOR!!!!!
  */
 /*-----------------------------------------------------------------------------*/
-void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
+/*void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
                                 JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
                                 JsonObject& comida, JsonObject& plato, 
                                 String& line)
@@ -305,25 +341,27 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        //comida["hora"] = line.substring(secondCommaIndex + 1);
-        // ---
         time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
         comida["fecha"] = (int)timestamp;
-        // ---
 
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
         JSONdoc["mac"] = macAddress;
 
-        // Mostrar JSON 
+        // ---- MOSTRAR JSON -----
         SerialPC.println();
-        serializeJsonPretty(JSONdoc, SerialPC); 
+        serializeJsonPretty(JSONdoc, SerialPC);
+        SerialPC.println();
+        // -----------------------
+
+        // -------- MEMORIA RAM USADA POR EL JSON ---------------------
+        SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage());
+        // ------------------------------------------------------------
 
         // Finalizar el DynamicJsonDocument actual y enviarlo a la base de datos
         // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
         // enviará otro JSON y así hasta recibir FIN-TRANSMISION
-        //sendJsonToDatabase(JSONdoc);
+
         // Enviar JSON a database:
         //  1. Pedir token
         //  2. Enviar JSON
@@ -333,33 +371,28 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
     {
-        SerialESP32Due.println("Transmisión completa");
+        SerialPC.println("Transmisión completa");
     }
     else
     {
-        SerialESP32Due.println("línea desconocida");
+        SerialPC.println("Línea desconocida");
     }
-}
-
-
-void addLineToJSON_oneJsonPerMeal_counting(String& successfulMeals, DynamicJsonDocument& JSONdoc, 
+}*/
+void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
                                 JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
                                 JsonObject& comida, JsonObject& plato, 
-                                String& line)
+                                String& line, String &bearerToken)
 {
-
-    static int nComidas = 0;
 
     if (line == "INICIO-COMIDA") 
     {
+        SerialPC.println("\n---------------------\nCOMENZANDO NUEVA COMIDA...\n---------------------\n");
         // Limpiar el DynamicJsonDocument antes de reutilizarlo para otra comida
         JSONdoc.clear();
 
         comidas = JSONdoc.createNestedArray("comidas");
         comida = comidas.createNestedObject();
         platos = comida.createNestedArray("platos");
-
-        nComidas++;
     } 
     else if (line == "INICIO-PLATO") 
     {
@@ -379,40 +412,48 @@ void addLineToJSON_oneJsonPerMeal_counting(String& successfulMeals, DynamicJsonD
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        //comida["fecha"] = line.substring(firstCommaIndex + 1, secondCommaIndex);
-        //comida["hora"] = line.substring(secondCommaIndex + 1);
-        // ---
         time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
         comida["fecha"] = (int)timestamp;
-        // ---
 
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
         JSONdoc["mac"] = macAddress;
 
-        // Mostrar JSON 
-        SerialPC.println();
-        serializeJsonPretty(JSONdoc, SerialPC); 
-
         // Finalizar el DynamicJsonDocument actual y enviarlo a la base de datos
         // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
         // enviará otro JSON y así hasta recibir FIN-TRANSMISION
-        //sendJsonToDatabase(JSONdoc);
+
         // Enviar JSON a database:
         //  1. Pedir token
         //  2. Enviar JSON
         //  3. Cerrar sesión
         //sendJsonToDatabase_fullProcess(JSONdoc);
 
-        if(sendJsonPerMealToDatabase_fullProcess(JSONdoc)){ // Si la comida se subió correctamente
-            successfulMeals += "," + String(nComidas); // // Añadir ID comida a la cadena que se enviará al Arduino
-                                            // El ID de la comida es el valor actual de 'nComidas'
-        }
+        uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON
+        // Si se devuelve SAVED-OK, da igual que falle el logout
 
+
+
+        // ---- MOSTRAR JSON -----
+        SerialPC.println();
+        serializeJsonPretty(JSONdoc, SerialPC);
+        SerialPC.println();
+        // -----------------------
+
+        // -------- MEMORIA RAM USADA POR EL JSON ---------------------
+        SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
+        // ------------------------------------------------------------
+
+    }
+    else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
+    {
+        logoutFromServer(bearerToken);              // 3. Cerrar sesión
+
+        SerialPC.println("Transmisión completa");
     }
     else
     {
-        SerialESP32Due.println("línea desconocida");
+        SerialPC.println("Línea desconocida");
     }
 }
 

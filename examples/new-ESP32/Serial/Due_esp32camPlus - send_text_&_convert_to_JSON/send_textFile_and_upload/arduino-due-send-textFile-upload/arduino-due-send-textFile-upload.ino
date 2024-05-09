@@ -12,11 +12,8 @@
 #define SerialPC Serial
 #define SerialDueESP32 Serial1
 
-//int nComidasToSend = -1;
-//int nComidasUploaded = -2;
-
-int     sendStringSimulationToEsp32_counting(String fileContent);
-void    updateStringSimulation(String successfulMeals, int nComidasContadas); 
+//int     sendStringSimulationToEsp32_counting(String fileContent);
+//void    updateStringSimulation(String successfulMeals, int nComidasContadas); 
 
 void setup()
 {
@@ -69,17 +66,39 @@ void loop()
         if(msg == "WAITING-FOR-DATA"){
             SerialPC.println("\nEnviando data...");
             // Enviar al ESP32-CAM la cadena 
-            sendStringSimulationToEsp32(string2);
-            //nComidasContadas = sendStringSimulationToEsp32_counting(string2);
+            //sendStringSimulationToEsp32(string2);
+            sendStringSimulationToEsp32MealByMeal(string2);
         }
-        else SerialPC.println("Comando desconocido");
-        /*else{ // Cadena con IDs de comidas subidas correctamente
-            updateStringSimulation(msg, nComidasContadas, string2);
-        }*/
+        //else SerialPC.println("Comando desconocido\n");
     }
     // -----------------------------------------------------------
     
 }
+
+
+
+/*
+// Simulacion de lectura de fichero enviando String estática
+    if(!msgPC){
+        SerialPC.print("PC, dime String a enviar: ");
+        msgPC = true;
+    }
+
+    if (SerialPC.available() > 0) { // Si se recibe algo desde el PC
+        String idString = SerialPC.readStringUntil('\n');
+        SerialPC.println(idString);
+
+        if(checkWifiConnection()){ // Pregunta al esp32 si hay conexión (CHECK-WIFI) y espera su respuesta
+            // Enviar al ESP32-CAM la cadena indicada
+            if(idString == "1") sendStringSimulationToEsp32MealByMeal(string1);
+            else if(idString == "2") sendStringSimulationToEsp32MealByMeal(string2);
+        }
+
+        msgPC = false;
+    }
+*/
+
+
 
 /*
 void loop() 
@@ -109,9 +128,6 @@ void loop()
         if(msgPC == "go"){ 
             // Solo enviar fichero al ESP32-CAM 
             //sendFileToEsp32ONE();
-
-            // Enviar fichero contando comidas
-            nComidasToSend = sendFileToEsp32();
         }
     }
     // -----------------------------------------------------------
@@ -122,16 +138,6 @@ void loop()
         String msg = SerialDueESP32.readStringUntil('\n');
 
         SerialPC.print("Mensaje recibido: "); SerialPC.println(msg); 
-
-        // Acuse de recibo de comida subida
-        if(msg == "JSON - OK"){
-            if(nComidasUploaded == -2) nComidasUploaded = 1; // Primera comida
-            else nComidasUploaded++;
-        }
-
-        // Si se han subido todas las comidas enviadas, se subió toda la info del fichero
-        if(nComidasUploaded == nComidasToSend) SerialPC.println("Subidas todas las comidas");
-    
     }
     // -----------------------------------------------------------
     

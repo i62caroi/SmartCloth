@@ -9,6 +9,7 @@
 
 
 /*
+  **********************************************************************
       --------------------------------------------
       |    ESP32-CAM   |    FTDI (Serial al PC)  |
       --------------------------------------------
@@ -16,7 +17,6 @@
       |    UOR (Rx)    |        TXD              |
       --------------------------------------------
 
-  *********************************************************************+
       --------------------------------------------
       |    ESP32-CAM   |  Arduino Due (Serial1)  |
       --------------------------------------------
@@ -33,16 +33,25 @@
         4. Retirar puente
         5. Resetear
 
-  *********************************************************************+
+  **********************************************************************
 
       ------------------------------------------------------
       |    ESP32-CAM PLUS        |  Arduino Due (Serial1)  |
       ------------------------------------------------------
-      |    IO17 (Tx1) (4º izq)   |      pin 19 (Rx1)       |    
-      |    IO16 (Rx1) (5º izq)   |      pin 18 (Tx1)       |
-      |      3V3                 |        3V3              |
-      |      GND                 |        GND              | 
+      |    IO17 (Tx1) (5º izq)   |      pin 19 (Rx1)       |    
+      |    IO16 (Rx1) (6º izq)   |      pin 18 (Tx1)       |
+      |       5V                 |        5V               |
+      |       GND                |        GND              | 
       ------------------------------------------------------
+
+      ------------------------------------------------------------
+      |    ESP32-CAM PLUS              |    Barcode Reader       |
+      ------------------------------------------------------------
+      |  IO19 (Tx2-Software) (4º izq)  |  cable azul (Rx)        |    
+      |  IO21 (Rx2-Software) (1º izq)  |  cable naranja (Tx)     |
+      |     3V3                        |        3V3              |
+      |     GND                        |        GND              | 
+      ------------------------------------------------------------
 
       ¡¡¡¡¡ IMPORTANTE !!!!!
       USAR ARDUINO IDE. EN VSCODE NO FUNCIONA LA TERMINAL.
@@ -61,27 +70,27 @@
 */
 
 /*
-// Nuevo ESP32
-#define PWDN_GPIO_NUM -1
-#define RESET_GPIO_NUM   5
-#define XCLK_GPIO_NUM    15
-#define SIOD_GPIO_NUM    22
-#define SIOC_GPIO_NUM    23
+  // Nuevo ESP32
+  #define PWDN_GPIO_NUM -1
+  #define RESET_GPIO_NUM   5
+  #define XCLK_GPIO_NUM    15
+  #define SIOD_GPIO_NUM    22
+  #define SIOC_GPIO_NUM    23
 
-#define Y2_GPIO_NUM 2
-#define Y3_GPIO_NUM 14
-#define Y4_GPIO_NUM 35
-#define Y5_GPIO_NUM 12
-#define Y6_GPIO_NUM 27
-#define Y7_GPIO_NUM 33
-#define Y8_GPIO_NUM 34
-#define Y9_GPIO_NUM 39
+  #define Y2_GPIO_NUM 2
+  #define Y3_GPIO_NUM 14
+  #define Y4_GPIO_NUM 35
+  #define Y5_GPIO_NUM 12
+  #define Y6_GPIO_NUM 27
+  #define Y7_GPIO_NUM 33
+  #define Y8_GPIO_NUM 34
+  #define Y9_GPIO_NUM 39
 
-#define VSYNC_GPIO_NUM    18
-#define HREF_GPIO_NUM    36
-#define PCLK_GPIO_NUM    26
+  #define VSYNC_GPIO_NUM    18
+  #define HREF_GPIO_NUM    36
+  #define PCLK_GPIO_NUM    26
 
-#define LED_GPIO_NUM 25
+  #define LED_GPIO_NUM 25
 */
 
 
@@ -151,7 +160,8 @@ void loop()
         else if (msgFromDUE == "SAVE"){
             SerialPC.println(F("Esperando data..."));
             SerialESP32Due.println("WAITING-FOR-DATA");
-            processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION
+            //processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION
+            processJSON_OnePerMeal();
         }
         // -----------------------------------------------
         else{ 

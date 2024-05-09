@@ -48,13 +48,9 @@ const char* password = "-polonio210alfileres-";
 const char* post_testServerName = "http://smartcloth.site/post-esp32-data-json.php"; 
 
 // URLs del servidor oficial
-const char* post_fetchTokenServerName = "https://smartclothweb.org/api/mac";
-const char* post_ComidaServerName = "https://smartclothweb.org/api/comidas";
-const char* get_logOutServerName = "https://smartclothweb.org/api/logout";
-
-
-// Token de autenticación pedido al servidor para poder subir información
-String bearerToken;
+const char* fetchTokenServerName = "https://smartclothweb.org/api/mac";
+const char* comidaServerName = "https://smartclothweb.org/api/comidas";
+const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
 
 
 /*-----------------------------------------------------------------------------
@@ -63,19 +59,10 @@ String bearerToken;
 bool    hayConexionWiFi();  // Comprobar si hay conexión WiFi
 void    connectToWiFi();    // Conectar a la red WiFi
 
-//void    sendJsonToDatabase(DynamicJsonDocument& JSONdoc);   // Enviar el JSON generado al servidor
-//bool    fetchToken();                                       // Pedir token de autenticación al servidor
-//void    logoutFromServer();                                 // Cerrar sesión en el servidor tras subir info
-
-
 void    sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc);           // Enviar el JSON generado al servidor
 void    fetchTokenFromServer(String &bearerToken);                              // 1. Pedir token
 void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);  // 2. Subir JSON
 void    logoutFromServer(String &bearerToken);                                  // 3. Cerrar sesión
-
-
-bool    sendJsonPerMealToDatabase_fullProcess(DynamicJsonDocument& JSONdoc);
-bool    uploadJSONPerMeal_part2(DynamicJsonDocument& JSONdoc, String &bearerToken);
 /*-----------------------------------------------------------------------------*/
 
 
@@ -148,7 +135,7 @@ bool hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); }
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Hace un solo intento de conexión a WiFi, con una espera máxima
- *        de 10 segundos.
+ *        de 5 segundos.
  */
 /*-----------------------------------------------------------------------------*/
 void connectToWiFi() 
@@ -159,13 +146,13 @@ void connectToWiFi()
     unsigned long startTime = millis();
 
     // Esperar hasta que se establezca la conexión o se agote el tiempo
-    unsigned long timeout_waitConexion = 10000; // 10 segundos
+    unsigned long timeout_waitConexion = 5000; // 5 segundos
 
     SerialPC.print(F("Conectando a WiFi..."));
     WiFi.begin(ssid, password);
 
-    // Mientras no se haya conectado a WiFi y mientras no hayan pasado 10 segundos.
-    // Si se conecta o si pasan los 10 segundos, sale del while.
+    // Mientras no se haya conectado a WiFi y mientras no hayan pasado 5 segundos.
+    // Si se conecta o si pasan los 5 segundos, sale del while.
     while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
     {
         delay(500);
@@ -188,69 +175,6 @@ void connectToWiFi()
     }
 
 }
-
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Convierte a String el JSON generado y lo envía a la base de datos.
- * @param JSONdoc - documento JSON a enviar
- * 
- * @note Esta función utiliza las variables globales post_ComidaServerName y bearerToken.
- */
-/*void sendJsonToDatabase(DynamicJsonDocument& JSONdoc)
-{
-    if(hayConexionWiFi())
-    {
-        // Convertir el documento JSON en una cadena
-        String jsonString;
-        serializeJson(JSONdoc, jsonString);
-
-        // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
-        HTTPClient http;
-        //http.begin(post_testServerName);
-        http.begin(post_ComidaServerName);
-        http.addHeader("Content-Type", "application/json");
-
-        // Enviar la petición HTTP
-        int httpResponseCode = http.POST(jsonString);
-
-        // Comprobar el código de respuesta HTTP
-        if(httpResponseCode > 0)
-        {
-            SerialPC.println();
-            SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
-            // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
-
-            String response = http.getString(); // Obtener la respuesta del servidor
-            SerialPC.println(response);         // Imprimir la respuesta del servidor
-
-            if((httpResponseCode >= 200) && (httpResponseCode < 300)){
-                SerialESP32Due.println(F("SAVED-OK"));
-            }
-            else{
-                SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
-            }
-        }
-        else
-        {
-            SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
-
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
-        }
-
-        // Cerrar la conexión
-        http.end();
-    }
-    else
-    {
-        SerialPC.println(F("No tengo wifi"));
-        SerialESP32Due.println(F("NO-WIFI"));
-    }
-}*/
-
-
 
 
 
@@ -280,6 +204,9 @@ void sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
             // Si se devuelve SAVED-OK, da igual que falle el logout
             logoutFromServer(bearerToken);              // 3. Cerrar sesión
         }
+        else{
+            SerialPC.println("Error al pedir token");
+        }
     }
     else
     {
@@ -289,43 +216,6 @@ void sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
 }
 
 
-
-/*void sendJsonToDatabase_justSend(DynamicJsonDocument& JSONdoc, String &bearerToken)
-{
-    if(hayConexionWiFi())
-    {
-        uploadJSONtoServer(JSONdoc,bearerToken);  // 2. Enviar JSON
-    }
-    else
-    {
-        SerialPC.println(F("No tengo wifi"));
-        SerialESP32Due.println(F("NO-WIFI"));
-    }
-}*/
-
-
-bool sendJsonPerMealToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
-{
-    bool mealUploaded;
-
-    if(hayConexionWiFi())
-    {
-        String bearerToken;
-
-        fetchTokenFromServer(bearerToken);          // 1. Pedir token de autenticación
-        mealUploaded = uploadJSONPerMeal_part2(JSONdoc,bearerToken);  // 2. Enviar JSON
-        logoutFromServer(bearerToken);              // 3. Cerrar sesión
-    }
-    else
-    {
-        SerialPC.println(F("No tengo wifi"));
-        SerialESP32Due.println(F("NO-WIFI"));
-
-        mealUploaded = false;
-    }
-
-    return mealUploaded;
-}
 
 
 /*-----------------------------------------------------------------------------*/
@@ -341,7 +231,7 @@ void fetchTokenFromServer(String &bearerToken)
 
     // Configurar la petición HTTP: un POST con la mac para obtener el token
     HTTPClient http;
-    http.begin(post_fetchTokenServerName);
+    http.begin(fetchTokenServerName);
     http.addHeader("Content-Type", "application/json");
 
     // JSON con MAC del esp32
@@ -365,16 +255,18 @@ void fetchTokenFromServer(String &bearerToken)
             DynamicJsonDocument doc(1024);
             deserializeJson(doc, response);
             bearerToken = doc["token"].as<String>();
-            SerialPC.println("token: " + bearerToken);    
+            SerialPC.println("\nTOKEN: " + bearerToken + "\n");    
         }
         else{
+            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
             SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
             bearerToken = "";
         }
     }
     else
     {
-        SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
+        SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
+        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
         bearerToken = "";
     }
 
@@ -382,6 +274,8 @@ void fetchTokenFromServer(String &bearerToken)
     http.end();
 
 }
+
+
 
 
 /*-----------------------------------------------------------------------------*/
@@ -394,6 +288,7 @@ void fetchTokenFromServer(String &bearerToken)
 void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 {
     SerialPC.println("\n2. Subiendo JSON...");
+    SerialPC.println("\nTOKEN: " + bearerToken + "\n"); 
 
     // Convertir el documento JSON en una cadena
     String jsonString;
@@ -402,7 +297,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
     // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
     HTTPClient http;
     //http.begin(post_testServerName);
-    http.begin(post_ComidaServerName);
+    http.begin(comidaServerName);
     http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", "Bearer " + bearerToken); // Añadir el token de autenticación
     /*  // Si se quisiera configurar opciones específicas de la conexión, se haría con un cliente WiFi
@@ -424,21 +319,22 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
         //SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
         // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
 
-        String response = http.getString(); // Obtener la respuesta del servidor
+        //String response = http.getString(); // Obtener la respuesta del servidor
         //SerialPC.println(response);         // Imprimir la respuesta del servidor
 
         if((httpResponseCode >= 200) && (httpResponseCode < 300)){
             SerialESP32Due.println(F("SAVED-OK"));
+            SerialPC.println("Comida subida\n");
         }
         else{
             SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+            SerialPC.println("Error en subir comida");
         }
     }
     else
     {
+        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
         SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
-
-        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
     }
 
     // Cerrar la conexión
@@ -446,67 +342,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 }
 
 
-bool uploadJSONPerMeal_part2(DynamicJsonDocument& JSONdoc, String &bearerToken)
-{
-    SerialPC.println("\n2. Subiendo JSON...");
 
-    bool mealUploaded;
-
-    // Convertir el documento JSON en una cadena
-    String jsonString;
-    serializeJson(JSONdoc, jsonString);
-
-    // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
-    HTTPClient http;
-    //http.begin(post_testServerName);
-    http.begin(post_ComidaServerName);
-    http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "Bearer " + bearerToken); // Añadir el token de autenticación
-    /*  // Si se quisiera configurar opciones específicas de la conexión, se haría con un cliente WiFi
-        // y se pasaría como parámetro al crear la conexión:
-            WiFiClient client;
-            // ...configurar 'client'...
-            http.begin(client, serverName);
-        // Si no se configura explícitamente, al hacer 'http.begin(serverName)' la biblioteca HTTPClient
-        // ya se encargará de crear un cliente por defecto
-    */
-
-    // Enviar la petición HTTP
-    int httpResponseCode = http.POST(jsonString);
-
-    // Comprobar el código de respuesta HTTP
-    if(httpResponseCode > 0)
-    {
-        //SerialPC.println();
-        //SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
-        // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
-
-        String response = http.getString(); // Obtener la respuesta del servidor
-        //SerialPC.println(response);         // Imprimir la respuesta del servidor
-
-        if((httpResponseCode >= 200) && (httpResponseCode < 300)){
-            //SerialESP32Due.println(F("SAVED-OK"));
-            mealUploaded = true;
-        }
-        else{
-            //SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
-            mealUploaded = false;
-        }
-    }
-    else
-    {
-        SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
-
-        //SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
-
-        mealUploaded = false;
-    }
-
-    // Cerrar la conexión
-    http.end();
-
-    return mealUploaded; // Si se ha subido o no la comida
-}
 
 
 /*-----------------------------------------------------------------------------*/
@@ -519,19 +355,22 @@ bool uploadJSONPerMeal_part2(DynamicJsonDocument& JSONdoc, String &bearerToken)
 void logoutFromServer(String &bearerToken)
 {
     SerialPC.println("\n3. Cerrando sesión...");
+    SerialPC.println("\nTOKEN: " + bearerToken + "\n"); 
 
     // Configurar la petición HTTP: un GET con el token en el header y el body vacío
     HTTPClient http;
-    http.begin(get_logOutServerName);
+    http.begin(logOutServerName);
+    http.addHeader("Content-Type", "application/json");
     http.addHeader("Authorization", "Bearer " + bearerToken);
 
     // Enviar la petición HTTP
-    int httpResponseCode = http.GET();
+    int httpResponseCode = http.POST(""); // Enviar un POST vacío con el token en el header
 
     // Comprobar el código de respuesta HTTP
-    if(httpResponseCode>0){
-        //SerialPC.println();
-        //SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+    if(httpResponseCode > 0)
+    {
+        SerialPC.println();
+        SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
 
         if((httpResponseCode >= 200) && (httpResponseCode < 300)){ // Petición exitosa
             // Obtener la respuesta del servidor
@@ -552,12 +391,13 @@ void logoutFromServer(String &bearerToken)
         }
         else{
             SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
+            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
         }
         
     }
     else {
-        SerialPC.print("ERROR-HTTP: ");
-        SerialPC.println(httpResponseCode);
+        SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
+        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
     }
     http.end();
 }
@@ -565,136 +405,7 @@ void logoutFromServer(String &bearerToken)
 
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Realiza una petición HTTP para obtener un token de autenticación que se 
- * utilizará para realizar operaciones de autenticación en futuras solicitudes.
- * 
- * @note Esta función utiliza las variables globales post_fetchTokenServerName y bearerToken.
- * 
- * @return true si se obtuvo el token correctamente, false en caso contrario.
- */
-/*-----------------------------------------------------------------------------*/
-/*bool fetchToken()
-{
-    bearerToken = ""; // Reiniciar token para saber si se actualiza o no
 
-    if(hayConexionWiFi()){
-        // Configurar la petición HTTP: un POST con la mac para obtener el token
-        HTTPClient http;
-        http.begin(post_fetchTokenServerName);
-        http.addHeader("Content-Type", "application/json");
-
-        // JSON con MAC del esp32
-        String macAddress = WiFi.macAddress();
-        String requestBody = "{\"mac\":\"" + macAddress + "\"}";
-
-        // Enviar la petición HTTP
-        int httpResponseCode = http.POST(requestBody);
-
-        // Comprobar el código de respuesta HTTP
-        if(httpResponseCode > 0)
-        {
-            SerialPC.println();
-            SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
-
-            if((httpResponseCode >= 200) && (httpResponseCode < 300)){ // Petición exitosa
-                // Obtener la respuesta del servidor
-                String response = http.getString(); 
-
-                // Extraer token de la respuesta recibida:
-                DynamicJsonDocument doc(1024);
-                deserializeJson(doc, response);
-                bearerToken = doc["token"].as<String>();
-                SerialPC.println("token: " + bearerToken);    
-                SerialPC.println();     
-            }
-            else{
-                SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
-            }
-        }
-        else
-        {
-            SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
-        }
-
-        // Cerrar la conexión
-        http.end();
-    }
-    // No hace falta, se hace luego si esta función devuelve false
-    //else { 
-      //  SerialPC.println(F("No tengo wifi"));
-      // SerialESP32Due.println("NO-WIFI");
-    //}
-
-    if(bearerToken == "") return false; // Hubo error y no se actualizó (devolvió) token
-    else return true;
-
-}*/
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Cierra la sesión del usuario en el servidor.
- * 
- * Esta función realiza una petición HTTP GET al servidor para cerrar la sesión del usuario.
- * Verifica si hay conexión WiFi antes de realizar la petición.
- * 
- * @note Esta función utiliza las variables globales get_logOutServerName y bearerToken.
- */
-/*-----------------------------------------------------------------------------*/
-/*void logoutFromServer() 
-{
-    if(hayConexionWiFi())
-    {
-        // Configurar la petición HTTP: un GET con el token en el header y el body vacío
-        HTTPClient http;
-        http.begin(get_logOutServerName);
-        http.addHeader("Authorization", "Bearer " + bearerToken);
-
-        // Enviar la petición HTTP
-        int httpResponseCode = http.GET();
-
-        // Comprobar el código de respuesta HTTP
-        if(httpResponseCode>0){
-            SerialPC.println();
-            SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
-
-            if((httpResponseCode >= 200) && (httpResponseCode < 300)){ // Petición exitosa
-                // Obtener la respuesta del servidor
-                String response = http.getString(); 
-
-                // Extraer mensaje de la respuesta recibida:
-                DynamicJsonDocument doc(1024);
-                deserializeJson(doc, response);
-                bool status = doc["status"];
-                String message = doc["message"];     
-
-                if(status && message == "User logged out successfully"){
-                    SerialPC.println("Cierre de sesión exitoso");
-                }
-                else {
-                    SerialPC.println("Error al cerrar la sesión");
-                }
-            }
-            else{
-                SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
-            }
-            
-        }
-        else {
-            SerialPC.print("ERROR-HTTP: ");
-            SerialPC.println(httpResponseCode);
-        }
-        http.end();
-    }
-    else { 
-        SerialPC.println(F("No tengo wifi"));
-        //SerialESP32Due.println("NO-WIFI");
-    }
-}
-*/
 
 
 #endif
