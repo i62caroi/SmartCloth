@@ -27,7 +27,7 @@
 
 void setup() {
     Serial.begin(115200);
-    while (!Serial);
+    //while (!Serial);
     delay(1000);
 
     Serial.println("\nStarting up...");
@@ -42,10 +42,15 @@ void setup() {
         Serial.println("Startup complete...");
 
         loadPicturesShowHourglass();
-        //dashboard();
+        arranque();
 
         Serial.println("Indique pantalla a mostrar: ");
     }
+
+   // setupScreen();
+    
+    //Serial.println("Indique pantalla a mostrar: ");
+    //showAccionRealizada(SAVE_EXECUTED_FULL);
 }
 
 

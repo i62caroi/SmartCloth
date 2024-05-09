@@ -132,6 +132,8 @@ bool setupSD(){
  */
 /*-----------------------------------------------------------------------------*/
 void setupScreen(){
+    Serial.println(F("Iniciando pantalla..."));
+
     pinMode(RA8876_BACKLIGHT, OUTPUT);  // Set backlight pin to OUTPUT mode
     digitalWrite(RA8876_BACKLIGHT, HIGH);  // Turn on backlight
 
@@ -255,8 +257,40 @@ void showDataToUpload(int option){
     }
     // ----------------------------------------------------------------------------------------------------
 
+
+    // ------ RELOJ (SUBIENDO DATA) ----------------------------------------------------------------------------
+    if(option == UPLOADING_DATA){ // SINCRONIZANDO...
+
+    }
+
+    // ----------------------------------------------------------------------------------------------------
+
 }
 
+
+/*
+void putNextReloj() {
+    static int currentReloj = 0;
+    currentReloj++;
+
+    switch(currentReloj) {
+        case 1:
+            putReloj1();
+            break;
+        case 2:
+            putReloj2();
+            break;
+        case 3:
+            putReloj3();
+            break;
+        // Añade más casos si tienes más imágenes
+        default:
+            currentReloj = 0;
+            putReloj1();
+            break;
+    }
+}
+*/
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -2485,7 +2519,7 @@ void con_pulsacion(int option){
 void putReloj1(){ 
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE); 
-  tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,279,PAGE1_START_ADDR,SCREEN_WIDTH,480,249,65,103); // Mostrar reloj1 (260x410) en PAGE1 -> x = 512 +/- 32 = 480     y = 300 +/- 51 = 249
+  tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,279,PAGE1_START_ADDR,SCREEN_WIDTH,480,249,65,103); // Mostrar reloj1 (65x103) en PAGE1 -> x = 512 +/- 32 = 480     y = 300 +/- 51 = 249
 }
 
 /*-----------------------------------------------------------------------------*/
