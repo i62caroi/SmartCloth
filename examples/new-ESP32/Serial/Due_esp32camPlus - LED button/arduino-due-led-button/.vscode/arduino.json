@@ -1,0 +1,5 @@
+{
+    "board": "arduino:sam:arduino_due_x_dbg",
+    "sketch": "arduino-due-led-button.ino",
+    "port": "/dev/tty.usbmodem1122201"
+}
