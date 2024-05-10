@@ -14,11 +14,15 @@
   ARDUINO BOARD CONFIGURATION:
   - Board: "ESP32 Dev Module"
   - Partition Scheme: "Huge APP (3MB No OTA/1MB SPIFFS)"
-  - Flash Mode: "DIO"
   - Upload Speed: "460800"
 
-  Con eso ya se puede subir el programa a la placa sin problemas y 
-  sin tener que presionar el botón de reset ni GIO0.
+
+        CARGAR Y EJECUTAR PROGRAMA:
+        1. Puentear IO0 a GND (3º por la derecha de la camara)
+        2. Resetear
+        3. Cargar programa
+        4. Retirar puente
+        5. Resetear
 
 */
 
@@ -69,8 +73,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "Irene";
-const char* password = "icradeba5050";
+const char* ssid = "UCOTEAM";
+const char* password = "-polonio210alfileres-";
 
 void startCameraServer();
 void setupLedFlash(int pin);
