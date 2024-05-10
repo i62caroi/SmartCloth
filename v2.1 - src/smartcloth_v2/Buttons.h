@@ -12,7 +12,7 @@
  * 
  */
 
-/* --------- CONEXIÓN PLACAS BOTONERAS CON ARDUINO DUE -----------
+/* --------- CONEXIÓN PLACAS BOTONERAS V1.0 CON ARDUINO DUE (SmartCloth v2.1) -----------
   
   BOTONERA GRANDE conectada de la siguiente forma (conexiones hacia arriba
   y de iquierda a derecha):
@@ -32,15 +32,40 @@
       | 3.3 |   33    |     31     |    29    |    27    |     25    |  -  | GND |       
       ----------------------------------------------------------------------------
 
+-----------------------------------------------------------------------------------
 
-    BOTON BARCODE conectada de la siguiente forma (indistintamente):
+
+/* --------- CONEXIÓN PLACAS BOTONERAS V2.0 CON ARDUINO DUE (SmartCloth v2.2) -----------
+  
+  BOTONERA GRANDE conectada de la siguiente forma (conexiones hacia derecha
+  y de arriba a abajo):
+      ----------------------------------------------------------------
+      | F4 | F3 | F2 | F1 | C5 | C4 | C3 | C2 | C1 | INT | VCC | GND |
+      ----------------------------------------------------------------
+      | 47 | 46 | 45 | 44 | 43 | 42 | 41 | 40 | 39 | 38  | 3.3 | GND |       
+      ----------------------------------------------------------------
+
+
+  BOTONERA MAIN conectada de la siguiente forma (conexiones hacia izquierda
+  y de arriba a abajo):
+      -----------------------------------------------------------------------
+      |     B1     |    B2   |    B3    |    B4    |     B5    |  VCC | GND |
+      | (cocinado) | (crudo) | (añadir) | (borrar) | (guardar) |      |     |
+      -----------------------------------------------------------------------
+      |     26     |   27    |    28    |    29    |     30    |  3.3 | GND |       
+      -----------------------------------------------------------------------
+
+
+    BOTON BARCODE conectado de la siguiente forma (indistintamente):
         -----------------
         | GND | Barcode |
         -----------------
         | GND |   53    |       
         -----------------
+    ¡IMPORTANTE! El GND junto al D53 en el screw shield no está conectado a nada. Usar alguno
+    de los que están junto a 5V o 3.3V.
 
-------------------------------------------------------------------
+-----------------------------------------------------------------------------------
 */
 
 
@@ -65,17 +90,6 @@ const byte intPinCrudo        = 27;
 const byte intPinAddPlato     = 28; 
 const byte intPinGuardar      = 29;  
 const byte intPinDeletePlato  = 30;  
-/*
-Botonera B	Arduino Due
-VCC	3.3 V
-B1 (cocinado)	pin 26 (digital)
-B2 (crudo)	pin 27 (digital)
-B3 (añadir plato)	pin 28 (digital)
-B4 (guardar comida)	pin 29 (digital)
-B5 (eliminar plato)	pin 30 (digital)
--	-
-GND	GND
-*/ 
 // ------------------------------------------------------
 
 
@@ -209,7 +223,7 @@ void checkGrandeButton(){
         buttonGrande = buttons[position.row][position.col];
         
         #if defined(SM_DEBUG)
-        SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
+            SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
         #endif 
         
         /* ----- EVENTO ------- */ 
@@ -287,6 +301,7 @@ void checkAllButtons(){
         // si el alimento está crudo o cocinado.
         //
 
+        //if(mainButtonInterruptOccurred())
         if(buttonMain != 0){
             switch (buttonMain) {
                 case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // Crudo -> opción predeterminada
@@ -305,12 +320,13 @@ void checkAllButtons(){
 
 
         /* ---------------    TECLADO GRANDE   ----------------- */
+        //if(grandeButtonInterruptOccurred())
         if (pulsandoGrande){ // Se está pulsando una tecla
             ButtonPosition position = readButtonsGrande(); // Posición del botón pulsado
             buttonGrande = buttons[position.row][position.col];
             
             #if defined(SM_DEBUG)
-            SerialPC.print(F("\nGrupo: ")); SerialPC.println(buttonGrande); 
+                SerialPC.print(F("\nGrupo: ")); SerialPC.println(buttonGrande); 
             #endif 
             
             /* ----- EVENTO ------- */ 
@@ -335,6 +351,7 @@ void checkAllButtons(){
 
 
         /* ---------------    BARCODE   -------------------------- */
+        //if(barcodeButtonInterruptOccurred()
         if (pulsandoBarcode){ // Se está pulsando una tecla
             /*eventoGrande = BARCODE;
             addEventToBuffer(eventoGrande);

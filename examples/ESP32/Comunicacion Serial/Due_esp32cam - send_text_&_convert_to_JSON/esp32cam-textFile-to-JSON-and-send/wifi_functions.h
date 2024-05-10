@@ -50,7 +50,8 @@ const char* post_testServerName = "http://smartcloth.site/post-esp32-data-json.p
 // URLs del servidor oficial
 const char* post_fetchTokenServerName = "https://smartclothweb.org/api/mac";
 const char* post_ComidaServerName = "https://smartclothweb.org/api/comidas";
-const char* get_logOutServerName = "https://smartclothweb.org/api/logout";
+//const char* get_logOutServerName = "https://smartclothweb.org/api/logout";
+const char* get_logOutServerName = "https://smartclothweb.org/api/logout_mac";
 
 
 // Token de autenticación pedido al servidor para poder subir información

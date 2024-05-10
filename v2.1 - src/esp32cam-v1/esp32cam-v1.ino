@@ -7,6 +7,8 @@
     Este programa recibe el contenido del fichero TXT por Serial desde el Due, lo convierte
     en JSON y lo envía a la base de datos para guardar su información.
   
+    **********************************************************************
+
       --------------------------------------------
       |    ESP32-CAM   |    FTDI (Serial al PC)  |
       --------------------------------------------
@@ -23,6 +25,15 @@
       |      GND       |        GND              | 
       --------------------------------------------
 
+      CARGAR Y EJECUTAR PROGRAMA:
+        1. Puentear IO0 a GND (3º por la derecha de la camara)
+        2. Resetear
+        3. Cargar programa
+        4. Retirar puente
+        5. Resetear
+
+    **********************************************************************
+
       -------------------------------------------------
       |    ESP32-CAM PLUS   |  Arduino Due (Serial1)  |
       -------------------------------------------------
@@ -32,13 +43,28 @@
       |      GND            |        GND              | 
       -------------------------------------------------
 
-      CARGAR Y EJECUTAR PROGRAMA:
-        1. Puentear IO0 a GND (3º por la derecha de la camara)
-        2. Resetear
-        3. Cargar programa
-        4. Retirar puente
-        5. Resetear
+      ------------------------------------------------------------
+      |    ESP32-CAM PLUS              |    Barcode Reader       |
+      ------------------------------------------------------------
+      |  IO19 (Tx2-Software) (4º izq)  |  cable azul (Rx)        |    
+      |  IO21 (Rx2-Software) (1º izq)  |  cable naranja (Tx)     |
+      |     3V3                        |        3V3              |
+      |     GND                        |        GND              | 
+      ------------------------------------------------------------
 
+      ¡¡¡¡¡ IMPORTANTE !!!!!
+      USAR ARDUINO IDE. EN VSCODE NO FUNCIONA LA TERMINAL.
+      
+      ARDUINO BOARD CONFIGURATION:
+      - Board: "ESP32 Dev Module"
+      - Partition Scheme: "Huge APP (3MB No OTA/1MB SPIFFS)"
+      - Flash Mode: "DIO"
+      - Upload Speed: "460800"
+
+      Con eso ya se puede subir el programa a la placa sin problemas y 
+      sin tener que presionar el botón de reset ni GIO0.
+
+    **********************************************************************
 
     -----------------------------------------------------------------------------------
     1. Recibe "CHECK-WIFI" del Due
@@ -49,7 +75,8 @@
     3. Si hay conexión, recibe "SAVE" del Due indicando a va a enviar data del TXT
     4. Responde al Due con "WAITING-FOR-DATA", quedando a la espera de ese data
     5. Cada línea recibida la procesa y modifica el JSON según su contenido
-    6. Cuando reciba "FIN-TRANSMISION", cierra el JSON y lo envía al servidor
+    6. Cuando recibe "FIN-COMIDA", cierra el JSON y lo envía al servidor.
+    7. Repite pasos 5 y 6 hasta recibir "FIN-TRANSMISION"
     -----------------------------------------------------------------------------------
 
   -------- MENSAJES ARDUINO -> ESP32 --------------
@@ -80,7 +107,7 @@
     3. Esperando datos a subir:
         "WAITING-FOR-DATA"
 
-    4. Guardado correctamente:
+    4. JSON guardado correctamente:
         "SAVED-OK"
 
     5. Error en el guardado (petición HTTP POST):
@@ -95,12 +122,16 @@
 
 
 
+// ESP32-CAM
+//#define RXD1 14
+//#define TXD1 15
 
-#define RXD1 14
-#define TXD1 15
+// ESP32-CAM PLUS
+#define RXD1 16
+#define TXD1 17
 
 
-#include "functions.h" // ya incluye "wifi_functions.h"
+#include "json_functions.h" // ya incluye "wifi_functions.h"
 #include "debug.h" // SM_DEBUG --> SerialPC
 
 
@@ -108,9 +139,9 @@
 void setup() {
     // --- Serial esp32-PC ---
     #if defined(SM_DEBUG)
-    SerialPC.begin(115200);
-    while (!SerialPC);
-    delay(100);
+        SerialPC.begin(115200);
+        while (!SerialPC);
+        delay(100);
     #endif
     
     // --- Serial esp32-Due ---
@@ -139,20 +170,20 @@ void loop() {
         msgFromDUE.trim();
 
         #if defined(SM_DEBUG)
-        SerialPC.println("\nMensaje recibido: " + msgFromDUE); 
+            SerialPC.println("\nMensaje recibido: " + msgFromDUE); 
         #endif
 
         // ------ Comprobar Wifi y avisar al Due ---------
         if (msgFromDUE == "CHECK-WIFI"){
             if(hayConexionWiFi()){
                 #if defined(SM_DEBUG)
-                SerialPC.println(F("\nTengo Wifi"));
+                    SerialPC.println(F("\nTengo Wifi"));
                 #endif
                 SerialESP32Due.println("WIFI-OK");
             }
             else { 
                 #if defined(SM_DEBUG)
-                SerialPC.println(F("\nNo tengo wifi"));
+                    SerialPC.println(F("\nNo tengo wifi"));
                 #endif
                 SerialESP32Due.println("NO-WIFI");
             }
@@ -161,17 +192,16 @@ void loop() {
         // ------ Procesar líneas y generar JSON ---------
         else if (msgFromDUE == "SAVE"){
             #if defined(SM_DEBUG)
-            SerialPC.println(F("\nEsperando data..."));
+                SerialPC.println(F("\nEsperando data..."));
             #endif
             SerialESP32Due.println("WAITING-FOR-DATA");
-            processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION,
-                           // entonces cierra el JSON y lo envía
+            processJSON_OnePerMeal(); // Comida a comida, procesa un JSON y lo envía
         }
         // -----------------------------------------------
         else{ 
             // Otras (p.ej. BARCODE)
             #if defined(SM_DEBUG)
-            SerialPC.println(F("Comando desconocido"));
+                SerialPC.println(F("Comando desconocido"));
             #endif
         }
     }

@@ -972,7 +972,7 @@ bool RA8876::init(void)
     if (!_calcClocks())
     {
       #if defined(SM_DEBUG)
-      SerialPC.println("_calcClocks failed");
+        SerialPC.println("_calcClocks failed");
       #endif
       return false;
     }
@@ -988,7 +988,7 @@ bool RA8876::init(void)
     if (!_initPLL())
     {
       #if defined(SM_DEBUG)
-      SerialPC.println("_initPLL failed");
+        SerialPC.println("_initPLL failed");
       #endif
       return false;
     }
@@ -996,7 +996,7 @@ bool RA8876::init(void)
     if (!_initMemory(_sdramInfo))
     {
       #if defined(SM_DEBUG)
-      SerialPC.println("_initMemory failed");
+        SerialPC.println("_initMemory failed");
       #endif
       return false;
     }
@@ -1004,7 +1004,7 @@ bool RA8876::init(void)
     if (!_initDisplay())
     {
       #if defined(SM_DEBUG)
-      SerialPC.println("_initDisplay failed");
+        SerialPC.println("_initDisplay failed");
       #endif
       return false;
     }
@@ -1879,7 +1879,7 @@ void RA8876::sdCardDraw16bppBIN8bits(uint16_t x,uint16_t y,uint16_t width, uint1
     }   
     else {
       #if defined(SM_DEBUG)
-      SerialPC.println(F("Fichero no encontrado"));
+        SerialPC.println(F("Fichero no encontrado"));
       #endif
     }
     setCanvasWindow(0,0,_width,_height);
@@ -1926,7 +1926,7 @@ void RA8876::sdCardDraw16bppBIN64bits(uint16_t x,uint16_t y,uint16_t width, uint
     }   
     else {
       #if defined(SM_DEBUG)
-      SerialPC.println(F("Fichero no encontrado"));
+        SerialPC.println(F("Fichero no encontrado"));
       #endif
     }
     setCanvasWindow(0,0,_width,_height);
@@ -1977,7 +1977,7 @@ void RA8876::sdCardDraw16bppBIN256bits(uint16_t x,uint16_t y,uint16_t width, uin
     }   
     else {
       #if defined(SM_DEBUG)
-      SerialPC.println(F("Fichero no encontrado"));
+        SerialPC.println(F("Fichero no encontrado"));
       #endif
     }
     setCanvasWindow(0,0,_width,_height);

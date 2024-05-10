@@ -343,7 +343,7 @@ void setupScreen(){
 
     if (!tft.init()){
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Could not initialize RA8876"));
+            SerialPC.println(F("Could not initialize RA8876"));
         #endif
         while(1);
     }
@@ -354,7 +354,7 @@ void setupScreen(){
     //SCREEN_WIDTH = tft.getWidth(); // X
     //SCREEN_HEIGHT = tft.getHeight(); // Y
     #if defined(SM_DEBUG)
-    SerialPC.println(F("Screen initialized"));
+        SerialPC.println(F("Screen initialized"));
     #endif
     delay(200);
 }

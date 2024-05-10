@@ -88,7 +88,7 @@ void setupScale(){
     scale.tare(1);  
     //scale.get_units(10);
     #if defined(SM_DEBUG)
-    SerialPC.println(F("Scale initialized"));
+        SerialPC.println(F("Scale initialized"));
     #endif
 }
 
@@ -157,7 +157,7 @@ void checkBascula(){
 
         if(tarado){
             #if defined(SM_DEBUG)
-            SerialPC.print(F("\nTARANDO"));
+                SerialPC.print(F("\nTARANDO"));
             #endif
             eventoBascula = TARAR;
         }
@@ -178,7 +178,7 @@ void checkBascula(){
 
                 if(lastWeight < newWeight){ // Incremento de peso   
                     #if defined(SM_DEBUG)              
-                    SerialPC.print(F("\nINCREMENTO"));
+                        SerialPC.print(F("\nINCREMENTO"));
                     #endif
                     eventoBascula = INCREMENTO;
                 }
@@ -186,14 +186,14 @@ void checkBascula(){
                     if(abs(abs(newWeight) - pesoARetirar) < 5.0){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
                         // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
                         #if defined(SM_DEBUG)
-                        SerialPC.print(F("\nLIBERADA"));
+                            SerialPC.print(F("\nLIBERADA"));
                         #endif
                         eventoBascula = LIBERAR;
                         flagRecipienteRetirado = true; // Se ha retirado el plato completo --> pantalla recipienteRetirado()
                     }
                     else{ // Se están retirando elementos de la báscula pero aún no se ha liberado
                         #if defined(SM_DEBUG)
-                        SerialPC.print(F("\nDECREMENTO"));
+                            SerialPC.print(F("\nDECREMENTO"));
                         #endif
                         eventoBascula = DECREMENTO;
                     }
@@ -201,14 +201,14 @@ void checkBascula(){
 
 
                 #if defined(SM_DEBUG)
-                SerialPC.println(F("\n--------------------------------------"));
-                SerialPC.print(F("\nPeso anterior: ")); SerialPC.println(lastWeight); 
-                SerialPC.print(F("Peso actual: ")); SerialPC.println(newWeight); 
-                SerialPC.print(F("Peso Bascula: ")); SerialPC.println(pesoBascula);
-                SerialPC.print(F("Peso a retirar: ")); SerialPC.println(pesoARetirar);
-                SerialPC.print(F("Peso recipiente: ")); SerialPC.println(pesoRecipiente);
-                SerialPC.print(F("Peso plato: ")); SerialPC.println(pesoPlato);
-                SerialPC.println(F("\n--------------------------------------"));
+                    SerialPC.println(F("\n--------------------------------------"));
+                    SerialPC.print(F("\nPeso anterior: ")); SerialPC.println(lastWeight); 
+                    SerialPC.print(F("Peso actual: ")); SerialPC.println(newWeight); 
+                    SerialPC.print(F("Peso Bascula: ")); SerialPC.println(pesoBascula);
+                    SerialPC.print(F("Peso a retirar: ")); SerialPC.println(pesoARetirar);
+                    SerialPC.print(F("Peso recipiente: ")); SerialPC.println(pesoRecipiente);
+                    SerialPC.print(F("Peso plato: ")); SerialPC.println(pesoPlato);
+                    SerialPC.println(F("\n--------------------------------------"));
                 #endif
 
                 addEventToBuffer(eventoBascula);

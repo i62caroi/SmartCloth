@@ -36,6 +36,20 @@
       --------------------------------------------
 
 -----------------------------------------------------
+-----------------------------------------------------
+
+ ESP32-CAM PLUS conectado por Serial (UART) de la siguiente forma:  
+
+      ------------------------------------------------------
+      |    ESP32-CAM PLUS        |  Arduino Due (Serial1)  |
+      ------------------------------------------------------
+      |    IO17 (Tx1) (4º izq)   |      pin 19 (Rx1)       |    
+      |    IO16 (Rx1) (5º izq)   |      pin 18 (Tx1)       |
+      |      3V3                 |        3V3              |
+      |      GND                 |        GND              | 
+      ------------------------------------------------------
+
+-----------------------------------------------------
 
 
   -------- MENSAJES ARDUINO -> ESP32 --------------
@@ -44,9 +58,6 @@
         "CHECK-WIFI"
 
     2. Guardar info en base de datos:
-        "SAVE:&carb=X&carb_R=X&lip=X&lip_R=X&prot=X&prot_R=X&kcal=X&peso=X"
-        Esta opción ya está lista para la petición POST
-
         2.1. Indicar guardado:
         "SAVE"
         2.2. Mandar datos a guardar:
@@ -74,7 +85,7 @@
         "ERROR-HTTP:<codigo_error>"
 
     6. Código de barras leído (se consulta base de datos de alimentos y se obtienen sus valores de carb, lip, prot y kcal por gramo):
-        "BARCODE:<codigo_barras_leido>:<carb>;<prot>;<kcal>"
+        "BARCODE:<codigo_barras_leido>:<carb_g>;<lip_g>;<prot_g>;<kcal_g>"
 
 
 */
@@ -316,7 +327,7 @@ bool prepareSaving()
 {
     // ---- Indicar envío de datos con "SAVE" ------------------------------------
     #if defined(SM_DEBUG)
-    SerialPC.println(F("\nIndicando que se quiere guardar..."));
+        SerialPC.println(F("\nIndicando que se quiere guardar..."));
     #endif
     SerialDueESP32.println(F("SAVE")); // Indicar al ESP32 que se le va a enviar información
     // ---------------------------------------------------------------------------
@@ -325,7 +336,7 @@ bool prepareSaving()
     String response = waitResponseFromESP32(FASE_1_WAITING); // En la fase 1, sale del while si recibe WAITING-FOR-DATA
     if(response == "WAITING-FOR-DATA"){ // El ESP32 queda a la espera de la info
         #if defined SM_DEBUG
-        SerialPC.println(F("El ESP32 está esperando la info..."));
+            SerialPC.println(F("El ESP32 está esperando la info..."));
         #endif
         return true;
     }
@@ -366,8 +377,8 @@ byte handleResponseFromESP32AfterUpload(byte option)
         if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(UPLOADED_DATA); // State_UPLOAD_DATA
 
         #if defined(SM_DEBUG)
-        SerialPC.println(F("JSON guardado y borrando fichero TXT..."));
-        SerialPC.println(F("\nPaso a Init tras subir la info y borrar TXT..."));
+            SerialPC.println(F("JSON guardado y borrando fichero TXT..."));
+            SerialPC.println(F("\nPaso a Init tras subir la info y borrar TXT..."));
         #endif
 
         return SAVE_EXECUTED_FULL;
@@ -378,15 +389,15 @@ byte handleResponseFromESP32AfterUpload(byte option)
         else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // STATE_saved --> La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
                                                         // Si se ha intentado subir la lista de la comida pero ha habido error.
             #if defined SM_DEBUG
-            SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
+                SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
             #endif
 
             saveListInTXT(); // Copia lista en TXT y la limpia
         }
 
         #if defined(SM_DEBUG)
-        SerialPC.print(F("Error al subir JSON: ")); SerialPC.println(msgFromESP32);
-        SerialPC.println(F("\nPaso a Init tras ERROR al subir la info..."));
+            SerialPC.print(F("Error al subir JSON: ")); SerialPC.println(msgFromESP32);
+            SerialPC.println(F("\nPaso a Init tras ERROR al subir la info..."));
         #endif
 
         return SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP;
@@ -397,15 +408,15 @@ byte handleResponseFromESP32AfterUpload(byte option)
         else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // STATE_saved --> La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
                                                         // Si se ha intentado enviar la lista de la comida pero no hay WiFi.
             #if defined SM_DEBUG
-            SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
+                SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
             #endif
 
             saveListInTXT(); // Copia lista en TXT y la limpia
         }
 
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Se ha cortado la conexión a Internet..."));
-        SerialPC.println(F("\nPaso a Init tras fallo de conexión..."));
+            SerialPC.println(F("Se ha cortado la conexión a Internet..."));
+            SerialPC.println(F("\nPaso a Init tras fallo de conexión..."));
         #endif        
 
         return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;
@@ -416,14 +427,14 @@ byte handleResponseFromESP32AfterUpload(byte option)
         else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // STATE_saved --> La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
                                                         // Si se ha intentado enviar la lista de la comida, pero ha habido error.
             #if defined SM_DEBUG
-            SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
+                SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
             #endif
 
             saveListInTXT(); // Copia lista en TXT y la limpia
         }
 
         #if defined(SM_DEBUG)
-        SerialPC.println(F("No se ha subido por TIMEOUT"));
+            SerialPC.println(F("No se ha subido por TIMEOUT"));
         #endif        
 
         return SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT;
@@ -431,7 +442,7 @@ byte handleResponseFromESP32AfterUpload(byte option)
     else
     { 
         #if defined(SM_DEBUG)
-        SerialPC.println(F("No se ha subido por ERROR DESCONOCIDO"));
+            SerialPC.println(F("No se ha subido por ERROR DESCONOCIDO"));
         #endif   
 
         return SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR;

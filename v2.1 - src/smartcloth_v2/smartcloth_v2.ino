@@ -52,10 +52,10 @@ bool falloCriticoSD = false;
 void setup() {
     // ------ COMUNICACIÓN SERIAL --------------
     #if defined(SM_DEBUG)
-    // Inicializar comunicación con PC (Serial)
-    SerialPC.begin(115200); //115200
-    while (!SerialPC); // Eliminar en programa final, cuando el PC no esté conectado
-    delay(100);
+        // Inicializar comunicación con PC (Serial)
+        SerialPC.begin(115200); //115200
+        while (!SerialPC); // Eliminar en programa final, cuando el PC no esté conectado
+        delay(100);
     #endif // SM_DEBUG
 
     // Inicializar comunicación con ESP32-CAM (Serial1)
@@ -93,10 +93,10 @@ void setup() {
     // ------ FICHERO TXT ----------------------
     bool dataToUpload;
     if(!falloCriticoSD){ // Si falló la SD, no se puede chequear el fichero txt
-        dataToUpload = !isFileEsp32Empty(); // Si el fichero no está vacío, hay data para subir
+        dataToUpload = !isFileTXTEmpty(); // Si el fichero no está vacío, hay data para subir
         if(dataToUpload) {
             #if defined(SM_DEBUG)
-            SerialPC.println(F("Hay data para subir\n"));
+                SerialPC.println(F("Hay data para subir\n"));
             #endif //SM_DEBUG
         }
     }
@@ -226,9 +226,12 @@ void loop() {
                             default: break;
                         }
                     }
-                    SerialPC.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      SerialPC.println();
-                    SerialPC.print(F("Nuevo estado: "));           printStateName(state_new);       SerialPC.println();
-                    SerialPC.print(F("Ultimo estado valido: "));   printStateName(lastValidState);  SerialPC.println();
+                    #if defined SM_DEBUG
+                        SerialPC.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      SerialPC.println();
+                        SerialPC.print(F("Nuevo estado: "));           printStateName(state_new);       SerialPC.println();
+                        SerialPC.print(F("Ultimo estado valido: "));   printStateName(lastValidState);  SerialPC.println();
+                        SerialPC.println("--------------------------------------------------");
+                    #endif
                 }
                 else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
                         // Se hace esta comprobación para evitar seguir marcando error durante los 3 segundos que no se cumple

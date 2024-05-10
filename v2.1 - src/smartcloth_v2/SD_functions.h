@@ -137,13 +137,13 @@ bool setupSDcard()
 {
     if(!SD.begin(SD_CARD_SCS)){
         #if defined(SM_DEBUG)
-        SerialPC.println(F("SD card failure!"));
+            SerialPC.println(F("SD card failure!"));
         #endif
         return false;
     }
     else {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("SD card initialized"));
+            SerialPC.println(F("SD card initialized"));
         #endif
     }
 
@@ -193,7 +193,7 @@ byte saveComida(){
 void writeHeaderFileCSV() 
 {
     #if defined(SM_DEBUG)
-    SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileCSV); SerialPC.println(F(" ...\n"));
+        SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileCSV); SerialPC.println(F(" ...\n"));
     #endif
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
@@ -208,7 +208,7 @@ void writeHeaderFileCSV()
     }
     else{
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Error abriendo archivo CSV!"));
+            SerialPC.println(F("Error abriendo archivo CSV!"));
         #endif
     }
 }
@@ -257,7 +257,7 @@ void getAcumuladoHoyFromSD(){
                 
                 if(msg){
                     #if defined SM_DEBUG
-                    SerialPC.println(F("Obteniendo Acumulado Hoy..."));
+                        SerialPC.println(F("Obteniendo Acumulado Hoy..."));
                     #endif
                     msg = false; // Solo imprimir una vez y si hay algo que sumar
                 }
@@ -300,7 +300,7 @@ void getAcumuladoHoyFromSD(){
     }
     else{
         #if defined SM_DEBUG
-        SerialPC.println(F("Error abriendo archivo CSV!"));
+            SerialPC.println(F("Error abriendo archivo CSV!"));
         #endif
     }
 
@@ -333,12 +333,12 @@ void saveComidaInCSV()
         myFile.println(dataString);
         myFile.close(); 
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Comida guardada correctamente en el CSV"));
+            SerialPC.println(F("Comida guardada correctamente en el CSV"));
         #endif
     }
     else{
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Error abriendo archivo CSV!"));
+            SerialPC.println(F("Error abriendo archivo CSV!"));
         #endif
     }
 }
@@ -359,18 +359,18 @@ bool deleteFileCSV(){
 
     // -------- BORRAR FICHERO CSV --------------------------
     #if defined(SM_DEBUG)
-    SerialPC.println(F("Borrando fichero csv..."));
+        SerialPC.println(F("Borrando fichero csv..."));
     #endif
     SD.remove(fileCSV);
 
     if (!SD.exists(fileCSV)) {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Fichero CSV borrado"));
+            SerialPC.println(F("Fichero CSV borrado"));
         #endif
     }
     else  {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Error borrando fichero CSV!"));
+            SerialPC.println(F("Error borrando fichero CSV!"));
         #endif
         return false;
     }
@@ -380,7 +380,7 @@ bool deleteFileCSV(){
     // -------- CREAR NUEVO FICHERO CSV ---------------------
     // Creo uno nuevo con el mismo nombre (writeHeader())
     #if defined(SM_DEBUG)
-    SerialPC.println(F("\nCreando fichero de nuevo.."));
+        SerialPC.println(F("\nCreando fichero de nuevo.."));
     #endif
     writeHeaderFileCSV();      // Crear fichero de nuevo e incluir el header
     getAcumuladoHoyFromSD();  // Actualizar acumulado (ahora debe ser 0)
@@ -430,7 +430,7 @@ byte saveComidaInDatabase_or_TXT(){
                                 // Esta función ya borra el fichero TXT si se ha subido correctamente
 
             #if defined SM_DEBUG
-            SerialPC.println("--------------------------------------------------");
+                SerialPC.println("--------------------------------------------------");
             #endif
             
             return typeOfSavingDone; // Puede ser SAVE_EXECUTED_FULL, SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP, SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI, 
@@ -438,14 +438,14 @@ byte saveComidaInDatabase_or_TXT(){
         }
         else{ // El ESP32 no respondió en 3 segundos o falló el paso de información. Actuamos como si no hubiera WiFi
             #if defined SM_DEBUG
-            SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+                SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
             #endif
 
             // Copiar lista en TXT y limpiarla
             saveListInTXT();
 
             #if defined SM_DEBUG
-            SerialPC.println("--------------------------------------------------");
+                SerialPC.println("--------------------------------------------------");
             #endif
 
             //return SAVE_EXECUTED_ONLY_LOCAL; // Solo local porque falló el envío de la lista
@@ -456,14 +456,14 @@ byte saveComidaInDatabase_or_TXT(){
     }
     else{ // Si no hay WiFi o si TIMEOUT, se guarda la lista en el TXT y se limpia la lista para la próxima comida
         #if defined SM_DEBUG
-        SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+            SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
         #endif
 
         // Copiar lista en TXT y limpiarla
         saveListInTXT(); 
 
         #if defined SM_DEBUG
-        SerialPC.println("--------------------------------------------------");
+            SerialPC.println("--------------------------------------------------");
         #endif
 
         return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;
@@ -522,7 +522,7 @@ void saveListInTXT()
 /*-----------------------------------------------------------------------------*/
 bool isFileTXTEmpty() {
     #if defined(SM_DEBUG)
-    SerialPC.println(F("\nComprobando contenido del fichero TXT del ESP32..."));
+        SerialPC.println(F("\nComprobando contenido del fichero TXT del ESP32..."));
     #endif
     File myFile = SD.open(fileESP32, FILE_READ);
     if (myFile && myFile.size() > 0) { // Si el archivo se puede abrir y su tamaño es mayor que 0, tiene contenido (false)
@@ -531,11 +531,9 @@ bool isFileTXTEmpty() {
     } 
     else { // Si no se puede abrir el archivo o su tamaño es 0, está vacío (true)
         #if defined(SM_DEBUG)
-        if (!myFile) {
-            #if defined SM_DEBUG
-            SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacio\n"));
-            #endif
-        }
+            if (!myFile) {
+                SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacio\n"));
+            }
         #endif
         if (myFile) {
             myFile.close();
@@ -576,7 +574,7 @@ void readFileTXT(){
 /*-----------------------------------------------------------------------------*/
 bool sendTXTFileToESP32(){
     #if defined SM_DEBUG
-    SerialPC.println(F("Enviando TXT al esp32..."));
+        SerialPC.println(F("Enviando TXT al esp32..."));
     #endif
 
     File dataFile = SD.open(fileESP32);
@@ -599,14 +597,14 @@ bool sendTXTFileToESP32(){
         if (msgFromESP32 == "JSON-OK") // Info recibida y JSON formado correctamente
         {
             #if defined(SM_DEBUG)
-            SerialPC.println(F("\nFichero completo enviado"));
+                SerialPC.println(F("\nFichero completo enviado"));
             #endif
 
             return true;
         } 
         else{ // TIMEOUT
             #if defined(SM_DEBUG)
-            SerialPC.println(F("\nProblema al crear JSON"));
+                SerialPC.println(F("\nProblema al crear JSON"));
             #endif
 
             return false;
@@ -614,7 +612,7 @@ bool sendTXTFileToESP32(){
     }
     else {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nError al abrir el archivo data-ESP.txt"));
+            SerialPC.println(F("\nError al abrir el archivo data-ESP.txt"));
         #endif
 
         return false;
@@ -637,19 +635,19 @@ bool deleteFileTXT(){
 
     // -------- BORRAR FICHERO ESP32 ------------------------
     #if defined(SM_DEBUG)
-    SerialPC.println(F("Borrando fichero TXT (ESP32)..."));
+        SerialPC.println(F("Borrando fichero TXT (ESP32)..."));
     #endif
     SD.remove(fileESP32);
 
     if (!SD.exists(fileESP32)) {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Fichero TXT (ESP32) borrado"));
+            SerialPC.println(F("Fichero TXT (ESP32) borrado"));
         #endif
         return true;
     }
     else  {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Error borrando fichero ESP32!"));
+            SerialPC.println(F("Error borrando fichero ESP32!"));
         #endif
         return false;
     }

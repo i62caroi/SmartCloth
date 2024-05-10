@@ -128,7 +128,7 @@ class Lista
         bool sendListToESP32(); ///< Envía la lista elemento a elemento al ESP32 por Serial
 
         #if defined(SM_DEBUG)
-        void leerLista(); ///< Lee la lista.
+            void leerLista(); ///< Lee la lista.
         #endif //SM_DEBUG
 
 };
@@ -149,7 +149,7 @@ void Lista::iniciarComida()
 
     if (isListEmpty()) {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nIniciando comida..."));
+            SerialPC.println(F("\nIniciando comida..."));
         #endif 
         
         // Añadir cadena a la lista
@@ -157,7 +157,7 @@ void Lista::iniciarComida()
     }
     else{
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nLa COMIDA ya ha comenzado"));
+            SerialPC.println(F("\nLa COMIDA ya ha comenzado"));
         #endif 
     }
 }
@@ -174,7 +174,7 @@ void Lista::iniciarPlato()
     // Comprobar si el último elemento no es "INICIO-PLATO"   
     if (getLastItem() != "INICIO-PLATO") {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nIniciando plato..."));
+            SerialPC.println(F("\nIniciando plato..."));
         #endif
         
         // Añadir cadena a la lista
@@ -182,7 +182,7 @@ void Lista::iniciarPlato()
     }
     else {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nEl PLATO ya ha comenzado"));
+            SerialPC.println(F("\nEl PLATO ya ha comenzado"));
         #endif
     }
 }
@@ -209,7 +209,7 @@ void Lista::iniciarPlato()
 void Lista::addAlimento(byte grupo, float peso) 
 {
     #if defined(SM_DEBUG)
-    SerialPC.println(F("Guardando alimento y peso en lista...\n"));
+        SerialPC.println(F("Guardando alimento y peso en lista...\n"));
     #endif
     
     // Obtener cadena "ALIMENTO,<grupo>,<peso>"
@@ -262,7 +262,7 @@ void Lista::finishComida()
     // porque si lo estuviera, no se llegaría a hacer el guardado.
 
     #if defined(SM_DEBUG)
-    SerialPC.println(F("\nFinalizando comida en lista...\n"));
+        SerialPC.println(F("\nFinalizando comida en lista...\n"));
     #endif 
 
     char *today = rtc.getDateStr();
@@ -286,7 +286,7 @@ void Lista::finishComida()
 bool Lista::sendListToESP32() 
 {
     #if defined SM_DEBUG
-    SerialPC.println(F("Enviando lista al esp32 para subir la info"));
+        SerialPC.println(F("Enviando lista al esp32 para subir la info"));
     #endif
 
     for (byte i = 0; i < getListSize(); i++) {
@@ -300,8 +300,8 @@ bool Lista::sendListToESP32()
     if (msgFromESP32 == "JSON-OK") // Info recibida y JSON formado correctamente
     {
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nLista completa enviada"));
-        SerialPC.println(F("Limpiando la lista..."));
+            SerialPC.println(F("\nLista completa enviada"));
+            SerialPC.println(F("Limpiando la lista..."));
         #endif
 
         // Limpiar la lista para la próxima comida
@@ -311,7 +311,7 @@ bool Lista::sendListToESP32()
     } 
     else{ // TIMEOUT
         #if defined(SM_DEBUG)
-        SerialPC.println(F("\nProblema al crear JSON de la lista"));
+            SerialPC.println(F("\nProblema al crear JSON de la lista"));
         #endif
 
         return false;

@@ -9,7 +9,7 @@
 #ifndef WIFI_FUNCTIONS_H
 #define WIFI_FUNCTIONS_H
 
-#include <WiFi.h>
+//#include <WiFi.h>
 #include <HTTPClient.h>
 #include <ArduinoJson.h> // Para serializar el JSON y enviarlo
 
