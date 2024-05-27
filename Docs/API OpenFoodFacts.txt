@@ -1,0 +1,33 @@
+
+ [27/05/24 12:37] El entorno de staging de OpenFoodFacts (https://world.openfoodfacts.net) está fallando, devuelve un error 500.
+ 	En la documentación (https://openfoodfacts.github.io/openfoodfacts-server/api/) dicen que usemos el staging si no
+ 	estamos en producción, pero como no funciona, vamos a usar el entorno de producción (https://world.openfoodfacts.org).
+ 
+
+
+
+Staging environment URL: https://world.openfoodfacts.net
+	NO FUNCIONA!! (27/05/24 12:37)
+
+Product environmet URL: https://world.openfoodfacts.org
+
+
+
+
+Producto que existe (Nutella): 3017624010701
+
+https://world.openfoodfacts.org/api/v2/product/3017624010701?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g
+
+
+
+
+Producto que existe (agua) pero sin macronutrientes: 8429359000004
+
+https://world.openfoodfacts.org/api/v2/product/8429359000004?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g
+
+
+
+
+Producto que no existe: 89746835293048
+
+https://world.openfoodfacts.org/api/v2/product/89746835293048?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g
