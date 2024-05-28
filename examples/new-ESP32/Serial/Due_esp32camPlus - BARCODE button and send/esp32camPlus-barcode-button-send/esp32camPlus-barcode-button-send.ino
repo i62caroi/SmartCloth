@@ -137,6 +137,12 @@ void loop()
             // ------- CAM --> ESP32 -----------------------------
             String barcode = "-"; // Cadena inicialmente "vacía"
             unsigned long startMillis = millis();
+
+            // A veces, al leer el Serial se lee el código de barras anterior. Probé a limpiar el buffer,
+            // pero podría acabar eliminando el código de barras que se está leyendo ahora. Por eso, se
+            // deja en manos del usuario que si se indica en pantalla un producto distinto al escaneado,
+            // se vuelva a escanear.
+
             while((barcode == "-") && (millis() - startMillis < 5000)) { // Si aún no se ha leído y no han pasado 5 segundos
                 if (SerialESP32Cam.available() > 0) { // La cámara leyó algo
                     barcode = SerialESP32Cam.readStringUntil('\n');

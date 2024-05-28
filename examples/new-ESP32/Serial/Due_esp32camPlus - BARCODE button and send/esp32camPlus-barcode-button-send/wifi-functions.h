@@ -136,6 +136,7 @@ void getFoodData(String &barcode) {
         String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields;
 
         http.begin(serverPath.c_str()); // Inicializar URL de la API
+        http.setTimeout(5000); // Establecer 5 segundos de espera para la respuesta del servidor OpenFoodFacts
 
         // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
         // En las operaciones de escritura hace falta más autenticación (credenciales), pero no nos afecta porque 
@@ -146,44 +147,46 @@ void getFoodData(String &barcode) {
 
         if(httpResponseCode>0){
             String payload = http.getString();  //Obtiene la respuesta
-            //SerialPC.println(httpResponseCode);   //Imprime el código de estado HTTP
-            //SerialPC.println(payload);            //Imprime la respuesta del servidor
 
             // Crear un objeto DynamicJsonDocument para almacenar el JSON analizado
             DynamicJsonDocument doc(JSON_SIZE_LIMIT); // 512 bytes
-
-            // Analizar la respuesta en el objeto DynamicJsonDocument
             deserializeJson(doc, payload);
 
-            // Comprobar si el estado del JSON es 1, lo que significa que se encontró el producto
+            // Si el estado del JSON es 1, se encontró el producto
             if (doc["status"] == 1) {
-                // Imprimir la información requerida del producto
+                // Código de barras
                 String barcode = doc["code"].as<String>();
                 SerialPC.println("\n\nBarcode: " + barcode);
 
-                String nombreProducto;
+                // Nombre del producto
                 // Preferencia del nombre en español frente al general (seguramente en inglés)
+                String nombreProducto;
                 if (doc["product"]["product_name_es"]) nombreProducto = doc["product"]["product_name_es"].as<String>();
                 else if (doc["product"]["product_name"]) nombreProducto = doc["product"]["product_name"].as<String>();
                 SerialPC.println("\nNombre: " + nombreProducto);
 
                 // Hay productos sin marconutrientes (como el agua), así que si no se obtienen eso valores, se asumen 0.0
                 // Si se toman valores 0.0, entonces los valores por 1gr también son 0.0. Si no, entonces se divide entre 100.0
+                
+                // Carbohidratos
                 float carb_100g = doc["product"]["carbohydrates_100g"] ? doc["product"]["carbohydrates_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
                 float carb_1g = carb_100g != 0.0 ? carb_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 si 
                 SerialPC.println("\nCarb_100g: " + String(carb_100g));
                 SerialPC.println("Carb_1g: " + String(carb_1g));
 
+                // Grasas o lípidos
                 float lip_100g = doc["product"]["fat_100g"] ? doc["product"]["fat_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
                 float lip_1g = lip_100g != 0.0 ? lip_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 si 
                 SerialPC.println("\nLip_100g: " + String(lip_100g));
                 SerialPC.println("Lip_1g: " + String(lip_1g));
 
+                // Proteínas
                 float prot_100g = doc["product"]["proteins_100g"] ? doc["product"]["proteins_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
                 float prot_1g = prot_100g != 0.0 ? prot_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 si 
                 SerialPC.println("\nProt_100g: " + String(prot_100g));
                 SerialPC.println("Prot_1g: " + String(prot_1g));
 
+                // Energía en kilocalorías
                 float kcal_100g = doc["product"]["energy-kcal_100g"] ? doc["product"]["energy-kcal_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
                 float kcal_1g = kcal_100g != 0.0 ? kcal_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 si 
                 SerialPC.println("\nKcal_100g: " + String(kcal_100g));
@@ -193,9 +196,12 @@ void getFoodData(String &barcode) {
                 SerialPC.println("Producto no encontrado!!");
             }
         }
+        else if(httpResponseCode==-1) {
+            SerialPC.println("Tiempo de espera agotado. Producto no encontrado.");
+        }
         else {
-            Serial.print("Error en la solicitud: ");
-            Serial.println(httpResponseCode);
+            SerialPC.print("Error en la solicitud: ");
+            SerialPC.println(httpResponseCode);
         }
         http.end();   //Cierra la conexión
     //}
