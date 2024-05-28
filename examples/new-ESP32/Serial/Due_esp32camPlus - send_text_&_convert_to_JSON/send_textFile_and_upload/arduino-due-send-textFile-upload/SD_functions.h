@@ -133,7 +133,14 @@ void sendFileToESP32()
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Envía el fichero TXT al esp32 comida a comida y va actualizando la
- *        cadena de comidas que se han podido subir.
+ *        cadena de comidas que NO se han podido subir.
+ * 
+ *      El problema de esta opción es que si falla la subida de muchas comidas, el vector 'unsavedMeals'
+ *      puede llegar a ser muy grande y ocupar mucha memoria. Otra posible solución sería guardar en un 
+ *      fichero TXT auxiliar las comidas no subidas y, al final, borrar el TXT original y crear uno nuevo
+ *      donde se copien todas las líneas del auxiliar. Con esa solución se elimina el problema de saturar 
+ *      la RAM, pero se añade latencia por la escritura en el auxiliar, pero sobre todo por la copia de 
+ *      todas las líneas al nuevo.
  */
 /*-----------------------------------------------------------------------------*/
 void sendFileToESP32MealByMeal()
