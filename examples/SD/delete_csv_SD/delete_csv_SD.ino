@@ -5,7 +5,7 @@
 #include <SD.h>
 
 
-const int chipSelect = 4;
+const int chipSelect = 13;
 
 char fileCSV[30] = "data/daTest.csv";
 

@@ -27,7 +27,7 @@ DS3231  rtc(SDA, SCL);
 //
 //
 
-const int CSpin = 4;
+const int CSpin = 13;
 
 char charRead;
 

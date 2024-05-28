@@ -43,7 +43,7 @@
 #include "lista.h"
 
 
-#define SD_CARD_SCS  4 ///< Define el pin CS para la tarjeta SD
+#define SD_CARD_SCS  13 ///< Define el pin CS para la tarjeta SD
 
 // Fichero donde ir escribiendo la info para cuando haya wifi
 char fileESP32[30] = "data/data-ESP.txt";
