@@ -130,6 +130,10 @@ void setup()
 
     // Intentar conectarse a la red WiFi
     connectToWiFi();
+
+    // Mostrar identificador del esp32 (MAC)
+    SerialPC.print("MAC: "); SerialPC.println(WiFi.macAddress());
+    SerialPC.println();
 }
 
 
@@ -160,8 +164,8 @@ void loop()
         else if (msgFromDUE == "SAVE"){
             SerialPC.println(F("Esperando data..."));
             SerialESP32Due.println("WAITING-FOR-DATA");
-            //processJSON(); // Procesa cada línea que lee del Serial hasta recibir FIN-TRANSMISION
-            processJSON_OnePerMeal();
+            //processJSON();          // Procesa cada línea y las mete todas en un JSON
+            processJSON_OnePerMeal(); // Procesa cada línea y mete cada comida en un JSON
         }
         // -----------------------------------------------
         else{ 
@@ -172,20 +176,3 @@ void loop()
 
 
 }
-
-
-/*void loop() 
-{
-    // -------- Recibir lineas y generar JSON -------
-    if (SerialESP32Due.available() > 0) 
-    {
-        String line = SerialESP32Due.readStringUntil('\n');
-        line.trim();
-
-        SerialPC.println("Linea recibida: " + line);
-
-        //addLineToJSON_ONE(line);
-        addLineToJSON(line);
-    }
-    // -----------------------------------------------
-}*/

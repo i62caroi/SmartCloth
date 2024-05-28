@@ -1,0 +1,4 @@
+{
+    "board": "arduino:sam:arduino_due_x_dbg",
+    "sketch": "arduino-due-send-textFile-upload/arduino-due-send-textFile-upload.ino"
+}

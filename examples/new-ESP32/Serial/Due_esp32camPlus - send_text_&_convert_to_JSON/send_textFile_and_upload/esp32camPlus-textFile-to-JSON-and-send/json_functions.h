@@ -180,41 +180,37 @@ void  processJSON_OnePerMeal()
 
 
     // ----- PEDIR TOKEN PARA USAR EN TODAS LAS SUBIDAS -----------
-    //if(hayConexionWiFi())
-    //{
-        // Token de autenticación pedido al servidor para poder subir información
-        String bearerToken;
+    // Token de autenticación pedido al servidor para poder subir información
+    String bearerToken;
 
-        fetchTokenFromServer(bearerToken);          // 1. Pedir token de autenticación
-        // Si falla la obtención de token, indica el error HTTP y no intenta subir la data
+    fetchTokenFromServer(bearerToken);          // 1. Pedir token de autenticación
+    // Si falla la obtención de token, indica el error HTTP y no intenta subir la data
 
-        if(bearerToken != ""){ // Se ha obtenido token
-            // ------------- GENERAR JSON ---------------------------------
-            SerialPC.println("Añadiendo lineas al JSON...");
-            String line = "";
-            while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
-                if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje del Due
-                    line = SerialESP32Due.readStringUntil('\n'); 
-                    line.trim();
-                    SerialPC.println("Linea recibida: " + line); 
+    if(bearerToken != ""){ // Se ha obtenido token
+        // ------------- GENERAR JSON ---------------------------------
+        SerialPC.println("Añadiendo lineas al JSON...");
+        String line = "";
 
-                    // Enviar un JSON por comida
-                    addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line, bearerToken);           
-                    // Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
-                    // Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
-                }
+        while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
+            
+            // Se sale del while después de procesar FIN-TRANSMISION
+
+            if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje del Due
+                line = SerialESP32Due.readStringUntil('\n'); 
+                line.trim();
+                SerialPC.println("Linea recibida: " + line); 
+
+                // Enviar un JSON por comida
+                addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line, bearerToken);           
+                //  Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
+                //  Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
             }
-            // ------------------------------------------------------------
         }
-        else{
-            SerialPC.println("Error al pedir token");
-        }
-    /*}
-    else
-    {
-        SerialPC.println(F("No tengo wifi"));
-        SerialESP32Due.println(F("NO-WIFI"));
-    }*/
+        // ------------------------------------------------------------
+    }
+    else{
+        SerialPC.println("Error al pedir token");
+    }
     // ------------------------------------------------------------
 
 
@@ -249,7 +245,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     else if (line.startsWith("ALIMENTO")) 
     {
         JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
@@ -305,7 +300,9 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
  *        tener que crear un JSON extremadamente grande para guardar todo
  *        el fichero txt.
  * 
- *        ESTA OPCION PUEDE SATURAR EL SERVIDOR!!!!!
+ *        Esta opción hace los 3 pasos (pide token, sube comida y cierra sesión)
+ *        para cada comida. Es innecesario, por eso hay otra opción que pide token
+ *        una vez, sube todas las comidas y luego cierra sesión. 
  */
 /*-----------------------------------------------------------------------------*/
 /*void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
@@ -331,7 +328,6 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     else if (line.startsWith("ALIMENTO")) 
     {
         JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
@@ -378,6 +374,19 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         SerialPC.println("Línea desconocida");
     }
 }*/
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Crea un JSON para cada comida, añade su información y lo envía.
+ *        De esta forma divide la información en varios paquetes, para no
+ *        tener que crear un JSON extremadamente grande para guardar todo
+ *        el fichero txt.
+ * 
+ *        ¿¿¿¿¿PUEDE SATURAR EL SERVIDOR?????
+ */
+/*-----------------------------------------------------------------------------*/
 void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
                                 JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
                                 JsonObject& comida, JsonObject& plato, 
@@ -402,7 +411,6 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
     else if (line.startsWith("ALIMENTO")) 
     {
         JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
@@ -427,7 +435,9 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         //  1. Pedir token
         //  2. Enviar JSON
         //  3. Cerrar sesión
-        //sendJsonToDatabase_fullProcess(JSONdoc);
+        // No se hacen los 3 pasos cada vez, sino que antes de procesar comidas pedimos token,
+        // luego para cada comida se envía el JSON y al terminar (FIN-TRANSMISION) se cierra
+        // la sesión.
 
         uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON
         // Si se devuelve SAVED-OK, da igual que falle el logout
@@ -482,7 +492,6 @@ void addLineToJSON_print(DynamicJsonDocument& JSONdoc,
     else if (line.startsWith("ALIMENTO")) 
     {
         JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();

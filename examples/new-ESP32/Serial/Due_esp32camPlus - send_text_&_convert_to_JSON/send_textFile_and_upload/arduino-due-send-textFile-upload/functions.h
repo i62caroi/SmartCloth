@@ -11,7 +11,7 @@
 
 #include "cadenas.h"
 #include <vector>
-#include <string>
+//#include <string>
 
 #define SerialPC Serial
 #define SerialDueESP32 Serial1
@@ -21,10 +21,10 @@
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
-bool    checkWifiConnection();                              // Preguntar al esp32 si tiene conexión WiFi
-void    sendStringSimulationToEsp32(String fileContent);    // Enviar String al esp32 simulando el fichero TXT
-
-void    sendStringSimulationToEsp32MealByMeal(String fileContent);    // Enviar String al esp32 simulando el fichero TXT
+bool    checkWifiConnection();                                                                  // Preguntar al esp32 si tiene conexión WiFi
+void    sendStringSimulationToEsp32(String fileContent);                                        // Enviar String al esp32 simulando el fichero TXT
+void    sendStringSimulationToEsp32MealByMeal(String fileContent);                              // Enviar String al esp32 simulando el fichero TXT
+void    saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals);   // Guardar 'actualMeal' no subida en vector 'unsavedMeals' para intentar subirla más tarde
 /*-----------------------------------------------------------------------------*/
 
 
@@ -170,49 +170,82 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
 
     while (end != -1) 
     {
+        // ----- LEER LÍNEA DEL TXT -------------
         // Leer línea del String de simulación (tendría que ser con fichero TXT)
         String line = fileContent.substring(start, end);
         line.trim();
+        // -------------------------------------
 
+        // ----- AÑADIR A actualMeal -----------
         // Añade la línea al vector de la comida actual 
         // (si la línea es INICIO-COMIDA, el vector debería estar vacío antes de insertarla)
         actualMeal.push_back(line); 
+        // -------------------------------------
 
+        // ----- ENVIAR A ESP32 ----------------
         // Envía la línea al ESP32 a través de Serial
         SerialDueESP32.println(line);
+        // -------------------------------------
 
+        // ----- ESPERAR SUBIDA A DATABASE ----------------
         // Si se ha llegado al final de la comida, se espera si se ha subido correctamente
-        if (line == "FIN-COMIDA") {
+        if (line.startsWith("FIN-COMIDA")) 
+        {
             unsigned long startTime = millis();
 
             // Esperar 10 segundos a que el ESP32 responda
             while (SerialDueESP32.available() == 0 && millis() - startTime < timeout);
 
-            // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-            if (SerialDueESP32.available() > 0) { // El ESP32 ha respondido
-                String response = SerialDueESP32.readStringUntil('\n');
-                if (response == "NO-WIFI" || response.startsWith("HTTP-ERROR")) {
-                    // Si no hay conexión WiFi o ha habido un error en la petición HTTP,
-                    // se añade la comida actual al vector de comidas no subidas
-                    //unsavedMeals.insert(unsavedMeals.end(), actualMeal.begin(), actualMeal.end());
-                    for (const auto& meal : actualMeal) unsavedMeals.push_back(meal);
-                }
-                else if(response == "SAVED-OK"){ 
-                    // Si se recibió SAVED-OK, no se añade a unsavedMeals y se borra actualMeal
-                    SerialPC.println("Comida guardada correctamente\n");
-                }
-                else SerialPC.println("Respuesta desconocida\n");
-            } 
-            else {
-                // Si no se recibe respuesta del ESP32 en 5 segundos, se asume que no se ha subido
-                // la comida y se guarda en 'unsavedMeals'
-                //unsavedMeals.insert(unsavedMeals.end(), actualMeal.begin(), actualMeal.end());
-                for (const auto& meal : actualMeal) unsavedMeals.push_back(meal);
-            }
+            // ---------------------------------------------
+            // Cuando se recibe mensaje o se pasa el timout, 
+            // entonces se comprueba la respuesta
+            // ---------------------------------------------
 
+            // ------- RESPUESTA DEL ESP32 --------------------
+            if (SerialDueESP32.available() > 0)  // El ESP32 ha respondido
+            {
+                String response = SerialDueESP32.readStringUntil('\n');
+                response.trim(); 
+
+                // ----- COMIDA SUBIDA ----------
+                if(response == "SAVED-OK")
+                    // Si se recibió SAVED-OK, no se añade a unsavedMeals 
+                    SerialPC.println("Comida guardada correctamente\n\n");
+                // ------------------------------
+
+                // ----- COMIDA NO SUBIDA -------
+                else if (response == "NO-WIFI" || response.startsWith("HTTP-ERROR")) 
+                {
+                    SerialPC.println("Sin WiFi o error en la petición HTTP\n");
+                    // -- AÑADIR A unsavedMeals --
+                    // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al vector de comidas no subidas
+                    saveMealForLater(actualMeal, unsavedMeals);
+                    // ---------------------------
+                }
+                else 
+                    SerialPC.println("Respuesta desconocida\n");
+                // ------------------------------
+            } 
+            // ------------------------------------------------
+
+            // ----- TIMEOUT DEL ESP32 ------------------------
+            else {
+                SerialPC.println("Timeout: No se ha recibido respuesta del ESP32\n");
+                // -- COMIDA NO SUBIDA. AÑADIR A unsavedMeals --
+                // Si no se recibe respuesta del ESP32 en 5 segundos, se asume que no se ha subido la comida y se guarda en 'unsavedMeals'
+                saveMealForLater(actualMeal, unsavedMeals);
+                // ---------------------------------------------
+            }
+            // ------------------------------------------------
+
+
+            // ---- REINCIAR actualMeal -----------------------
             // Reseta el vector de la comida actual
             actualMeal.clear();
+            // ------------------------------------------------
+
         }
+        // ------------------------------------------------
 
         start = end + 1;
         end = fileContent.indexOf('\n', start);
@@ -221,16 +254,27 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
     // Tras enviar todas las comidas, se envía un mensaje de fin de transmisión
     SerialDueESP32.println(F("FIN-TRANSMISION"));
 
-    if (unsavedMeals.empty()) { // Si se ha subido todo, se borraría el fichero TXT
-        SerialPC.println("Info completa guardada");
-    } 
+    if (unsavedMeals.empty())  // Si se ha subido todo, se borraría el fichero TXT
+        SerialPC.println("Info completa guardada"); 
     // Si no se ha subido todo, se actualiza el fichero TXT (borrar y crear nuevo) con las comidas no subidas
-    else { 
+    else 
         SerialPC.println("No se ha podido subir todo");
-    }
 }
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Guarda la comida 'actualMeal' en el vector 'unsavedMeals' para intentar subirla más tarde
+ */
+/*-----------------------------------------------------------------------------*/
+void saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals)
+{
+    // Recorre el vector actualMeal y añade cada línea al vector unsavedMeals
+    for (const auto& meal : actualMeal) unsavedMeals.push_back(meal); 
+
+    // Esta línea se supone que hace lo mismo, pero creo que no funcionaba
+    //unsavedMeals.insert(unsavedMeals.end(), actualMeal.begin(), actualMeal.end()); 
+}
 
 
 
