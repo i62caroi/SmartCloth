@@ -1,18 +1,13 @@
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp32-cam-video-streaming-web-server-camera-home-assistant/
-  
-  IMPORTANT!!! 
-   - Select Board "AI Thinker ESP32-CAM"
-   - GPIO 0 must be connected to GND to upload a sketch
-   - After connecting GPIO 0 to GND, press the ESP32-CAM on-board RESET button to put your board in flashing mode
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
+/*
+  Ejemplo CameraWebServer adaptado al ESP32-CAM PLUS, que tiene pines diferentes
+  y una cámara autofocus
 
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*********/
+  Acceder al stream de esta forma:
+    http://192.168.201.148:81/stream
+  
+  Cambiando la IP si no se usa IP estática.
+
+*/
 
 #include "esp_camera.h"
 #include <WiFi.h>
@@ -28,10 +23,10 @@
 #include "ESP32_OV5640_AF.h"
 
 //Replace with your network credentials
-const char* ssid = "Irene";
-const char* password = "icradeba5050";
+const char* ssid = "Irene";               // Nombre red
+const char* password =  "icradeba5050";   // Contraseña
 
-// Anterior ESP32
+// Anterior ESP32-CAM
   /*
   #define PWDN_GPIO_NUM     32
   #define RESET_GPIO_NUM    -1
@@ -52,7 +47,7 @@ const char* password = "icradeba5050";
   #define PCLK_GPIO_NUM     22
   */
 
-// Nuevo ESP32
+// Nuevo ESP32-CAM PLUS (grande)
 #define PWDN_GPIO_NUM -1
 #define RESET_GPIO_NUM   5
 #define XCLK_GPIO_NUM    15
@@ -141,7 +136,6 @@ static esp_err_t index_handler(httpd_req_t *req)
         } else if (s->id.PID == OV5640_PID) {
             return httpd_resp_send(req, (const char *)index_ov5640_html_gz, index_ov5640_html_gz_len);
         } else { //OV2640
-            // Mi esp32cam tiene esta cámara
             Serial.println("\nCamara ov2640");
             return httpd_resp_send(req, (const char *)index_ov2640_html_gz, index_ov2640_html_gz_len);
         }
@@ -302,7 +296,9 @@ void setup() {
  
   Serial.begin(115200);
   Serial.setDebugOutput(false);
+  delay(200);
   Serial.println();
+  Serial.println("\nHolita\n");
   
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -412,7 +408,7 @@ void setup() {
   // Start streaming web server
   startCameraServer();
   
-  Serial.print("Camera Stream Ready! Go to: http://");
+  Serial.print("\nCamera Stream Ready! Go to: http://");
   Serial.print(WiFi.localIP());
   Serial.println();
   

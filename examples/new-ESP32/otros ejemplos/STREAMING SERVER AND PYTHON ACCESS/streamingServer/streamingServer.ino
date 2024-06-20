@@ -1,18 +1,21 @@
-/*********
-  Rui Santos
-  Complete project details at https://RandomNerdTutorials.com/esp32-cam-video-streaming-web-server-camera-home-assistant/
-  
-  IMPORTANT!!! 
-   - Select Board "AI Thinker ESP32-CAM"
-   - GPIO 0 must be connected to GND to upload a sketch
-   - After connecting GPIO 0 to GND, press the ESP32-CAM on-board RESET button to put your board in flashing mode
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy
-  of this software and associated documentation files.
+/*
+  Ejemplo CameraWebServer adaptado al ESP32-CAM PLUS, que tiene pines diferentes al ESP32-CAM normal
 
-  The above copyright notice and this permission notice shall be included in all
-  copies or substantial portions of the Software.
-*********/
+  USAR CAMARA OV2640!! No usar la autofocus (OV5640 o FD5640)
+
+  Acceder al stream de esta forma:
+    http://192.168.201.148:81/stream
+  
+  Cambiando la IP por la que dé el servidor DHCP.
+
+
+  Si se usa IP estática:
+    http://192.168.1.184:81/stream
+
+  CON IP ESTÁTICA TARDA LA VIDA EN CONECTARSEEEEEEEEE
+  (si es que se conecta siquiera)
+
+*/
 
 #include "esp_camera.h"
 #include <WiFi.h>
@@ -26,28 +29,64 @@
 
 #include "camera_index.h"
 
-//Replace with your network credentials
+// Conectar a una red existente
 const char* ssid = "Irene";
 const char* password = "icradeba5050";
 
 
-#define PWDN_GPIO_NUM     32
-#define RESET_GPIO_NUM    -1
-#define XCLK_GPIO_NUM      0
-#define SIOD_GPIO_NUM     26
-#define SIOC_GPIO_NUM     27
+// ----- IP ESTÁTICA -----------
+/*
+// Direccion IP estatica
+IPAddress local_IP(192, 168, 1, 184);
+// Direccion IP del Gateway
+IPAddress gateway(192, 168, 1, 1);
+// Mascara de la subred
+IPAddress subnet(255, 255, 0, 0);*/
+// -----------------------------
 
-#define Y9_GPIO_NUM       35
-#define Y8_GPIO_NUM       34
-#define Y7_GPIO_NUM       39
-#define Y6_GPIO_NUM       36
-#define Y5_GPIO_NUM       21
-#define Y4_GPIO_NUM       19
-#define Y3_GPIO_NUM       18
-#define Y2_GPIO_NUM        5
-#define VSYNC_GPIO_NUM    25
-#define HREF_GPIO_NUM     23
-#define PCLK_GPIO_NUM     22
+
+// Anterior ESP32-CAM
+  /*
+  #define PWDN_GPIO_NUM     32
+  #define RESET_GPIO_NUM    -1
+  #define XCLK_GPIO_NUM      0
+  #define SIOD_GPIO_NUM     26
+  #define SIOC_GPIO_NUM     27
+
+  #define Y9_GPIO_NUM       35
+  #define Y8_GPIO_NUM       34
+  #define Y7_GPIO_NUM       39
+  #define Y6_GPIO_NUM       36
+  #define Y5_GPIO_NUM       21
+  #define Y4_GPIO_NUM       19
+  #define Y3_GPIO_NUM       18
+  #define Y2_GPIO_NUM        5
+  #define VSYNC_GPIO_NUM    25
+  #define HREF_GPIO_NUM     23
+  #define PCLK_GPIO_NUM     22
+  */
+
+// Nuevo ESP32-CAM PLUS (grande)
+#define PWDN_GPIO_NUM -1
+#define RESET_GPIO_NUM   5
+#define XCLK_GPIO_NUM    15
+#define SIOD_GPIO_NUM    22
+#define SIOC_GPIO_NUM    23
+
+#define Y2_GPIO_NUM 2
+#define Y3_GPIO_NUM 14
+#define Y4_GPIO_NUM 35
+#define Y5_GPIO_NUM 12
+#define Y6_GPIO_NUM 27
+#define Y7_GPIO_NUM 33
+#define Y8_GPIO_NUM 34
+#define Y9_GPIO_NUM 39
+
+#define VSYNC_GPIO_NUM    18
+#define HREF_GPIO_NUM    36
+#define PCLK_GPIO_NUM    26
+
+#define LED_GPIO_NUM 25
 
 
 #define PART_BOUNDARY "123456789000000000000987654321"
@@ -263,7 +302,9 @@ void setup() {
  
   Serial.begin(115200);
   Serial.setDebugOutput(false);
+  delay(200);
   Serial.println();
+  Serial.println("\nHolita\n");
   
   camera_config_t config;
   config.ledc_channel = LEDC_CHANNEL_0;
@@ -305,8 +346,9 @@ void setup() {
     FRAMESIZE_SXGA,     // 1280x1024
     FRAMESIZE_UXGA,     // 1600x1200
   */
-  config.frame_size = FRAMESIZE_UXGA; // Máxima resolución
-  //config.frame_size = FRAMESIZE_SVGA;
+  config.frame_size = FRAMESIZE_UXGA; // // Máxima resolución puede rebasar la memoria de la cámara y hacer que no 
+                                        // pueda asignar memoria para el buffer de frames
+  //config.frame_size = FRAMESIZE_VGA;
 
   config.grab_mode = CAMERA_GRAB_WHEN_EMPTY;
   config.fb_location = CAMERA_FB_IN_PSRAM;
@@ -345,7 +387,15 @@ void setup() {
     s->set_framesize(s, FRAMESIZE_QVGA);
   }*/
 
+  // ------- IP ESTÁTICA --------------------------
+  // Comprobar que se ha establecido correctamente
+  /*if (!WiFi.config(local_IP, gateway, subnet)) {
+    // Fallo en la configuracion
+    Serial.println("Fallo al configurar STA");
+  }*/
+  // ----------------------------------------------
 
+  // ---- Conexion a red existente ----- 
   // Wi-Fi connection
   WiFi.begin(ssid, password);
   WiFi.setSleep(false);
@@ -356,12 +406,14 @@ void setup() {
   }
   Serial.println("");
   Serial.println("WiFi connected");
+  // ----------------------------------
 
   // Start streaming web server
   startCameraServer();
   
-  Serial.print("Camera Stream Ready! Go to: http://");
+  Serial.print("\nCamera Stream Ready! Go to: http://");
   Serial.print(WiFi.localIP());
+  Serial.print(":81/stream");
   
   
 }
