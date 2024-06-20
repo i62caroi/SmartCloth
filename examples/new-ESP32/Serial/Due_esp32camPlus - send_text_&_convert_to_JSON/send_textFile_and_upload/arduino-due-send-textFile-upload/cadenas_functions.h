@@ -6,10 +6,43 @@
     por comunicación Serial.
  */
 
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#ifndef CADENAS_FUNCTIONS_H
+#define CADENAS_FUNCTIONS_H
 
-#include "cadenas.h"
+// Simular la lectura del archivo
+String string1 = "INICIO-COMIDA\n"
+                "INICIO-PLATO\n"
+                "ALIMENTO,15,53.50\n"
+                "ALIMENTO,9,53.50\n"
+                "FIN-COMIDA,02.05.2024,17:55:36\n"
+                "INICIO-COMIDA\n"
+                "INICIO-PLATO\n"
+                "ALIMENTO,15,24.40\n"
+                "FIN-COMIDA,02.05.2024,18:25:25\n";
+                
+                
+
+String string2 = "INICIO-COMIDA\n"
+                "INICIO-PLATO\n"
+                "ALIMENTO,15,53.50\n"
+                "ALIMENTO,9,53.50\n"
+                "FIN-COMIDA,02.05.2024,17:55:36\n"
+                "INICIO-COMIDA\n"
+                "INICIO-PLATO\n"
+                "ALIMENTO,15,24.40\n"
+                "FIN-COMIDA,02.05.2024,18:25:25\n"
+                "INICIO-COMIDA\n"
+                "INICIO-PLATO\n"
+                "ALIMENTO,15,53.50\n"
+                "ALIMENTO,9,53.50\n"
+                "INICIO-PLATO\n"
+                "ALIMENTO,3,32.07\n"
+                "ALIMENTO,27,46.65\n"
+                "ALIMENTO,10,16.23\n"
+                "FIN-COMIDA,02.05.2024,10:39:36\n";
+
+
+
 #include <vector>
 //#include <string>
 
@@ -17,105 +50,16 @@
 #define SerialDueESP32 Serial1
 
 
-
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
-bool    checkWifiConnection();                                                                  // Preguntar al esp32 si tiene conexión WiFi
 void    sendStringSimulationToEsp32(String fileContent);                                        // Enviar String al esp32 simulando el fichero TXT
 void    sendStringSimulationToEsp32MealByMeal(String fileContent);                              // Enviar String al esp32 simulando el fichero TXT
-void    saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals);   // Guardar 'actualMeal' no subida en vector 'unsavedMeals' para intentar subirla más tarde
+
+void    saveMealForLaterCadenas(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals);   // Guardar 'actualMeal' no subida en vector 'unsavedMeals' para intentar subirla más tarde
 /*-----------------------------------------------------------------------------*/
+                
 
-
-
-/*---------------------------------------------------------------------------------------------------------*/
-/**
- * @brief Comprueba la conexión WiFi del ESP32.
- * 
- * @return true si hay conexión WiFi, false si no la hay.
- */
-/*---------------------------------------------------------------------------------------------------------*/
-bool checkWifiConnection() {
-    SerialPC.println(F("Comprobando la conexión WiFi del ESP32..."));
-
-    SerialPC.println(F("Cadena enviada al esp32: CHECK-WIFI")); 
-    SerialDueESP32.print(F("CHECK-WIFI")); //Envía la cadena al esp32
-
-    unsigned long timeout = 3000;  // Espera máxima de 3 segundos
-    unsigned long startTime = millis();  // Obtenemos el tiempo actual
-
-    // Espera a recibir la respuesta del ESP32. Dos enfoques:
-
-    // Enfoque 1: bucle while se ejecuta mientras no se recibe una respuesta del ESP32 y no se ha
-    // superado el tiempo de espera. Es más eficiente que el enfoque 2 porque se detiene en cuanto
-    // se recibe la respuesta o se supera el tiempo de espera, pero no ejecuta las líneas de comprobación
-    // continuamente si no se ha recibido respuesta del ESP32.
-
-    // Esperar 3 segundos a que el ESP32 responda
-    while ((SerialDueESP32.available() == 0) && (millis() - startTime < timeout)); 
-    
-    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-    if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
-        String msgFromESP32 = SerialDueESP32.readStringUntil('\n');
-        msgFromESP32.trim();  // Elimina espacios en blanco al principio y al final
-        SerialPC.println("Respuesta del ESP32: " + msgFromESP32);  
-
-        if (msgFromESP32 == "WIFI-OK") {
-            // Respuesta OK, hay conexión WiFi
-            SerialPC.println(F("Dice que hay wifi"));
-            return true;
-        } 
-        else if (msgFromESP32 == "NO-WIFI") {
-            // Respuesta NO-WIFI, no hay conexión WiFi
-            SerialPC.println(F("Dice que NO hay wifi"));
-            return false;
-        }
-    } 
-    else {
-        // No se ha recibido respuesta del ESP32
-        SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
-
-        // Se considera que no hay conexión WiFi
-        return false;
-    }
-
-
-    // Enfoque 2: bucle while infinito que incluye todas las comprobaciones del tipo de mensaje recibido.
-    // Como se ejecuta hasta que se recibe una respuesta del ESP32 o se supera el tiempo de espera,
-    // obliga a ejecutar todas esas líneas aunque no se haya recibido respuesta del ESP32. Por tanto, puede ser 
-    // poco eficiente si la respuesta del ESP32 tarda mucho en llegar
-    /*while (true) { // Bloquea el arduino en este bucle hasta que se reciba respuesta o se pase el TIMEOUT
-        // Comprueba si hay datos disponibles en el puerto serie del ESP32
-        if (SerialDueESP32.available() > 0) { // Si el esp32 ha respondido
-            String msgFromESP32 = SerialDueESP32.readStringUntil('\n');
-            msgFromESP32.trim();  // Elimina espacios en blanco al principio y al final
-            SerialPC.println("Respuesta del ESP32: " + msgFromESP32);  
-
-            if (msgFromESP32 == "WIFI-OK") {
-                // Respuesta OK, hay conexión WiFi
-                SerialPC.println(F("Dice que hay wifi"));
-                return true;
-            } 
-            else if (msgFromESP32 == "NO-WIFI") {
-                // Respuesta NO-WIFI, no hay conexión WiFi
-                SerialPC.println(F("Dice que NO hay wifi"));
-                return false;
-            }
-        }
-
-        // Comprueba si ha pasado un tiempo límite sin respuesta del esp32
-        if (millis() - startTime > timeout) {
-            // Tiempo de espera agotado, se considera que no hay conexión WiFi
-            SerialPC.println(F("Timeout"));
-            return false;
-        }
-    }
-    
-    // Si sale del while (no debería), se considera que no hay conexión WiFi
-    return false;
-    */
-}
 
 
 
@@ -219,7 +163,7 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
                     SerialPC.println("Sin WiFi o error en la petición HTTP\n");
                     // -- AÑADIR A unsavedMeals --
                     // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al vector de comidas no subidas
-                    saveMealForLater(actualMeal, unsavedMeals);
+                    saveMealForLaterCadenas(actualMeal, unsavedMeals);
                     // ---------------------------
                 }
                 else 
@@ -233,7 +177,7 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
                 SerialPC.println("Timeout: No se ha recibido respuesta del ESP32\n");
                 // -- COMIDA NO SUBIDA. AÑADIR A unsavedMeals --
                 // Si no se recibe respuesta del ESP32 en 5 segundos, se asume que no se ha subido la comida y se guarda en 'unsavedMeals'
-                saveMealForLater(actualMeal, unsavedMeals);
+                saveMealForLaterCadenas(actualMeal, unsavedMeals);
                 // ---------------------------------------------
             }
             // ------------------------------------------------
@@ -262,12 +206,14 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
 }
 
 
+
+
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Guarda la comida 'actualMeal' en el vector 'unsavedMeals' para intentar subirla más tarde
  */
 /*-----------------------------------------------------------------------------*/
-void saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals)
+void saveMealForLaterCadenas(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals)
 {
     // Recorre el vector actualMeal y añade cada línea al vector unsavedMeals
     for (const auto& meal : actualMeal) unsavedMeals.push_back(meal); 
@@ -275,9 +221,6 @@ void saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsa
     // Esta línea se supone que hace lo mismo, pero creo que no funcionaba
     //unsavedMeals.insert(unsavedMeals.end(), actualMeal.begin(), actualMeal.end()); 
 }
-
-
-
 
 
 #endif

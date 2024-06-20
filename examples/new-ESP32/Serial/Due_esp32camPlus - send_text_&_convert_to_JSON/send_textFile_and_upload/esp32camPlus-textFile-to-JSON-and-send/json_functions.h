@@ -16,13 +16,10 @@
 #ifndef JSON_FUNCTIONS_H
 #define JSON_FUNCTIONS_H
 
-#define SerialPC Serial
-#define SerialESP32Due Serial1
-
-#include <ArduinoJson.h>    // Trabajar con JSON
-#include <TimeLib.h>        // Convertir la fecha a UNIX
-#include "wifi_functions.h" // Obtener la MAC, pedir token, enviar JSON y cerrar sesión
-
+#include <ArduinoJson.h>      // Trabajar con JSON
+#include <TimeLib.h>          // Convertir la fecha a UNIX
+#include "wifi_functions.h"   // Obtener la MAC, pedir token, enviar JSON y cerrar sesión
+#include "Serial_functions.h" // Funciones de interacción con el Serial ESP32-Due
 
 #define JSON_SIZE_LIMIT 20480 // 20k; 4k --> 4096
 
@@ -181,23 +178,54 @@ void  processJSON_OnePerMeal()
 
     // ----- PEDIR TOKEN PARA USAR EN TODAS LAS SUBIDAS -----------
     // Token de autenticación pedido al servidor para poder subir información
-    String bearerToken;
-
-    fetchTokenFromServer(bearerToken);          // 1. Pedir token de autenticación
+    String bearerToken; // Token de autenticación       
     // Si falla la obtención de token, indica el error HTTP y no intenta subir la data
 
-    if(bearerToken != ""){ // Se ha obtenido token
+    if(fetchTokenFromServer(bearerToken)) // 1. Pedir token de autenticación. True si se ha obtenido token
+    {
+        // ------- ESPERAR DATA ----------------------
+        // El ESP32 se ha autenticado en la database y está listo para subir datos
+        SerialPC.println(F("Esperando data..."));
+        //SerialESP32Due.println("WAITING-FOR-DATA");
+        sendMsgToDue("WAITING-FOR-DATA");
+        // -------------------------------------------
+
         // ------------- GENERAR JSON ---------------------------------
         SerialPC.println("Añadiendo lineas al JSON...");
         String line = "";
 
-        while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
-            
-            // Se sale del while después de procesar FIN-TRANSMISION
+        unsigned long startTime = millis();
+        unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda
 
-            if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje del Due
-                line = SerialESP32Due.readStringUntil('\n'); 
-                line.trim();
+        while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
+        {
+            // Se sale del while después de procesar FIN-TRANSMISION o si no se recibe nada durante 15 segundos
+
+            // ------- SIN MENSAJE DEL DUE ----------------------
+            // Si no se recibe nada durante 15 segundos, se cierra sesión
+            //
+            // Se comprueba si no hay nada en el Serial y si han pasado más de 'timeout' segundos
+            // sin nada en el Serial. Cuando se recibe algo, se reinician los 15 segundos
+            // Se hace esta comprobación por si ha habido algún error en la lectura del fichero en el Due o
+            // si se ha perdido la comunicación ESP32-Due, para que el ESP32 no se quede esperando indefinidamente.
+            //if (SerialESP32Due.available() == 0 && millis() - startTime > timeout){
+            if (!hayMsgFromDue() && isTimeoutExceeded(startTime, timeout))
+            {
+                logoutFromServer(bearerToken); // Cerrar sesión aquí
+                break;
+            }
+            // --------------------------------------------------
+
+            // ------- RECIBIDO MENSAJE -------------------------
+            //else if (SerialESP32Due.available() > 0)  // Comprobar si hay algún mensaje del Due
+            else if (hayMsgFromDue())  // Comprobar si hay algún mensaje del Due
+            {
+                // Restablecer el tiempo de inicio si hay datos disponibles
+                startTime = millis();
+
+                /*line = SerialESP32Due.readStringUntil('\n'); 
+                line.trim();*/
+                readMsgFromSerialDue(line); // Leer mensaje del Due
                 SerialPC.println("Linea recibida: " + line); 
 
                 // Enviar un JSON por comida
@@ -205,11 +233,17 @@ void  processJSON_OnePerMeal()
                 //  Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
                 //  Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
             }
+            // --------------------------------------------------
         }
         // ------------------------------------------------------------
     }
     else{
-        SerialPC.println("Error al pedir token");
+        // ------- FALLO AUTENTICACIÓN ---------------
+        // Ha fallado la autenticación del ESP32 en la database. No puede subir info 
+        SerialPC.println(F("Error al pedir token"));
+        //SerialESP32Due.println(F("NO-TOKEN"));
+        sendMsgToDue(F("NO-TOKEN"));
+        // -------------------------------------------
     }
     // ------------------------------------------------------------
 
@@ -268,7 +302,8 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         JSONdoc["mac"] = macAddress;
 
         // Avisar al Due de que ya se tiene el JSON completo
-        SerialESP32Due.println("JSON-OK");
+        //SerialESP32Due.println("JSON-OK");
+        sendMsgToDue("JSON-OK");
 
         // Enviar JSON a database
         //sendJsonToDatabase(JSONdoc);
@@ -282,7 +317,9 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     }
     else
     {
-        SerialESP32Due.println("Línea desconocida");
+        SerialPC.println("Linea desconocida");
+        //SerialESP32Due.println("Línea desconocida");
+        sendMsgToDue("No entiendo el comando");
     }
 }
 
@@ -445,13 +482,13 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
 
 
         // ---- MOSTRAR JSON -----
-        SerialPC.println();
+        /*SerialPC.println();
         serializeJsonPretty(JSONdoc, SerialPC);
-        SerialPC.println();
+        SerialPC.println();*/
         // -----------------------
 
         // -------- MEMORIA RAM USADA POR EL JSON ---------------------
-        SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
+        //SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
         // ------------------------------------------------------------
 
     }

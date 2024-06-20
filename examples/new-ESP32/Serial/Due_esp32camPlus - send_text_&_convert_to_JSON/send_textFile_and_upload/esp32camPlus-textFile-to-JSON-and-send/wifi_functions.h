@@ -11,10 +11,10 @@
 
 //#include <WiFi.h>
 #include <HTTPClient.h>
-#include <ArduinoJson.h> // Para serializar el JSON y enviarlo
+#include <ArduinoJson.h>      // Para serializar el JSON y enviarlo
+#include "Serial_functions.h" // Funciones de interacción con el Serial ESP32-Due
 
-#define SerialPC Serial
-#define SerialESP32Due Serial1
+
 
 /*
     Las credenciales se podrían guardar en la memoria flash no volátil del ESP32 en lugar de
@@ -36,11 +36,11 @@
 */
 
 // Credenciales conexión red WiFi
-//const char* ssid = "Irene";               // Nombre red
-//const char* password =  "icradeba5050";   // Contraseña
+const char* ssid = "Irene";               // Nombre red
+const char* password =  "icradeba5050";   // Contraseña
 
-const char* ssid = "UCOTEAM";
-const char* password = "-polonio210alfileres-";
+//const char* ssid = "UCOTEAM";
+//const char* password = "-polonio210alfileres-";
 
 
 // URL del servidor donde enviar el JSON
@@ -56,25 +56,45 @@ const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
-bool    hayConexionWiFi();  // Comprobar si hay conexión WiFi
+inline bool    hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); };  // Comprobar si hay conexión a la red WiFi
+
+void    setupWiFi();                    // Configurar modo del WiFi y conectar a la red, si se puede
 void    connectToWiFi();    // Conectar a la red WiFi
+void    checkWiFi();        // Comprobar si hay WiFi e indicarlo al Due
 
 void    sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc);           // Enviar el JSON generado al servidor
-void    fetchTokenFromServer(String &bearerToken);                              // 1. Pedir token
+bool    fetchTokenFromServer(String &bearerToken);                              // 1. Pedir token
 void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);  // 2. Subir JSON
 void    logoutFromServer(String &bearerToken);                                  // 3. Cerrar sesión
 /*-----------------------------------------------------------------------------*/
 
 
 
-
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Comprueba si hay conexión a la red WiFi.
+ * @brief Configura el módulo WiFi del ESP32 y lo conecta a la red, si es posible
  */
 /*-----------------------------------------------------------------------------*/
-bool hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); }
+void setupWiFi()
+{
+    // --- CONFIGURAR MÓDULO WIFI ----
+    // Configurar el módulo WiFi en modo estación (STA) para que pueda conectarse a una red WiFi
+    // existente, pero no pueda aceptar conexiones entrantes como punto de acceso. Esto es necesario
+    // para obtener la MAC correcta para este modo.
+    WiFi.mode(WIFI_MODE_STA);
+    // -------------------------------
 
+    // --- CONECTAR A RED ------------
+    // Intentar conectarse a la red WiFi
+    connectToWiFi();
+    // -------------------------------
+
+    // --- OBTENER MAC ---------------
+    // Mostrar identificador del esp32 (MAC) para ver si está en database
+    SerialPC.print("MAC: "); SerialPC.println(WiFi.macAddress());
+    SerialPC.println();
+    // -------------------------------
+}
 
 
 /*-----------------------------------------------------------------------------*/
@@ -153,7 +173,8 @@ void connectToWiFi()
 
     // Mientras no se haya conectado a WiFi y mientras no hayan pasado 5 segundos.
     // Si se conecta o si pasan los 5 segundos, sale del while.
-    while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
+    //while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
+    while(!hayConexionWiFi() && isTimeoutExceeded(startTime, timeout_waitConexion))
     {
         delay(500);
         SerialPC.print(F("."));
@@ -165,15 +186,40 @@ void connectToWiFi()
         SerialPC.println();
         SerialPC.print(F("Conectado a red WiFi con IP: ")); SerialPC.println(WiFi.localIP());
         SerialPC.println();
-        //SerialESP32Due.println(F("WIFI")); // No hace falta, se pregunta después
+        // No hace falta indicar al Due que se tiene WiFi, se pregunta después
     } 
     else 
     {
         // Si tras 10 segundos no se ha establecido la conexión:
         SerialPC.println(F("\nNo se pudo establecer la conexion WiFi."));
-        //SerialESP32Due.println(F("NO-WIFI")); // No hace falta, se pregunta después
+        // No hace falta indicar al Due que NO se tiene WiFi, se pregunta después
     }
 
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Verifica si hay conexión WiFi y envía un mensaje al dispositivo ESP32 Due.
+ * 
+ * Esta función verifica si hay una conexión WiFi disponible. Si hay conexión, 
+ * se envía un mensaje al dispositivo ESP32 Due indicando que hay WiFi. Si no 
+ * hay conexión, se envía un mensaje indicando que no hay WiFi.
+ */
+/*-----------------------------------------------------------------------------*/
+void checkWiFi()
+{
+    if(hayConexionWiFi())
+    {
+        SerialPC.println(F("\nTengo Wifi"));
+        sendMsgToDue(F("WIFI-OK"));
+    }
+    else 
+    { 
+        SerialPC.println(F("\nNo tengo wifi"));
+        sendMsgToDue(F("NO-WIFI"));
+    }
 }
 
 
@@ -211,7 +257,9 @@ void sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
     else
     {
         SerialPC.println(F("No tengo wifi"));
-        SerialESP32Due.println(F("NO-WIFI"));
+        
+        //SerialESP32Due.println(F("NO-WIFI"));
+        sendMsgToDue(F("NO-WIFI"));
     }
 }
 
@@ -225,7 +273,7 @@ void sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
  * @param bearerToken Referencia a una cadena de caracteres donde se almacenará el token obtenido.
  */
 /*-----------------------------------------------------------------------------*/
-void fetchTokenFromServer(String &bearerToken)
+bool fetchTokenFromServer(String &bearerToken)
 {
     // Pide el token si sigue teniendo conexión
     if(hayConexionWiFi())
@@ -261,25 +309,49 @@ void fetchTokenFromServer(String &bearerToken)
                 SerialPC.println("\nTOKEN: " + bearerToken + "\n");    
             }
             else{
-                SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
                 SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
+                
+                //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+                //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
+                //sendMsgToDue(errorHttp);
+                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+
                 bearerToken = "";
             }
         }
         else
         {
             SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+            
+            //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+            //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
+            //sendMsgToDue(errorHttp);
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+
             bearerToken = "";
         }
 
         // Cerrar la conexión
         http.end();
-        
+
     }
     else{
         SerialPC.println(F("\nNo se puede PEDIR TOKEN porque ha perdido la conexion a Internet"));
-        SerialESP32Due.println(F("NO-WIFI"));
+        
+        //SerialESP32Due.println(F("NO-WIFI"));
+        
+        bearerToken = "";
+    }
+
+
+    // Si se ha obtenido el token, devolver true
+    if(bearerToken != ""){ 
+        SerialPC.println("Token obtenido.");
+        return true;
+    }
+    else{
+        SerialPC.println("Falla token. No se continua.");
+        return false;
     }
 
 }
@@ -335,18 +407,28 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
             //SerialPC.println(response);         // Imprimir la respuesta del servidor
 
             if((httpResponseCode >= 200) && (httpResponseCode < 300)){
-                SerialESP32Due.println(F("SAVED-OK"));
                 SerialPC.println("Comida subida\n");
+
+                //SerialESP32Due.println(F("SAVED-OK"));
+                sendMsgToDue(F("SAVED-OK"));
             }
             else{
-                SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
                 SerialPC.println("Error en subir comida");
+
+                //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+                //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
+                //sendMsgToDue(errorHttp);
+                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
             }
         }
         else
         {
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
             SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
+
+            //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+            //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
+            //sendMsgToDue(errorHttp);
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
         }
 
         // Cerrar la conexión
@@ -355,7 +437,9 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
     }
     else{
         SerialPC.println(F("\nNo se puede SUBIR LA COMIDA porque ha perdido la conexion a Internet"));
-        SerialESP32Due.println(F("NO-WIFI"));
+        
+        //SerialESP32Due.println(F("NO-WIFI"));
+        sendMsgToDue(F("NO-WIFI"));
     }
 
 }
@@ -374,9 +458,10 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 void logoutFromServer(String &bearerToken)
 {
     // Cierra sesión si sigue teniendo conexión
-    // Creo que no pasa nada si se queda abierta, se cerrará a la media hora. Lo que no sé es si se queda abierta,
-    // si se puede volver a pedir token con la misma MAC. Por si fallara el cerrar sesión y pocos minutos después
-    // se quisiera guardar más comidas
+    //
+    // Creo que no pasa nada si se queda abierta, se cerrará a la media hora por si fallara el cerrar sesión y 
+    // pocos minutos después se quisiera guardar más comidas. Lo que no sé es que si se queda abierta, si se
+    // puede volver a pedir token con la misma MAC. 
     if(hayConexionWiFi())
     {
         SerialPC.println("\n3. Cerrando sesión...");
@@ -416,20 +501,30 @@ void logoutFromServer(String &bearerToken)
             }
             else{
                 SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
-                SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+                
+                //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+                //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
+                //sendMsgToDue(errorHttp);
+                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
             }
             
         }
         else {
             SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+            
+            //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+            //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
+            //sendMsgToDue(errorHttp);
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
         }
         http.end();
 
     }
     else{
         SerialPC.println(F("\nNo se puede CERRAR SESION porque ha perdido la conexion a Internet"));
-        SerialESP32Due.println(F("NO-WIFI"));
+        
+        //SerialESP32Due.println(F("NO-WIFI"));
+        sendMsgToDue(F("NO-WIFI"));
     }
 
 }

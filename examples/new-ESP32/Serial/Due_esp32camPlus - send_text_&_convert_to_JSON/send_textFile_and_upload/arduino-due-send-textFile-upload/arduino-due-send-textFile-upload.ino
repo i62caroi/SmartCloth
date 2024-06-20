@@ -6,24 +6,20 @@
     que lo convierta a JSON y lo suba a la base de datos
  */
 
-#include "functions.h" 
-#include "SD_functions.h"
+#include "wifi_functions.h" 
+#include "cadenas_functions.h" 
+#include "SD_functions.h" // incluye Serial_functions.h
 
-#define SerialPC Serial
-#define SerialDueESP32 Serial1
 
 
 void setup()
 {
-    SerialPC.begin(115200);
-    while (!SerialPC);
-
-    // DEBE TENER LA MISMA VELOCIDAD EN BAUDIOS QUE EL ESP32 (p.ej. 115200)
-    SerialDueESP32.begin(115200);
-    while (!SerialDueESP32);
+    setupSerial(); // Inicializar comunicación serie con PC y ESP32
+    delay(100);
      
     // Inicializar SD
-    if (!setupSDcard()){
+    if (!setupSDcard())
+    {
         SerialPC.println(F("Card failed, or not present"));
         return;
     }
@@ -38,13 +34,19 @@ void loop()
 
     // ---------------- ENVIO ------------------------------------
     // Simulacion de lectura de fichero enviando String estática
-    if (SerialPC.available() > 0) { // Si se recibe algo desde el PC ("go")
+    if (SerialPC.available() > 0)  // Si se recibe algo desde el PC ("go")
+    {
         String msg = SerialPC.readStringUntil('\n');
         msg.trim();
-        if(msg == "go"){ 
-            if(checkWifiConnection()){ // Pregunta al esp32 si hay conexión (CHECK-WIFI) y espera su respuesta
+        if(msg == "go")
+        { 
+            // Comprobar WiFi
+            if(checkWifiConnection()) // Pregunta al esp32 si hay conexión (CHECK-WIFI) y espera su respuesta
+            {
+                // Indicar inicio de guardado
                 SerialPC.println(F("\nIndicando que se quiere guardar..."));
-                SerialDueESP32.println(F("SAVE"));
+                //SerialDueESP32.println(F("SAVE"));
+                sendMsgToESP32("SAVE");
             }
         }
     }
@@ -53,15 +55,17 @@ void loop()
 
 
     // -------------- RECEPCION ----------------------------------
-    if (SerialDueESP32.available() > 0) { // Si se recibe algo desde el esp32
-        String msg = SerialDueESP32.readStringUntil('\n');
-        msg.trim();  
-        SerialPC.print("\nMensaje recibido en loop: "); SerialPC.println(msg); 
-
-        //int nComidasContadas;
+    //if (SerialDueESP32.available() > 0)  // Si se recibe algo desde el esp32
+    if(hayMsgFromESP32())
+    {
+        /*String msgFromESP32 = SerialDueESP32.readStringUntil('\n');
+        msgFromESP32.trim();  */
+        String msgFromESP32 = readMsgFromESP32();
+        SerialPC.print("\nMensaje recibido en loop: "); SerialPC.println(msgFromESP32); 
 
         // Esperando datos a subir
-        if(msg == "WAITING-FOR-DATA"){
+        if(msgFromESP32 == "WAITING-FOR-DATA") // El ESP32 se autenticó correctamente y está esperando datos
+        {
             SerialPC.println("\nEnviando data...");
 
             // --- Enviar cadena de simulación al ESP32 ------------
@@ -75,6 +79,15 @@ void loop()
             // -----------------------------------------------------
 
         }
+        else if(msgFromESP32 == "NO-TOKEN") // Falló la autenticación del ESP32 y no puede subir datos
+        {
+            SerialPC.println(F("Fallo en la autenticacion del SmartCloth en la database"));
+        }
+        /*else if(msg == "NO-WIFI")
+        {
+            SerialPC.println(F("Se ha perdido la conexion a Internet"));
+        }*/
+
         //else SerialPC.println("Comando desconocido\n");
     }
     // -----------------------------------------------------------

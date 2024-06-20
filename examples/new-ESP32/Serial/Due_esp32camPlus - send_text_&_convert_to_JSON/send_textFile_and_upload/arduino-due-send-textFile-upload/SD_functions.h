@@ -36,22 +36,19 @@
 #ifndef SD_FUNCTIONS
 #define SD_FUNCTIONS
 
-#include <SD.h>
 // incluir esta línea en el includePath de c_cpp_properties.json 
 //
 // "/Applications/Arduino.app/Contents/Java/libraries/SD/src"
-
-#include <vector> // Para los vectores actualMeal y unsavedMeals
-#include "functions.h" // incluye <vector> para los vectores actualMeal y unsavedMeals, y función saveMealForLater()
+#include <SD.h>
+#include <vector> // Para los vectores actualMal y unsavedMeals
+#include "Serial_functions.h" // Funciones de interacción con el Serial Due-ESP32
 
 
 #define SD_CARD_SCS  13 ///< Define el pin CS para la tarjeta SD
 
+
 // Fichero donde ir escribiendo la info para cuando haya wifi
 char fileTXT[30] = "data/data-esp.txt";
-
-#define SerialPC Serial
-#define SerialDueESP32 Serial1
 
 
 
@@ -64,10 +61,13 @@ bool    setupSDcard();                                      // Inicializar tarje
 void    sendFileToESP32();                                  // Enviar fichero TXT al esp32 para un solo JSON
 void    sendFileToESP32MealByMeal();                        // Enviar fichero TXT al esp32 esperando subida de un JSON por comida
 
+void    saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals);   // Guardar 'actualMeal' no subida en vector 'unsavedMeals' para intentar subirla más tarde
+
 bool    deleteFileTXT();                                    // Borrar fichero TXT
 void    updateFileTXT(std::vector<String> &unsavedMeals);   // Actualizar fichero TXT con comidas sin guardar
-void    readFileTXT();                                    // Leer fichero TXT 
+void    readFileTXT();                                      // Leer fichero TXT 
 /*-----------------------------------------------------------------------------*/
+
 
 
 
@@ -113,11 +113,13 @@ void sendFileToESP32()
             line.trim();
 
             // Envía la línea al ESP32 a través de Serial
-            SerialDueESP32.println(line);
+            //SerialDueESP32.println(line);
+            sendMsgToESP32(line);
         }
         dataFile.close();
 
-        SerialDueESP32.println(F("FIN-TRANSMISION"));
+        //SerialDueESP32.println(F("FIN-TRANSMISION"));
+        sendMsgToESP32(F("FIN-TRANSMISION"));
 
         SerialPC.println(F("\nFichero completo enviado"));
     }
@@ -160,7 +162,7 @@ void sendFileToESP32MealByMeal()
             // ----- LEER LÍNEA DEL TXT -------------
             String line = dataFile.readStringUntil('\n');
             line.trim();
-            SerialPC.print("Linea del TXT: "); SerialPC.println(line);
+            //SerialPC.print("Linea del TXT: "); SerialPC.println(line);
             // -------------------------------------
 
             // ----- AÑADIR A actualMeal -----------
@@ -171,7 +173,8 @@ void sendFileToESP32MealByMeal()
 
             // ----- ENVIAR A ESP32 ----------------
             // Envía la línea al ESP32 a través de Serial
-            SerialDueESP32.println(line);
+            //SerialDueESP32.println(line);
+            sendMsgToESP32(line);
             // -------------------------------------
 
             // ----- ESPERAR SUBIDA A DATABASE ----------------
@@ -180,8 +183,9 @@ void sendFileToESP32MealByMeal()
             {
                 unsigned long startTime = millis();
 
-                // Esperar 10 segundos a que el ESP32 responda
-                while (SerialDueESP32.available() == 0 && millis() - startTime < timeout);
+                // Esperar hasta 10 segundos a que el ESP32 responda
+                //while (SerialDueESP32.available() == 0 && millis() - startTime < timeout);
+                while(isESP32SerialEmpty() && timeoutNotExceeded(startTime, timeout));
 
                 // ---------------------------------------------
                 // Cuando se recibe mensaje o se pasa el timout, 
@@ -189,20 +193,22 @@ void sendFileToESP32MealByMeal()
                 // ---------------------------------------------
 
                 // ------- RESPUESTA DEL ESP32 --------------------
-                if (SerialDueESP32.available() > 0)  // El ESP32 ha respondido
+                //if (SerialDueESP32.available() > 0)  // El ESP32 ha respondido
+                if(hayMsgFromESP32())
                 {
-                    String response = SerialDueESP32.readStringUntil('\n');
-                    response.trim(); 
-                    SerialPC.print("\nMensaje recibido en sendFile: "); SerialPC.println(response); 
+                    /*String msgFromESP32 = SerialDueESP32.readStringUntil('\n');
+                    msgFromESP32.trim(); */
+                    String msgFromESP32 = readMsgFromESP32();
+                    SerialPC.print("\nMensaje recibido en sendFile: "); SerialPC.println(msgFromESP32); 
                     
                     // ----- COMIDA SUBIDA ----------
-                    if(response == "SAVED-OK")
+                    if(msgFromESP32 == "SAVED-OK")
                         // Si se recibió SAVED-OK, no se añade a unsavedMeals 
                         SerialPC.println("Comida guardada correctamente\n\n");
                     // ------------------------------
 
                     // ----- COMIDA NO SUBIDA -------
-                    else if (response == "NO-WIFI" || response.startsWith("HTTP-ERROR")) {
+                    else if (msgFromESP32 == "NO-WIFI" || msgFromESP32.startsWith("HTTP-ERROR")) {
                         SerialPC.println("Sin WiFi o error en la petición HTTP\n");
                         // -- AÑADIR A unsavedMeals --
                         // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al vector de comidas no subidas
@@ -227,7 +233,7 @@ void sendFileToESP32MealByMeal()
                 // ------------------------------------------------
 
 
-                // ---- REINCIAR actualMeal -----------------------
+                // ---- REINICIAR actualMeal -----------------------
                 // Reseta el vector de la comida actual
                 actualMeal.clear();
                 // ------------------------------------------------
@@ -241,7 +247,8 @@ void sendFileToESP32MealByMeal()
         dataFile.close();
 
         // Tras enviar todas las comidas, se envía un mensaje de fin de transmisión
-        SerialDueESP32.println(F("FIN-TRANSMISION"));
+        //SerialDueESP32.println(F("FIN-TRANSMISION"));
+        sendMsgToESP32(F("FIN-TRANSMISION"));
 
 
         // ------------------------------------------------------
@@ -264,9 +271,28 @@ void sendFileToESP32MealByMeal()
 
     }
     else 
-        SerialPC.println(F("\nError al abrir el archivo data-ESP.txt"));
+        SerialPC.println(F("\nError al abrir el archivo data-ESP.txt\n"));
 
 }
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Guarda la comida 'actualMeal' en el vector 'unsavedMeals' para intentar subirla más tarde
+ */
+/*-----------------------------------------------------------------------------*/
+void saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals)
+{
+    // Recorre el vector actualMeal y añade cada línea al vector unsavedMeals
+    for (const auto& meal : actualMeal) unsavedMeals.push_back(meal); 
+
+    // Esta línea se supone que hace lo mismo, pero creo que no funcionaba
+    //unsavedMeals.insert(unsavedMeals.end(), actualMeal.begin(), actualMeal.end()); 
+}
+
+
 
 
 
