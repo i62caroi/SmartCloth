@@ -27,7 +27,7 @@
 */
 
 
-// Anterior ESP32
+// Anterior ESP32-CAM
   /*
   #define PWDN_GPIO_NUM     32
   #define RESET_GPIO_NUM    -1
@@ -48,7 +48,7 @@
   #define PCLK_GPIO_NUM     22
   */
 
-// Nuevo ESP32
+// Nuevo ESP32-CAM PLUS
 #define PWDN_GPIO_NUM -1
 #define RESET_GPIO_NUM 5
 #define XCLK_GPIO_NUM 15
@@ -74,8 +74,8 @@
 // ===========================
 // Enter your WiFi credentials
 // ===========================
-const char* ssid = "UCOTEAM";
-const char* password = "-polonio210alfileres-";
+const char* ssid = "Irene";               // Nombre red
+const char* password =  "icradeba5050";   // Contraseña
 
 void startCameraServer();
 void setupLedFlash(int pin);

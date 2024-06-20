@@ -1,3 +1,10 @@
+/*
+* author: Irene Casares Rodríguez
+* date: 19/01/24
+*
+* brief: Este programa obtiene la MAC del dispositivo y la imprime por terminal.
+*/
+
 #include <WiFi.h>
 
 void setup() {
@@ -10,9 +17,6 @@ void setup() {
   // Imprimir la dirección MAC
   Serial.print("\nDirección MAC: ");
   Serial.println(WiFi.macAddress());
-  
-  //Dirección MAC: 08:D1:F9:CB:A1:EC <-- cable rojo
-  // Dirección MAC: 08:D1:F9:CB:4C:24 <--
 }
 
 void loop() {
