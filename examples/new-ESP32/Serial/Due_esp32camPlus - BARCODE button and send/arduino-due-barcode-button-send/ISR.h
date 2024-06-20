@@ -11,7 +11,7 @@
 #ifndef ISR_H
 #define ISR_H
 
-#define DEBOUNCE_TIME 500
+#define BARCODE_DEBOUNCE_TIME 500
 
 
 const byte intPinBarcode = 53;
@@ -27,7 +27,7 @@ volatile bool pulsandoBarcode = false;
 void ISR_barcode(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
+    if ((interrupt_time - last_interrupt_time) > BARCODE_DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }
 
