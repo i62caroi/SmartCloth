@@ -3,9 +3,17 @@
 //
 
 #include <DS3231.h>
+#include <DueFlashStorage.h> // Para guardar una flag si se está en horario de verano o invierno
 
-// Init the DS3231 using the hardware interface
-DS3231  rtc(SDA, SCL);
+
+// ------ OBJETO RTC --------------
+DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la librería
+// --------------------------------
+
+// ----- FLAG VERANO/INVIERNO -----
+DueFlashStorage dueFlashStorage; // Crear objeto para guardar en la flash
+#define SUMMER_TIME_FLAG_ADDRESS 0 // Dirección en la flash para la bandera del horario de verano
+// --------------------------------
 
 
 
@@ -29,27 +37,29 @@ void setup()
   // Inicializar el objeto RTC
   rtc.begin();
 
-  Serial.print("1 - Hoy es "); Serial.print(rtc.getDateStr()); Serial.print(F(" y son las ")); Serial.println(rtc.getTimeStr());
+  // Imprimir la fecha y hora actuales
+  Serial.print("Hoy es "); Serial.print(rtc.getDateStr()); Serial.print(F(" y son las ")); Serial.println(rtc.getTimeStr());
 
 
+  // ----- OBTENER FECHA Y HORA DE COMPILACIÓN -------------
   // Obtener la fecha y hora de compilación
   const char* compileDate = __DATE__;
   const char* compileTime = __TIME__;
 
-
-  // Descomponer la fecha y hora de compilación en componentes
-  // Fecha de compilación
+  // ------ DESCOMPONER FECHA Y HORA -----
+  // --- Fecha de compilación ---
   char month[4];
   int day, year;
   sscanf(compileDate, "%s %d %d", month, &day, &year);
 
-  // Hora de compilacion
+  // --- Hora de compilacion ---
   int hour, minute, second;
   sscanf(compileTime, "%d:%d:%d", &hour, &minute, &second);
-
+  // ------------------------------------
 
   // Corregir desfase de segundos 
-  adjustTime(second, minute, hour);
+  adjustTime(second, minute, hour, 30); // offset de 30 segundos entre la hora de compilación y la hora real
+  // No hace falta ajustar la hora al segundo, no pasa nada si el segundo no es exacto
 
   // Convertir el mes a un número
   int monthNumber = convertMonthToNumber(month);
@@ -57,13 +67,33 @@ void setup()
   // Obtener día de la semana
   int dow = getDOW(day, monthNumber, year);
   Serial.print("Día de la semana: "); Serial.println(dow);
+  // -------------------------------------------------------
   
 
-  // Establecer la fecha y hora en el RTC
-  rtc.setDOW(dow);                        // Establecer el día de la semana Lunes-Domingo (1 - 7)
+  // ----- MODIFICAR FECHA Y HORA -------------
+  rtc.setDOW(dow);                       // Establecer el día de la semana Lunes-Domingo (1 - 7)
   rtc.setDate(day, monthNumber, year);   // Establecer fecha a día (1 - 31), mes (1 - 12), año (2000 - 2099) actuales
   rtc.setTime(hour, minute, second);     // Establecer la hora (formato 24hr) => hora (0 - 23), min (0 - 59), seg (0 - 59)
-  
+  // ------------------------------------------
+
+
+  // ----- MODIFICAR FLAG DE HORARIO DE VERANO/INVIERNO -----
+  // Leer el valor actual de la flag de horario de verano/invierno
+  uint8_t currentFlagState = dueFlashStorage.read(SUMMER_TIME_FLAG_ADDRESS);
+
+  // Guardar en la flash que estamos en horario de verano (23/06/2024)
+  // Si el valor actual es 0 (inverno), guardar un 1 en la dirección 0 (verano)
+  if(currentFlagState == 0){ 
+    dueFlashStorage.write(SUMMER_TIME_FLAG_ADDRESS, 1); 
+    Serial.println("Horario de verano");
+  }
+  // Si estuviéramos en invierno (p. ej. 13/11/24), al establecer la hora del RTC guardaríamos un 0 
+  // Si el valor actual es 1 (verano), guardar un 0 en la dirección 0 (invierno)
+  // if(currentFlagState == 1){ 
+  //  dueFlashStorage.write(SUMMER_TIME_FLAG_ADDRESS, 0);
+  //  Serial.println("Horario de invierno");
+  // }
+  // ---------------------------------------------------------
 
 }
 
@@ -106,10 +136,10 @@ void loop()
  * @param hour La hora actual
  */
 /*-----------------------------------------------------------------------------*/
-void adjustTime(int& second, int& minute, int& hour) 
+void adjustTime(int& second, int& minute, int& hour, int offset) 
 {
   // Corregir el desfase de segundos
-  second += 20;
+  second += offset;
   if (second >= 60) {
     second -= 60;
     minute++;

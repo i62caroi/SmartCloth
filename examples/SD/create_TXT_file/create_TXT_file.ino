@@ -5,7 +5,11 @@
 
 #include <SD.h>
 
-#define SD_CARD_SCS  13 ///< Define el pin CS para la tarjeta SD
+
+#define SD_CARD_SCS  4      // SmartCloth v2.1
+//#define SD_CARD_SCS  13   // SmartCloth v2.2
+
+
 
 // Fichero donde ir escribiendo la info para cuando haya wifi
 char fileTXT[30] = "data/data-esp.txt";
@@ -102,11 +106,11 @@ void createFileTXT()
         dataFile.println("INICIO-PLATO");
         dataFile.println("ALIMENTO,15,53.50");
         dataFile.println("ALIMENTO,9,53.50");
-        dataFile.println("FIN-COMIDA,27.05.2024,10:18:36");
+        dataFile.println("FIN-COMIDA,23.06.2024,10:18:36");
         dataFile.println("INICIO-COMIDA");
         dataFile.println("INICIO-PLATO");
         dataFile.println("ALIMENTO,15,24.40");
-        dataFile.println("FIN-COMIDA,27.05.2024,15:25:25");
+        dataFile.println("FIN-COMIDA,23.06.2024,15:25:25");
         dataFile.println("INICIO-COMIDA");
         dataFile.println("INICIO-PLATO");
         dataFile.println("ALIMENTO,15,53.50");
@@ -115,7 +119,7 @@ void createFileTXT()
         dataFile.println("ALIMENTO,3,32.07");
         dataFile.println("ALIMENTO,27,46.65");
         dataFile.println("ALIMENTO,10,16.23");
-        dataFile.println("FIN-COMIDA,27.05.2024,22:39:36");
+        dataFile.println("FIN-COMIDA,23.06.2024,22:39:36");
 
         dataFile.close();
 

@@ -23,6 +23,7 @@
                 "/Users/irenecasares/Library/Arduino15/packages/arduino/hardware/sam/1.6.12/cores/arduino",
                 "/Users/irenecasares/Library/Arduino15/packages/arduino/hardware/sam/1.6.12/variants/arduino_due_x",
                 "/Users/irenecasares/Documents/Arduino/libraries/DS3231",
+                "/Users/irenecasares/Documents/Arduino/libraries/DueFlashStorage/src",
                 "/Users/irenecasares/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/arm-none-eabi/include/c++/4.8.3",
                 "/Users/irenecasares/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/arm-none-eabi/include/c++/4.8.3/arm-none-eabi",
                 "/Users/irenecasares/Library/Arduino15/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/arm-none-eabi/include/c++/4.8.3/backward",

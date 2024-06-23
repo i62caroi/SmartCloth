@@ -305,7 +305,6 @@ void showCriticFailureSD(){
  * 
  *               - ERROR_READING_TXT, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR: "¡Error del sistema!" con comentario
  * 
- * Se han modificado las siguientes pantallas de sincronización (la hecha al inicio si el TXT tiene algo):
  */
 void showDataToUpload(byte option)
 {
