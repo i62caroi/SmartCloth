@@ -41,8 +41,9 @@ void setup() {
         
         Serial.println("Startup complete...");
 
-        loadPicturesShowHourglass();
-        arranque();
+        //loadPicturesShowHourglass();
+        //arranque();
+        //arranqueSlowOpacity();
 
         Serial.println("Indique pantalla a mostrar: ");
     }
@@ -75,27 +76,48 @@ void loop() {
             case 3:     showAccionRealizada(SAVE_EXECUTED_FULL);                        break;
             case 4:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP);       break;
             case 5:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI);          break;
-            case 6:     showAccionRealizada(SAVE_ESP32_TIMEOUT);                        break;
+            case 6:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT);          break;
             case 7:     showAccionRealizada(SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR);    break;
-            case 8:     dashboard();                                                    break;
-            case 9:     crudo_cocinado_sobre_dashboard();                               break; // sin transparencias ni alternancias, solo aparecer
-            case 10:    pantalla_inicial();                                             break;
-            case 11:    select_Grupo();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
-            case 12:    crudo_cocinado();                                               break; // Con 3º alternancia y aparición/desaparición paulatinas
-            case 13:    colocar_alimento();                                             break; // Con aparición paulatina
-            case 14:    add_Plato();                                                    break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 15:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            case 16:    save_Comida(true);                                              break; // Guardar con WiFi (tb a database)
-            case 17:    save_Comida(false);                                             break; // Guardar sin WiFi (solo local)
-            case 18:    pedirConfirmacion_DELETE_CSV();                                 break;
-            case 19:    suggestAction();                                                break;
-            case 20:    showCriticFailureSD();                                          break;
-            case 21:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
-            case 22:    showDataToUpload(NO_INTERNET_CONECTION);                        break;  // No hay WiFi
+            case 8:     showAccionRealizada(SAVE_EXECUTED_ONLY_DATABASE);               break;
+            case 9:     showAccionRealizada(ERROR_SAVING_DATA);                         break;
+            
+            case 10:     dashboard();                                                   break;
+            
+            case 11:     crudo_cocinado_sobre_dashboard();                              break; // sin transparencias ni alternancias, solo aparecer
+            
+            case 12:    pantalla_inicial();                                             break;
+            
+            case 13:    select_Grupo();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo verde
+            
+            case 14:    crudo_cocinado();                                               break; // Con 3º alternancia y aparición/desaparición paulatinas
+            
+            case 15:    colocar_alimento();                                             break; // Con aparición paulatina
+            
+            case 16:    add_Plato();                                                    break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+            
+            case 17:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+            
+            case 18:    save_Comida(true);                                              break; // Guardar con WiFi (tb a database)
+            case 19:    save_Comida(false);                                             break; // Guardar sin WiFi (solo local)
+            
+            case 20:    pedirConfirmacion_DELETE_CSV();                                 break;
+            
+            case 21:    suggestAction();                                                break;
+            
+            case 22:    showCriticFailureSD();                                          break;
+            
+            //case 21:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
+            //case 22:    showDataToUpload(NO_INTERNET_CONNECTION);                        break;  // No hay WiFi
             case 23:    showDataToUpload(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
-            case 24:    showDataToUpload(UPLOADED_DATA);                                break;  // Se ha completado la subida
-            case 25:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
-            case 26:    showError(ERROR_STATE_GROUP);                                   break;  // Error: se puso alimento sin crudo/cocinado 
+            case 24:    showDataToUpload(ALL_MEALS_UPLOADED);                           break;  // Se ha completado la subida
+            case 25:    showDataToUpload(MEALS_LEFT);                                   break;  // Se han quedado comidas sin guardar
+            case 26:    showDataToUpload(ERROR_READING_TXT);                            break;  // Error al enviar la info
+            case 27:    showDataToUpload(NO_INTERNET_CONNECTION);                       break;  // Error: se puso alimento sin crudo/cocinado
+            case 28:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
+            case 29:    showDataToUpload(TIMEOUT);                                      break;  // Error al enviar la info
+            case 30:    showDataToUpload(UNKNOWN_ERROR);                                break;  // Error al enviar la info
+
+            case 31:    showError(ERROR_STATE_GROUP);                                   break;  // Error: se puso alimento sin crudo/cocinado 
 
             default:    Serial.println("Opción desconocida: " + String(input));         break;
         }

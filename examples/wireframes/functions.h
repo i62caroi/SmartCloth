@@ -6,9 +6,9 @@
 
 // ------- ChipSelect de SD --------------
 // SmartCloth v2.1
-//#define SD_CARD_SCS  4 
+#define SD_CARD_SCS  4 
 // SmartCloth v2.2
-#define SD_CARD_SCS  13 
+//#define SD_CARD_SCS  13 
 // ---------------------------------------
 
 // Screen circuit wiring
@@ -24,19 +24,6 @@ int SCREEN_HEIGHT; // Y (600)
 // --- ACCIÓN CONFIRMADA ---
 #define  ADD_EXECUTED                             1
 #define  DELETE_EXECUTED                          2
-#define  SAVE_EXECUTED_FULL                       3  
-#define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4
-#define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5
-#define  SAVE_ESP32_TIMEOUT                       6
-#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7
-
-
-#define  DATA_TO_UPLOAD         1
-#define  NO_INTERNET_CONECTION  2
-#define  UPLOADING_DATA         3
-#define  UPLOADED_DATA          4
-#define  HTTP_ERROR             5
-
 
 
 // --- MENSAJE DE ERROR ----
@@ -55,6 +42,39 @@ int SCREEN_HEIGHT; // Y (600)
 #define  ERROR_STATE_CANCEL          13
 #define  ERROR_STATE_AVISO           14
 
+// --- RESULTADOS DE SUBIR INFO A DATABASE --- 
+// Usadas en:
+//      prepareSaving()                 -->     WAITING_FOR_DATA, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT y UNKNOWN_ERROR
+//      sendTXTFileToESP32()            -->     ALL_MEALS_UPLOADED, MEALS_LEFT y ERROR_READING_TXT
+//      saveComidaInDatabase_or_TXT()   -->     MEAL_UPLOADED, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT y UNKNOWN_ERROR
+//      showDataToUpload()              -->     UPLOADING_DATA, ALL_MEALS_UPLOADED, MEALS_LEFT, ERROR_READING_TXT, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT y UNKNOWN_ERROR
+#define  WAITING_FOR_DATA        1
+#define  UPLOADING_DATA          2
+#define  ALL_MEALS_UPLOADED      3 // Comidas guardadas en sincronización inicial
+#define  MEAL_UPLOADED           3 // Comida guardada al pulsar "Guardar comida"
+#define  MEALS_LEFT              4
+#define  ERROR_READING_TXT       5
+#define  NO_INTERNET_CONNECTION  6
+#define  HTTP_ERROR              7
+#define  TIMEOUT                 8
+#define  UNKNOWN_ERROR           9
+
+
+
+// --- TIPO DE GUARDADO HECHO (GENERAL) ---
+// Usados en saveComida() y luego en showAccionRealizada()
+#define  SAVE_EXECUTED_FULL                       3  // Se ha guardado en CSV y en la database
+#define  SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP      4  // Solo se ha guardado en CSV. Fallo en petición HTTP
+#define  SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI         5  // Solo se ha guardado en CSV. No hay WiFi
+#define  SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT         6  // Solo se ha guardado en CSV. Timeout de respuesta del esp32
+#define  SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR   7  // Solo se ha guardado en CSV. Error desconocido
+#define  SAVE_EXECUTED_ONLY_DATABASE              8  // Solo en la database porque falló el CSV
+#define  ERROR_SAVING_DATA                        9  // Error al guardar. Falló el CSV y la database
+
+
+
+
+
 
 
 RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
@@ -66,7 +86,7 @@ bool    setupSD();
 void    setupScreen();
 
 void    showCriticFailureSD();              // Pantalla: Fallo en SD (no se encuentra)
-void    showDataToUpload(int option);
+void    showDataToUpload(byte option);
 void    pedirConfirmacion_DELETE_CSV();     // Pantalla: Pedir confirmacion y confirmado borrar CSV
 
 void    suggestAction();                    // Pantalla: Sugerencia acción
@@ -77,9 +97,10 @@ void    crudo_cocinado_sobre_dashboard();   // Pantalla: Escoja crudo/cocinado (
 void    colocar_alimento();                 // Pantalla: Coloque alimento sobre báscula
 void    add_Plato();                        // Pantalla: Pedir confirmación y confirmado añadir plato
 void    delete_Plato();                     // Pantalla: Pedir confirmación y confirmado borrar plato
-void    save_Comida();                      // Pantalla: Pedir confirmación y confirmado guardar comida
+void    save_Comida(bool conexion);         // Pantalla: Pedir confirmación y confirmado guardar comida
 void    showAccionRealizada(int option);    // Pantalla: Acción realizada (añadir, borrar, guardar)
 void    arranque();                         // Pantalla: Mostrar logo SmartCloth letra a letra
+void    arranqueSlowOpacity();              // Pantalla: Mostrar logo SmartCloth con distinta opacidad
 void    dashboard();                        // Pantalla: Dashboard completo 
 void    showError(int option);              // Pantalla: Error y sugerencia de solución
 
@@ -194,10 +215,10 @@ void showCriticFailureSD(){
  * @brief Muestra información indicando que se debe sincronizar SmartCloth con la web.
  * Es decir, que hay algo en el fichero TXT que se debe subir.
  * 
- * @param option La opción seleccionada: DATA_TO_UPLOAD, UPLOADING_DATA o NO_INTERNET_CONECTION
+ * @param option La opción seleccionada: DATA_TO_UPLOAD, UPLOADING_DATA o NO_INTERNET_CONNECTION
  */
 /*-----------------------------------------------------------------------------*/
-void showDataToUpload(int option){
+/*void showDataToUpload(int option){
 
     tft.clearScreen(WHITE);
 
@@ -220,7 +241,7 @@ void showDataToUpload(int option){
 
     switch (option){
         case DATA_TO_UPLOAD:            tft.setCursor(80, 158);     tft.println("SINCRONIZACI\xD3""N NECESARIA");           break; 
-        case NO_INTERNET_CONECTION:     tft.setCursor(300, 158);    tft.println("SIN CONEXI\xD3""N");                       break;
+        case NO_INTERNET_CONNECTION:     tft.setCursor(300, 158);    tft.println("SIN CONEXI\xD3""N");                       break;
         case UPLOADING_DATA:            tft.setCursor(220, 158);    tft.println("SINCRONIZANDO...");                        break; 
 
         case UPLOADED_DATA:             tft.fillRect(55,115,969,273,VERDE_PEDIR); // Verde de éxito
@@ -244,7 +265,7 @@ void showDataToUpload(int option){
     switch (option){
         case DATA_TO_UPLOAD:            tft.setCursor(110, 358);                                        tft.println("COMPROBANDO CONEXI\xD3""N A INTERNET...");         break; 
         
-        case NO_INTERNET_CONECTION:     tft.setCursor(200, 358);                                        tft.println("NO HAY CONEXI\xD3""N A INTERNET");
+        case NO_INTERNET_CONNECTION:     tft.setCursor(200, 358);                                        tft.println("NO HAY CONEXI\xD3""N A INTERNET");
                                         tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println("NO SE PUEDE SINCRONIZAR LA INFORMACI\xD3""N");     break;
         
         case UPLOADING_DATA:            tft.setCursor(50, 358);                                         tft.println("ESPERE MIENTRAS SE COMPLETA LA SUBIDA...");        break; 
@@ -265,7 +286,184 @@ void showDataToUpload(int option){
 
     // ----------------------------------------------------------------------------------------------------
 
+}*/
+
+
+/**
+ * Muestra la información y los elementos gráficos correspondientes a la opción de subida de datos.
+ * 
+ * @param option La opción seleccionada para mostrar los datos de subida.
+ * 
+ *               - UPLOADING_DATA: "Sincronizando..." con fondo azul dentro de un recuadro azul oscuro indicando 
+ *                                  al usuario que espere a que termine de subirse toda la info
+ * 
+ *               - ALL_MEALS_UPLOADED: "¡SmartCloth sincronizado!" con fondo verde entre dos líneas blancas indicando 
+ *                                      al usuario que se ha subido toda la info
+ * 
+ *               - MEALS_LEFT: "Sincronización parcial" con fondo amarillo entre dos líneas rojas indicando al usuario 
+ *                              que se han subido algunas comidas pero otras no se ha podido y se intentará más adelante
+ * 
+ *               - ERROR_READING_TXT, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR: "¡Error del sistema!" con comentario
+ * 
+ * Se han modificado las siguientes pantallas de sincronización (la hecha al inicio si el TXT tiene algo):
+ */
+void showDataToUpload(byte option)
+{
+    // ---- COLOR FONDO, RECUADRO Y TEXTO ------------------------------------------------------------
+    uint16_t backgroundColor, lineColor, textColor;
+    
+    switch(option)
+    {
+        case UPLOADING_DATA:            backgroundColor = AZUL_SINCRONIZANDO;           lineColor = textColor = WHITE;                          break;
+        case ALL_MEALS_UPLOADED:        backgroundColor = VERDE_PEDIR;                  lineColor = textColor = WHITE;                          break;
+        case MEALS_LEFT:                backgroundColor = AMARILLO_CONFIRM_Y_AVISO;     lineColor = textColor = ROJO_TEXTO_CONFIRM_Y_AVISO;     break;
+        
+        // Error: option en rango [5, 9]
+        default:                        backgroundColor = RED_ERROR_Y_CANCEL;           lineColor = textColor = WHITE;                          break;
+
+    }
+
+    // Aplicar color al fondo
+    tft.clearScreen(backgroundColor);
+
+    // El color del texto se establece después de dibujar (recuadro o líneas) porque al dibujar se modifica '_textForeColor'
+    // -----------------------------------------------------------------------------------------------
+
+
+    // ----- DIBUJO ----------------------------------------------------------------------------------
+    switch (option)
+    {
+        case UPLOADING_DATA:
+            // ---- RECUADRO ----
+            // Borde:
+            tft.drawRect(50,110,974,278,lineColor);
+            tft.drawRect(51,111,973,277,lineColor);
+            tft.drawRect(52,112,972,276,lineColor);
+            tft.drawRect(53,113,971,275,lineColor);
+            tft.drawRect(54,114,970,274,lineColor);
+            // Relleno:
+            tft.fillRect(55, 115, 969, 273, AZUL_RECUADRO_SINCRONIZANDO); // Rellenar el rectángulo más interno con DARK_BLUE
+            // ------------------
+            // ----- NUBE -------
+            // Parte superior de la nube
+            /*tft.fillCircle(50, 148, 70, WHITE);  // Extremo izquierdo superior, más grande
+            tft.fillCircle(175, 128, 100, WHITE); // Círculo central superior, más grande
+            tft.fillCircle(300, 148, 100, WHITE);  // Círculo medio derecho superior, más grande
+            tft.fillCircle(425, 128, 100, WHITE); // Círculo extremo derecho superior, más grande
+            tft.fillCircle(550, 148, 70, WHITE);  // Nuevo círculo extremo derecho para extender la nube
+
+            // Base de la nube
+            tft.fillCircle(50, 178, 60, WHITE);  // Círculo izquierdo de la base, más grande
+            tft.fillCircle(175, 198, 90, WHITE); // Círculo central de la base, más grande
+            tft.fillCircle(300, 178, 90, WHITE); // Círculo medio derecho de la base, más grande
+            tft.fillCircle(425, 198, 90, WHITE); // Círculo extremo derecho de la base, más grande
+            tft.fillCircle(550, 178, 60, WHITE); // Nuevo círculo extremo derecho de la base para extender la nube
+            */
+            // ------------------
+            break;
+
+        case MEALS_LEFT:
+            tft.fillRoundRect(252,110,764,118,3,lineColor); // Línea superior
+            tft.fillRoundRect(252,270,764,278,3,lineColor); // Línea inferior
+            break;
+
+        case ALL_MEALS_UPLOADED:
+            tft.fillRoundRect(252,110,764,118,3,lineColor); // Línea superior
+            tft.fillRoundRect(252,270,764,278,3,lineColor); // Línea inferior
+            break;
+            
+        case ERROR_READING_TXT:
+        case NO_INTERNET_CONNECTION:
+            // Parte superior de la nube
+            /*tft.fillCircle(900, 65, 18, WHITE); // Círculo izquierdo superior
+            tft.fillCircle(920, 60, 20, WHITE); // Círculo central superior 
+            tft.fillCircle(940, 65, 18, WHITE); // Círculo derecho superior 
+            // Base de la nube 
+            tft.fillCircle(890, 80, 15, WHITE); // Círculo izquierdo de la base
+            tft.fillCircle(910, 80, 15, WHITE); // Círculo central de la base 
+            tft.fillCircle(930, 80, 15, WHITE); // Círculo derecho de la base 
+
+            // Dibujar línea diagonal para simbolizar NO_INTERNET_CONNECTION
+            //tft.drawLine(390, 70, 460, 110, RED); // Línea diagonal roja cruzando la nube
+            tft.drawLine(960, 30, 880, 110, RED); // Línea diagonal roja cruzando la nube
+            tft.drawLine(961, 31, 881, 111, RED);
+            tft.drawLine(962, 32, 882, 112, RED);
+            break;*/
+        case HTTP_ERROR:
+        case TIMEOUT:
+        case UNKNOWN_ERROR:
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127); // Mostrar cruz (114x127) en PAGE1
+            tft.fillRoundRect(252,290,764,298,3,lineColor); // Dibujar líea por encima de la imagen de cruz para no tener que cuadrarla
+            break;
+
+        default:
+            break;
+    }
+    
+    // Restablecer color de texto. Al dibujar (recuadro o líneas), el foregroundColor se cambia a lineColor
+    tft.setTextForegroundColor(textColor);
+    // -----------------------------------------------------------------------------------------------
+    
+
+
+
+    // ----- TEXTO (INFORMACIÓN) ---------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
+
+    switch (option)
+    {
+        // CREO QUE ES MEJOR HACERLO EN UN SEGUNDO PLANO Y SOLO MOSTRAR INFO DE LA SINCRONIZACIÓN SI OCURRE,
+        // OSEA SI HAY ALGO QUE SUBIR Y SE PUEDE SUBIR (HAY WIFI)
+        //case DATA_TO_UPLOAD:            tft.setCursor(80, 158);         tft.println("SINCRONIZACI\xD3""N NECESARIA");           break; 
+
+        case UPLOADING_DATA:            tft.setCursor(230, 158);        tft.println("SINCRONIZANDO...");                        break; 
+
+        case ALL_MEALS_UPLOADED:        tft.setCursor(70, 158);         tft.println("\xA1""SMARTCLOTH SINCRONIZADO\x21""");     break;
+
+        case MEALS_LEFT:                tft.setCursor(100, 158);         tft.println("SINCRONIZACI\xD3""N PARCIAL");             break;
+
+        case ERROR_READING_TXT:         
+        case NO_INTERNET_CONNECTION:     
+        case HTTP_ERROR:                tft.setCursor(180,100);         tft.println("\xA1""ERROR DEL SISTEMA\x21""");            break;
+
+        //case TIMEOUT:                   tft.setCursor(30,158);         tft.println("ERROR DEL SISTEMA: TIMEOUT");                                 break;
+
+        //case UNKNOWN_ERROR:             tft.setCursor(30,158);         tft.println("ERROR DEL SISTEMA: DESCONOCIDO");                       break;
+        
+        default:    break;
+    }
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    switch (option){
+        //case DATA_TO_UPLOAD:            tft.setCursor(110, 358);                                        tft.println("COMPROBANDO CONEXI\xD3""N A INTERNET...");         break; 
+
+        case UPLOADING_DATA:            tft.setCursor(70, 358);                                         tft.println("ESPERE MIENTRAS SE COMPLETA LA SUBIDA");           break; 
+
+        case ALL_MEALS_UPLOADED:        tft.setCursor(210, 358);                                        tft.println("LA WEB SE HA ACTUALIZADO");                        break;
+
+        case MEALS_LEFT:                tft.setCursor(50, 358);                                         tft.println("ALGUNAS COMIDAS NO SE HAN SINCRONIZADO");                
+                                        tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY()+20);   tft.println("SE INTENTAR\xC1"" DE NUEVO M\xC1""S ADELANTE");    break;
+
+        case ERROR_READING_TXT:         tft.setCursor(60, 420);                                         tft.println("FALL\xD3"" LA LECTURA DEL FICHERO DE COMIDAS");    break;
+        
+        case NO_INTERNET_CONNECTION:    tft.setCursor(125, 420);                                        tft.println("SE PERDI\xD3"" LA CONEXI\xD3""N A INTERNET");
+                                        tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println("NO SE PUEDE SINCRONIZAR LA INFORMACI\xD3""N");     break;
+              
+        case HTTP_ERROR:                tft.setCursor(80, 358);                                         tft.println("FALL\xD3"" LA SINCRONIZACI\xD3""N CON LA WEB");    break;
+
+        // case TIMEOUT:                   tft.setCursor(100, 358);                                        tft.println("M\xD3""DULO WIFI NO RESPONDE");    break;
+
+        default:    break;
+    }
+    // ----------------------------------------------------------------------------------------------------
+
 }
+
 
 
 /*
@@ -1283,31 +1481,52 @@ void save_Comida(bool conexion){ // Tb PAGE3, pero más a la derecha
  */
 /*-----------------------------------------------------------------------------*/
 void showAccionRealizada(int option){
-    tft.clearScreen(VERDE_PEDIR);
+    // ------------ COLOR FONDO Y TEXTO ------------------------------------------------------------------
+    switch (option)
+    {
+        case SAVE_EXECUTED_ONLY_DATABASE:   tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO);  break; // Comida guardado solo en database. ERROR IMPORTANTE EN MEMORIA (acumulado local no actualizado)
+        case ERROR_SAVING_DATA:             tft.clearScreen(RED_ERROR_Y_CANCEL);        break; // ERROR IMPORTANTE EN MEMORIA (acumulado local no actualizado)
+        default:                            tft.clearScreen(VERDE_PEDIR);               break; // Éxito completo o parcial (guardado solo local): option en rango [1, 7]
+                                                                                               //     Si falla la subida a database pero se puede guardar en local, también es éxito
+    }
+    // ----------------------------------------------------------------------------------------------------
+
 
     // ------------ LINEA ---------------------------------------------------------------------------------
-    tft.fillRoundRect(252,150,764,158,3,WHITE);
+    // Al dibujar la línea, ya se cambia el color del texto según el caso
+    if(option == SAVE_EXECUTED_ONLY_DATABASE)   tft.fillRoundRect(252,150,764,158,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
+    else                                        tft.fillRoundRect(252,150,764,158,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
+    
 
     // ----- TEXTO (ACCION REALIZADA) ---------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(WHITE); 
 
-    switch (option){
-      case ADD_EXECUTED:               tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");  break; // PLATO AÑADIDO
-      case DELETE_EXECUTED:            tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");    break; // PLATO ELIMINADO
-      case SAVE_EXECUTED_FULL:  
-      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   
-      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:    
-      case SAVE_ESP32_TIMEOUT:
-      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:
-                                       tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break; // COMIDA GUARDADA AL MENOS EN LOCAL
+    switch (option)
+    {
+        case ADD_EXECUTED:               tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");  break; // PLATO AÑADIDO
+        
+        case DELETE_EXECUTED:            tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");    break; // PLATO ELIMINADO
+        
+        case SAVE_EXECUTED_FULL:  
+        case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   
+        case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:    
+        case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:
+        case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:
+                                        tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break; // COMIDA GUARDADA AL MENOS EN LOCAL
+    
+        case SAVE_EXECUTED_ONLY_DATABASE:   tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");                break;  // Comida guardada solo en database. Error en acumulado local
+        case ERROR_SAVING_DATA:             tft.setCursor(100, 208);   tft.println("\xA1""ERROR AL GUARDAR DATOS\x21""");    break;  // Error al guardar datos
+
+        default: break;
     }
     // ----------------------------------------------------------------------------------------------------
     
     // ------------ LINEA ---------------------------------------------------------------------------------
-    tft.fillRoundRect(252,330,764,338,3,WHITE);
+    // Al dibujar la línea, ya se cambia el color del texto según el caso
+    if(option == SAVE_EXECUTED_ONLY_DATABASE)   tft.fillRoundRect(252,330,764,338,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
+    else                                        tft.fillRoundRect(252,330,764,338,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 
 
@@ -1323,43 +1542,63 @@ void showAccionRealizada(int option){
       case SAVE_EXECUTED_FULL: // GUARDADA EN LOCAL Y DATABASE
       case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:   // GUARDADA SOLO EN LOCAL POR FALLO EN PETICION HTTP
       case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:  // GUARDADA SOLO EN LOCAL POR NO TENER WIFI
-      case SAVE_ESP32_TIMEOUT:  // TIMEOUT EN LA RESPUESTA DEL ESP32. NO SABEMOS SI HA GUARDADO O NO, PERO ASUMIMOS QUE NO
+      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:  // TIMEOUT EN LA RESPUESTA DEL ESP32. NO SABEMOS SI HA GUARDADO O NO, PERO ASUMIMOS QUE NO
       case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:  // GUARDADA SOLO EN LOCAL POR UN ERROR DESCONOCIDO AL GUARDAR EN DATABASE
+                // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así, la báscula estará vacía (pesoARetirar = 0).
                 // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
-                //if(lastValidState == STATE_Init){
-                    // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
-                    // la báscula estará vacía (pesoARetirar = 0).
-                    //tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
-                    //tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
-                //}
-                //else{ 
-                    // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
-                    // estando aún en la báscula.
+                /*if(lastValidState == STATE_Init)
+                {
+                    tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
+                    tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
+                }
+                else // Si se guarda tras conformar el plato, estando aún en la báscula, indicando que se retire
+                {*/ 
                     tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
                     tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
                 //}
 
+                // --- MENSAJE DE SUBIDA EN ESQUINA --------------
+                // Tamaño de texto para mensaje en la esquina
                 tft.selectInternalFont(RA8876_FONT_SIZE_24);
                 tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
             
+                // Color de texto según mensaje
                 if (option == SAVE_EXECUTED_FULL) // SE HA GUARDADO LOCAL Y DATABASE
                     tft.setTextColor(WHITE,DARKPURPLE,RA8876_TEXT_TRANS_OFF); // Texto blanco sobre fondo morado oscuro
                 else // SOLO SE HA GUARDADO EN LOCAL
                     tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco sobre fondo rojo
             
-
-                switch(option){
+                // Mensaje según tipo de guardado
+                switch(option)
+                {
                     case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break;
                     case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(785,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(810,550);   tft.println(" NO SUBIDO A WEB ");                        break;
-                    case SAVE_ESP32_TIMEOUT:                        tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(810,550);   tft.println(" NO SUBIDO A WEB ");                     break;
+                    case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
                     case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
+                    default: break;
                 }
+
 
                 // Eliminar "resaltado" del texto de aquí en adelante:
                 tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
+                // ---- FIN MENSAJE DE SUBIDA EN ESQUINA ---------
 
                 break; 
+
+
+        case SAVE_EXECUTED_ONLY_DATABASE:
+        case ERROR_SAVING_DATA:
+                if(option == SAVE_EXECUTED_ONLY_DATABASE){ tft.setCursor(220, 388); tft.println("ACUMULADO NO ACTUALIZADO, SOLO WEB"); }
+                else if(option == ERROR_SAVING_DATA){ tft.setCursor(85, 388); tft.println("FALLO IMPORTANTE EN MEMORIA. ACUMULADO NO ACTUALIZADO"); }
+
+                // Si se guarda tras conformar el plato, estando aún en la báscula, indicando que se retire
+                //if(lastValidState != STATE_Init){ tft.setCursor(50,450); tft.println("RETIRE EL PLATO Y CONTACTE CON EL EQUIPO DE SMARTCLOTH");}
+                tft.setCursor(80,450); tft.println("RETIRE EL PLATO Y CONTACTE CON EL EQUIPO DE SMARTCLOTH");
+
+                break;
+
+        default: break;
 
     }
     // ----------------------------------------------------------------------------------------------------
@@ -1946,6 +2185,120 @@ void arranque(){ // OK ==> HECHO
     
 }
 
+
+/**
+ * @brief Función que realiza el arranque del programa con las letras apareciendo poco a poco.
+*/
+void arranqueSlowOpacity(){
+
+    uint8_t i; // Variable i de los bucles for para ir modificando la opacidad de las imágenes y que aparezcan poco a poco
+
+    tft.clearScreen(WHITE); // Fondo blanco en PAGE1
+    delay(200);
+
+    // S M A R T C L O T H ==> S T O T M L R A C H (orden de aparición)
+
+    // ----------- LETRA S ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar S apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,40,150,95,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,0,PAGE1_START_ADDR,SCREEN_WIDTH,40,150,95,159);       // S (95x159) 
+    delay(80);
+
+    // ----------- LETRA T1 ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar T1 apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,428,150,104,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,428,150,104,159);   // T1 (104x159)
+    delay(80);
+
+    // ----------- LETRA O ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar  apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,669,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,702,150,85,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,669,0,PAGE1_START_ADDR,SCREEN_WIDTH,702,150,85,159);    // O (85x159)
+    delay(80);
+    
+    // ----------- LETRA T2 ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar T2 apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,787,150,104,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,392,0,PAGE1_START_ADDR,SCREEN_WIDTH,787,150,104,159);   // T2 (104x159) 
+    delay(80);
+
+    // ----------- LETRA M ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar M apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,96,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,135,150,104,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,96,0,PAGE1_START_ADDR,SCREEN_WIDTH,135,150,104,159);    // M (104x154) 
+    delay(80);
+    
+    // ----------- LETRA L ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar L apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,583,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,617,150,85,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,583,0,PAGE1_START_ADDR,SCREEN_WIDTH,617,150,85,159);    // L (85x159) 
+    delay(80);
+
+    // ----------- LETRA R ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar R apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,306,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,343,150,85,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,306,0,PAGE1_START_ADDR,SCREEN_WIDTH,343,150,85,159);    // R (85x159) 
+    delay(80);
+
+    // ----------- LETRA A ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar A apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,201,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,239,150,104,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,201,0,PAGE1_START_ADDR,SCREEN_WIDTH,239,150,104,159);   // A (104x159) 
+    delay(80);
+
+    // ----------- LETRA C ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar C apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,497,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,532,150,85,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,497,0,PAGE1_START_ADDR,SCREEN_WIDTH,532,150,85,159);    // C (85x159) 
+    delay(80);
+
+    // ----------- LETRA H ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar H apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,755,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,891,150,85,159,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,755,0,PAGE1_START_ADDR,SCREEN_WIDTH,891,150,85,159);    // H (85x159) 
+    delay(80);   
+
+    
+    // ----------- LOGO ----------------------
+    for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+        // Mostrar LOGO apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+        tft.bteMemoryCopyWithOpacity(PAGE2_START_ADDR,SCREEN_WIDTH,841,0,PAGE1_START_ADDR,SCREEN_WIDTH,0,400,PAGE1_START_ADDR,SCREEN_WIDTH,417,350,162,169,i);
+        delay(10);
+    }
+    tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,841,0,PAGE1_START_ADDR,SCREEN_WIDTH,417,350,162,169);   // Logo (162x169) ==> debajo
+    
+    delay(500);
+}
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

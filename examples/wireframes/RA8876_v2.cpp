@@ -1552,6 +1552,48 @@ void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 }
 
 
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::drawArc(uint16_t x, uint16_t y, uint16_t radius, uint16_t startAngle, uint16_t endAngle, uint16_t color) {
+    uint16_t x_aux = radius;
+    uint16_t y_aux = 0;
+    uint16_t err = 0;
+    while (x >= y) {
+        // Determinar los puntos de la circunferencia para los octantes
+        for (int octante = 0; octante < 8; octante++) {
+            uint16_t px, py;
+            switch (octante) {
+                case 0: px = x + x_aux; py = y - y_aux; break;
+                case 1: px = x + y_aux; py = y - x_aux; break;
+                case 2: px = x - y_aux; py = y - x_aux; break;
+                case 3: px = x - x_aux; py = y - y_aux; break;
+                case 4: px = x - x_aux; py = y + y_aux; break;
+                case 5: px = x - y_aux; py = y + x_aux; break;
+                case 6: px = x + y_aux; py = y + x_aux; break;
+                case 7: px = x + x_aux; py = y + y_aux; break;
+            }
+
+            // Calcular el ángulo para el punto actual
+            float angulo = atan2(py - y, px - x) * (180 / M_PI);
+            if (angulo < 0) angulo += 360;
+
+            // Dibujar solo si el ángulo está dentro del rango especificado
+            if (angulo >= startAngle && angulo <= endAngle) {
+                drawPixel(px, py, color);
+            }
+        }
+
+        y_aux += 1;
+        err += 1 + 2*y_aux;
+        if (2*(err - x_aux) + 1 > 0) {
+            x_aux -= 1;
+            err += 1 - 2*x_aux;
+        }
+    }
+}
+
+
 /* *************************************************************
    ************************************************************* */
 void RA8876::bte_Source0_MemoryStartAddr(uint32_t addr)	

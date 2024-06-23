@@ -27,6 +27,8 @@ Version   : v2.0
 #include <SD.h>
 #include "COLORS.h"
 
+#include <cmath> // Para funciones matemáticas
+
 #define SerialPC Serial
 
 
@@ -1131,6 +1133,7 @@ public:
   inline void     drawEllipse(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_ELLIPSE); }; //0x80
   inline void     fillEllipse(uint16_t x, uint16_t y, uint16_t radius, uint16_t color) { _drawEllipseShape(x, y, radius, radius, color, RA8876_DRAW_ELLIPSE_FILL); }; //0xC0
 
+  inline void     drawArc(uint16_t x, uint16_t y, uint16_t radius, uint16_t startAngle, uint16_t endAngle, uint16_t color);
   // Limpiar pantalla 
   inline void     clearScreen(uint16_t color) { fillRect(0, 0, _width, _height, color); };
   inline void     clearArea(uint16_t xOrig, uint16_t yOrig, uint16_t xDest, uint16_t yDest, uint16_t color) { fillRect(xOrig, yOrig, xDest, yDest, color); }; 
