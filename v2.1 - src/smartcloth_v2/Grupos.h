@@ -26,6 +26,10 @@
 
 #include "COLORS.h" // Colores del texto de nombre de grupo y ejemplos
 
+
+
+
+/*-----------------------------------------------------------------------------*/
 /**
  * @struct Grupo
  * @brief Estructura que representa un grupo de alimentos.
@@ -33,6 +37,7 @@
  * Esta estructura contiene información sobre un grupo de alimentos, como su ID, color, nombre,
  * ejemplos y contenido nutricional por gramo.
  */
+/*-----------------------------------------------------------------------------*/
 typedef struct {
     byte          ID_grupo;         /**< ID del grupo */
     uint16_t      color_grupo;      /**< Color del texto del grupo */
@@ -45,17 +50,19 @@ typedef struct {
 }Grupo;
 
 
+
 /* 
-    á --> E1    Á --> C1
-    é --> E9    É --> C9
-    í --> ED    Í --> CD
-    ó --> F3    Ó --> D3
-    ú --> FA    Ú --> DA
+    Caracteres especiales en ISO 8859-1 (Latin-1) en HEX:
+        á --> E1    Á --> C1
+        é --> E9    É --> C9
+        í --> ED    Í --> CD
+        ó --> F3    Ó --> D3
+        ú --> FA    Ú --> DA
 
-    ñ --> F1    Ñ --> D1
+        ñ --> F1    Ñ --> D1
 
-    ¿ --> BF    ? --> 3F
-    ¡ --> A1    ! --> 21
+        ¿ --> BF    ? --> 3F
+        ¡ --> A1    ! --> 21
 */
 
 
@@ -75,13 +82,19 @@ typedef struct {
 // si el alimento está crudo o cocinado.
 //
 
+
+
+
+
                                     // ID | Color | Nombre | Ejemplos | Kcal | Proteinas | Lipidos | Carbohidratos
+/*-----------------------------------------------------------------------------*/
 /**
  * @var gruposAlimentos
  * @brief Arreglo de objetos Grupo que representa los grupos de alimentos.
  *
- * Este arreglo almacena los distintos grupos de alimentos y sus características.
- */                                   
+ * Este array almacena los distintos grupos de alimentos y sus características.
+ */               
+/*-----------------------------------------------------------------------------*/                    
 Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.684059925,0.038014981,0.037910112,0.047191011},
                                       {2,COLOR_G2,"L\xE1""cteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.465,0.033,0.016,0.046},
                                       {3,COLOR_G3,"L\xE1""cteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.391466667,0.041822222,0.0016,0.052133333},
@@ -111,26 +124,23 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche 
                                     };
                                     // {50,COLOR_G50,"NOMBRE PRODUCTO","",0.0,0.0,0.0,0.0}
 
-/**
- * @var grupoEscogido
- * Grupo de alimentos seleccionado.
- */
-Grupo grupoEscogido;
-/**
- * @var grupoAnterior
- * Grupo de alimentos anteriormente seleccionado.
- */
-Grupo grupoAnterior;
 
 
-/*---------------------------------------------------------------------------------------------------------
-   getGrupoAlimentos(): Obtener grupo de alimentos seleccionado (checkAllButtons() en BUTTONS.h)
-----------------------------------------------------------------------------------------------------------*/
+
+Grupo grupoEscogido; // Grupo de alimentos seleccionado
+Grupo grupoAnterior; // Grupo de alimentos seleccionado anteriormente
+
+
+
+
+/*-----------------------------------------------------------------------------*/
 /**
  * @brief Establece el grupo de alimentos seleccionado.
- * @param id ID del grupo a seleccionar.
+ * @param id 'buttonGrande', ID del grupo a seleccionar.
  */
-void setGrupoAlimentos(byte id){       // 'id' pasado es buttonGrande 
+/*-----------------------------------------------------------------------------*/
+void setGrupoAlimentos(byte id)      
+{
     byte posGrupo = 0;
     for(byte i = 0; i < NUM_GRUPOS; i++){
         if(gruposAlimentos[i].ID_grupo == id){ 

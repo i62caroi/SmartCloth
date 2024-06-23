@@ -178,7 +178,7 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 
 #include "ISR.h" 
 #include "RA8876_v2.h" // COLORS.h
-#include "State_Machine.h"  
+#include "State_Machine.h"  // Incluye SD_functions.h (Serial_functions.h)
 
 
 /* Screen circuit wiring */
@@ -229,12 +229,6 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 #define   MANO_Y_PULSACION_GUARDAR    3
 #define   MANO_Y_PULSACION_GRUPOS     4  
 
-// Sincronización SmartCloth con web
-//#define  DATA_TO_UPLOAD         1
-#define  NO_INTERNET_CONECTION  2
-#define  UPLOADING_DATA         3
-#define  UPLOADED_DATA          4
-#define  HTTP_ERROR             5
 
 
 // Screen object 
@@ -249,56 +243,61 @@ RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 
 
 
-/*-----------------------------------------------------------------------------
-                           DEFINICIONES FUNCIONES
------------------------------------------------------------------------------*/
+/*******************************************************************************
+/*******************************************************************************
+                          DECLARACIÓN FUNCIONES
+/******************************************************************************/
+/******************************************************************************/
 void    setupScreen();                    // Inicializar pantalla
 void    welcome();                        // Cargar imágenes (loadPicturesShowHourglass()) y mostrar wireframe de Arranque (logo SmartCloth)
+
 // --- DASHBOARD ---
-void    blinkGrupoyProcesamiento(byte msg_option); // Mostrar zonas 1 y 2 parpadeando (msg de sin grupo o recipiente) o solo zona 2 (sin msg)
-void    printGrupoyEjemplos();            // Zona 1 => Mostrar nombre de grupo escogido y ejemplos
-void    printProcesamiento();             // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo => STATE_raw y STATE_cooked
-void    printZona3(byte show_objeto);      // Zona 3 => Mostrar comida actual copiada (SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (SHOW_ALIMENTO_ACTUAL_ZONA3)
-void    printZona4(byte show_objeto);      // Zona 4 => Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
+void    blinkGrupoyProcesamiento(byte msg_option);              // Mostrar zonas 1 y 2 parpadeando (msg de sin grupo o recipiente) o solo zona 2 (sin msg)
+void    printGrupoyEjemplos();                                  // Zona 1 => Mostrar nombre de grupo escogido y ejemplos
+void    printProcesamiento();                                   // Zona 2 => Mostrar imagen de 'crudo' o 'cocinado' según el procesamiento activo => STATE_raw y STATE_cooked
+void    printZona3(byte show_objeto);                           // Zona 3 => Mostrar comida actual copiada (SHOW_COMIDA_ACTUAL_ZONA3) o alimento actual (SHOW_ALIMENTO_ACTUAL_ZONA3)
+void    printZona4(byte show_objeto);                           // Zona 4 => Mostrar comida actual real (SHOW_COMIDA_ACTUAL_ZONA4) o acumulado hoy (SHOW_ACUMULADO_HOY_ZONA4)
 void    showValores(ValoresNutricionales &valores, byte zona);  // Mostrar valores en la 'zona' correspondiente (SHOW_VALORES_ZONA3 O SHOW_VALORES_ZONA4).
 void    showRaciones(ValoresNutricionales &valores, byte zona); // Mostrar raciones con decimales mínimos y centradas según la 'zona' (SHOW_RACIONES_ZONA3 o SHOW_RACIONES_ZONA4).
-void    showDashboardStyle1(byte msg_option);  // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Init y STATE_Plato
-void    showDashboardStyle2();                // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
-bool    showSemiDashboard_PedirProcesamiento(); // Mostrar medio dashboard (zonas 1 y 2). Las zonas 3 y 4 se tapan con pantalla de pedir procesamiento => STATE_groupA/B
+void    showDashboardStyle1(byte msg_option);                   // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Init y STATE_Plato
+void    showDashboardStyle2();                                  // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
+bool    showSemiDashboard_PedirProcesamiento();                 // Mostrar medio dashboard (zonas 1 y 2). Las zonas 3 y 4 se tapan con pantalla de pedir procesamiento => STATE_groupA/B
+
 // --- PANTALLAS TRANSITORIAS ---
 // -- Info para sincronizar ---
-void    showDataToUpload(byte option);     // Sincronizar memoria de SmartCloth con Web
+void    showDataToUpload(byte option);      // Sincronizar memoria de SmartCloth con Web
 // -- Recipiente ---------
-void    pedirRecipiente();                // Pedir colocar recipiente          =>  STATE_Init
-void    recipienteColocado();             // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
-void    recipienteRetirado();             // Mostrar "Recipiente retirado"     =>  solo si se ha retirado (LIBERAR --> STATE_Init)
+void    pedirRecipiente();                  // Pedir colocar recipiente          =>  STATE_Init
+void    recipienteColocado();               // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
+void    recipienteRetirado();               // Mostrar "Recipiente retirado"     =>  solo si se ha retirado (LIBERAR --> STATE_Init)
 // -- Grupo --------------
-void    pedirGrupoAlimentos();            // Pedir escoger grupo de alimentos  =>  STATE_Plato
+void    pedirGrupoAlimentos();              // Pedir escoger grupo de alimentos  =>  STATE_Plato
 // -- Procesamiento ------
 //void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
 bool    formGraphicsPedirProcesamiento();   // Compone la pantalla (forma, colores, texto y 1º botón de cocinado) de pedir procesamiento sobre las zonas 3 y 4 del dashboard.
 bool    alternateButtonsProcesamiento();    // Alterna imágenes de botones crudo y cocinado 
 bool    pedirProcesamientoZonas3y4();       // Pedir procesamiento sobre zonas 3 y 4 del dashboard  =>  STATE_groupA y STATE_groupB
 // -- Colocar alimento ---
-void    pedirAlimento();                  // Pedir colocar alimento
+void    pedirAlimento();                    // Pedir colocar alimento
 // -- Sugerir acción ----
-void    sugerirAccion();                  // Sugerir acción: añadir más alimento, escoger otro grupo, añadir otro plato, borrar plato actual o guardar comida.
+void    sugerirAccion();                    // Sugerir acción: añadir más alimento, escoger otro grupo, añadir otro plato, borrar plato actual o guardar comida.
 // -- Confirmar acción ---
-void    pedirConfirmacion(byte option);        // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
+void    pedirConfirmacion(byte option);     // Pregunta de confirmación general  =>  STATE_add_check (option: 1), STATE_delete_check (option: 2) y STATE_save_check (option: 3)
 // -- Acción realizada ---
-void    showAccionRealizada(byte option);  // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showAccionRealizada(byte option);   // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Acción cancelada ---
-void    showAccionCancelada();            // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
+void    showAccionCancelada();              // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
 // -- Fallo crítico en SD ---
-void    showCriticFailureSD();            // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
+void    showCriticFailureSD();              // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
 // --- Errores o avisos ---
-void    showError(byte option);            // Pantalla de error con mensaje según estado 
-void    showWarning(byte option);          // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showError(byte option);             // Pantalla de error con mensaje según estado 
+void    showWarning(byte option);           // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Aparición/Desaparición imágenes --
 bool    slowAppearanceImage(byte option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
 bool    slowAppearanceAndDisappareanceProcesamiento(byte option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
+
 // --- CARGA DE IMÁGENES ---
-void    loadPicturesShowHourglass();      // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloj de arena (hourglass)
+void    loadPicturesShowHourglass();        // Cargar imágenes en la SDRAM de la pantalla mientras se muestra un reloj de arena (hourglass)
 void    putReloj1();
 void    putReloj2();
 void    putReloj3();
@@ -309,24 +308,36 @@ void    putRelojGirado3();
 void    putRelojGirado4();
 void    putRelojGirado5();
 void    putRelojGirado6();
+
 /*-----------------------------------------------------------------------------*/
 // --- INTERRUPCIONES/EVENTOS ---
-bool    eventOccurred();                  // Comprobar si ha habido interrupciones de botoneras o eventos de báscula
+bool    eventOccurred();                    // Comprobar si ha habido interrupciones de botoneras o eventos de báscula
+
 /*-----------------------------------------------------------------------------*/
 // --- ESPERA E INTERRUPCION ---
 bool    doubleDelayAndCheckInterrupt(unsigned long period);  // El tiempo especificado se divide a la mitad y se comprueba interrupción tras cada espera
+
 /*-----------------------------------------------------------------------------*/
 // --- MOVIMIENTO PANTALLAS GRUPOS Y CONFIRMACIÓN ---
 bool    desplazar_mano(byte option);   // Desplazar imagen de "mano" por la pantalla hasta el botón correspondiente. Devuelve bool para poder salir de pedirConfirmacion() si hay interrupción.
 void    sin_pulsacion(byte option);    // Mano sobre botón sin pulsación 
 void    con_pulsacion(byte option);    // Pulsación de mano en botón
 
-
 // --- PANTALLAS CHECK Y CONFIRMADO DEL BORRADO CSV ---
 void    pedirConfirmacion_DELETE_CSV();   // Pantalla de confirmación de borrado del csv
 void    showAcumuladoBorrado(bool exito); // Pantalla con mensaje de "Fichero borrado" (exito = true) o "Error en el borrado" (exito = false)
+/******************************************************************************/
+/******************************************************************************/
 
 
+
+
+
+/*******************************************************************************
+/*******************************************************************************
+                           DEFINICIÓN FUNCIONES
+/******************************************************************************/
+/******************************************************************************/
 
 
 
@@ -414,7 +425,7 @@ bool doubleDelayAndCheckInterrupt(unsigned long period){
 ----------------------------------------------------------------------------------------------------------*/
 void welcome(){
 
-    uint8_t i;
+    uint8_t i; // Variable i de los bucles for para ir modificando la opacidad de las imágenes y que aparezcan poco a poco
 
     showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
 
@@ -1200,70 +1211,136 @@ bool showSemiDashboard_PedirProcesamiento(){
 /*---------------------------- SINCRONIZACIÓN CON WEB   -------------------------------------------*/
 /***************************************************************************************************/
 
+
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Muestra información indicando que se debe sincronizar SmartCloth con la web.
- * Es decir, que hay algo en el fichero TXT que se debe subir.
+ * @brief Muestra la información de sincronización en la pantalla.
  * 
- * @param option La opción seleccionada: DATA_TO_UPLOAD, UPLOADING_DATA, NO_INTERNET_CONECTION o HTTP_ERROR
+ * @param option Opción que indica el estado de la sincronización.
+ *               - UPLOADING_DATA: "Sincronizando..." con fondo azul dentro de un recuadro azul oscuro indicando 
+ *                                  al usuario que espere a que termine de subirse toda la info
+ * 
+ *               - ALL_MEALS_UPLOADED: "¡SmartCloth sincronizado!" con fondo verde entre dos líneas blancas indicando 
+ *                                      al usuario que se ha subido toda la info
+ * 
+ *               - MEALS_LEFT: "Sincronización parcial" con fondo amarillo entre dos líneas rojas indicando al usuario 
+ *                              que se han subido algunas comidas pero otras no se ha podido y se intentará más adelante
+ * 
+ *               - ERROR_READING_TXT, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR: "¡Error del sistema!" con comentario
  */
 /*-----------------------------------------------------------------------------*/
-void showDataToUpload(byte option){
+void showDataToUpload(byte option)
+{
+    // ---- COLOR FONDO, RECUADRO Y TEXTO ------------------------------------------------------------
+    uint16_t backgroundColor, lineColor, textColor;
+    
+    switch(option)
+    {
+        case UPLOADING_DATA:            backgroundColor = AZUL_SINCRONIZANDO;           lineColor = textColor = WHITE;                          break;
+        case ALL_MEALS_UPLOADED:        backgroundColor = VERDE_PEDIR;                  lineColor = textColor = WHITE;                          break;
+        case MEALS_LEFT:                backgroundColor = AMARILLO_CONFIRM_Y_AVISO;     lineColor = textColor = ROJO_TEXTO_CONFIRM_Y_AVISO;     break;
+        
+        // Error: option en rango [5, 9]
+        default:                        backgroundColor = RED_ERROR_Y_CANCEL;           lineColor = textColor = WHITE;                          break;
 
-    tft.clearScreen(WHITE);
+    }
 
-    // ------------ RECUADRO ---------------------------------------------------------------------------------
-    // Borde
-    tft.drawRect(50,110,974,278,BLACK);
-    tft.drawRect(51,111,973,277,BLACK);
-    tft.drawRect(52,112,972,276,BLACK);
-    tft.drawRect(53,113,971,275,BLACK);
-    tft.drawRect(54,114,970,274,BLACK);
+    // Aplicar color al fondo
+    tft.clearScreen(backgroundColor);
 
-    // Relleno
-    tft.fillRect(55,115,969,273,AMARILLO_CONFIRM_Y_AVISO);
-    // ----------------------------------------------------------------------------------------------------
+    // El color del texto se establece después de dibujar (recuadro o líneas) porque al dibujar se modifica '_textForeColor'
+    // -----------------------------------------------------------------------------------------------
+
+
+    // ----- DIBUJO ----------------------------------------------------------------------------------
+    switch (option)
+    {
+        case UPLOADING_DATA:
+            // ---- RECUADRO ----
+            // Borde:
+            tft.drawRect(50,110,974,278,lineColor);
+            tft.drawRect(51,111,973,277,lineColor);
+            tft.drawRect(52,112,972,276,lineColor);
+            tft.drawRect(53,113,971,275,lineColor);
+            tft.drawRect(54,114,970,274,lineColor);
+            // Relleno:
+            tft.fillRect(55, 115, 969, 273, AZUL_RECUADRO_SINCRONIZANDO); // Rellenar el rectángulo más interno con DARK_BLUE
+            // ------------------
+            break;
+
+        case ALL_MEALS_UPLOADED:
+            tft.fillRoundRect(252,110,764,118,3,lineColor); // Línea superior
+            tft.fillRoundRect(252,270,764,278,3,lineColor); // Línea inferior
+            break;
+            
+        case MEALS_LEFT:
+            tft.fillRoundRect(252,110,764,118,3,lineColor); // Línea superior
+            tft.fillRoundRect(252,270,764,278,3,lineColor); // Línea inferior
+            break;
+
+        case ERROR_READING_TXT:
+        case NO_INTERNET_CONNECTION:
+        case HTTP_ERROR:
+        case TIMEOUT:
+        case UNKNOWN_ERROR:
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,0,292,PAGE1_START_ADDR,SCREEN_WIDTH,451,231,114,127); // Mostrar cruz (114x127) en PAGE1
+            tft.fillRoundRect(252,290,764,298,3,lineColor); // Dibujar líea por encima de la imagen de cruz para no tener que cuadrarla
+            break;
+
+        default:
+            break;
+    }
+    
+    // Restablecer color de texto según el caso. Al dibujar (recuadro o líneas), el foregroundColor se cambia a lineColor
+    tft.setTextForegroundColor(textColor);
+    // -----------------------------------------------------------------------------------------------
 
 
     // ----- TEXTO (INFORMACIÓN) ---------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
-    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO);
 
-    switch (option){
-        // CREO QUE ES MEJOR HACERLO EN UN SEGUNDO PLANO Y SOLO MOSTRAR INFO DE LA SINCRONIZACIÓN SI OCURRE,
-        // OSEA SI HAY ALGO QUE SUBIR, HAY WIFI Y SE SUBE.
-        //case DATA_TO_UPLOAD:            tft.setCursor(80, 158);     tft.println("SINCRONIZACI\xD3""N NECESARIA");           break; 
-        case NO_INTERNET_CONECTION:     tft.setCursor(300, 158);    tft.println("SIN CONEXI\xD3""N");                       break;
-        case UPLOADING_DATA:            tft.setCursor(220, 158);    tft.println("SINCRONIZANDO...");                        break; 
+    switch (option)
+    {
+        case UPLOADING_DATA:            tft.setCursor(230, 158);        tft.println("SINCRONIZANDO...");                        break; 
 
-        case UPLOADED_DATA:             tft.fillRect(55,115,969,273,VERDE_PEDIR); // Verde de éxito
-                                        tft.setTextForegroundColor(WHITE); // Texto blanco
-                                        tft.setCursor(80, 158);     tft.println("\xA1""SMARTCLOTH SINCRONIZADO\x21""");     break;
-                                        
-        case HTTP_ERROR:                tft.fillRect(55,115,969,273,RED); // Rojo de error
-                                        tft.setTextForegroundColor(WHITE); // Texto blanco
-                                        tft.setCursor(130,158);            tft.println("ERROR EN EL SERVIDOR");             break;
+        case ALL_MEALS_UPLOADED:        tft.setCursor(70, 158);         tft.println("\xA1""SMARTCLOTH SINCRONIZADO\x21""");     break;
+
+        case MEALS_LEFT:                tft.setCursor(100, 158);         tft.println("SINCRONIZACI\xD3""N PARCIAL");             break;
+
+        case ERROR_READING_TXT:         
+        case NO_INTERNET_CONNECTION:     
+        case HTTP_ERROR:                tft.setCursor(180,100);         tft.println("\xA1""ERROR DEL SISTEMA\x21""");            break;
+
+        //case TIMEOUT:                   tft.setCursor(130,158);         tft.println("TIMEOUT");                                 break;
+
+        //case UNKNOWN_ERROR:             tft.setCursor(130,158);         tft.println("ERROR DESCONOCIDO");                       break;
         
         default:    break;
     }
     // ----------------------------------------------------------------------------------------------------
 
+
     // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-    tft.setTextForegroundColor(BLACK);
-    
-    switch (option){
-        //case DATA_TO_UPLOAD:            tft.setCursor(110, 358);                                        tft.println("COMPROBANDO CONEXI\xD3""N A INTERNET...");         break; 
+
+    switch (option)
+    {
+        case UPLOADING_DATA:            tft.setCursor(70, 358);                                         tft.println("ESPERE MIENTRAS SE COMPLETA LA SUBIDA");           break; 
+
+        case ALL_MEALS_UPLOADED:        tft.setCursor(210, 358);                                        tft.println("LA WEB SE HA ACTUALIZADO");                        break;
+
+        case MEALS_LEFT:                tft.setCursor(50, 358);                                         tft.println("ALGUNAS COMIDAS NO SE HAN SINCRONIZADO");                
+                                        tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY()+20);   tft.println("SE INTENTAR\xC1"" DE NUEVO M\xC1""S ADELANTE");    break;
+
+        case ERROR_READING_TXT:         tft.setCursor(60, 420);                                         tft.println("FALL\xD3"" LA LECTURA DEL FICHERO DE COMIDAS");    break;
         
-        case NO_INTERNET_CONECTION:     tft.setCursor(200, 358);                                        tft.println("NO HAY CONEXI\xD3""N A INTERNET");
+        case NO_INTERNET_CONNECTION:    tft.setCursor(125, 420);                                        tft.println("SE PERDI\xD3"" LA CONEXI\xD3""N A INTERNET");
                                         tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println("NO SE PUEDE SINCRONIZAR LA INFORMACI\xD3""N");     break;
-        
-        case UPLOADING_DATA:            tft.setCursor(50, 358);                                         tft.println("ESPERE MIENTRAS SE COMPLETA LA SUBIDA...");        break; 
+              
+        case HTTP_ERROR:                tft.setCursor(80, 358);                                         tft.println("FALL\xD3"" LA SINCRONIZACI\xD3""N CON LA WEB");    break;
 
-        case UPLOADED_DATA:             tft.setCursor(260, 358);                                        tft.println("LA WEB SE HA ACTUALIZADO");                        break;
-
-        case HTTP_ERROR:                tft.setCursor(100, 358);                                        tft.println("FALL\xD3"" LA SINCRONIZACI\xD3""N CON LA WEB");    break;
+        // case TIMEOUT:                   tft.setCursor(100, 358);                                        tft.println("M\xD3""DULO WIFI NO RESPONDE");    break;
 
         default:    break;
     }
@@ -1298,7 +1375,6 @@ void pedirRecipiente(){
 
     // ************ TEXTO ********************************************************************************
     // ----- FONDO VERDE -----------
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
 
     // ----- INTERNAL FIXED 12x24 X3 --------------
@@ -1387,7 +1463,6 @@ void recipienteColocado(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (RECIPIENTE COLOCADO) -------------------------------------------------------------------
-    //tft.clearScreen(RED);
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
     // ------ LINEA ---------
     tft.fillRoundRect(252,200,764,208,3,WHITE);
@@ -1408,7 +1483,6 @@ void recipienteRetirado(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (PLATO RETIRADO) -----------------------------------------------------------------------
-    //tft.clearScreen(RED);
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
     // ------ LINEA ---------
     tft.fillRoundRect(252,200,764,208,3,WHITE);
@@ -1443,7 +1517,6 @@ void pedirGrupoAlimentos(){
     bool pulsacion = true;
 
     // ***** FONDO VERDE ***********
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
 
 
@@ -1544,7 +1617,6 @@ void pedirGrupoAlimentos(){
         Return:   true: ha habido interrupción    false: no ha habido interrupción
             Devuelve bool para salir de la función que llamó de desplazar_mano() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
-
 bool desplazar_mano(byte option){
     int alto, posY;
 
@@ -1974,7 +2046,6 @@ void pedirAlimento(){
 
     // ************ TEXTO ********************************************************************************
     // ----- FONDO VERDE -----------
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
     tft.clearScreen(VERDE_PEDIR); // Fondo verde en PAGE1
 
     // ----- INTERNAL FIXED 12x24 X3 --------------
@@ -2276,17 +2347,29 @@ void pedirConfirmacion(byte option){
 /*---------------------------------------------------------------------------------------------------------
    showAccionRealizada(): Confirmación de haber realizado acción (añadir, eliminar o guardar) 
         Parámetros: 
-            - option -> 1: añadir                           2: eliminar                         3: guardar completo (local y database)      
-                        4: guardar solo local, error HTTP   5: guardar solo local, sin WiFi     6: guardar solo local, timeout      
-                        7: guardar solo local, error desconocido
+            - option -> 1: ADD_EXECUTED                            2: DELETE_EXECUTED                         3: SAVE_EXECUTED_FULL (local y database)      
+            
+                        4: SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP          5: SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI            6: SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT
+                        7: SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR       8: SAVE_EXECUTED_ONLY_DATABASE                 9: ERROR_SAVING_DATA
 ----------------------------------------------------------------------------------------------------------*/
-void showAccionRealizada(byte option){
+void showAccionRealizada(byte option)
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
-    tft.clearScreen(VERDE_PEDIR);
+    // ------------ COLOR DE FONDO ------------------------------------------------------------------------
+    switch (option)
+    {
+        case SAVE_EXECUTED_ONLY_DATABASE:   tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO);  break; // Comida guardado solo en database. ERROR IMPORTANTE EN MEMORIA (acumulado local no actualizado)
+        case ERROR_SAVING_DATA:             tft.clearScreen(RED_ERROR_Y_CANCEL);        break; // ERROR IMPORTANTE EN MEMORIA (acumulado local no actualizado)
+        default:                            tft.clearScreen(VERDE_PEDIR);               break; // Éxito completo o parcial (guardado solo local): option en rango [1, 7]
+                                                                                               //     Si falla la subida a database pero se puede guardar en local, también es éxito
+    }
+    // ----------------------------------------------------------------------------------------------------
 
     // ------------ LINEA ---------------------------------------------------------------------------------
-    tft.fillRoundRect(252,150,764,158,3,WHITE);
+    // Al dibujar la línea, ya se cambia el COLOR DEL TEXTO según el caso
+    if(option == SAVE_EXECUTED_ONLY_DATABASE)   tft.fillRoundRect(252,150,764,158,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
+    else                                        tft.fillRoundRect(252,150,764,158,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 
     // -------- INT -------------------
@@ -2295,23 +2378,31 @@ void showAccionRealizada(byte option){
     // ----- TEXTO (ACCION REALIZADA) ---------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(WHITE); 
 
-    switch (option){
-        case ADD_EXECUTED:              tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");  break;  // PLATO AÑADIDO
-        case DELETE_EXECUTED:           tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");    break;  // PLATO ELIMINADO
-        case SAVE_EXECUTED_FULL:                                                                                      // GUARDADO EN LOCAL Y DATABASE
-        case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                     // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
-        case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                        // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
-        case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                        // TIMEOUT EN LA RESPUESTA DEL ESP32
-        case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                  // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
-                                        tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");    break;  // Comida guardada al menos en local
+    switch (option)
+    {
+        case ADD_EXECUTED:                  tft.setCursor(170, 208);   tft.println("NUEVO PLATO A\xD1""ADIDO");             break;  // PLATO AÑADIDO
+
+        case DELETE_EXECUTED:               tft.setCursor(100, 208);   tft.println("PLATO ACTUAL ELIMINADO");               break;  // PLATO ELIMINADO
+
+        case SAVE_EXECUTED_FULL:                                                                                                    // GUARDADO EN LOCAL Y DATABASE
+        case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                                   // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
+        case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                                      // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
+        case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                                      // TIMEOUT EN LA RESPUESTA DEL ESP32
+        case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                                // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
+                                            tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");               break;  // Comida guardada al menos en local
+
+        case SAVE_EXECUTED_ONLY_DATABASE:   tft.setCursor(120, 208);   tft.println("COMIDA ACTUAL GUARDADA");               break;  // Comida guardada solo en database. Error en acumulado local
+        case ERROR_SAVING_DATA:             tft.setCursor(120, 208);   tft.println("\xA1""ERROR AL GUARDAR DATOS\x21""");   break;  // Error al guardar datos
+
         default: break;
     }
     // ----------------------------------------------------------------------------------------------------
     
     // ------------ LINEA ---------------------------------------------------------------------------------
-    tft.fillRoundRect(252,330,764,338,3,WHITE);
+    // Al dibujar la línea, ya se cambia el COLOR DEL TEXTO según el caso
+    if(option == SAVE_EXECUTED_ONLY_DATABASE)   tft.fillRoundRect(252,330,764,338,3,ROJO_TEXTO_CONFIRM_Y_AVISO);
+    else                                        tft.fillRoundRect(252,330,764,338,3,WHITE);
     // ----------------------------------------------------------------------------------------------------
 
     // ----- ESPERA E INTERRUPCION ----------------
@@ -2323,51 +2414,65 @@ void showAccionRealizada(byte option){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
      switch (option){
-      case ADD_EXECUTED:    tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");                 break;  // AÑADIDO
+      case ADD_EXECUTED:                    tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");                 break;  // AÑADIDO
 
-      case DELETE_EXECUTED: tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break;  // ELIMINADO
+      case DELETE_EXECUTED:                 tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break;  // ELIMINADO
               
-      case SAVE_EXECUTED_FULL:                                                                                                  // GUARDADO EN LOCAL Y DATABASE
-      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                                 // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
-      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                                    // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
-      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                                    // TIMEOUT EN LA RESPUESTA DEL ESP32
-      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                              // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
+      case SAVE_EXECUTED_FULL:                                                                                                                  // GUARDADO EN LOCAL Y DATABASE
+      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                                                 // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
+      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                                                    // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
+      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                                                    // TIMEOUT EN LA RESPUESTA DEL ESP32
+      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                                              // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
+                
+                // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así, la báscula estará vacía (pesoARetirar = 0).
                 // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
-                if(lastValidState == STATE_Init){
-                    // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así,
-                    // la báscula estará vacía (pesoARetirar = 0).
+                if(lastValidState == STATE_Init)
+                {
                     tft.setCursor(190, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO");
                     tft.setCursor(350, tft.getCursorY() + tft.getTextSizeY()+40); tft.print("AL ACUMULADO DE HOY"); 
                 }
-                else{ 
-                    // El siguiente mensaje solo se mostrará si se ha querido guardar tras conformar el plato,
-                    // estando aún en la báscula, indicando que se retire
+                else // Si se guarda tras conformar el plato, estando aún en la báscula, indicando que se retire
+                { 
                     tft.setCursor(30, 388); tft.println("LOS VALORES NUTRICIONALES SE HAN A\xD1""ADIDO AL ACUMULADO DE HOY");  
                     tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
                 }
 
+                // --- MENSAJE DE SUBIDA EN ESQUINA --------------
                 // Tamaño de texto para mensaje en la esquina
                 tft.selectInternalFont(RA8876_FONT_SIZE_24);
                 tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
             
                 // Color de texto según mensaje
                 if (option == SAVE_EXECUTED_FULL) tft.setTextColor(WHITE,DARKPURPLE,RA8876_TEXT_TRANS_OFF); // SE HA GUARDADO LOCAL Y DATABASE --> Texto blanco sobre fondo morado oscuro
-                else tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // SOLO SE HA GUARDADO EN LOCAL --> Texto blanco sobre fondo rojo
+                else tft.setTextColor(WHITE,RED_ERROR_Y_CANCEL,RA8876_TEXT_TRANS_OFF); // SOLO SE HA GUARDADO EN LOCAL --> Texto blanco sobre fondo rojo
             
                 // Mensaje según tipo de guardado
-                switch(option){
-                    case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(750,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break;
-                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break;
+                switch(option)
+                {
+                    case SAVE_EXECUTED_FULL:                        tft.setCursor(20,550);    tft.println(" SUBIDO A WEB ");                        break; // Esquina izquierda
+                    case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:       tft.setCursor(750,550);   tft.println(" ERROR EN EL ENV\xCD""O ");              break; // Esquina derecha
+                    case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:          tft.setCursor(850,550);   tft.println(" SIN INTERNET ");                        break; // Esquina derecha
+                    case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:          tft.setCursor(705,550);   tft.println(" ERROR EN ENV\xCD""O (TIMEOUT) ");       break; // Esquina derecha
+                    case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:    tft.setCursor(790,550);   tft.println(" ERROR DESCONOCIDO ");                   break; // Esquina derecha
                     default: break;
                 }
 
                 // Eliminar "resaltado" del texto de aquí en adelante:
                 tft.ignoreTextBackground(); // Ignorar el color de background del texto que haya y mostrar fondo canvas
+                // ---- FIN MENSAJE DE SUBIDA EN ESQUINA ---------
 
                 break; 
+
+
+        case SAVE_EXECUTED_ONLY_DATABASE:
+        case ERROR_SAVING_DATA:
+                if(option == SAVE_EXECUTED_ONLY_DATABASE){  tft.setCursor(220, 388);    tft.println("ACUMULADO NO ACTUALIZADO, SOLO WEB"); }
+                else if(option == ERROR_SAVING_DATA){       tft.setCursor(85, 388);     tft.println("FALLO IMPORTANTE EN MEMORIA. ACUMULADO NO ACTUALIZADO"); }
+
+                // Si se guarda tras conformar el plato, estando aún en la báscula, indicando que se retire
+                if(lastValidState != STATE_Init){           tft.setCursor(80,450);      tft.println("RETIRE EL PLATO Y CONTACTE CON EL EQUIPO DE SMARTCLOTH"); }
+
+                break;
 
         default: break;
     }
@@ -2392,7 +2497,7 @@ void showAccionCancelada(){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (ACCION CANCELADA) -----------------------------------
-    tft.clearScreen(RED);
+    tft.clearScreen(RED_ERROR_Y_CANCEL);
     // ------ LINEA ---------
     tft.fillRoundRect(252,200,764,208,3,WHITE);
     // ------ TEXTO ---------
@@ -2425,8 +2530,6 @@ void showWarning(byte option){
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
-    //tft.clearScreen(RED); // Fondo rojo en PAGE1
-    //tft.clearScreen(DARKORANGE); // Fondo amarillo oscuro en PAGE1
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
@@ -2497,7 +2600,7 @@ void showWarning(byte option){
 void showCriticFailureSD(){
 
     // ----- TEXTO (FALLO EN MEMORIA INTERNA DE SM - SD) ---------------------
-    tft.clearScreen(RED);
+    tft.clearScreen(RED_ERROR_Y_CANCEL);
     // ------ LINEA ---------
     tft.fillRoundRect(252,110,764,118,3,WHITE);
     // ------ TEXTO ---------
@@ -2547,7 +2650,7 @@ void showError(byte option){
     tft.canvasImageStartAddress(PAGE1_START_ADDR); 
 
     // ----- TEXTO (ERROR) --------------------------------------------------------------------------------
-    tft.clearScreen(RED); // Fondo rojo en PAGE1
+    tft.clearScreen(RED_ERROR_Y_CANCEL); // Fondo rojo en PAGE1
 
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
@@ -3410,6 +3513,11 @@ void putRelojGirado6(){
 }
 
 
+
+
+
+/******************************************************************************/
+/******************************************************************************/
 
 
 #endif

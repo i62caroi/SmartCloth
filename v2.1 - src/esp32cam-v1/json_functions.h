@@ -20,7 +20,7 @@
 
 
 /*-----------------------------------------------------------------------------
-                           DEFINICIONES FUNCIONES
+                           DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
 void    processJSON_OnePerMeal();                                                                            // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar 
 
@@ -77,36 +77,76 @@ void  processJSON_OnePerMeal()
     // ----- PEDIR TOKEN PARA USAR EN TODAS LAS SUBIDAS -----------
     // Token de autenticación pedido al servidor para poder subir información
     String bearerToken;
-
-    fetchTokenFromServer(bearerToken);          // 1. Pedir token de autenticación
     // Si falla la obtención de token, indica el error HTTP y no intenta subir la data
 
-    if(bearerToken != ""){ // Se ha obtenido token
+    if(fetchTokenFromServer(bearerToken)) // 1. Pedir token de autenticación. True si se ha obtenido token
+    {
+        // El ESP32 se ha autenticado en la database y está listo para subir datos
+        // En fetchTokenFromServer() se indica WAITING-FOR-DATA al obtener token
+
         // ------------- GENERAR JSON ---------------------------------
         #if defined(SM_DEBUG)
             SerialPC.println("Añadiendo lineas al JSON...");
         #endif
+
         String line = "";
-        while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
-            if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje del Due
-                line = SerialESP32Due.readStringUntil('\n'); 
-                line.trim();
+        
+        unsigned long startTime = millis();
+        unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda
+
+        while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
+        {
+            // Se sale del while después de procesar FIN-TRANSMISION o si no se recibe nada durante 15 segundos
+
+            // ------- SIN MENSAJE DEL DUE ----------------------
+            // Si no se recibe nada durante 15 segundos, se cierra sesión
+            //
+            // Se comprueba si no hay nada en el Serial y si han pasado más de 'timeout' segundos
+            // sin nada en el Serial. Cuando se recibe algo, se reinician los 15 segundos
+            // Se hace esta comprobación por si ha habido algún error en la lectura del fichero en el Due o
+            // si se ha perdido la comunicación ESP32-Due, para que el ESP32 no se quede esperando indefinidamente.
+            if (!hayMsgFromDue() && isTimeoutExceeded(startTime, timeout))
+            {
+                logoutFromServer(bearerToken); // Cerrar sesión aquí
+                break;
+            }
+            // --------------------------------------------------
+
+            // ------- RECIBIDO MENSAJE -------------------------
+            else if (hayMsgFromDue())  // Comprobar si hay algún mensaje del Due
+            {
+                // Reiniciar el tiempo de espera
+                startTime = millis();
+
+                // ------ LEER MENSAJE ---------
+                readMsgFromSerialDue(line); // Leer mensaje del Due
+
                 #if defined(SM_DEBUG)
                     SerialPC.println("Linea recibida: " + line); 
                 #endif
+                // -----------------------------
 
-                // Enviar un JSON por comida
+                // ------ AÑASIR A JSON --------
+                // Comprobar linea y conformar JSON. Enviar un JSON por comida
+                //  Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
+                //  Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
                 addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line, bearerToken);           
-                // Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
-                // Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
+                // -----------------------------
             }
+            // --------------------------------------------------
         }
         // ------------------------------------------------------------
     }
-    else{
+    else
+    {
+        // ------- FALLO AUTENTICACIÓN ---------------
+        // Ha fallado la autenticación del ESP32 en la database. No puede subir info 
         #if defined(SM_DEBUG)
-            SerialPC.println("Error al pedir token");
+            SerialPC.println(F("Error al pedir token"));
         #endif
+
+        // En fetchTokenFromServer() se muestra el error (NO-WIFI, ERROR-HTTP, etc.)
+        // -------------------------------------------
     }
     // ------------------------------------------------------------
 
@@ -176,7 +216,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON
         // Si se devuelve SAVED-OK, da igual que falle el logout
 
-        #if defined(SM_DEBUG)
+        /*#if defined(SM_DEBUG)
             // ---- MOSTRAR JSON -----
             SerialPC.println();
             serializeJsonPretty(JSONdoc, SerialPC);
@@ -186,7 +226,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
             // -------- MEMORIA RAM USADA POR EL JSON ---------------------
             SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
             // ------------------------------------------------------------
-        #endif
+        #endif*/
 
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
@@ -197,7 +237,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
             SerialPC.println("Transmisión completa");
         #endif
     }
-    else
+    else // No debería entrar aquí
     {
         #if defined(SM_DEBUG)
             SerialPC.println("Línea desconocida");

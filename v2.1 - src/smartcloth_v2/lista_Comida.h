@@ -51,11 +51,11 @@
 
 
 #include "debug.h" // SM_DEBUG --> SerialPC
-#define SerialDueESP32 Serial1
+#include "Serial_functions.h" // SerialESP32 y resultados de subir a database (WAITING_FOR_DATA, UPLOADING_DATA, MEAL_UPLOADED, MEALS_LEFT, ERROR_READING_TXT, NO_INTERNET_CONECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR)
 
-String  waitResponseFromESP32(byte phase);
-// --- Fases en las respuestas del ESP32 ---
-#define FASE_2_RECEIVED   2   // JSON-OK
+
+void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout);
+
 
 
 // **************************************************************************************************************************
@@ -73,7 +73,7 @@ class Lista
 {
     private:
         
-        std::vector<String> _lines; ///< Vector para almacenar las líneas de la lista.
+        std::vector<String> _lines; // Vector para almacenar las líneas de la lista.
 
         /**
          * @brief Obtiene el último elemento de la lista.
@@ -120,15 +120,17 @@ class Lista
         */
         inline void clearList() { _lines.clear(); };
 
-        void iniciarComida(); ///< Inicia una comida.
-        void iniciarPlato(); ///< Inicia un plato.
-        void addAlimento(byte grupo, float peso); ///< Añade un alimento a la lista.
-        void borrarLastPlato(); ///< Borra el último plato de la lista.
-        void finishComida(); ///< Finaliza la comida añadiendo la fecha y hora
-        bool sendListToESP32(); ///< Envía la lista elemento a elemento al ESP32 por Serial
+
+        void iniciarComida();                       // Inicia una comida.
+        void iniciarPlato();                        // Inicia un plato.
+        void addAlimento(byte grupo, float peso);   // Añade un alimento a la lista.
+        void borrarLastPlato();                     // Borra el último plato de la lista.
+        void finishComida();                        // Finaliza la comida añadiendo la fecha y hora
+        void sendListToESP32();                     // Envía la lista elemento a elemento al ESP32 por Serial
+
 
         #if defined(SM_DEBUG)
-            void leerLista(); ///< Lee la lista.
+            void leerLista(); // Lee la lista.
         #endif //SM_DEBUG
 
 };
@@ -280,24 +282,39 @@ void Lista::finishComida()
 /**
  * @brief Envia el contenido de la lista al ESP32.
  *
- * Recorre la lista y envía cada línea a través de SerialDueESP32.
+ * Recorre la lista y envía cada línea a través de SerialESP32.
  */
 /*-----------------------------------------------------------------------------*/
-bool Lista::sendListToESP32() 
+/*byte Lista::sendListToESP32() 
 {
     #if defined SM_DEBUG
         SerialPC.println(F("Enviando lista al esp32 para subir la info"));
     #endif
 
     for (byte i = 0; i < getListSize(); i++) {
-        SerialDueESP32.println(getItem(i));
+        //SerialESP32.println(getItem(i));
+        sendMsgToESP32(getItem(i));
     }
 
-    SerialDueESP32.println(F("FIN-TRANSMISION"));
 
-    String msgFromESP32 = waitResponseFromESP32(FASE_2_RECEIVED); // En la fase 2, sale del while si recibe JSON-OK
+    // ----- SUBIDA A DATABASE ------------------------
+    // ---- ESPERAR RESPUESTA DEL ESP32 -----
+    String msgFromESP32;
+    unsigned long timeout = 10000; // Tiempo de espera máximo de 10 segundos para que el esp32 responda
+    waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
+    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
+    // --------------------------------------
 
-    if (msgFromESP32 == "JSON-OK") // Info recibida y JSON formado correctamente
+    // ---- INDICAR FIN DE INFO -------------
+    // Se indica después de esperar la respuesta de si se ha subido la info a database para
+    // mantener un orden en la comunicación
+    //SerialESP32.println(F("FIN-TRANSMISION"));
+    sendMsgToESP32(F("FIN-TRANSMISION"));
+    // --------------------------------------
+
+    // ---- ANALIZAR RESPUESTA DEL ESP32 ----
+    // --- EXITO: COMIDA SUBIDA ------
+    if (msgFromESP32 == "SAVED-OK") // El ESP32 ha creado el JSON y subido a la database
     {
         #if defined(SM_DEBUG)
             SerialPC.println(F("\nLista completa enviada"));
@@ -307,20 +324,63 @@ bool Lista::sendListToESP32()
         // Limpiar la lista para la próxima comida
         clearList(); 
 
-        return true;
+        //return MEAL_UPLOADED; // Comida subida a database
+        return SAVE_EXECUTED_FULL; // CSV y database
     } 
-    else{ // TIMEOUT
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("\nProblema al crear JSON de la lista"));
-        #endif
+    // --------------------------------------
+    // --- ERRORES -------------------
+    else // Falló subir la comida a database
+    {
+        if(msgFromESP32 == "NO-WIFI") // Se ha perdido la conexion WiFi
+        {
+            #if defined SM_DEBUG
+                SerialPC.println(F("Se ha perdido la conexión WiFi..."));
+            #endif
 
-        return false;
+            return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI; // Solo CSV. No hay WiFi
+        }
+        else if(msgFromESP32.startsWith("HTTP-ERROR")) // Error HTTP al subir la info al ESP32
+        {
+            #if defined SM_DEBUG
+                SerialPC.println(F("Error HTTP al subir la info a database..."));
+            #endif
+
+            return SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP; // Solo CSV. Error HTTP
+        }
+        else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32()
+        {
+            #if defined SM_DEBUG
+                SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
+            #endif
+            
+            return SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT; // Solo CSV. Timeout
+        } 
+        else 
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println("Error desconocido al subir la comida a database...\n");
+            #endif
+
+            return SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR; // Solo CSV. Error desconocido
+        }
     }
+    // -------------------------------
 
-    return false;
+    // ------------------------------------------------
       
-}
+}*/
 
+void Lista::sendListToESP32() 
+{
+    #if defined SM_DEBUG
+        SerialPC.println(F("Enviando lista al esp32 para subir la info"));
+    #endif
+
+    for (byte i = 0; i < getListSize(); i++) {
+        //SerialESP32.println(getItem(i));
+        sendMsgToESP32(getItem(i));
+    }
+}
 
 
 

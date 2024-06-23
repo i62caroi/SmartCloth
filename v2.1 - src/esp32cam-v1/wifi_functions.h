@@ -13,7 +13,7 @@
 #include <HTTPClient.h>
 #include <ArduinoJson.h> // Para serializar el JSON y enviarlo
 
-#include "debug.h" // SM_DEBUG --> SerialPC
+#include "Serial_functions.h" // incluye debug.h
 
 /*
     Las credenciales se podrían guardar en la memoria flash no volátil del ESP32 en lugar de
@@ -35,8 +35,15 @@
 */
 
 // Credenciales conexión red WiFi
-const char* ssid = "UCOTEAM";
-const char* password = "-polonio210alfileres-";
+// Laboratorio:
+//const char* ssid = "UCOTEAM";
+//const char* password = "-polonio210alfileres-";
+// Casa:
+const char* ssid = "MOVISTAR_FB23_EXT";
+const char* password = "DP6BUuEtuFvRw3mHmFoG";
+// Post testeos:
+//const char* ssid = "SmartCloth";
+//const char* password = "SM-pass24/";
 
 
 // URL del servidor donde enviar el JSON
@@ -46,14 +53,16 @@ const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
 
 
 
-
 /*-----------------------------------------------------------------------------
-                           DEFINICIONES FUNCIONES
+                           DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
-bool    hayConexionWiFi();  // Comprobar si hay conexión WiFi
-void    connectToWiFi();    // Conectar a la red WiFi
+inline bool    hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); };  // Comprobar si hay conexión a la red WiFi
 
-void    fetchTokenFromServer(String &bearerToken);                                  // 1. Pedir token
+void    setupWiFi();        // Configurar módulo WiFi y conectar a la red
+void    connectToWiFi();    // Conectar a la red WiFi
+void    checkWiFi();        // Comprobar si hay WiFi e indicarlo al Due
+
+bool    fetchTokenFromServer(String &bearerToken);                                  // 1. Pedir token
 void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);      // 2. Subir JSON
 void    logoutFromServer(String &bearerToken);                                      // 3. Cerrar sesión
 /*-----------------------------------------------------------------------------*/
@@ -61,12 +70,35 @@ void    logoutFromServer(String &bearerToken);                                  
 
 
 
+
+
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Comprueba si hay conexión a la red WiFi.
+ * @brief Configura el módulo WiFi del ESP32 y lo conecta a la red, si es posible
  */
 /*-----------------------------------------------------------------------------*/
-bool hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); }
+void setupWiFi()
+{
+    // --- CONFIGURAR MÓDULO WIFI ----
+    // Configurar el módulo WiFi en modo estación (STA) para que pueda conectarse a una red WiFi
+    // existente, pero no pueda aceptar conexiones entrantes como punto de acceso. Esto es necesario
+    // para obtener la MAC correcta para este modo.
+    WiFi.mode(WIFI_MODE_STA);
+    // -------------------------------
+
+    // --- CONECTAR A RED ------------
+    // Intentar conectarse a la red WiFi
+    connectToWiFi();
+    // -------------------------------
+
+    // --- OBTENER MAC ---------------
+    // Mostrar identificador del esp32 (MAC)
+    #if defined(SM_DEBUG)
+        SerialPC.print("MAC: "); SerialPC.println(WiFi.macAddress());
+        SerialPC.println();
+    #endif
+    // -------------------------------
+}
 
 
 
@@ -96,7 +128,8 @@ void connectToWiFi()
 
     // Mientras no se haya conectado a WiFi y mientras no hayan pasado 5 segundos.
     // Si se conecta o si pasan los 5 segundos, sale del while.
-    while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
+    //while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
+    while(!hayConexionWiFi() && !isTimeoutExceeded(startTime, timeout_waitConexion))
     {
         delay(500);
         #if defined(SM_DEBUG)
@@ -128,71 +161,153 @@ void connectToWiFi()
 
 /*-----------------------------------------------------------------------------*/
 /**
+ * @brief Verifica si hay conexión WiFi y envía un mensaje al dispositivo ESP32 Due.
+ * 
+ * Esta función verifica si hay una conexión WiFi disponible. Si hay conexión, 
+ * se envía un mensaje al dispositivo ESP32 Due indicando que hay WiFi. Si no 
+ * hay conexión, se envía un mensaje indicando que no hay WiFi.
+ */
+/*-----------------------------------------------------------------------------*/
+void checkWiFi()
+{
+    if(hayConexionWiFi())
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("\nTengo Wifi"));
+        #endif
+
+        sendMsgToDue(F("WIFI-OK"));
+    }
+    else 
+    { 
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("\nNo tengo wifi"));
+        #endif
+
+        sendMsgToDue(F("NO-WIFI"));
+    }
+}
+
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
  * Realiza una petición HTTP POST al servidor para obtener un token de autenticación.
  * 
  * @param bearerToken Referencia a una cadena de caracteres donde se almacenará el token obtenido.
  */
 /*-----------------------------------------------------------------------------*/
-void fetchTokenFromServer(String &bearerToken)
+bool fetchTokenFromServer(String &bearerToken)
 {
-    #if defined(SM_DEBUG)
-        SerialPC.println("\n1. Pidiendo token...");
-    #endif
-
-    // Configurar la petición HTTP: un POST con la mac para obtener el token
-    HTTPClient http;
-    http.begin(fetchTokenServerName);
-    http.addHeader("Content-Type", "application/json");
-
-    // JSON con MAC del esp32
-    String macAddress = WiFi.macAddress();
-    String requestBody = "{\"mac\":\"" + macAddress + "\"}";
-
-    // Enviar la petición HTTP
-    int httpResponseCode = http.POST(requestBody);
-
-    // Comprobar el código de respuesta HTTP
-    if(httpResponseCode > 0)
+    // Pide el token si sigue teniendo conexión
+    if(hayConexionWiFi())
     {
+
         #if defined(SM_DEBUG)
-            SerialPC.print("Respuesta HTTP: "); SerialPC.println(httpResponseCode); 
+            SerialPC.println("\n1. Pidiendo token...");
         #endif
 
-        if((httpResponseCode >= 200) && (httpResponseCode < 300)){ // Petición exitosa
-            // Obtener la respuesta del servidor
-            String response = http.getString(); 
+        // --- CONFIGURAR PETICIÓN HTTP ---
+        // Configurar la petición HTTP: un POST con la mac para obtener el token
+        HTTPClient http;
+        http.begin(fetchTokenServerName);
+        http.addHeader("Content-Type", "application/json");
 
-            // Extraer token de la respuesta recibida:
-            DynamicJsonDocument doc(1024);
-            deserializeJson(doc, response);
-            bearerToken = doc["token"].as<String>();
+        // JSON con MAC del esp32
+        String macAddress = WiFi.macAddress();
+        String requestBody = "{\"mac\":\"" + macAddress + "\"}";
+        // --------------------------------
+
+        // --- ENVIAR PETICIÓN HTTP -------
+        // Enviar la petición HTTP
+        int httpResponseCode = http.POST(requestBody);
+        // --------------------------------
+
+
+        // --- PROCESAR RESPUESTA HTTP -----
+        // Comprobar el código de respuesta HTTP
+        if(httpResponseCode > 0)
+        {
             #if defined(SM_DEBUG)
-                SerialPC.println("\nTOKEN: " + bearerToken + "\n");     
+                SerialPC.println();
+                SerialPC.print("Respuesta pedir token: "); SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP 
             #endif
+
+            if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Petición exitosa
+            {
+                // ---- TOKEN ------------------------------
+                // Obtener la respuesta del servidor
+                String response = http.getString(); 
+
+                // Extraer token de la respuesta recibida:
+                DynamicJsonDocument doc(1024);
+                deserializeJson(doc, response);
+                bearerToken = doc["token"].as<String>(); // Token asignado por el servidor
+                // -----------------------------------------
+
+                #if defined(SM_DEBUG)
+                    SerialPC.println("\nTOKEN: " + bearerToken + "\n");     
+                    SerialPC.println(F("Esperando data..."));
+                #endif
+
+                // -- RESPUESTA AL DUE ---
+                sendMsgToDue(F("WAITING-FOR-DATA"));
+                // -----------------------
+
+                return true; // Token obtenido
+            }
+            else
+            {
+                #if defined(SM_DEBUG)
+                    SerialPC.print(F("A. Error pidiendo token: ")); SerialPC.println(httpResponseCode);
+                #endif
+
+                // -- RESPUESTA AL DUE ---
+                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+                // -----------------------
+
+                bearerToken = ""; // Token vacío por error en autenticación
+
+                return false; // No se ha podido obtener el token
+            }
         }
-        else{
+        else
+        {
             #if defined(SM_DEBUG)
-                SerialPC.print(F("A. Error pidiendo token: ")); SerialPC.println(httpResponseCode);
+                SerialPC.print(F("B. Error pidiendo token: ")); SerialPC.println(httpResponseCode);
             #endif
-
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
             
-            bearerToken = "";
+            // -- RESPUESTA AL DUE ---
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+            // -----------------------
+
+            bearerToken = ""; // Token vacío por error en autenticación
+
+            return false; // No se ha podido obtener el token
         }
+        // --------------------------------
+
+        // --- CERRAR CONEXIÓN HTTP -------
+        http.end(); // Cierra la conexión
+        // --------------------------------
+
     }
     else
     {
         #if defined(SM_DEBUG)
-            SerialPC.print(F("B. Error pidiendo token: ")); SerialPC.println(httpResponseCode);
+            SerialPC.println(F("\nNo se puede PEDIR TOKEN porque ha perdido la conexion a Internet"));
         #endif
-        
-        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
 
-        bearerToken = "";
+        // -- RESPUESTA AL DUE ---
+        sendMsgToDue("NO-WIFI"); // No hay conexión WiFi
+        // -----------------------
+
+        bearerToken = ""; // Token vacío por error en autenticación
+
+        return false; // No se ha podido obtener el token
     }
-
-    // Cerrar la conexión
-    http.end();
 
 }
 
@@ -206,57 +321,89 @@ void fetchTokenFromServer(String &bearerToken)
  */
 void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 {
-    #if defined(SM_DEBUG)
-        SerialPC.println("\n2. Subiendo JSON...");
-    #endif
-
-    // Convertir el documento JSON en una cadena
-    String jsonString;
-    serializeJson(JSONdoc, jsonString);
-
-    // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
-    HTTPClient http;
-    http.begin(comidaServerName);
-    http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "Bearer " + bearerToken); // Añadir el token de autenticación
-
-    // Enviar la petición HTTP
-    int httpResponseCode = http.POST(jsonString);
-
-    // Comprobar el código de respuesta HTTP
-    if(httpResponseCode > 0)
+    // Sube la comida si sigue teniendo conexión
+    if(hayConexionWiFi())
     {
         #if defined(SM_DEBUG)
-            SerialPC.print("Respuesta HTTP: "); SerialPC.println(httpResponseCode); 
+            SerialPC.println("\n2. Subiendo JSON...");
         #endif
 
-        String response = http.getString(); // Obtener la respuesta del servidor
-        //SerialPC.println(response);         // Imprimir la respuesta del servidor
+        // --- CONFIGURAR PETICIÓN HTTP ---
+        // Convertir el documento JSON en una cadena
+        String jsonString;
+        serializeJson(JSONdoc, jsonString);
 
-        if((httpResponseCode >= 200) && (httpResponseCode < 300)){
+        // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
+        HTTPClient http;
+        http.begin(comidaServerName);
+        http.addHeader("Content-Type", "application/json");
+        http.addHeader("Authorization", "Bearer " + bearerToken); // Añadir el token de autenticación
+        // --------------------------------
+
+        // --- ENVIAR PETICIÓN HTTP -------
+        // Enviar la petición HTTP
+        int httpResponseCode = http.POST(jsonString);
+        // --------------------------------
+
+        // --- PROCESAR RESPUESTA HTTP -----
+        // Comprobar el código de respuesta HTTP
+        if(httpResponseCode > 0)
+        {
             #if defined(SM_DEBUG)
-                SerialPC.print(F("Comida subida")); 
+                SerialPC.print("Respuesta HTTP: "); SerialPC.println(httpResponseCode); 
             #endif
-            SerialESP32Due.println(F("SAVED-OK"));
+
+            String response = http.getString(); // Obtener la respuesta del servidor
+            //SerialPC.println(response);         // Imprimir la respuesta del servidor
+
+            if((httpResponseCode >= 200) && (httpResponseCode < 300))
+            {
+                #if defined(SM_DEBUG)
+                    SerialPC.print(F("Comida subida")); 
+                #endif
+
+                // -- RESPUESTA AL DUE ---
+                sendMsgToDue(F("SAVED-OK"));
+                // -----------------------
+            }
+            else
+            {
+                #if defined(SM_DEBUG)
+                    SerialPC.print(F("A. Error subiendo comida: ")); SerialPC.println(httpResponseCode);
+                #endif
+
+                // -- RESPUESTA AL DUE ---
+                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+                // -----------------------
+            }
         }
-        else{
+        else
+        {
             #if defined(SM_DEBUG)
-                SerialPC.print(F("A. Error subiendo comida: ")); SerialPC.println(httpResponseCode);
+                SerialPC.print(F("B. Error subiendo comida: ")); SerialPC.println(httpResponseCode);
             #endif
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
+    
+            // -- RESPUESTA AL DUE ---
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+            // -----------------------
         }
+        // --------------------------------
+
+        // --- CERRAR CONEXIÓN HTTP -------
+        http.end(); // Cierra la conexión
+        // --------------------------------
+
     }
     else
     {
         #if defined(SM_DEBUG)
-            SerialPC.print(F("B. Error subiendo comida: ")); SerialPC.println(httpResponseCode);
+            SerialPC.println(F("\nNo se puede SUBIR LA COMIDA porque ha perdido la conexion a Internet"));
         #endif
 
-        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
+        // -- RESPUESTA AL DUE ---
+        sendMsgToDue("NO-WIFI"); // No hay conexión WiFi
+        // -----------------------
     }
-
-    // Cerrar la conexión
-    http.end();
 }
 
 
@@ -270,61 +417,94 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 /*-----------------------------------------------------------------------------*/
 void logoutFromServer(String &bearerToken)
 {
-    #if defined(SM_DEBUG)
-        SerialPC.println("\n3. Cerrando sesion...");
-    #endif
+    // Cierra sesión si sigue teniendo conexión
+    //
+    // Creo que no pasa nada si se queda abierta, se cerrará a la media hora por si fallara el cerrar sesión y 
+    // pocos minutos después se quisiera guardar más comidas. Lo que no sé es que si se queda abierta, si se
+    // puede volver a pedir token con la misma MAC. 
+    if(hayConexionWiFi())
+    {
 
-    // Configurar la petición HTTP: un GET con el token en el header y el body vacío
-    HTTPClient http;
-    http.begin(logOutServerName);
-    http.addHeader("Content-Type", "application/json");
-    http.addHeader("Authorization", "Bearer " + bearerToken);
+        #if defined(SM_DEBUG)
+            SerialPC.println("\n3. Cerrando sesion...");
+            SerialPC.println("\nTOKEN: " + bearerToken + "\n"); 
+        #endif
 
-    // Enviar la petición HTTP
-    int httpResponseCode = http.POST(""); // Enviar un POST vacío con el token en el header
+        // --- CONFIGURAR PETICIÓN HTTP ---
+        // Configurar la petición HTTP: un GET con el token en el header y el body vacío
+        HTTPClient http;
+        http.begin(logOutServerName);
+        http.addHeader("Content-Type", "application/json");
+        http.addHeader("Authorization", "Bearer " + bearerToken);
+        // --------------------------------
 
-    // Comprobar el código de respuesta HTTP
-    if(httpResponseCode>0)
+        // --- ENVIAR PETICIÓN HTTP -------
+        // Enviar la petición HTTP
+        int httpResponseCode = http.POST(""); // Enviar un POST vacío con el token en el header
+        // --------------------------------
+
+        // --- PROCESAR RESPUESTA HTTP -----
+        // Comprobar el código de respuesta HTTP
+        if(httpResponseCode>0)
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println();
+                SerialPC.print("Respuesta logout: "); SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+            #endif
+
+            if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Petición exitosa
+            {
+                #if defined(SM_DEBUG)
+                    // Obtener la respuesta del servidor
+                    String response = http.getString(); 
+
+                    // Extraer mensaje de la respuesta recibida:
+                    DynamicJsonDocument doc(1024);
+                    deserializeJson(doc, response);
+                    bool success = doc["success"];
+                    String message = doc["message"];     
+                    
+                    
+                    if(success && message == "User logged out successfully") SerialPC.println("Cierre de sesion exitoso");
+                    else{ 
+                        SerialPC.println("Error al cerrar la sesion");
+                    }
+                #endif
+            }
+            else{
+                #if defined(SM_DEBUG)
+                    SerialPC.print(F("A. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
+                #endif
+                
+                //sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+                // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
+            }
+            
+        }
+        else {
+            #if defined(SM_DEBUG)
+                SerialPC.print(F("B. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
+            #endif
+
+            //sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+            // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
+        }
+        // --------------------------------
+
+        // --- CERRAR CONEXIÓN HTTP -------
+        http.end(); // Cierra la conexión
+        // --------------------------------
+
+    }
+    else
     {
         #if defined(SM_DEBUG)
-            SerialPC.print("Respuesta HTTP: "); SerialPC.println(httpResponseCode); 
+            SerialPC.println(F("\nNo se puede CERRAR SESION porque ha perdido la conexion a Internet"));
         #endif
 
-        if((httpResponseCode >= 200) && (httpResponseCode < 300)){ // Petición exitosa
-            #if defined(SM_DEBUG)
-                // Obtener la respuesta del servidor
-                String response = http.getString(); 
-
-                // Extraer mensaje de la respuesta recibida:
-                DynamicJsonDocument doc(1024);
-                deserializeJson(doc, response);
-                bool success = doc["success"];
-                String message = doc["message"];     
-                
-                
-                if(success && message == "User logged out successfully") SerialPC.println("Cierre de sesion exitoso");
-                else{ 
-                    SerialPC.println("Error al cerrar la sesion");
-                }
-            #endif
-        }
-        else{
-            #if defined(SM_DEBUG)
-                SerialPC.print(F("A. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
-            #endif
-            
-            SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode); 
-        }
-        
+        //sendMsgToDue(F("NO-WIFI"));
+        // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
     }
-    else {
-        #if defined(SM_DEBUG)
-            SerialPC.print(F("B. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
-        #endif
-
-        SerialESP32Due.print(F("ERROR-HTTP: ")); SerialESP32Due.println(httpResponseCode);
-    }
-    http.end();
 }
 
 

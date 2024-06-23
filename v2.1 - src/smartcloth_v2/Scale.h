@@ -37,17 +37,19 @@ HX711 scale;
 
 
 // ------ HX711 circuit wiring -----------
-// SmartCloth v2.1
-//const byte LOADCELL_DOUT_PIN = 3;
-//const byte LOADCELL_SCK_PIN = 2;
-// SmartCloth v2.2
-const byte LOADCELL_DOUT_PIN = 2;
-const byte LOADCELL_SCK_PIN = 3;
+#ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
+    const byte LOADCELL_DOUT_PIN = 3;
+    const byte LOADCELL_SCK_PIN = 2;
+#endif
+#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
+    const byte LOADCELL_DOUT_PIN = 2;
+    const byte LOADCELL_SCK_PIN = 3;
+#endif
 // ---------------------------------------
 
 
-bool      scaleEventOccurred = false;
-bool      tarado = false;
+bool      scaleEventOccurred = false;   // Flag para indicar que ha cambiado el peso de la báscula
+bool      tarado = false;               // Flag para indicar que se ha tarado la báscula
 
 // ------ VARIABLES DE PESO ------------------------------------------------------------
 float     pesoARetirar      =   0.0;    // Peso que se debe retirar para liberar la báscula (recipiente + alimentos)
@@ -61,19 +63,27 @@ float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 #include "State_Machine.h" // Debajo de las variables para que estén disponibles en su ámbito
 
 
+/*******************************************************************************
+/*******************************************************************************
+                          DECLARACIÓN FUNCIONES
+/******************************************************************************/
+/******************************************************************************/
+void    setupScale();       // Inicializar báscula
+float   weighScale();       // Pesar báscula
+void    tareScale();        // Tarar báscula
+void    reiniciarPesos();   // Reiniciar pesos de recipiente, plato y alimento
+void    checkBascula();     // Comprobar si ha habido algún evento en la báscula y determinar el tipo de evento
+/******************************************************************************/
+/******************************************************************************/
 
-/*-----------------------------------------------------------------------------
-                           DEFINICIONES FUNCIONES
------------------------------------------------------------------------------*/
-void    setupScale();
-float   weighScale();
-void    tareScale();
-void    reiniciarPesos();
-void    checkBascula();
-/*-----------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------*/
 
 
+
+/*******************************************************************************
+/*******************************************************************************
+                           DEFINICIÓN FUNCIONES
+/******************************************************************************/
+/******************************************************************************/
 
 
 /*-----------------------------------------------------------------------------*/
@@ -225,6 +235,11 @@ void checkBascula(){
 
 }
 
+
+
+
+/******************************************************************************/
+/******************************************************************************/
 
 
 #endif

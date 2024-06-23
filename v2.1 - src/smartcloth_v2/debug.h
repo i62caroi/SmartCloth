@@ -8,4 +8,10 @@
 #endif
 
 
+// Escoger versión para establecer los pines de conexión:
+// SmartCloth v2.1 (cartón)
+#define SM_V2_1
+// SmartCloth v2.2 (3D)
+//#define SM_V2_2
+
 #endif

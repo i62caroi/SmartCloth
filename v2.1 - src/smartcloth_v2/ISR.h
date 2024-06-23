@@ -23,7 +23,52 @@
 
 #include "debug.h" // SM_DEBUG --> SerialPC
 
+#define DEBOUNCE_TIME 1000 // Tiempo de debouncing en ms
+#define BARCODE_DEBOUNCE_TIME 1000 // Tiempo de debouncing en ms para el botón de barcode
 
+// ------------ PINES DE INTERRUPCIÓN ------------
+#ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
+    // ---- MAIN ----
+    const byte intPinCocinado     = 33;   
+    const byte intPinCrudo        = 31;    
+    const byte intPinAddPlato     = 29;   
+    const byte intPinDeletePlato  = 27;   
+    const byte intPinGuardar      = 25;   
+
+    // ---- GRANDE ----
+    const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
+#endif
+// ---------------------------------
+
+#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
+    // ---- MAIN ----
+    const byte intPinCocinado     = 26;   
+    const byte intPinCrudo        = 27;    
+    const byte intPinAddPlato     = 28; 
+    const byte intPinGuardar      = 29;  
+    const byte intPinDeletePlato  = 30;
+    // ---- GRANDE ----
+    const byte interruptPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
+    // ---- BARCODE ----
+    const byte intPinBarcode = 53;
+#endif
+// -----------------------------------------------
+
+
+// ------------ FLAGS DE INTERRUPCIÓN ------------
+// Flag de botón pulsado en Main (botonera B)
+volatile byte buttonMain = 0; // No es flag, sino variable que almacena el botón pulsado
+
+// Flag de botón pulsado en Grande (botonera A)
+volatile bool pulsandoGrande  = false;    
+
+// Flag de botón pulsado en Barcode
+volatile bool pulsandoBarcode = false;
+// -----------------------------------------------
+
+
+
+//  -----  BÁSCULA --------------------------------------
 /*  ----- SCALE ISR ----- */
 #define TIMER_INTERRUPT_DEBUG         0
 #define _TIMERINTERRUPT_LOGLEVEL_     0
@@ -36,31 +81,6 @@
 
 SAMDUE_ISR_Timer ISR_Timer;
 
-
-#define DEBOUNCE_TIME 200
-
-//  -----   MAIN  --------------------------------------
-volatile byte  buttonMain = 0; // Botón pulsado en Main (botonera B)
-// ------------------------------------------------------
-
-
-//  -----   GRANDE  -------------------------------------
-// SmartCloth v2.1
-//const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
-// SmartCloth v2.2
-const byte interruptPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
-volatile bool pulsandoGrande  = false;    // Flag de estar pulsando algo en Grande
-// ------------------------------------------------------
-
-
-// ----- BOTÓN BARCODE ----------------------------------
-const byte intPinBarcode = 53;
-volatile bool pulsandoBarcode = false;
-// ------------------------------------------------------
-
-
-
-//  -----  BÁSCULA --------------------------------------
 volatile float  weight = 0.0;         ///< Peso real tomado por ISR
 volatile bool   pesado = false;       // Flag de haber pesado por ISR
 // ------------------------------------------------------
@@ -70,9 +90,11 @@ volatile bool   pesado = false;       // Flag de haber pesado por ISR
 #include "Scale.h" // Debajo de las variables para que estén disponibles en su ámbito
 
 
-/*-----------------------------------------------------------------------------
-                           DEFINICIONES FUNCIONES
------------------------------------------------------------------------------*/
+/*******************************************************************************
+/*******************************************************************************
+                          DECLARACIÓN FUNCIONES
+/******************************************************************************/
+/******************************************************************************/
 void ISR_crudo();                         // ISR de botón de 'crudo'
 void ISR_cocinado();                      // ISR de botón de 'cocinado'
 void ISR_addPlato();                      // ISR de botón de 'añadir plato'
@@ -90,10 +112,17 @@ bool mainButtonInterruptOccurred();
 bool grandeButtonInterruptOccurred();
 bool barcodeButtonInterruptOccurred();
 bool hasScaleEventOccurred();             // Devuelve true si se ha activado algún evento en báscula
-/*-----------------------------------------------------------------------------*/
-/*-----------------------------------------------------------------------------*/
+/******************************************************************************/
+/******************************************************************************/
 
 
+
+
+/*******************************************************************************
+/*******************************************************************************
+                           DEFINICIÓN FUNCIONES
+/******************************************************************************/
+/******************************************************************************/
 
 
 
@@ -199,7 +228,7 @@ void ISR_pulsandoButtonsGrande(){
 void ISR_barcode(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
+    if ((interrupt_time - last_interrupt_time) > BARCODE_DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }
 
@@ -326,5 +355,10 @@ void TimerHandler() { ISR_Timer.run(); }
     else return false;
  }
 
+
+
+
+/******************************************************************************/
+/******************************************************************************/
 
 #endif

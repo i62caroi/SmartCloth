@@ -43,11 +43,15 @@
 
 #define   DARKORANGE                  0xCB20 // 0xC86406 en RGB-8:8:8 ==> aviso
 
-#define   RED                         0xF800  // Parpadeo dashboard y wireframes de error y cancelar
+#define   RED_ERROR_Y_CANCEL          0xF800  // Wireframes de error y cancelar
+#define   RED                         0xF800  // Rojo general
 
 #define   RED_BUTTON                  0xB8C3  // Recuadro que aparece alrededor de los botones de los wireframes de añadir, eliminar, guardar y grupos
 
 #define   DARKPURPLE                  0x30C6  // Mini mensaje cuando guardado completo (local y database)
+
+#define   AZUL_SINCRONIZANDO          0x1B9F  // Pantalla de sincronización
+#define   AZUL_RECUADRO_SINCRONIZANDO 0x0010  // Recuadro de la pantalla de sincronización
 // --------------------------------------------------------------
 
 

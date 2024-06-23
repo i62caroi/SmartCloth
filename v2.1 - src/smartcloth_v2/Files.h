@@ -22,7 +22,7 @@ char    fileCSV[30] = "data/data-sc.csv"; ///< Nombre del archivo para guardar l
 
 
 // --- FICHERO GUARDAR INFO ESP32 ---
-char    fileESP32[30] = "data/data-esp.txt"; ///< Nombre del archivo para guardar las comidas realizadas con pares <grupo>,<peso>
+char    fileTXT[30] = "data/data-esp.txt"; ///< Nombre del archivo para guardar las comidas realizadas con pares <grupo>,<peso>
 
 
 // --- IMAGENES RELOJ ARENA ---

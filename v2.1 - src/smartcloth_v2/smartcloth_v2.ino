@@ -12,29 +12,34 @@
  */
 
 
+// ------ LIBRERÍAS -------------------------
 #include "debug.h" // SM_DEBUG --> SerialPC
-#include "Serial_esp32cam.h" //Comunicación con ESP32-CAM
+//#include "Serial_esp32cam.h" //Comunicación con ESP32-CAM
 
-#include "Buttons.h"       /**< Buttons.h 
-                                => ISR.h 
-                                      => Scale.h
-                                          => HX711.h
-                                          => State_Machine.h (eventos)
-                                => State_Machine.h (eventos)
-                                      => SD_functions.h
-                                          => RTC.h
-                                          => Files.h
-                                          => Diario.h 
-                                               => Comida.h 
-                                                  => Plato.h 
-                                                       => Alimento.h
-                                                          => Valores_Nutricionales.h
-                                                          => Grupos.h
-                                      => Screen.h 
-                                          => RA8876_v2.h
-                                                
-                                                                      
-                            */
+#include "Buttons.h"       
+/*
+    Estructura de archivos:
+
+    - Buttons.h 
+        - ISR.h 
+            - Scale.h
+                - State_Machine.h (eventos)
+                    - Serial_esp32cam.h
+                    - SD_functions.h
+                        - lista_Comida.h
+                        - RTC.h
+                        - Files.h
+                        - Diario.h 
+                            - Comida.h 
+                                - Plato.h 
+                                    - Alimento.h
+                                        - Valores_Nutricionales.h
+                                        - Grupos.h
+                    - Screen.h 
+                        - RA8876_v2.h
+                            - COLORS.h
+*/
+// ------------------------------------------
 
 
 /* Time */
@@ -47,21 +52,13 @@ bool falloCriticoSD = false;
 
 
 /*---------------------------------------------------------------------------------------------------------
-   \brief Función para inicializar el RTC, la SD, la pantalla, la báscula, las botoneras y las interrupciones
+   setup(): Función para inicializar el RTC, la SD, la pantalla, la báscula, las botoneras y las interrupciones
 ----------------------------------------------------------------------------------------------------------*/
-void setup() {
+void setup() 
+{
     // ------ COMUNICACIÓN SERIAL --------------
-    #if defined(SM_DEBUG)
-        // Inicializar comunicación con PC (Serial)
-        SerialPC.begin(115200); //115200
-        while (!SerialPC); // Eliminar en programa final, cuando el PC no esté conectado
-        delay(100);
-    #endif // SM_DEBUG
-
-    // Inicializar comunicación con ESP32-CAM (Serial1)
-    SerialDueESP32.begin(115200);
-    while (!SerialDueESP32);
-    delay(100); 
+    setupSerial();
+    delay(100);
     // -----------------------------------------
 
 
@@ -105,14 +102,11 @@ void setup() {
 
     // ------- ESTADO INICIAL ------------------
     // Si falla la SD, se inicia en el estado STATE_CRITIC_FAILURE_SD que no tiene transiciones
-    // de entrada ni de salida. Te obliga a reiniciar SM para intentar subsanar el fallo.
-    //
-    // Si no falla la SD, se inicia en el primer estado funcional.
+    // de entrada ni de salida. Te obliga a reiniciar SM para intentar subsanar el fallo
     if (falloCriticoSD) state_actual = STATE_CRITIC_FAILURE_SD;     // Estado sin salida
+    // Si no falla la SD, se inicia en el primer estado funcional
     else if(dataToUpload) state_actual = STATE_UPLOAD_DATA;         // Estado para subir data a database
     else state_actual = STATE_Init;                                 // Estado inicial de la Máquina de Estados
-
-    //state_actual = STATE_Init;
     // -----------------------------------------
 
 
@@ -163,9 +157,17 @@ void setup() {
 
     // ------- BIENVENIDA ----------------------
     // Si no falla la SD, cargar las imágenes y mostrar pantalla de bienvenida.
-    // Si falla, directamente se mostrará la pantalla de "FALLO EN MEMORIA"
+    // Si falla, directamente se mostrará la pantalla de "FALLO EN MEMORIA" en el estado STATE_CRITIC_FAILURE_SD
     if (!falloCriticoSD) welcome();  // Cargar imágenes y mostrar logo de SmartCloth
-    //welcome();
+    // -----------------------------------------
+
+
+    // ------- COMPROBAR COMUNICACIÓN ESP32 ----
+    // Si no falla la SD, se comprueba la comunicación con el ESP32-CAM
+    // Se comprueba después de la pantalla de bienvenida para que, si el ESP32 tarda en responder, al menos haya algo
+    // en pantalla que indique que el sistema está encendido. Si se comprobara la conexión con ESP32 en setupSerial(),
+    // como la pantalla está apagada en ese momento, podrían pensar que hay algún error.
+    if (!falloCriticoSD) pingESP32(); // Comprobar comunicación con ESP32-CAM
     // -----------------------------------------
 
 }

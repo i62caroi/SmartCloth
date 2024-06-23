@@ -1,37 +1,42 @@
-/*
-    Irene Casares Rodríguez
-    12/01/2024
+/**
+ * @file  esp32cam_v1.ino
+ * @brief Programa principal del ESP32
+ *
+ * @author Irene Casares Rodríguez
+ * @date 12/01/2024
+ * @version 1.0
+ *
+ * Se ha utilizado el módulo ESP32-CAM PLUS:
+ *    SPI Flash: default 32Mbit
+ *    RAM: built-in 520 KB+external 4MPSRAM
+ *    Bluetooth: Bluetooth 4.2 BR/EDR and BLE standards 
+ *    Wi-Fi: 802.11 b/g/n de hasta 150 Mbps
+ *    Support Interface: UART, SPI, I2C, PWM
+ *    Camera: OV5640 autofocus
+ *    Image Output Format: JXGA
+ *    Power supply range: 5V
+ *
+ * @see ESP32-CAM PLUS (Aliexpress): https://acortar.link/Aubtwq
+ *
+ * Como lector de códigos de barras se ha utilizado el "Barcode Scanner Module (D)" de Waveshare:
+ *    Resolución: 640x480
+ *    Ángulos de Escaneo: Horizontal 70°, Vertical 55°, Rotación 360°
+ *    Modos de Escaneo: Sensado, Continuo
+ *    Precisión: Código 1D ≥ 5mil, Código 2D ≥ 10mil
+ *    Interfaz de Comunicación: UART (9600 8N1 por defecto)
+ *    Indicador LED: Azul (escaneo), Verde (decodificado exitoso)
+ *    Alimentación: 3.3V, 120mA
+ *    Protección: ESD (contacto 6 kV, aire ±12 kV), IP54 (frontal)
+ *    Temperatura: Operación -30°C a +70°C, Almacenamiento -40°C a +80°C
+ *    Humedad: 5%RH ~ 95%RH (no condensante)
+ *
+ * @see https://www.waveshare.com/wiki/Barcode_Scanner_Module_(D)
+ * 
+ * 
+ */
 
-    PROGRAMA PRINCIPAL DEL ESP32
-      
-    Este programa recibe el contenido del fichero TXT por Serial desde el Due, lo convierte
-    en JSON y lo envía a la base de datos para guardar su información.
-  
-    **********************************************************************
 
-      --------------------------------------------
-      |    ESP32-CAM   |    FTDI (Serial al PC)  |
-      --------------------------------------------
-      |    UOT (Tx)    |        RXD              |    
-      |    UOR (Rx)    |        TXD              |
-      --------------------------------------------
-
-      --------------------------------------------
-      |    ESP32-CAM   |  Arduino Due (Serial1)  |
-      --------------------------------------------
-      |    IO15 (Tx1)  |      pin 19 (Rx1)       |    
-      |    IO14 (Rx1)  |      pin 18 (Tx1)       |
-      |      3V3       |        3V3              |
-      |      GND       |        GND              | 
-      --------------------------------------------
-
-      CARGAR Y EJECUTAR PROGRAMA:
-        1. Puentear IO0 a GND (3º por la derecha de la camara)
-        2. Resetear
-        3. Cargar programa
-        4. Retirar puente
-        5. Resetear
-
+/*  
     **********************************************************************
 
       -------------------------------------------------
@@ -46,8 +51,8 @@
       ------------------------------------------------------------
       |    ESP32-CAM PLUS              |    Barcode Reader       |
       ------------------------------------------------------------
-      |  IO19 (Tx2-Software) (4º izq)  |  cable azul (Rx)        |    
-      |  IO21 (Rx2-Software) (1º izq)  |  cable naranja (Tx)     |
+      |  IO21 (Tx2-Software) (4º izq)  |  cable azul (Rx)        |    
+      |  IO19 (Rx2-Software) (1º izq)  |  cable naranja (Tx)     |
       |     3V3                        |        3V3              |
       |     GND                        |        GND              | 
       ------------------------------------------------------------
@@ -79,125 +84,119 @@
     7. Repite pasos 5 y 6 hasta recibir "FIN-TRANSMISION"
     -----------------------------------------------------------------------------------
 
-  -------- MENSAJES ARDUINO -> ESP32 --------------
+    -------- MENSAJES ARDUINO -> ESP32 --------------
+        ----- COMPROBAR COMUNICACIÓN --
+        1) Comprobar conexión:
+            "PING"
 
-    1. Check wifi:
-        "CHECK-WIFI"
+        ----- CONEXIÓN A INTERNET -----
+        2) Check wifi:
+            "CHECK-WIFI"
 
-    2. Guardar info en base de datos al inicio:
-        2.1. Indicar guardado:
-            "SAVE"
-        2.2. Mandar datos a guardar, línea a línea:
-            "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,9,54.35" ... --> sendFileToEsp32()
+        ----- INFO COMIDAS ------------
+        3) Guardar info en base de datos al inicio:
+            3.1. Indicar guardado:
+                "SAVE"
+            3.2. Mandar datos a guardar, línea a línea:
+                "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,9,54.35" ... --> sendFileToEsp32MealByMeal()
 
-   ******** NOT IMPLEMENTED ********
-    3. Activar cámara y leer código de barras:
-        "GET-BARCODE"
-   *********************************
+        ----- BARCODE ----------------
+        4) Leer código de barras:
+            "GET-BARCODE"
 
-  
-  -------- MENSAJES ESP32 -> ARDUINO -------------- 
 
-    1. Hay wifi:
-        "WIFI-OK"
 
-    2. No hay wifi:
-        "NO-WIFI"
+    -------- MENSAJES ESP32 -> ARDUINO -------------- 
+        ----- COMPROBAR COMUNICACIÓN --
+        1) Comprobación de conexión:
+            "PONG"
 
-    3. Esperando datos a subir:
-        "WAITING-FOR-DATA"
+        ----- CONEXIÓN A INTERNET -----
+        2) Hay wifi:
+            "WIFI-OK"
 
-    4. JSON guardado correctamente:
-        "SAVED-OK"
+        3) No hay wifi:
+            "NO-WIFI"
+        
+        ----- INFO COMIDAS ------------
+        4) Esperando datos a subir:
+            "WAITING-FOR-DATA"
 
-    5. Error en el guardado (petición HTTP POST):
-        "ERROR-HTTP:<codigo_error>"
+        5) JSON guardado correctamente:
+            "SAVED-OK"
 
-   ******** NOT IMPLEMENTED ********
-    6. Código de barras leído (se consulta base de datos de alimentos y se obtienen sus valores de carb, lip, prot y kcal por gramo):
-        "BARCODE:<codigo_barras_leido>:<carb>;<prot>;<kcal>"
-   *********************************
+        6) Error en el guardado de la comida (petición HTTP POST):
+            "ERROR-HTTP:<codigo_error>"
+
+       ----- BARCODE ----------------
+            ----- LEER BARCODE -----
+            7) Código de barras leído. Buscando información del producto:
+                "BARCODE:<barcode>"
+        
+            8) No se ha podido leer el código de barras (no se ve bien o el lector no responde):
+                "NO-BARCODE"
+    
+            ----- BUSCAR PRODUCTO -----
+            9) Información del producto:
+                "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+            
+            10) No se ha encontrado el producto en OpenFoodFacts (error HTTP 404 not found):
+                "NO-PRODUCT"
+
+            11) Error al buscar producto (diferente a no encontrado):
+                "ERROR-HTTP:<codigo_error>"
+
+            12) El servidor de OpenFoodFacts no responde:
+                "PRODUCT-TIMEOUT" 
 
  */
 
 
-
-// ESP32-CAM
-//#define RXD1 14
-//#define TXD1 15
-
-// ESP32-CAM PLUS
-#define RXD1 16
-#define TXD1 17
-
-
-#include "json_functions.h" // ya incluye "wifi_functions.h"
-#include "debug.h" // SM_DEBUG --> SerialPC
+#include "json_functions.h" // incluye "wifi_functions.h"
+#include "Serial_functions.h" // incluye debug.h
 
 
 
-void setup() {
-    // --- Serial esp32-PC ---
-    #if defined(SM_DEBUG)
-        SerialPC.begin(115200);
-        while (!SerialPC);
-        delay(100);
-    #endif
-    
-    // --- Serial esp32-Due ---
-    // DEBE TENER LA MISMA VELOCIDAD EN BAUDIOS QUE EL ARDUINO (p.ej. 115200)
-    SerialESP32Due.begin(115200, SERIAL_8N1, RXD1, TXD1);
-    while (!SerialESP32Due);
-    delay(100);
+void setup() 
+{
+    // --- COMUNICACIÓN SERIAL ---
+    setupAllSerial();
+    // ---------------------------
 
-    // Configurar el módulo WiFi en modo estación (STA) para que pueda conectarse a una red WiFi
-    // existente, pero no pueda aceptar conexiones entrantes como punto de acceso. Esto es necesario
-    // para obtener la MAC correcta para este modo.
-    WiFi.mode(WIFI_MODE_STA);
 
-    // Intentar conectarse a la red WiFi
-    connectToWiFi();
+    // --- CONEXIÓN WIFI ---------
+    setupWiFi();
+    // ---------------------------
   
 }
 
 
 
-void loop() {
-  
-    if (SerialESP32Due.available() > 0) // Recibido algo del Due
+void loop() 
+{  
+    if(hayMsgFromDue()) // Recibido algo del Due
     {
-        String msgFromDUE = SerialESP32Due.readStringUntil('\n');
-        msgFromDUE.trim();
+        // ------ Leer mensaje del Due ---------
+        String msgFromDue;
+        readMsgFromSerialDue(msgFromDue); // Leer mensaje del Serial
 
         #if defined(SM_DEBUG)
-            SerialPC.println("\nMensaje recibido: " + msgFromDUE); 
+            SerialPC.println("\nMensaje recibido: " + msgFromDue); 
         #endif
+        // -------------------------------------
+
+        // ------ Comprobar comunicación Serial ----------
+        if (msgFromDue == "PING") ackDue(); // Responder al Due (PONG) indicando comunicación establecida
+        // -----------------------------------------------
 
         // ------ Comprobar Wifi y avisar al Due ---------
-        if (msgFromDUE == "CHECK-WIFI"){
-            if(hayConexionWiFi()){
-                #if defined(SM_DEBUG)
-                    SerialPC.println(F("\nTengo Wifi"));
-                #endif
-                SerialESP32Due.println("WIFI-OK");
-            }
-            else { 
-                #if defined(SM_DEBUG)
-                    SerialPC.println(F("\nNo tengo wifi"));
-                #endif
-                SerialESP32Due.println("NO-WIFI");
-            }
-        }
+        if (msgFromDue == "CHECK-WIFI") checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
         // -----------------------------------------------
+
         // ------ Procesar líneas y generar JSON ---------
-        else if (msgFromDUE == "SAVE"){
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("\nEsperando data..."));
-            #endif
-            SerialESP32Due.println("WAITING-FOR-DATA");
-            processJSON_OnePerMeal(); // Comida a comida, procesa un JSON y lo envía
-        }
+        else if (msgFromDue == "SAVE") processJSON_OnePerMeal(); // Autentica esp32, recibe líneas y genera JSON por comida
         // -----------------------------------------------
+
         else{ 
             // Otras (p.ej. BARCODE)
             #if defined(SM_DEBUG)
