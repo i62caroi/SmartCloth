@@ -41,17 +41,22 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios di
 Para ensamblar el hardware de SmartCloth 2.0, por favor consulte el [documento de montaje](./Docs/Diseño-SmartCloth/SmartCloth%20assembly%20document%20V0.2.pdf).
 
 ### Programación del dispositivo
-1. Guardar imágenes en SD ([v2.1 - src/contenido_SD](v2.1%20-%20src/contenido_SD)) manteniendo la estructura de ficheros
-2. Poner RTC en hora (programa [v2.1 - src/RTC_set_time.ino](./v2.1%20-%20src/RTC_set_time/RTC_set_time.ino))
-3. Calibrar báscula (programa [v2.1 - src/scale.ino](./v2.1%20-%20src/scale/scale.ino)) 
+1. Añadir MAC del ESP32 a la database ([v2.1 - src/get_MAC_address](v2.1%20-%20src/get_MAC_address/get_MAC_address.ino))
+2. Guardar imágenes en SD ([v2.1 - src/contenido_SD](v2.1%20-%20src/contenido_SD)) manteniendo la estructura de ficheros
+3. Poner RTC en hora (programa [v2.1 - src/RTC_set_time.ino](./v2.1%20-%20src/RTC_set_time/RTC_set_time.ino))
+4. Calibrar báscula (programa [v2.1 - src/scale.ino](./v2.1%20-%20src/scale/scale.ino)) 
    1. Poner peso conocido (p.ej. celda de carga que pesa 30gr)
    2. 𝑒𝑠𝑐𝑎𝑙𝑎 𝑖𝑛𝑖𝑐𝑖𝑎𝑙 ∗ 𝑔𝑟 𝑜𝑏𝑡𝑒𝑛𝑖𝑑𝑜𝑠 𝑎𝑙 𝑝𝑒𝑠𝑎𝑟 = 𝑋
    3. 𝑋/30 𝑔𝑟 = 𝑛𝑢𝑒𝑣𝑎 𝑒𝑠𝑐𝑎𝑙𝑎 (𝑏𝑎𝑠𝑐𝑢𝑙𝑎 𝑐𝑎𝑙𝑖𝑏𝑟𝑎𝑑𝑎)
    4. Modificar programa Arduino con nueva escala calculada ([scale.set_scale(escala)](https://github.com/i62caroi/SmartCloth/blob/main/v2.1%20-%20src/smartcloth_v2/Scale.h#L87) en la función [setupScale()](https://github.com/i62caroi/SmartCloth/blob/main/v2.1%20-%20src/smartcloth_v2/Scale.h#L68)) del programa de Arduino
-5. Comentar `#define SM_DEBUG` en los programas de Arduino ([v2.1 - src/smartcloth_v2/debug.h](./v2.1%20-%20src/smartcloth_v2/debug.h)) y ESP32 (([v2.1 - src/esp32cam-v1/debug.h](./v2.1%20-%20src/esp32cam-v1/debug.h))) 
-6. Programar Arduino ([v2.1 - src/smartcloth_v2.ino](v2.1%20-%20src/smartcloth_v2/smartcloth_v2.ino))
-7. Cambiar credenciales WiFi (nombre y contraseña) en programa ESP32
-8. Programar ESP32 ([v2.1 - src/esp32cam-v1.ino](v2.1%20-%20src/esp32cam-v1/esp32cam-v1.ino))
+5. Programar Arduino ([v2.1 - src/smartcloth_v2.ino](v2.1%20-%20src/smartcloth_v2/smartcloth_v2.ino))
+6. Programar ESP32 ([v2.1 - src/esp32cam-v1.ino](v2.1%20-%20src/esp32cam-v1/esp32cam-v1.ino))
+
+#### Post testeo de cada dispositivo:
+1) Comentar `#define SM_DEBUG` en los programas de Arduino ([v2.1 - src/smartcloth_v2/debug.h](./v2.1%20-%20src/smartcloth_v2/debug.h)) y ESP32 ([v2.1 - src/esp32cam-v1/debug.h](./v2.1%20-%20src/esp32cam-v1/debug.h))
+2) Eliminar menú oculto para borrar el fichero CSV y TXT entre pruebas de usuarios
+3) Cambiar credenciales WiFi (nombre y contraseña) en programa ESP32 ([v2.1 - src/esp32cam-v1/wifi_functions.h](./v2.1%20-%20src/esp32cam-v1/wifi_functions.h))
+4) Reprogramar Arduino y ESP32
 
 ## Contacto
 Para obtener más información, visite nuestro sitio web oficial en [smartcloth.org](https://smartcloth.org).
