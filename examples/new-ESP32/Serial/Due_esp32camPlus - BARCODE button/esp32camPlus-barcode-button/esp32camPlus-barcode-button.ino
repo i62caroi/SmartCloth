@@ -136,9 +136,8 @@ void loop()
         SerialPC.print("Mensaje recibido: "); SerialPC.println(command);
 
         if (command == "GET-BARCODE") {
-            digitalWrite(LED_BUILTIN, LOW); // Enciende el LED
-            SerialPC.println("\nLed ON");
             SerialPC.println("Leyendo codigo de barras...");
+            SerialESP32Cam.read(); // Lee y descarta cualquier dato pendiente en el buffer
             // ------- CAM --> ESP32 -----------------------------
             bool barcodeRead = false;
             unsigned long startMillis = millis();
@@ -155,8 +154,6 @@ void loop()
             }
             if(!barcodeRead) {
                 SerialPC.println("\nNo se ha leido ningún código de barras");
-                digitalWrite(LED_BUILTIN, HIGH); // Apaga el LED
-                SerialPC.println("Led OFF");
             }
             // ---------------------------------------------------
         }

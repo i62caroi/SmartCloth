@@ -75,60 +75,68 @@
   **********************************************************************
 
     -------- MENSAJES ARDUINO -> ESP32 --------------
+        ----- COMPROBAR COMUNICACIÓN --
+        1) Comprobar conexión:
+            "PING"
+
         ----- CONEXIÓN A INTERNET -----
-        1) Check wifi:
+        2) Check wifi:
             "CHECK-WIFI"
 
         ----- INFO COMIDAS ------------
-        2) Guardar info en base de datos al inicio:
-            2.1. Indicar guardado:
+        3) Guardar info en base de datos al inicio:
+            3.1. Indicar guardado:
                 "SAVE"
-            2.2. Mandar datos a guardar, línea a línea:
+            3.2. Mandar datos a guardar, línea a línea:
                 "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,9,54.35" ... --> sendFileToEsp32MealByMeal()
 
         ----- BARCODE ----------------
-        3) Leer código de barras:
+        4) Leer código de barras:
             "GET-BARCODE"
 
 
 
     -------- MENSAJES ESP32 -> ARDUINO -------------- 
+        ----- COMPROBAR COMUNICACIÓN --
+        1) Comprobación de conexión:
+            "PONG"
+
         ----- CONEXIÓN A INTERNET -----
-        1) Hay wifi:
+        2) Hay wifi:
             "WIFI-OK"
 
-        2) No hay wifi:
+        3) No hay wifi:
             "NO-WIFI"
         
         ----- INFO COMIDAS ------------
-        3) Esperando datos a subir:
+        4) Esperando datos a subir:
             "WAITING-FOR-DATA"
 
-        4) JSON guardado correctamente:
+        5) JSON guardado correctamente:
             "SAVED-OK"
 
-        5) Error en el guardado de la comida (petición HTTP POST):
+        6) Error en el guardado de la comida (petición HTTP POST):
             "ERROR-HTTP:<codigo_error>"
 
         ----- BARCODE ----------------
             ----- LEER BARCODE -----
-            6) Código de barras leído. Buscando información del producto:
+            7) Código de barras leído. Buscando información del producto:
                 "BARCODE:<barcode>"
         
-            7) No se ha podido leer el código de barras (no se ve bien o el lector no responde):
+            8) No se ha podido leer el código de barras (no se ve bien o el lector no responde):
                 "NO-BARCODE"
     
             ----- BUSCAR PRODUCTO -----
-            8) Información del producto:
+            9) Información del producto:
                 "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
             
-            9) No se ha encontrado el producto en OpenFoodFacts (error HTTP 404 not found):
+            10) No se ha encontrado el producto en OpenFoodFacts (error HTTP 404 not found):
                 "NO-PRODUCT"
 
-            10) Error al buscar producto (diferente a no encontrado):
+            11) Error al buscar producto (diferente a no encontrado):
                 "ERROR-HTTP:<codigo_error>"
 
-            11) El servidor de OpenFoodFacts no responde:
+            12) El servidor de OpenFoodFacts no responde:
                 "PRODUCT-TIMEOUT"
 
 */
@@ -156,7 +164,7 @@ void setup()
     setupAllSerial();
 
     SerialPC.println("HOLA PC DESDE ESP32");
-    sendMsgToDue("HOLA DUE");
+    //sendMsgToDue("HOLA DUE");
     // ---------------------------
 
 
@@ -173,28 +181,25 @@ void loop()
     //if (SerialESP32Due.available() > 0) { // Due envió algo
     if(hayMsgFromDue()) 
     {
-        String command;
-        readMsgFromSerialDue(command);
+        String msgFromDue;
+        readMsgFromSerialDue(msgFromDue);
 
-        SerialPC.print("Mensaje recibido: "); SerialPC.println(command);
+        SerialPC.print("\nMensaje recibido: |"); SerialPC.print(msgFromDue); SerialPC.println("|\n");
 
-        if (command == "GET-BARCODE") 
-        {
-            if(hayConexionWiFi())
-            {
-                SerialPC.println("Leyendo codigo de barras...");
-                getBarcode(); // Lee barcode con BR y obtiene su info de OpenFoodFacts
-            }
-            else  
-            {
-                SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
-                sendMsgToDue(F("NO-WIFI"));
-            }
-        }
+        // ------ Comprobar comunicación Serial ----------
+        if (msgFromDue == "PING") ackDue(); // Responder al Due (PONG) indicando comunicación establecida
+        // -----------------------------------------------
+
+        // ------ Intentar obtener Barcode ---------------
+        else if (msgFromDue == "GET-BARCODE") tryGetBarcode(); // Si hay WiFi, leer barcode
+        // -----------------------------------------------
+
+        // ------ Comando no válido ----------------------
         else{
           SerialPC.println("Command not valid");
           sendMsgToDue(F("Command not valid"));
         }
+        // -----------------------------------------------
     }
     // ---------------------------------------------------
 

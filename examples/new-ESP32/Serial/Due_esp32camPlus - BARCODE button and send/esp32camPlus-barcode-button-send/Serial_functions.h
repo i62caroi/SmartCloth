@@ -33,13 +33,15 @@ SoftwareSerial mySerial(RXD2, TXD2); // RX, TX
 
 
 #include "wifi_functions.h"
-void    getFoodData(String barcode);
+void          getFoodData(String barcode);
+inline bool   hayConexionWiFi();
 
 
 /*-----------------------------------------------------------------------------
                            DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
 void            setupAllSerial();                             // Inicializar comunicación serie con PC, Due y lector de código de barras
+void            ackDue();                                     // Indicar que la comunicación está establecida
 inline bool     isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout); // Comprobar si se ha excedido el tiempo de espera
 
 // Comunicación Serial ESP32-Due
@@ -51,7 +53,8 @@ inline void     readMsgFromSerialDue(String &msgFromDue);     // Leer mensaje de
 inline bool     hayMsgFromBR();                               // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
 inline void     readMsgFromSerialBR(String &msgFromBR);       // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
 
-void            getBarcode(); // Leer código de barras 
+void            tryGetBarcode();    // Si hay WiFi, intentar obtener el código de barras 
+void            getBarcode();       // Leer código de barras 
 /*-----------------------------------------------------------------------------*/
 
 
@@ -85,6 +88,22 @@ void setupAllSerial()
     SerialBR.begin(9600); // Debe ser 9600 porque así trabaja el lector
     delay(100);
     // ---------------------------
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Envia una respuesta "PONG" al Due para indicar que la comunicación está establecida.
+ * 
+ * Esta función envía un mensaje "PONG" al Due para indicar que la comunicación entre el ESP32 y el Due está establecida.
+ */
+/*-----------------------------------------------------------------------------*/
+void ackDue() 
+{
+    // Enviar respuesta "PONG" al Due para indicar que la comunicación está establecida
+    sendMsgToDue("PONG");
+
+    SerialPC.println(F("Comunicación con Due establecida"));
 }
 
 
@@ -167,6 +186,30 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
 
 /*-----------------------------------------------------------------------------*/
 /**
+ * @brief Intenta obtener el código de barras y obtener su información de OpenFoodFacts.
+ * 
+ * Si hay una conexión WiFi disponible, se intentará leer el código de barras y obtener su información de OpenFoodFacts.
+ * Si no hay conexión WiFi, se mostrará un mensaje de error y se enviará un mensaje al dispositivo Due indicando la falta de conexión.
+ */
+/*-----------------------------------------------------------------------------*/
+void tryGetBarcode()
+{
+    if(hayConexionWiFi())
+    {
+        SerialPC.println("Leyendo codigo de barras...");
+        getBarcode(); // Lee barcode con BR y obtiene su info de OpenFoodFacts
+    }
+    else  
+    {
+        SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
+        sendMsgToDue(F("NO-WIFI"));
+    }
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
  * @brief Obtiene el códido de barras leído por el lector BR (Barcode Reader) y 
  *          envía la información del producto al Due.
  *
@@ -183,10 +226,11 @@ void getBarcode()
     unsigned long startMillis = millis();
     unsigned long timeToRead = 10000; // 10 segundos para leer el código de barras
 
-    // A veces, al leer el Serial se lee el código de barras anterior. Probé a limpiar el buffer,
-    // pero podría acabar eliminando el código de barras que se está leyendo ahora. Por eso, se
-    // deja en manos del usuario que si se indica en pantalla un producto distinto al escaneado,
-    // se vuelva a escanear.
+    // A veces, al leer el Serial se lee el código de barras anterior. Limpiar el buffer podría
+    // acabar eliminando el código de barras que se está leyendo ahora, pero eso es mejor que enviar
+    // datos extraños en la petición a OpenFoodFacts. Si se borra sin querer lo leído ahora, que
+    // el usuario lo vuelva a escanear.
+    SerialBR.read(); // Lee y descarta cualquier dato pendiente en el buffer    
 
     while((barcode == "-") && !isTimeoutExceeded(startMillis, timeToRead))  // Si aún no se ha leído y no han pasado 5 segundos
     {
@@ -220,5 +264,9 @@ void getBarcode()
     // ---------------------------------
 
 }
+
+
+
+
 
 #endif

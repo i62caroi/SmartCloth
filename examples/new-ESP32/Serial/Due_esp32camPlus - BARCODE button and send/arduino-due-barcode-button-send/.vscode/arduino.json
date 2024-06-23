@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
     "sketch": "arduino-due-barcode-button-send.ino",
-    "port": "/dev/tty.usbmodem1122401"
+    "port": "/dev/tty.usbmodem1122201"
 }

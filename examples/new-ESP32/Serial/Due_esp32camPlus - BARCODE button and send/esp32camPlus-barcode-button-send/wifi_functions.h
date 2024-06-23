@@ -14,8 +14,16 @@
 
 #include "Serial_functions.h"
 
-const char* ssid = "UCOTEAM";
-const char* password = "-polonio210alfileres-";
+// Credenciales conexión red WiFi
+// Laboratorio:
+//const char* ssid = "UCOTEAM";
+//const char* password = "-polonio210alfileres-";
+// Casa:
+const char* ssid = "MOVISTAR_FB23_EXT";
+const char* password = "DP6BUuEtuFvRw3mHmFoG";
+// Post testeos:
+//const char* ssid = "SmartCloth";
+//const char* password = "SM-pass24/";
 
 /*
   [27/05/24 12:37] 
