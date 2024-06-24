@@ -128,7 +128,7 @@ void setup()
     pinMode(intPinGuardar, INPUT);
 
     //  ----- BARCODE  -----
-    //pinMode(intPinBarcode, INPUT_PULLUP); // Entrada con resistencia pull-up interna
+    pinMode(intPinBarcode, INPUT_PULLUP); // Entrada con resistencia pull-up interna
     // -----------------------------------------
 
   
@@ -147,7 +147,7 @@ void setup()
 
     //  -----   Barcode   -----
     // FALLING porque su resistencia (la interna del Due) está modo pull-up, así que el botón se activa a la baja
-    //attachInterrupt(digitalPinToInterrupt(intPinBarcode), ISR_barcode, FALLING); // Interrupción en flanco de bajada
+    attachInterrupt(digitalPinToInterrupt(intPinBarcode), ISR_barcode, FALLING); // Interrupción en flanco de bajada
 
     //  -----   Scale   ------
     attachDueInterrupt(HW_TIMER_INTERVAL_MS * 1000, TimerHandler, "ITimer");

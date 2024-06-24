@@ -190,11 +190,15 @@ void loop()
         // -----------------------------------------------
 
         // ------ Comprobar Wifi y avisar al Due ---------
-        if (msgFromDue == "CHECK-WIFI") checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
+        else if (msgFromDue == "CHECK-WIFI") checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
         // -----------------------------------------------
 
         // ------ Procesar líneas y generar JSON ---------
         else if (msgFromDue == "SAVE") processJSON_OnePerMeal(); // Autentica esp32, recibe líneas y genera JSON por comida
+        // -----------------------------------------------
+
+        // ------ Intentar obtener Barcode ---------------
+        else if (msgFromDue == "GET-BARCODE") tryGetBarcode(); // Si hay WiFi, leer barcode
         // -----------------------------------------------
 
         else{ 

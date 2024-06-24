@@ -125,6 +125,10 @@
 #define SERIAL_FUNCTIONS_H
 
 #include "Comida.h" // comidaActual
+#include "SD_functions.h"
+#include "debug.h" // SM_DEBUG --> Comunicación Serial con PC
+#define SerialESP32 Serial1 // Comunicación Serial con ESP32
+
 
 // --- RESULTADOS DE SUBIR INFO A DATABASE --- 
 // Usadas en:
@@ -144,17 +148,21 @@
 #define  UNKNOWN_ERROR           9
 
 
+// --- RESULTADOS DE LEER BARCODE ---
+// Barcode leido o no:
+#define BARCODE_READ            0
+#define BARCODE_NOT_READ        1
+// Conexion con ESP32:
+//#define NO_ESP32_CONNECTION     2
+// Product info found or not:
+#define PRODUCT_FOUND           3
+#define PRODUCT_NOT_FOUND       4
+#define PRODUCT_TIMEOUT         5
 
-
-#include "SD_functions.h"
-
-#include "debug.h" // SM_DEBUG --> Comunicación Serial con PC
-#define SerialESP32 Serial1 // Comunicación Serial con ESP32
+bool isESP32Connected = false; // Flag para indicar si la comunicación con el ESP32 está establecida
 
 
 void showDataToUpload(byte option);
-
-bool isESP32Connected = false; // Flag para indicar si la comunicación con el ESP32 está establecida
 
 
 /*******************************************************************************
@@ -164,7 +172,7 @@ bool isESP32Connected = false; // Flag para indicar si la comunicación con el E
 /******************************************************************************/
 // Funciones para manejar la comunicación Serial con el ESP32
 void            setupSerial();                                      // Inicializar comunicación serie con PC y ESP32
-void            pingESP32();                                       // Comprobar conexión con ESP32
+void            pingESP32();                                        // Comprobar conexión con ESP32
 
 inline void     sendMsgToESP32(const String &msg);                  // Enviar 'msg' del Due al ESP32
 inline bool     hayMsgFromESP32();                                  // Comprobar si hay mensajes del ESP32 disponibles
@@ -175,12 +183,11 @@ void            waitResponseFromESP32(String &msgFromESP32, unsigned long &timeo
 inline bool     isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout);    // Comprobar si se ha excedido el tiempo de espera
 // -------------
 
-bool    checkWifiConnection();                                                      // Comprobar conexion a internet
-
-byte    prepareSaving();                                                            // Indica al ESP32 que se le va a enviar info y espera su respuesta WAITING-FOR-DATA
-
-//byte    handleResponseFromESP32AfterUpload(byte option);                          // Maneja la respuesta del ESP32 y actúa acorde
-
+bool    checkWifiConnection();                                      // Comprobar conexion a internet
+byte    prepareSaving();                                            // Indica al ESP32 que se le va a enviar info y espera su respuesta WAITING-FOR-DATA
+void    getBarcodeAndProductInfo();                                 // Leer código de barras y buscar información del producto
+byte    askForBarcode(String &barcode);                             // Obtener el código de barras
+byte    getProductInfo(String &barcode, String &productInfo);       // Obtener la información del producto a partir de un código de barras
 /******************************************************************************/
 /******************************************************************************/
 
@@ -583,107 +590,182 @@ byte prepareSaving()
 
 
 
+/*---------------------------------------------------------------------------------------------------------*/
+/**
+ * @brief Obtiene el código de barras y la información del producto.
+ * 
+ * Esta función se utiliza para obtener el código de barras y la información del producto asociada.
+ * Si la comunicación con el ESP32 está establecida, se solicita el código de barras y se busca la información del producto en OpenFoodFacts.
+ * Si no se ha leído el código de barras, no se buscará información del producto.
+ * 
+ * @param barcode Referencia a una cadena de caracteres donde se almacenará el código de barras.
+ * @param productInfo Referencia a una cadena de caracteres donde se almacenará la información del producto.
+ */
+/*---------------------------------------------------------------------------------------------------------*/
+void getBarcodeAndProductInfo()
+{
+    String barcode;
+    // 1. Obtener barcode
+    byte resultFromReadingBarcode = askForBarcode(barcode);
+
+    // 2. Si se ha leído el barcode, buscar información del producto
+    if(resultFromReadingBarcode == BARCODE_READ)
+    { 
+        String productInfo;
+        byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts
+        if(resultFromGettingProductInfo == PRODUCT_FOUND); //showProductInfo(productInfo);
+    }
+    else
+    {
+        #ifdef SM_DEBUG
+            SerialPC.println(F("\nNo se va a buscar info del producto porque no se ha leido el barcode"));
+        #endif
+    } 
+}
+
+
 
 /*---------------------------------------------------------------------------------------------------------*/
 /**
- * @brief Maneja la respuesta recibida desde el ESP32 después de subir la info a database.
+ * @brief Solicita la lectura de un código de barras al ESP32 y espera la respuesta.
  * 
- * Esta función recibe la respuesta del ESP32 tras subir la información y realiza las acciones necesarias
- * según la respuesta recibida.
- * 
- * @param option La opción para determinar el comportamiento de la función (mostrar o no pantalla de sincronización) 
- * 
- * @return El código de estado idicando el resultado del proceso de subida:
- *         - SAVE_EXECUTED_FULL: La comida se ha guardado localmente y en la base de datos.
- *         - SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP: La comida solo se ha guardado localmente por un error HTTP.
- *         - SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI: La comida solo se ha guardado localmente porque se perdió la conexión WiFi. 
- *         - SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT: La comida solo se ha guardado localmente por TIMEOUT de respuesta del ESP32. 
- *         - SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR: La comida solo se ha guardado localmente por error desconocido. 
+ * @param barcode Referencia a un objeto String donde se almacenará el código de barras leído.
+ * @return El resultado de la operación:
+ *         - BARCODE_READ si se ha leído correctamente el código de barras.
+ *         - BARCODE_NOT_READ si no se ha podido leer el código de barras.
+ *         - NO_INTERNET_CONNECTION si no hay conexión a internet.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-/*byte handleResponseFromESP32AfterUpload(byte option)
+byte askForBarcode(String &barcode)
 {
-    //String msgFromESP32 = waitResponseFromESP32(FASE_3_UPLOADING); // En la fase 3, sale del while si recibe SAVED-OK, HTTP-ERROR: o NO-WIFI
+    // ---- PEDIR LEER BARCODE ---------------------------------
+    #ifdef SM_DEBUG
+        SerialPC.println(F("\nPidiendo escanear barcode..."));
+    #endif
+    sendMsgToESP32("GET-BARCODE"); // Envía la cadena al ESP32
+    // ---------------------------------------------------------
+
+    // ---- RESPUESTA DEL ESP32 --------------------------------
+    // ---- ESPERAR RESPUESTA DEL ESP32 -----
     String msgFromESP32;
-    waitResponseFromESP32(msgFromESP32); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
+    unsigned long timeout = 10500; // Espera máxima de 10.5 segundos (el tiempo que da el ESP32 para colocar el producto)
+    waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
+    // --------------------------------------
 
-    if (msgFromESP32 == "SAVED-OK") // JSON guardado en la base de datos
+    // ---- ANALIZAR RESPUESTA DEL ESP32 ----
+    // --- EXITO ------
+    if(msgFromESP32.startsWith("BARCODE:")) 
     {
-        deleteFileTXT(); // Borrar fichero porque ya se ha subido su info
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(ALL_MEALS_UPLOADED); // State_UPLOAD_DATA
-
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("JSON guardado y borrando fichero TXT..."));
-            SerialPC.println(F("\nPaso a Init tras subir la info y borrar TXT..."));
+        barcode = msgFromESP32.substring(8);
+        #ifdef SM_DEBUG
+            SerialPC.println("\nCodigo de barras leido: " + barcode);
         #endif
-
-        return SAVE_EXECUTED_FULL;
-    } 
-    else if (msgFromESP32.startsWith("ERROR-HTTP:")) // La subida no ha sido exitosa 
-    { 
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(HTTP_ERROR);
-        else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // STATE_saved --> La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
-                                                        // Si se ha intentado subir la lista de la comida pero ha habido error.
-            #if defined SM_DEBUG
-                SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
-            #endif
-
-            saveListInTXT(); // Copia lista en TXT y la limpia
-        }
-
-        #if defined(SM_DEBUG)
-            SerialPC.print(F("Error al subir JSON: ")); SerialPC.println(msgFromESP32);
-            SerialPC.println(F("\nPaso a Init tras ERROR al subir la info..."));
+        return BARCODE_READ;
+    }
+    // -----------------
+    // --- "ERRORES" ---
+    else if(msgFromESP32 == "NO-BARCODE") 
+    {
+        #ifdef SM_DEBUG
+            SerialPC.println("\nNo se ha podido leer el codigo de barras");
         #endif
-
-        return SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP;
+        return BARCODE_NOT_READ;
     }
-    else if (msgFromESP32 == "NO-WIFI") // Se ha cortado la conexión (no debería ocurrir si ya se ha comprobado antes)
+    else if(msgFromESP32 == "TIMEOUT") return TIMEOUT; // No se ha recibido respuesta del ESP32
+    else // Mensaje desconocido
     {
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONNECTION);
-        else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // STATE_saved --> La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
-                                                        // Si se ha intentado enviar la lista de la comida pero no hay WiFi.
-            #if defined SM_DEBUG
-                SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
-            #endif
-
-            saveListInTXT(); // Copia lista en TXT y la limpia
-        }
-
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("Se ha cortado la conexión a Internet..."));
-            SerialPC.println(F("\nPaso a Init tras fallo de conexión..."));
-        #endif        
-
-        return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;
+        #ifdef SM_DEBUG
+            SerialPC.println(F("\nError desconocido al pedir leer barcode..."));
+        #endif
+        return UNKNOWN_ERROR;
     }
-    else if (msgFromESP32 == "TIMEOUT") // El ESP32 no respondió en 30 segundos. Actuamos como si no hubiera WiFi
+    // -----------------
+    // --------------------------------------
+    // ---------------------------------------------------------
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------*/
+/**
+ * @brief Obtiene la información de un producto a partir de un código de barras.
+ * 
+ * Esta función envía una solicitud al ESP32 para buscar la información del producto correspondiente al código de barras proporcionado.
+ * Espera la respuesta del ESP32 y analiza la respuesta para determinar si se encontró el producto o si ocurrió algún error.
+ * 
+ * @param barcode El código de barras del producto.
+ * @param productInfo La información del producto encontrada.
+ */
+/*---------------------------------------------------------------------------------------------------------*/
+byte getProductInfo(String &barcode, String &productInfo)
+{
+    // ---- BUSCAR PRODUCTO ---------------------------------
+    #ifdef SM_DEBUG
+        SerialPC.println("\nBuscando informacion del producto: " + barcode);
+    #endif
+    // ---------------------------------------------------------
+
+    // ---- RESPUESTA DEL ESP32 --------------------------------
+    // ---- ESPERAR RESPUESTA DEL ESP32 -----
+    String msgFromESP32;
+    unsigned long timeout = 5500; // Espera máxima de 5.5 segundos (el tiempo que se da el ESP32 para buscar el producto)
+    waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
+    // --------------------------------------
+
+    // ---- ANALIZAR RESPUESTA DEL ESP32 ----
+    // --- EXITO ------
+    if(msgFromESP32.startsWith("PRODUCT:")) 
     {
-        if(option == SHOW_SCREEN_UPLOAD_DATA) showDataToUpload(NO_INTERNET_CONNECTION);
-        else if(option == NOT_SHOW_SCREEN_UPLOAD_DATA){ // STATE_saved --> La opción NOT_SHOW_SCREEN_UPLOAD_DATA se usa en el STATE_saved para no mostrar el proceso.
-                                                        // Si se ha intentado enviar la lista de la comida, pero ha habido error.
-            #if defined SM_DEBUG
-                SerialPC.println(F("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...")); // STATE_saved
-            #endif
-
-            saveListInTXT(); // Copia lista en TXT y la limpia
-        }
-
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("No se ha subido por TIMEOUT"));
-        #endif        
-
-        return SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT;
+        #ifdef SM_DEBUG
+            SerialPC.println("\nInformacion del producto: " + msgFromESP32);
+        #endif
+        productInfo = msgFromESP32;
+        return PRODUCT_FOUND;
     }
-    else
-    { 
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("No se ha subido por ERROR DESCONOCIDO"));
-        #endif   
-
-        return SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR;
+    // -----------------
+    // --- ERRORES -----
+    else if(msgFromESP32 == "NO-PRODUCT") 
+    {
+        #ifdef SM_DEBUG
+            SerialPC.print("\nNo se ha encontrado el producto " + barcode); SerialPC.println(" en OpenFoodFacts");
+        #endif
+        return PRODUCT_NOT_FOUND;
     }
-}*/
+    else if(msgFromESP32 == "PRODUCT-TIMEOUT") 
+    {
+        #ifdef SM_DEBUG
+            SerialPC.println("\nEl servidor de OpenFoodFacts no responde");
+        #endif
+        return PRODUCT_TIMEOUT;
+    }
+    else if(msgFromESP32 == "NO-WIFI") 
+    {
+        #ifdef SM_DEBUG
+            SerialPC.println("\nNo hay wifi");
+        #endif
+        return NO_INTERNET_CONNECTION;
+    }
+    else if(msgFromESP32.startsWith("ERROR-HTTP:")) 
+    {
+        #ifdef SM_DEBUG
+            String error = msgFromESP32.substring(11);
+            SerialPC.println("Error al buscar info del producto (peticion HTTP POST): " + error);
+        #endif
+        return HTTP_ERROR;
+    }
+    else if(msgFromESP32 == "TIMEOUT") return TIMEOUT; // No se ha recibido respuesta del ESP32
+    else // Mensaje desconocido
+    {
+        #ifdef SM_DEBUG
+            SerialPC.println("Mensaje no reconocido: " + msgFromESP32);
+        #endif
+        return UNKNOWN_ERROR;
+    }
+    // -----------------
+    // --------------------------------------
+    // ---------------------------------------------------------
+}
+
 
 
 

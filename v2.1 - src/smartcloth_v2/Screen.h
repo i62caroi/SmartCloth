@@ -689,7 +689,8 @@ void blinkGrupoyProcesamiento(byte msg_option){
 /*---------------------------------------------------------------------------------------------------------
    printGrupoyEjemplos(): Zona 1 => Muestra ejemplos del grupo de alimentos seleccionado.
 ----------------------------------------------------------------------------------------------------------*/
-void printGrupoyEjemplos(){    
+void printGrupoyEjemplos()
+{    
     // -------- TEXTO ------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 

@@ -17,8 +17,6 @@
 const byte intPinBarcode = 53;
 volatile bool pulsandoBarcode = false;
 
-const int pinBarcode = 53;   
-
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief ISR de botón de barcode

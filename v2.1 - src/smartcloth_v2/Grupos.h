@@ -21,13 +21,14 @@
 #ifndef GRUPOS_H
 #define GRUPOS_H
 
-#define NUM_GRUPOS 26 
-//#define NUM_GRUPOS 27 // 26 nuestros (crudos y cocinados) y el de barcode
+//#define NUM_GRUPOS 26 
+#define NUM_GRUPOS 27 // 26 nuestros (crudos y cocinados) y el de barcode
 
 #include "COLORS.h" // Colores del texto de nombre de grupo y ejemplos
+#include "debug.h"  // SM_DEBUG --> SerialPC
 
 
-
+#define BARCODE_PRODUCT_INDEX 50 // ID del grupo de alimentos para el barcode
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -120,9 +121,10 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche 
                                       {29,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",1.119421488,0.081446281,0.011157025,0.172933884},
                                       {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jam\xF3""n cocido, at\xFA""n natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.836939597,0.167436242,0.015221477,0.005798658},
                                       {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca\x2F""buey, jam\xF3""n curado (sin\n   grasa), pescados grasos (at\xFA""n, sardina, trucha, boquer\xF3""n\x85""), v\xED""sceras, pato\n   sin piel, codorniz, etc.",1.321273973,0.205972603,0.054369863,0.001726027},
-                                      {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, at\xFA""n o sardinas en aceite, caballa,\n   salm\xF3""n, jam\xF3""n curado con grasa, huevo, queso fresco, reques\xF3""n, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443}
+                                      {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, at\xFA""n o sardinas en aceite, caballa,\n   salm\xF3""n, jam\xF3""n curado con grasa, huevo, queso fresco, reques\xF3""n, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443},
+
+                                      {BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} // Grupo de alimentos para el barcode
                                     };
-                                    // {50,COLOR_G50,"NOMBRE PRODUCTO","",0.0,0.0,0.0,0.0}
 
 
 
@@ -136,11 +138,12 @@ Grupo grupoAnterior; // Grupo de alimentos seleccionado anteriormente
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Establece el grupo de alimentos seleccionado.
- * @param id 'buttonGrande', ID del grupo a seleccionar.
+ * @param id ID del grupo a seleccionar ('buttonGrande' o 50 si es el de barcode).
  */
 /*-----------------------------------------------------------------------------*/
 void setGrupoAlimentos(byte id)      
 {
+    // Obtener posición del grupo en el array
     byte posGrupo = 0;
     for(byte i = 0; i < NUM_GRUPOS; i++){
         if(gruposAlimentos[i].ID_grupo == id){ 
@@ -152,6 +155,81 @@ void setGrupoAlimentos(byte id)
     grupoEscogido = gruposAlimentos[posGrupo]; 
 }
 
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * Actualiza la información del grupo de alimentos 'grupoEscodigo' basándose en el código de barras proporcionado.
+ * 
+ * Esta función toma una cadena de texto que representa la información del producto obtenida a través
+ * de un código de barras. La información del producto debe seguir un formato específico donde los
+ * diferentes campos están separados por punto y coma (;). El formato esperado es:
+ * "PRODUCT:<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+ * 
+ * Los campos extraídos son:
+ * - nombre_producto: El nombre del producto.
+ * - carb_1g: La cantidad de carbohidratos por gramo.
+ * - lip_1g: La cantidad de lípidos (grasas) por gramo.
+ * - prot_1g: La cantidad de proteínas por gramo.
+ * - kcal_1g: La cantidad de kilocalorías por gramo.
+ * 
+ * Estos valores se utilizan para actualizar la información del grupo de alimentos actualmente seleccionado.
+ * 
+ * @param productInfo Una cadena de texto que contiene la información del producto, incluyendo el nombre y los valores nutricionales.
+ */
+/*-----------------------------------------------------------------------------*/
+void updateGrupoEscogidoFromBarcode(String &productInfo)
+{
+    #ifdef SM_DEBUG
+        SerialPC.println("Actualizando 'grupoEscogido' con la info del producto...");
+    #endif
+
+    // ----- OBTENER INFO DEL PRODUCTO -----
+    String cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
+
+    int idx_nombre = cad.indexOf(';');
+    int idx_carb = cad.indexOf(';', idx_nombre + 1);
+    int idx_lip = cad.indexOf(';', idx_carb + 1);
+    int idx_prot = cad.indexOf(';', idx_lip + 1);
+    int idx_kcal = cad.indexOf(';', idx_prot + 1);
+
+    String barcode = cad.substring(0, idx_nombre);
+    String nombre_producto = cad.substring(idx_nombre + 1, idx_carb);
+    float carb_1g = cad.substring(idx_carb + 1, idx_lip).toFloat();
+    float lip_1g = cad.substring(idx_lip + 1, idx_prot).toFloat();
+    float prot_1g = cad.substring(idx_prot + 1, idx_kcal).toFloat();
+    float kcal_1g = cad.substring(idx_kcal + 1).toFloat();
+
+    /*#ifdef SM_DEBUG
+        SerialPC.println("\nCodigo: " + barcode);
+        SerialPC.println("Nombre: " + nombre_producto);
+        SerialPC.println("Carb_1g: " + String(carb_1g));
+        SerialPC.println("Lip_1g: " + String(lip_1g));
+        SerialPC.println("Prot_1g: " + String(prot_1g));
+        SerialPC.println("Kcal_1g: " + String(kcal_1g));
+    #endif*/
+    // -------------------------------------
+
+
+    // ----- ACTUALIZAR INFO DEL GRUPO -----
+    grupoEscogido.Nombre_grupo = nombre_producto;
+    grupoEscogido.Carb_g = carb_1g;
+    grupoEscogido.Lip_g = lip_1g;
+    grupoEscogido.Prot_g = prot_1g;
+    grupoEscogido.Kcal_g = kcal_1g;
+
+    #ifdef SM_DEBUG
+        SerialPC.println("\nCodigo: " + barcode);
+        SerialPC.println("Nombre: " + grupoEscogido.Nombre_grupo);
+        SerialPC.println("Carb_1g: " + String(grupoEscogido.Carb_g));
+        SerialPC.println("Lip_1g: " + String(grupoEscogido.Lip_g));
+        SerialPC.println("Prot_1g: " + String(grupoEscogido.Prot_g));
+        SerialPC.println("Kcal_1g: " + String(grupoEscogido.Kcal_g));
+    #endif
+    // -------------------------------------
+
+}
 
 
 

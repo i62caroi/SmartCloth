@@ -34,6 +34,7 @@
     }
 */
 
+// ------- CREDENCIALES -------------
 // Credenciales conexión red WiFi
 // Laboratorio:
 //const char* ssid = "UCOTEAM";
@@ -44,12 +45,30 @@ const char* password = "DP6BUuEtuFvRw3mHmFoG";
 // Post testeos:
 //const char* ssid = "SmartCloth";
 //const char* password = "SM-pass24/";
+// -----------------------------------
 
 
+// ------- DATABASE SMARTCLOTH -------
 // URL del servidor donde enviar el JSON
 const char* fetchTokenServerName = "https://smartclothweb.org/api/mac";
 const char* comidaServerName = "https://smartclothweb.org/api/comidas";
 const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
+// ----------------------------------
+
+
+// ------- OPEN FOOD FACTS ----------
+// URL de la API de OpenFoodFacts
+/*  [27/05/24 12:37] 
+    El entorno de staging de OpenFoodFacts (https://world.openfoodfacts.net) está fallando, devuelve un error 500.
+    En la documentación (https://openfoodfacts.github.io/openfoodfacts-server/api/) dicen que usemos el staging si no
+    estamos en producción, pero como no funciona, vamos a usar el entorno de producción (https://world.openfoodfacts.org).*/
+//const char* openFoodFacts_server = "https://world.openfoodfacts.net/api/v2/product/"; // Staging environment
+const char* openFoodFacts_server = "https://world.openfoodfacts.org/api/v2/product/";   // Production environment
+const char* openFoodFacts_fields = "?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"; // Campos requeridos
+
+#define JSON_SIZE_LIMIT_BARCODE 512 // El JSON devuelto suele de ser de 200 bytes, pero ponemos 512 por segurarnos
+// ----------------------------------
+
 
 
 
@@ -65,6 +84,10 @@ void    checkWiFi();        // Comprobar si hay WiFi e indicarlo al Due
 bool    fetchTokenFromServer(String &bearerToken);                                  // 1. Pedir token
 void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);      // 2. Subir JSON
 void    logoutFromServer(String &bearerToken);                                      // 3. Cerrar sesión
+
+// Barcode
+void    getFoodData(String barcode);                                    // Obtener los datos de un alimento
+void    getProductInfo(const String &payload, String &productInfo);     // Obtener la información del producto a partir de un JSON
 /*-----------------------------------------------------------------------------*/
 
 
@@ -505,6 +528,235 @@ void logoutFromServer(String &bearerToken)
         //sendMsgToDue(F("NO-WIFI"));
         // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
     }
+}
+
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Obtiene los datos de un alimento a través de un código de barras.
+ * 
+ * Esta función realiza una solicitud HTTP a la API de Open Food Facts para obtener los datos de un alimento
+ * utilizando el código de barras proporcionado. Los datos obtenidos incluyen el nombre del producto, los
+ * carbohidratos por cada 100 gramos, la energía en kilocalorías por cada 100 gramos, la grasa por cada 100 gramos
+ * y las proteínas por cada 100 gramos.
+ *
+ * [27/05/24 12:37] El entorno de staging de OpenFoodFacts (https://world.openfoodfacts.net) está fallando, devuelve un error 500.
+ *  En la documentación (https://openfoodfacts.github.io/openfoodfacts-server/api/) dicen que usemos el staging si no
+ *  estamos en producción, pero como no funciona, vamos a usar el entorno de producción (https://world.openfoodfacts.org).
+ *
+ *  Ejemplo: https://world.openfoodfacts.org/api/v2/product/3017624010701?fields=product_name,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g
+ * 
+ * @param barcode El código de barras del alimento.
+ */
+/*-----------------------------------------------------------------------------*/
+void getFoodData(String barcode) 
+{
+    // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
+
+    // Si no hay conexión a Internet, no merece la pena escanear el código de barras porque no se podrá buscar su información en OpenFoodFacts
+    // Creo que esto ya se hace en Due antes de pedir leer el barcode, pero por si acaso.
+
+    // --- HAY INTERNET ---
+    if(hayConexionWiFi())    //Comprueba si la conexión WiFi sigue activa
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println("Obtieniendo información del producto...");
+        #endif
+        
+        // --- CONFIGURAR PETICIÓN HTTP ---
+        // Configurar la petición HTTP: un GET a la URL de la API de OpenFoodFacts con el código de barras
+        // y los campos que se quieren obtener
+        HTTPClient http;  
+        String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields; // Conformar URL de la API
+        http.begin(serverPath.c_str()); // Inicializar URL de la API
+        http.setTimeout(5000); // Establecer 5 segundos de espera para la respuesta del servidor OpenFoodFacts
+
+        // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
+        // En las operaciones de escritura hace falta más autenticación (credenciales), pero no nos afecta porque 
+        // no vamos a modificar productos.
+        http.setUserAgent("SmartCloth/1.0 (irene.casares@imibic.org)"); // Establece el User-Agent personalizado
+        // --------------------------------
+
+        // --- ENVIAR PETICIÓN HTTP -------
+        // Enviar la petición HTTP
+        int httpResponseCode = http.GET();  // Método de petición HTTP
+        // --------------------------------
+
+        // --- PROCESAR RESPUESTA HTTP -----
+        // Comprobar el código de respuesta HTTP
+        if(httpResponseCode>0)
+        {
+            if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Se encontró la info del producto
+            {
+                // --- OBTENER INFO DEL PRODUCTO ---
+                String payload = http.getString();  // Obtener la respuesta del servidor de OpenFoodFacts
+                String productInfo;
+                getProductInfo(payload, productInfo); // Obtener la información del producto del 'payload' y almacenarla en 'productInfo' con la estuctura adecuada:
+                                                      //   "PRODUCT:barcode;nombreProducto;carb_1g;lip_1g;prot_1g;kcal_1g"
+                // --------------------------------
+
+                // --- RESPUESTA AL DUE -----------
+                sendMsgToDue(productInfo);
+                // --------------------------------
+            }
+            else // No se encontró la info del producto
+            {
+                if(httpResponseCode == 404) 
+                {
+                    // Si no se encuentra el producto, se obtiene código 404 (Not Found) y un JSON como este:
+                    // { "code": "8422114932702", "status": 0, "status_verbose": "product not found" }
+                    #if defined(SM_DEBUG)
+                        SerialPC.println("Producto no encontrado.");
+                    #endif
+
+                    // -- RESPUESTA AL DUE ---
+                    sendMsgToDue(F("NO-PRODUCT"));
+                    // -----------------------
+                }
+                else 
+                {
+                    #if defined(SM_DEBUG)
+                        SerialPC.println("Error en la solicitud: " + httpResponseCode);
+                    #endif
+
+                    // -- RESPUESTA AL DUE ---
+                    sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+                    // -----------------------
+                
+                }
+            }
+        }
+        else if(httpResponseCode==-1) 
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println("Tiempo de espera agotado. OpenFoodFacts no responde.");
+            #endif
+
+            // -- RESPUESTA AL DUE ---
+            sendMsgToDue(F("PRODUCT-TIMEOUT"));
+            // -----------------------
+        }
+        else 
+        { // Creo que nunca llegaría a esta condición
+            #if defined(SM_DEBUG)
+                SerialPC.println("Error en la solicitud: " + httpResponseCode);
+            #endif
+
+            // -- RESPUESTA AL DUE ---
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+            // -----------------------
+        }
+        // --------------------------------
+
+        // --- CERRAR CONEXIÓN HTTP -------
+        http.end();   //Cierra la conexión
+        // --------------------------------
+    }
+    // --- FIN HAY INTERNET --
+
+    // --- NO HAY INTERNET ---
+    else 
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println("No se puede obtener la información del producto porque ha perdido la conexión a Internet");
+        #endif
+        sendMsgToDue(F("NO-WIFI"));
+    }
+    // --- FIN NO HAY INTERNET ---
+    // ---- FIN CHEQUEO INTERNET --------------------
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Obtiene la información del producto a partir de un JSON y la almacena en una cadena de texto.
+ * 
+ * @param payload El JSON que contiene la información del producto.
+ * @param productInfo La cadena de texto donde se almacenará la información del producto.
+ */
+/*-----------------------------------------------------------------------------*/
+void getProductInfo(const String &payload, String &productInfo)
+{
+    // ---- OBTENER INFO DEL JSON -----------------------------------
+    // Crear un objeto DynamicJsonDocument para almacenar el JSON analizado
+    DynamicJsonDocument doc(JSON_SIZE_LIMIT_BARCODE); // 512 bytes
+    deserializeJson(doc, payload);
+    // --------------------------------------------------------------
+
+    // ---- OBTENER DATOS DEL PRODUCTO ------------------------------
+    // --- BARCODE -----------
+    // Código de barras
+    String barcode = doc["code"].as<String>();
+    #if defined(SM_DEBUG)
+        SerialPC.println("\n\nBarcode: " + barcode);
+    #endif
+    // -----------------------
+
+    // --- NOMBRE PRODUCTO ---
+    // Preferencia del nombre en español frente al general (seguramente en inglés)
+    String nombreProducto;
+    if (doc["product"]["product_name_es"]) nombreProducto = doc["product"]["product_name_es"].as<String>();
+    else if (doc["product"]["product_name"]) nombreProducto = doc["product"]["product_name"].as<String>();
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nNombre: " + nombreProducto);
+    #endif
+    // ----------------------
+
+    // ------ MACRONUTRIENTES -------
+    // Hay productos sin marconutrientes (como el agua), así que si no se obtienen esos valores, se asumen 0.0
+    // Si se obtienen valores 0.0, entonces los valores por 1gr también son 0.0. Si no, se dividen entre 100.0
+    
+    // --- CARBOHIDRATOS ---
+    float carb_100g = doc["product"]["carbohydrates_100g"] ? doc["product"]["carbohydrates_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
+    float carb_1g = carb_100g != 0.0 ? carb_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nCarb_100g: " + String(carb_100g));
+        SerialPC.println("Carb_1g: " + String(carb_1g));
+    #endif
+    // ---------------------
+
+    // --- LÍPIDOS ---------
+    float lip_100g = doc["product"]["fat_100g"] ? doc["product"]["fat_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
+    float lip_1g = lip_100g != 0.0 ? lip_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nLip_100g: " + String(lip_100g));
+        SerialPC.println("Lip_1g: " + String(lip_1g));
+    #endif
+    // ---------------------
+
+    // --- PROTEÍNAS -------
+    float prot_100g = doc["product"]["proteins_100g"] ? doc["product"]["proteins_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
+    float prot_1g = prot_100g != 0.0 ? prot_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nProt_100g: " + String(prot_100g));
+        SerialPC.println("Prot_1g: " + String(prot_1g));
+    #endif
+    // ---------------------
+
+    // --- KILOCALORÍAS -----
+    float kcal_100g = doc["product"]["energy-kcal_100g"] ? doc["product"]["energy-kcal_100g"].as<float>() : 0.0; // Si está, su valor. Si no, a 0.0 
+    float kcal_1g = kcal_100g != 0.0 ? kcal_100g / 100.0 : 0.0; // Si está, tomar por gramo. Si no, a 0.0 
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nKcal_100g: " + String(kcal_100g));
+        SerialPC.println("Kcal_1g: " + String(kcal_1g));
+    #endif
+    // ---------------------
+    // ------------------------------
+    // --------------------------------------------------------------
+
+
+    // --- CONSTRUIR CADENA DE TEXTO --------------------------------
+    // Construir la cadena de texto con los datos
+    productInfo = "PRODUCT:" + barcode + ";" + nombreProducto + ";" + String(carb_1g) + ";" + String(lip_1g) + ";" + String(prot_1g) + ";" + String(kcal_1g);
+    #if defined(SM_DEBUG)
+        SerialPC.println("\n\n" + productInfo);
+    #endif   
+    // --------------------------------------------------------------
+    
 }
 
 

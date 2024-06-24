@@ -59,6 +59,10 @@ float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  a
 float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
+#define UMBRAL_MIN_CAMBIO_PESO 2.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
+
+
+
 
 #include "State_Machine.h" // Debajo de las variables para que estén disponibles en su ámbito
 
@@ -172,7 +176,7 @@ void checkBascula(){
             eventoBascula = TARAR;
         }
         else{
-            if(diffWeight > 2.0){ // Si ha habido una variación de peso de más de 2 gramos y no ha sido causada por una tara --> evento
+            if(diffWeight > UMBRAL_MIN_CAMBIO_PESO){ // Si ha habido una variación de peso de más de 2 gramos y no ha sido causada por una tara --> evento
                 scaleEventOccurred = true;
                 
                 // 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.

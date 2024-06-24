@@ -23,8 +23,8 @@
 
 #include "debug.h" // SM_DEBUG --> SerialPC
 
-#define DEBOUNCE_TIME 1000 // Tiempo de debouncing en ms
-#define BARCODE_DEBOUNCE_TIME 1000 // Tiempo de debouncing en ms para el botón de barcode
+#define DEBOUNCE_TIME 500 // Tiempo de debouncing en ms
+#define DEBOUNCE_TIME_BARCODE 2000 // Tiempo de debouncing en ms para el botón de barcode
 
 // ------------ PINES DE INTERRUPCIÓN ------------
 #ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
@@ -36,7 +36,10 @@
     const byte intPinGuardar      = 25;   
 
     // ---- GRANDE ----
-    const byte interruptPinGrande = 37;       // Pin de interrupcion RISING para Grande (botonera A)
+    const byte interruptPinGrande = 37;     // Pin de interrupcion RISING para Grande (botonera A)
+
+    // ---- BARCODE ----
+    const byte intPinBarcode = 53;          // Pin de interrupción para el botón de barcode
 #endif
 // ---------------------------------
 
@@ -95,22 +98,31 @@ volatile bool   pesado = false;       // Flag de haber pesado por ISR
                           DECLARACIÓN FUNCIONES
 /******************************************************************************/
 /******************************************************************************/
+
+// Botonera Main (acciones)
 void ISR_crudo();                         // ISR de botón de 'crudo'
 void ISR_cocinado();                      // ISR de botón de 'cocinado'
 void ISR_addPlato();                      // ISR de botón de 'añadir plato'
 void ISR_deletePlato();                   // ISR de botón de 'eliminar plato'
 void ISR_guardar();                       // ISR de botón de 'guardar comida'
+
+// Botonera Grande (grupos de alimentos)
 void ISR_pulsandoButtonsGrande();         // ISR de botonera de grupos de alimentos
+
+// Botón de barcode
 void ISR_barcode();                       // ISR de botón de barcode
+
+// Báscula
 void TimerHandler();                      // Activar timer de interrupción de la báscula
 void ISR_pesarBascula();                  // Activar báscula para pesar cuando salte timer de interrupción
 uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName);     // Adjuntar interrupción al timer
 
+// Avisos de interrupción
 bool interruptionOccurred();              // Devuelve true si se ha activado alguna interrupción en botoneras o evento en báscula
 bool buttonInterruptOccurred();           // Devuelve true si se ha activado alguna interrupción en botoneras 
-bool mainButtonInterruptOccurred();
-bool grandeButtonInterruptOccurred();
-bool barcodeButtonInterruptOccurred();
+bool mainButtonInterruptOccurred();       // Devuelve true si se ha activado alguna interrupción en botonera Main
+bool grandeButtonInterruptOccurred();     // Devuelve true si se ha activado alguna interrupción en botonera Grande
+bool barcodeButtonInterruptOccurred();    // Devuelve true si se ha activado alguna interrupción en botón Barcode
 bool hasScaleEventOccurred();             // Devuelve true si se ha activado algún evento en báscula
 /******************************************************************************/
 /******************************************************************************/
@@ -228,7 +240,7 @@ void ISR_pulsandoButtonsGrande(){
 void ISR_barcode(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > BARCODE_DEBOUNCE_TIME) pulsandoBarcode = true;
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME_BARCODE) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }
 
