@@ -41,6 +41,8 @@ void setup() {
         
         Serial.println("Startup complete...");
 
+        tft.clearScreen(DARKORANGE);
+
         //loadPicturesShowHourglass();
         //arranque();
         //arranqueSlowOpacity();
@@ -118,6 +120,15 @@ void loop() {
             case 30:    showDataToUpload(UNKNOWN_ERROR);                                break;  // Error al enviar la info
 
             case 31:    showError(ERROR_STATE_GROUP);                                   break;  // Error: se puso alimento sin crudo/cocinado 
+
+            case 32: scanningBarcode(); break;
+            case 33: showProductInfo_1("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75); break;
+            case 34: showProductInfo_2("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75); break;
+            case 35: showBarcodeNotRead(); break;
+            case 36: showProductNotFound("1234567890123"); break;
+            case 37: esp32_sinWifi(); break;
+
+            case 38: showWarning(WARNING_RAW_COOKED_NOT_NEEDED); break;
 
             default:    Serial.println("Opción desconocida: " + String(input));         break;
         }

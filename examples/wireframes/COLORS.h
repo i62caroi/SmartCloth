@@ -91,6 +91,9 @@
 // -------------------------------------------------
 
 
+#define GRAY 0x7BEF
+#define LIGHT_GRAY 0xBDF7
+#define   BLUE          0x001F
 
 
 // ------------- COLORES EJEMPLO ----------------------
