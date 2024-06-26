@@ -40,8 +40,13 @@
 //const char* ssid = "UCOTEAM";
 //const char* password = "-polonio210alfileres-";
 // Casa:
-const char* ssid = "MOVISTAR_FB23_EXT";
-const char* password = "DP6BUuEtuFvRw3mHmFoG";
+//const char* ssid = "MOVISTAR_FB23_EXT";
+//const char* password = "DP6BUuEtuFvRw3mHmFoG";
+
+// Testeos:
+const char* ssid = "Irene";
+const char* password = "icradeba5050";
+
 // Post testeos:
 //const char* ssid = "SmartCloth";
 //const char* password = "SM-pass24/";
@@ -142,7 +147,7 @@ void connectToWiFi()
     unsigned long startTime = millis();
 
     // Esperar hasta que se establezca la conexión o se agote el tiempo
-    unsigned long timeout_waitConexion = 5000; // 5 segundos
+    unsigned long timeout_waitConexion = 15000; // 5 segundos
 
     #if defined(SM_DEBUG)
         SerialPC.print(F("Conectando a WiFi..."));

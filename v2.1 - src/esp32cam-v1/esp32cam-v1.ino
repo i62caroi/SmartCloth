@@ -186,11 +186,11 @@ void loop()
         // -------------------------------------
 
         // ------ Comprobar comunicación Serial ----------
-        if (msgFromDue == "PING") ackDue(); // Responder al Due (PONG) indicando comunicación establecida
+        //if (msgFromDue == "PING") ackDue(); // Responder al Due (PONG) indicando comunicación establecida
         // -----------------------------------------------
 
         // ------ Comprobar Wifi y avisar al Due ---------
-        else if (msgFromDue == "CHECK-WIFI") checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
+        if (msgFromDue == "CHECK-WIFI") checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
         // -----------------------------------------------
 
         // ------ Procesar líneas y generar JSON ---------

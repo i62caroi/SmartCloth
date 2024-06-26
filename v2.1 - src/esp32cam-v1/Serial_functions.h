@@ -159,7 +159,7 @@ void getBarcode()
     String barcode = "-"; // Cadena inicialmente "vacía"
 
     unsigned long startMillis = millis();
-    unsigned long timeToRead = 10000; // 10 segundos para leer el código de barras
+    unsigned long timeToRead = 30000; // 30 segundos para leer el código de barras
 
     // A veces, al leer el Serial se lee el código de barras anterior. Limpiar el buffer podría
     // acabar eliminando el código de barras que se está leyendo ahora, pero eso es mejor que enviar
