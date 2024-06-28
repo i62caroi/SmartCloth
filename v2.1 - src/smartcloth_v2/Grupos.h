@@ -52,20 +52,6 @@ typedef struct {
 
 
 
-/* 
-    Caracteres especiales en ISO 8859-1 (Latin-1) en HEX:
-        á --> E1    Á --> C1
-        é --> E9    É --> C9
-        í --> ED    Í --> CD
-        ó --> F3    Ó --> D3
-        ú --> FA    Ú --> DA
-
-        ñ --> F1    Ñ --> D1
-
-        ¿ --> BF    ? --> 3F
-        ¡ --> A1    ! --> 21
-*/
-
 
 //
 // Si el grupo de alimentos seleccionado es de TIPO_A, necesita diferenciar entre crudo o cocinado porque sus valores
@@ -199,15 +185,6 @@ void updateGrupoEscogidoFromBarcode(String &productInfo)
     float lip_1g = cad.substring(idx_lip + 1, idx_prot).toFloat();
     float prot_1g = cad.substring(idx_prot + 1, idx_kcal).toFloat();
     float kcal_1g = cad.substring(idx_kcal + 1).toFloat();
-
-    /*#ifdef SM_DEBUG
-        SerialPC.println("\nCodigo: " + barcode);
-        SerialPC.println("Nombre: " + nombre_producto);
-        SerialPC.println("Carb_1g: " + String(carb_1g));
-        SerialPC.println("Lip_1g: " + String(lip_1g));
-        SerialPC.println("Prot_1g: " + String(prot_1g));
-        SerialPC.println("Kcal_1g: " + String(kcal_1g));
-    #endif*/
     // -------------------------------------
 
 
@@ -233,6 +210,42 @@ void updateGrupoEscogidoFromBarcode(String &productInfo)
 }
 
 
+
+
+
+/**
+ * @brief Convierte los caracteres especiales en una cadena de texto.
+ * 
+ * Esta función reemplaza los caracteres especiales en una cadena de texto con sus correspondientes
+ * códigos de caracteres en formato hexadecimal. Los caracteres especiales que se reemplazan son:
+ * á, Á, é, É, í, Í, ó, Ó, ú, Ú, ñ, Ñ, ¿, ¡.
+ * 
+ * Se utilizan los caracteres especiales en ISO 8859-1 (Latin-1) en HEX.
+ * 
+ * @param input La cadena de texto en la que se reemplazarán los caracteres especiales.
+ */
+void convertSpecialCharacters(String &input) 
+{
+    // Minúsculas: vocales y 'ñ'
+    input.replace("á", "\xE1");
+    input.replace("é", "\xE9");
+    input.replace("í", "\xED");
+    input.replace("ó", "\xF3");
+    input.replace("ú", "\xFA");
+    input.replace("ñ", "\xF1");
+
+    // Mayúsculas: vocales y 'Ñ'
+    input.replace("Á", "\xC1");
+    input.replace("É", "\xC9");
+    input.replace("Í", "\xCD");
+    input.replace("Ó", "\xD3");
+    input.replace("Ú", "\xDA");
+    input.replace("Ñ", "\xD1");
+
+    // Signos de interrogación y exclamación
+    input.replace("¿", "\xBF");
+    input.replace("¡", "\xA1");
+}
 
 
 

@@ -59,10 +59,15 @@
 
 
 // --- MENSAJE DE AVISO ---
-#define  WARNING_RAW_COOKED_NOT_NEEDED 0
-#define  WARNING_NOT_ADDED      1
-#define  WARNING_NOT_DELETED    2
-#define  WARNING_NOT_SAVED      3
+#define  WARNING_NOT_ADDED                  1   // Aviso: plato no añadido porque está vacío
+#define  WARNING_NOT_DELETED                2   // Aviso: plato no borrado porque está vacío
+#define  WARNING_NOT_SAVED                  3   // Aviso: comida no guardada porque está vacía
+#define  WARNING_RAW_COOKED_NOT_NEEDED      4   // Aviso: no hace falta crudo/cocinado para producto con código de barras
+#define  WARNING_BARCODE_NOT_READ           5   // Aviso: código de barras no leído
+#define  WARNING_PRODUCT_NOT_FOUND          6   // Aviso: producto no encontrado
+#define  WARNING_MEALS_LEFT                 7   // Aviso: algunas comidas no sincronizadas
+#define  WARNING_NO_INTERNET_NO_BARCODE     8   // Aviso: no se puede leer barcode porque no hay conexión a internet
+
 
 // --- MENSAJE DE ERROR ----
 #define  ERROR_STATE_INIT            1
@@ -1237,7 +1242,7 @@ void actStateBarcode()
             if(resultFromReadingBarcode == BARCODE_READ)
             { 
                 // ----- INFO DE PANTALLA -------------------------
-                //showSearchingProductInfo(); // Mostrar "Buscando información del producto..."
+                showSearchingProductInfo(); // Mostrar "Buscando información del producto..."
                 // ----- FIN INFO DE PANTALLA ---------------------
                 
                 String productInfo;
@@ -1265,7 +1270,8 @@ void actStateBarcode()
                             SerialPC.println(F("Producto no encontrado"));
                         #endif
                         // ----- INFO DE PANTALLA -------------------------
-                        showProductNotFound(barcode); // Mostrar "Producto no encontrado"
+                        //showProductNotFound(barcode); // Mostrar "Producto no encontrado"
+                        showWarning(WARNING_PRODUCT_NOT_FOUND, barcode); // Mostrar "Producto no encontrado"
                         // ----- FIN INFO DE PANTALLA ---------------------
                         groupChanged = false;
 
@@ -1300,7 +1306,8 @@ void actStateBarcode()
                     SerialPC.println(F("No se va a buscar informacion del producto porque no se ha leido el barcode"));
                 #endif
 
-                showBarcodeNotRead(); // Mostrar "Código de barras no leído"
+                //showBarcodeNotRead(); // Mostrar "Código de barras no leído"
+                showWarning(WARNING_BARCODE_NOT_READ); // Mostrar "Código de barras no leído"
                 groupChanged = false;
                 showing_barcode_not_read = true;                           // Se está mostrando "Código de barras no detectado"
                 showing_scanning_barcode = false;     
@@ -1316,7 +1323,7 @@ void actStateBarcode()
                 #endif
                 //interruptionDuringReading = true;
             }
-            else 
+            else // TIMEOUT o UNKNOWN_ERROR
             { 
                 #ifdef SM_DEBUG
                     SerialPC.println(F("Error al leer codigo de barras."));
@@ -1342,7 +1349,8 @@ void actStateBarcode()
             #endif
 
             // ----- INFO DE PANTALLA -------------------------
-            esp32_sinWifi();                 // Mostrar "Sin conexión. No se puede leer el código de barras" 
+            //esp32_sinWifi();                 // Mostrar "Sin conexión. No se puede leer el código de barras" 
+            showWarning(WARNING_NO_INTERNET_NO_BARCODE); // Mostrar "Sin conexión. No se puede leer el código de barras"
             // ----- FIN INFO DE PANTALLA ---------------------
 
             groupChanged = false;
@@ -2066,7 +2074,7 @@ void actStateSaved()
             #endif
 
             // -----  INFORMACIÓN MOSTRADA  -------------------------
-            showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web. Habría que usar otra función para mostrar "Guardando comida..."
+            showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web. Habría que usar otra función para mostrar "Guardando comida..."
             // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
 
@@ -3440,7 +3448,7 @@ void actState_UPLOAD_DATA()
         if(checkWifiConnection()) // Hay WiFi 
         {
             // -----  INFORMACIÓN MOSTRADA  -------------------------
-            showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web
+            showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web
             //delay(2000);
             // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
@@ -3453,13 +3461,15 @@ void actState_UPLOAD_DATA()
                 // Enviar el fichero TXT línea a línea
                 byte uploadResult = sendTXTFileToESP32(); 
 
+                if(uploadResult == MEALS_LEFT) showWarning(WARNING_MEALS_LEFT);  // No se han subido todas las comidas
+
                 // Mostrar en pantalla el resultado de la subida de datos
-                showDataToUpload(uploadResult); // ALL_MEALS_UPLOADED, MEALS_LEFT, ERROR_READING_TXT
+                showDataUploadState(uploadResult); // ALL_MEALS_UPLOADED, ERROR_READING_TXT
             }
             else // Al avisar del guardado, ha fallado la comunicación con el ESP32 o la autenticación
             {
                 // Mostrar en pantalla el fallo al indicar que se va a guardar
-                showDataToUpload(responseToSavePrompt); // NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
+                showDataUploadState(responseToSavePrompt); // NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
             }
     
             // El delay y el GO_TO_INIT se hace al final para todos los casos
@@ -3468,11 +3478,11 @@ void actState_UPLOAD_DATA()
                 handleResponseFromESP32AfterUpload(SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta y mostrar mensaje acorde
                 // En este caso, ignoramos el valor devuelto de handleResponseFromESP32AfterUpload() porque no lo necesitamos
             else // El ESP32 no respondió en 3 segundos o falló el paso de información. Actuamos como si no hubiera WiFi
-                showDataToUpload(NO_INTERNET_CONNECTION); // No hay conexión, no se puede sincronizar SM con web
+                showDataUploadState(NO_INTERNET_CONNECTION); // No hay conexión, no se puede sincronizar SM con web
                 // El delay y el GO_TO_INIT se hace al final para todos los casos
             */
 
-            showingScreen = true;
+            showingScreen = true; // Se está mostrando pantalla. Esperar 5 segundos antes de pasar a Init
             // ------------------------------------------------------
         }
 

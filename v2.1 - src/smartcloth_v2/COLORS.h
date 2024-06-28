@@ -50,8 +50,8 @@
 
 #define   DARKPURPLE                  0x30C6  // Mini mensaje cuando guardado completo (local y database)
 
-#define   AZUL_SINCRONIZANDO          0x1B9F  // Pantalla de sincronización
-#define   AZUL_RECUADRO_SINCRONIZANDO 0x0010  // Recuadro de la pantalla de sincronización
+#define   AZUL_PROCESO                0x1B9F  // Pantalla de sincronización, de escanear producto y de buscar info producto
+#define   AZUL_RECUADRO_PROCESO       0x0010  // Recuadro para el texto
 // --------------------------------------------------------------
 
 

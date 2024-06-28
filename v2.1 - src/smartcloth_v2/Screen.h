@@ -265,7 +265,7 @@ bool    showSemiDashboard_PedirProcesamiento();                 // Mostrar medio
 
 // --- PANTALLAS TRANSITORIAS ---
 // -- Info para sincronizar ---
-void    showDataToUpload(byte option);      // Sincronizar memoria de SmartCloth con Web
+void    showDataUploadState(byte option);      // Sincronizar memoria de SmartCloth con Web
 // -- Recipiente ---------
 void    pedirRecipiente();                  // Pedir colocar recipiente          =>  STATE_Init
 void    recipienteColocado();               // Mostrar "Recipiente colocado"     =>  solo una vez en STATE_Plato
@@ -274,6 +274,8 @@ void    recipienteRetirado();               // Mostrar "Recipiente retirado"    
 void    pedirGrupoAlimentos();              // Pedir escoger grupo de alimentos  =>  STATE_Plato
 // -- Barcode ------------
 void    showScanningBarcode();                  // Mostrar "Escaneando código"        =>  STATE_Barcode
+void    showSearchingProductInfo();             // Pantalla: Buscando información del producto
+
 // -- Procesamiento ------
 //void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
 bool    formGraphicsPedirProcesamiento();   // Compone la pantalla (forma, colores, texto y 1º botón de cocinado) de pedir procesamiento sobre las zonas 3 y 4 del dashboard.
@@ -293,7 +295,7 @@ void    showAccionCancelada();              // Mensaje general de acción cancel
 void    showCriticFailureSD();              // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
 // --- Errores o avisos ---
 void    showError(byte option);             // Pantalla de error con mensaje según estado 
-void    showWarning(byte option);           // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showWarning(byte option, String barcode = "");           // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Aparición/Desaparición imágenes --
 bool    slowAppearanceImage(byte option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
 bool    slowAppearanceAndDisappareanceProcesamiento(byte option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
@@ -1232,16 +1234,16 @@ bool showSemiDashboard_PedirProcesamiento(){
  *               - ERROR_READING_TXT, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR: "¡Error del sistema!" con comentario
  */
 /*-----------------------------------------------------------------------------*/
-void showDataToUpload(byte option)
+void showDataUploadState(byte option)
 {
     // ---- COLOR FONDO, RECUADRO Y TEXTO ------------------------------------------------------------
     uint16_t backgroundColor, lineColor, textColor;
     
     switch(option)
     {
-        case UPLOADING_DATA:            backgroundColor = AZUL_SINCRONIZANDO;           lineColor = textColor = WHITE;                          break;
+        case UPLOADING_DATA:            backgroundColor = AZUL_PROCESO;           lineColor = textColor = WHITE;                          break;
         case ALL_MEALS_UPLOADED:        backgroundColor = VERDE_PEDIR;                  lineColor = textColor = WHITE;                          break;
-        case MEALS_LEFT:                backgroundColor = AMARILLO_CONFIRM_Y_AVISO;     lineColor = textColor = ROJO_TEXTO_CONFIRM_Y_AVISO;     break;
+        //case MEALS_LEFT:                backgroundColor = AMARILLO_CONFIRM_Y_AVISO;     lineColor = textColor = ROJO_TEXTO_CONFIRM_Y_AVISO;     break;
         
         // Error: option en rango [5, 9]
         default:                        backgroundColor = RED_ERROR_Y_CANCEL;           lineColor = textColor = WHITE;                          break;
@@ -1267,7 +1269,7 @@ void showDataToUpload(byte option)
             tft.drawRect(53,113,971,275,lineColor);
             tft.drawRect(54,114,970,274,lineColor);
             // Relleno:
-            tft.fillRect(55, 115, 969, 273, AZUL_RECUADRO_SINCRONIZANDO); // Rellenar el rectángulo más interno con DARK_BLUE
+            tft.fillRect(55, 115, 969, 273, AZUL_RECUADRO_PROCESO); // Rellenar el rectángulo más interno con DARK_BLUE
             // ------------------
             break;
 
@@ -1276,10 +1278,10 @@ void showDataToUpload(byte option)
             tft.fillRoundRect(252,270,764,278,3,lineColor); // Línea inferior
             break;
             
-        case MEALS_LEFT:
+        /*case MEALS_LEFT:
             tft.fillRoundRect(252,110,764,118,3,lineColor); // Línea superior
             tft.fillRoundRect(252,270,764,278,3,lineColor); // Línea inferior
-            break;
+            break;*/
 
         case ERROR_READING_TXT:
         case NO_INTERNET_CONNECTION:
@@ -1309,7 +1311,7 @@ void showDataToUpload(byte option)
 
         case ALL_MEALS_UPLOADED:        tft.setCursor(70, 158);         tft.println("\xA1""SMARTCLOTH SINCRONIZADO\x21""");     break;
 
-        case MEALS_LEFT:                tft.setCursor(100, 158);         tft.println("SINCRONIZACI\xD3""N PARCIAL");             break;
+        //case MEALS_LEFT:                tft.setCursor(100, 158);         tft.println("SINCRONIZACI\xD3""N PARCIAL");             break;
 
         case ERROR_READING_TXT:         
         case NO_INTERNET_CONNECTION:     
@@ -1333,8 +1335,8 @@ void showDataToUpload(byte option)
 
         case ALL_MEALS_UPLOADED:        tft.setCursor(210, 358);                                        tft.println("LA WEB SE HA ACTUALIZADO");                        break;
 
-        case MEALS_LEFT:                tft.setCursor(50, 358);                                         tft.println("ALGUNAS COMIDAS NO SE HAN SINCRONIZADO");                
-                                        tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY()+20);   tft.println("SE INTENTAR\xC1"" DE NUEVO M\xC1""S ADELANTE");    break;
+        /*case MEALS_LEFT:                tft.setCursor(50, 358);                                         tft.println("ALGUNAS COMIDAS NO SE HAN SINCRONIZADO");                
+                                        tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY()+20);   tft.println("SE INTENTAR\xC1"" DE NUEVO M\xC1""S ADELANTE");    break;*/
 
         case ERROR_READING_TXT:         tft.setCursor(60, 420);                                         tft.println("FALL\xD3"" LA LECTURA DEL FICHERO DE COMIDAS");    break;
         
@@ -1948,7 +1950,7 @@ void showScanningBarcode()
 
     // ---- COLOR FONDO ------------------------------------------------------------------------------
     // Aplicar color al fondo
-    tft.clearScreen(AZUL_SINCRONIZANDO);
+    tft.clearScreen(AZUL_PROCESO);
     // -----------------------------------------------------------------------------------------------
 
     // ----- DIBUJO DEL CÓDIGO DE BARRAS FICTICIO -----------------------------------------------------
@@ -1976,6 +1978,46 @@ void showScanningBarcode()
     tft.println("COLOQUE EL PRODUCTO SOBRE EL LECTOR");
     // -----------------------------------------------------------------------------------------------
 }
+
+
+void showSearchingProductInfo() {
+    // ---- COLOR FONDO ------------------------------------------------------------------------------
+    // Aplicar color al fondo
+    tft.clearScreen(AZUL_PROCESO);
+    // -----------------------------------------------------------------------------------------------
+
+    // ----- DIBUJO ----------------------------------------------------------------------------------
+    // ---- RECUADRO ----
+    // Borde:
+    tft.drawRect(50,110,974,278,WHITE);
+    tft.drawRect(51,111,973,277,WHITE);
+    tft.drawRect(52,112,972,276,WHITE);
+    tft.drawRect(53,113,971,275,WHITE);
+    tft.drawRect(54,114,970,274,WHITE);
+    // Relleno:
+    tft.fillRect(55, 115, 969, 273, AZUL_RECUADRO_PROCESO); // Rellenar el rectángulo más interno con DARK_BLUE
+    // ------------------
+
+    // Restablecer color de texto. Al dibujar (recuadro o líneas), el foregroundColor se cambia a lineColor
+    tft.setTextForegroundColor(WHITE);
+    // -----------------------------------------------------------------------------------------------
+
+    // ----- TEXTO (INFORMACIÓN) ---------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
+
+    tft.setCursor(150, 158);    tft.println("BUSCANDO PRODUCTO...");
+    // -----------------------------------------------------------------------------------------------
+
+    // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    tft.setCursor(50, 358);   tft.println("ESPERE MIENTRAS SE BUSCA LA INFORMACI\xD3""N");
+    tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY()+10);   tft.println("NUTRICIONAL DEL PRODUCTO"); 
+    // ----------------------------------------------------------------------------------------------------
+
+}
+
 
 
 
@@ -2109,7 +2151,7 @@ void showProductNotFound(String &barcode)
 }
 
 
-void esp32_sinWifi()
+/*void esp32_sinWifi()
 {
     // ---- COLOR FONDO ------------------------------------------------------------------------------
     // Aplicar color al fondo
@@ -2141,7 +2183,7 @@ void esp32_sinWifi()
     // -----------------------------------------------------------------------------------------------
 
 }
-
+*/
 /*-------------------------------- FIN ESCANEAR BARCODE -------------------------------------------------*/
 
 
@@ -2429,12 +2471,13 @@ void pedirConfirmacion(byte option)
     tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
 
     // ----- CONEXION A INTERNET O NO (GUARDAR COMIDA) ---------
-    if(option == ASK_CONFIRMATION_SAVE){
+    if(option == ASK_CONFIRMATION_SAVE)
+    {
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
         if(hayConexion){ 
             // ----- CON WIFI -----
             // "Resaltar" texto:
-            tft.selectInternalFont(RA8876_FONT_SIZE_24);
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
             tft.setTextColor(WHITE,VERDE_PEDIR,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo morado oscuro, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
             // Texto
             tft.setCursor(20,550);    tft.println(" CONECTADO A INTERNET ");
@@ -2445,8 +2488,6 @@ void pedirConfirmacion(byte option)
         else{
             // ----- SIN INTERNET -----
             // "Resaltar" texto:
-            tft.selectInternalFont(RA8876_FONT_SIZE_24);
-            tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
             tft.setTextColor(WHITE,RED,RA8876_TEXT_TRANS_OFF); // Texto blanco remarcado con fondo rojo, se superpone al fondo verde del canvas (RA8876_TEXT_TRANS_OFF)
             // Texto
             tft.setCursor(850,550); tft.println(" SIN INTERNET "); 
@@ -2742,7 +2783,8 @@ void showAccionCancelada(){
         Parámetros: 
             option  - 1: añadir   2: eliminar   3: guardar
 ----------------------------------------------------------------------------------------------------------*/
-void showWarning(byte option){
+void showWarning(byte option, String barcode)
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
@@ -2752,8 +2794,16 @@ void showWarning(byte option){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
 
-    tft.setCursor(384, 100);
-    tft.println("\xA1""AVISO\x21""");
+    // Título principal de la pantalla
+    switch(option){
+        case WARNING_BARCODE_NOT_READ:      tft.setCursor(100, 100);    tft.println("\xA1""PRODUCTO NO DETECTADO\x21""");           break;
+        case WARNING_PRODUCT_NOT_FOUND:     tft.setCursor(100, 100);    tft.println("\xA1""PRODUCTO NO ENCONTRADO\x21""");          break;
+        case WARNING_MEALS_LEFT:            tft.setCursor(100, 100);    tft.println("\xA1""SINCRONIZACI\xD3""N PARCIAL\x21""");     break;
+        case WARNING_NO_INTERNET_NO_BARCODE:           tft.setCursor(70, 100);    tft.println("\xA1""SIN CONEXI\xD3""N A INTERNET\x21""");    break;
+        // ADD, DELETE, SAVE
+        default:                            tft.setCursor(384, 100);    tft.println("\xA1""AVISO\x21""");                           break;
+    }
+    
     // ---------------------------------------------------------------------------------------------------
 
 
@@ -2782,25 +2832,46 @@ void showWarning(byte option){
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
 
-    switch (option){
-        case WARNING_RAW_COOKED_NOT_NEEDED: // AÑADIR
-              tft.setCursor(50, 410);                                      tft.println("NO HACE FALTA ESCOGER GRUPO O COCINADO"); 
-              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PARA ESTE PRODUCTO");  
-              break;
-      case WARNING_NOT_ADDED: // AÑADIR
-              tft.setCursor(150, 410);                                      tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
-              tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
-              break;
+    switch (option)
+    {
+        case WARNING_NOT_ADDED: // AÑADIR
+            tft.setCursor(150, 410);                                      tft.println("NO SE HA CREADO UN NUEVO PLATO"); 
+            tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EL ACTUAL EST\xC1"" VAC\xCD""O");  
+            break;
 
-      case WARNING_NOT_DELETED: // ELIMINAR
-              tft.setCursor(180, 410);                                      tft.println("NO SE HA ELIMINADO EL PLATO"); 
-              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
-              break;
+        case WARNING_NOT_DELETED: // ELIMINAR
+            tft.setCursor(180, 410);                                      tft.println("NO SE HA ELIMINADO EL PLATO"); 
+            tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""O"); 
+            break;
 
-      case WARNING_NOT_SAVED: // GUARDAR
-              tft.setCursor(190, 410);                                      tft.println("NO SE HA GUARDADO LA COMIDA"); 
-              tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
-              break;
+        case WARNING_NOT_SAVED: // GUARDAR
+            tft.setCursor(190, 410);                                      tft.println("NO SE HA GUARDADO LA COMIDA"); 
+            tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());    tft.print("PORQUE EST\xC1"" VAC\xCD""A"); 
+            break;
+
+        case WARNING_RAW_COOKED_NOT_NEEDED: // NO HACE FALTA CRUDO/COCINADO PARA PRODUCTO BARCODE
+            tft.setCursor(50, 410);                                         tft.println("NO HACE FALTA ESCOGER GRUPO O COCINADO"); 
+            tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());      tft.print("PARA ESTE PRODUCTO");  
+            break;
+
+        case WARNING_BARCODE_NOT_READ: // CÓDIGO DE BARRAS NO LEÍDO
+            tft.setCursor(100, 410);                                        tft.println("NO SE HA LE\xCD""DO EL C\xD3""DIGO DE BARRAS");
+            break;
+
+        case WARNING_PRODUCT_NOT_FOUND: // PRODUCTO NO ENCONTRADO
+            tft.setCursor(150, 410);                                        tft.println("NO SE HA ENCONTRADO EL PRODUCTO");
+            //String cad = "CON EL C\xD3""DIGO: " + barcode;
+            tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY()+10);   tft.println("CON EL C\xD3""DIGO: " + barcode); 
+            break;
+
+        case WARNING_MEALS_LEFT: // SINCRONIZACIÓN PARCIAL
+            tft.setCursor(50, 410);                                         tft.println("ALGUNAS COMIDAS NO SE HAN SINCRONIZADO"); 
+            tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY()+20);   tft.println("SE INTENTAR\xC1"" DE NUEVO M\xC1""S ADELANTE");
+            break;
+
+        case WARNING_NO_INTERNET_NO_BARCODE: // SIN CONEXIÓN A INTERNET
+            tft.setCursor(100, 410);         tft.println("NO SE PUEDE LEER EL C\xD3""DIGO DE BARRAS");
+            break;
     }
     // ----------------------------------------------------------------------------------------------------  
 
