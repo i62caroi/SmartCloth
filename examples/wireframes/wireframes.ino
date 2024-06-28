@@ -108,27 +108,34 @@ void loop() {
             
             case 22:    showCriticFailureSD();                                          break;
             
-            //case 21:    showDataToUpload(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
-            //case 22:    showDataToUpload(NO_INTERNET_CONNECTION);                        break;  // No hay WiFi
-            case 23:    showDataToUpload(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
-            case 24:    showDataToUpload(ALL_MEALS_UPLOADED);                           break;  // Se ha completado la subida
-            case 25:    showDataToUpload(MEALS_LEFT);                                   break;  // Se han quedado comidas sin guardar
-            case 26:    showDataToUpload(ERROR_READING_TXT);                            break;  // Error al enviar la info
-            case 27:    showDataToUpload(NO_INTERNET_CONNECTION);                       break;  // Error: se puso alimento sin crudo/cocinado
-            case 28:    showDataToUpload(HTTP_ERROR);                                   break;  // Error al enviar la info
-            case 29:    showDataToUpload(TIMEOUT);                                      break;  // Error al enviar la info
-            case 30:    showDataToUpload(UNKNOWN_ERROR);                                break;  // Error al enviar la info
+            //case 21:    showDataUploadState(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
+            //case 22:    showDataUploadState(NO_INTERNET_CONNECTION);                        break;  // No hay WiFi
+            case 23:    showDataUploadState(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
+            case 24:    showDataUploadState(ALL_MEALS_UPLOADED);                           break;  // Se ha completado la subida
+            case 25:    showWarning(WARNING_MEALS_LEFT);                                   break;  // Se han quedado comidas sin guardar
+            case 26:    showDataUploadState(ERROR_READING_TXT);                            break;  // Error al enviar la info
+            case 27:    showDataUploadState(NO_INTERNET_CONNECTION);                       break;  // Error: se puso alimento sin crudo/cocinado
+            case 28:    showDataUploadState(HTTP_ERROR);                                   break;  // Error al enviar la info
+            case 29:    showDataUploadState(TIMEOUT);                                      break;  // Error al enviar la info
+            case 30:    showDataUploadState(UNKNOWN_ERROR);                                break;  // Error al enviar la info
 
-            case 31:    showError(ERROR_STATE_GROUP);                                   break;  // Error: se puso alimento sin crudo/cocinado 
+            case 31:    showError(ERROR_STATE_GROUP);                                      break;  // Error: se puso alimento sin crudo/cocinado 
 
-            case 32: scanningBarcode(); break;
-            case 33: showProductInfo_1("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75); break;
-            case 34: showProductInfo_2("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75); break;
-            case 35: showBarcodeNotRead(); break;
-            case 36: showProductNotFound("1234567890123"); break;
-            case 37: esp32_sinWifi(); break;
+            case 32:    scanningBarcode();                                                                  break;
+            case 33:    showSearchingProductInfo();                                                         break;
+            case 34:    showProductInfo_1("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
+            case 35:    showWarning(WARNING_BARCODE_NOT_READ);                                              break;
+            case 36:    showWarning(WARNING_PRODUCT_NOT_FOUND, "1234567890123");                            break;
+            case 37:    showWarning(WARNING_NO_INTERNET_NO_BARCODE);                                        break;
+            case 38:    showWarning(WARNING_RAW_COOKED_NOT_NEEDED);                                         break;
 
-            case 38: showWarning(WARNING_RAW_COOKED_NOT_NEEDED); break;
+            case 39:    showSavingMeal(SAVING_FULL);                                                        break;
+            case 40:    showSavingMeal(SAVING_ONLY_LOCAL);                                                  break;
+
+            case 41:    showProductInfo_2("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
+            case 42:    showProductInfo_3("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
+
+
 
             default:    Serial.println("Opción desconocida: " + String(input));         break;
         }
