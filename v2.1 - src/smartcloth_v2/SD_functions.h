@@ -338,7 +338,7 @@ void getAcumuladoHoyFromSD()
                 if(msg)
                 {
                     #if defined SM_DEBUG
-                        SerialPC.println(F("Obteniendo Acumulado Hoy..."));
+                        //SerialPC.println(F("Obteniendo Acumulado Hoy..."));
                     #endif
                     msg = false; // Solo imprimir una vez y si hay algo que sumar
                 }
@@ -383,7 +383,7 @@ void getAcumuladoHoyFromSD()
     else
     {
         #if defined SM_DEBUG
-            SerialPC.println(F("Error abriendo archivo CSV!"));
+            //SerialPC.println(F("Error abriendo archivo CSV!"));
         #endif
     }
 
@@ -1086,7 +1086,9 @@ void updateFileTXT(std::vector<String> &unsavedMeals)
     // Borrar fichero
     deleteFileTXT(); // Comprueba si existe antes de borrarlo
 
-    SerialPC.println(F("\nActualizando fichero TXT (ESP32)..."));
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nActualizando fichero TXT (ESP32)..."));
+    #endif
 
     // Crear nuevo fichero
     File dataFile = SD.open(fileTXT, FILE_WRITE);
@@ -1099,11 +1101,15 @@ void updateFileTXT(std::vector<String> &unsavedMeals)
         }
         dataFile.close();
 
-        SerialPC.println(F("Fichero actualizado!"));
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("Fichero actualizado!"));
+        #endif
     }
     else 
-    {
-        SerialPC.println(F("Error al actualizar el archivo data-ESP.txt"));
+    {   
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("Error al actualizar el archivo data-ESP.txt"));
+        #endif
     }
 }
 

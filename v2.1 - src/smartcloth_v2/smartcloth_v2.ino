@@ -57,8 +57,9 @@ bool falloCriticoSD = false;
 void setup() 
 {
     // ------ COMUNICACIÓN SERIAL --------------
-    setupSerial();
-    delay(100);
+    #if defined(SM_DEBUG)
+    setupSerialPC();
+    #endif
     // -----------------------------------------
 
 
@@ -71,7 +72,6 @@ void setup()
     // ------ SD card --------------------------
     // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
     if (!setupSDcard()) falloCriticoSD = true; // Si la SD falla o no se encuentra, no se permitirá usar SM
-    //setupSDcard();
     delay(100); 
     // -----------------------------------------
 
@@ -161,13 +161,22 @@ void setup()
     if (!falloCriticoSD) welcome();  // Cargar imágenes y mostrar logo de SmartCloth
     // -----------------------------------------
 
-
+    //delay(2000);
+    
     // ------- COMPROBAR COMUNICACIÓN ESP32 ----
     // Si no falla la SD, se comprueba la comunicación con el ESP32-CAM
     // Se comprueba después de la pantalla de bienvenida para que, si el ESP32 tarda en responder, al menos haya algo
     // en pantalla que indique que el sistema está encendido. Si se comprobara la conexión con ESP32 en setupSerial(),
     // como la pantalla está apagada en ese momento, podrían pensar que hay algún error.
-    if (!falloCriticoSD) pingESP32(); // Comprobar comunicación con ESP32-CAM
+    //if (!falloCriticoSD) pingESP32(); // Comprobar comunicación con ESP32-CAM
+    // -----------------------------------------
+
+
+    // ------ COMUNICACIÓN SERIAL --------------
+    // Establecer el Serial del ESP32 al final para que le dé tiempo al ESP32 a encenderse, porque tarda más que el Due.
+    // Si se hace al principio, el Due no puede configurar correctamente la comunicación Serial.
+    setupSerialESP32();
+    delay(100);
     // -----------------------------------------
 
 }

@@ -92,7 +92,8 @@
 
 
 
-
+#define   BLUE          0x001F
+#define   GRAY          0x7BEF
 
 
 

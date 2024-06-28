@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 141   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
+#define RULES 155   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
             // 135 sin barcode y separando estados State_GroupA y State_GroupB
 
 
@@ -59,6 +59,7 @@
 
 
 // --- MENSAJE DE AVISO ---
+#define  WARNING_RAW_COOKED_NOT_NEEDED 0
 #define  WARNING_NOT_ADDED      1
 #define  WARNING_NOT_DELETED    2
 #define  WARNING_NOT_SAVED      3
@@ -178,7 +179,7 @@ typedef enum
               GO_TO_INIT            =   (16),   // Evento ficticio para volver a STATE_Init porque saltó un error, aviso o se canceló una acción (añadir, eliminar o guardar)
               GO_TO_PLATO           =   (17),   // Evento ficticio para volver a STATE_Plato porque saltó un error 
               GO_TO_GRUPO           =   (18),   // Evento ficticio para volver a STATE_Grupo porque saltó un error o aviso
-              //GO_TO_BARCODE         =   (19),   // Evento ficticio para volver a STATE_Barcode porque saltó un error o aviso
+              GO_TO_BARCODE         =   (19),   // Evento ficticio para volver a STATE_Barcode porque saltó un error o aviso
               GO_TO_RAW             =   (20),   // Evento ficticio para volver a STATE_raw porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
               GO_TO_COOKED          =   (21),   // Evento ficticio para volver a STATE_cooked porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
               GO_TO_WEIGHTED        =   (22),   // Evento ficticio para volver a STATE_weighted porque saltó un error o se canceló una acción (añadir, eliminar o guardar)
@@ -261,19 +262,26 @@ static transition_rule rules[RULES] =
                                         // --- Grupo Barcode --------
                                         {STATE_Barcode,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
                                         {STATE_Barcode,STATE_Barcode,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
-                                        {STATE_Barcode,STATE_Barcode,TARAR},              // Tarar tras colocar recipiente o alimento   
-                                        {STATE_Barcode,STATE_Grupo,TIPO_A},               // Pasar a grupos normales sin haber leído el barcode
-                                        {STATE_Barcode,STATE_Grupo,TIPO_B},                
+                                        {STATE_Barcode,STATE_Barcode,TARAR},              // Tarar tras colocar recipiente o alimento            
+                                        {STATE_Barcode,STATE_Barcode,BARCODE},            // Leer barcode (vuelve a comenzar, pero para que no salte error si se pulsa dos veces)
                                         {STATE_Barcode,STATE_Plato,GO_TO_PLATO},          // Regresar a STATE_Plato si fue lastState y no se ha podido leer el barcode. También si el ESP32 está desconectado
                                         {STATE_Barcode,STATE_Grupo,GO_TO_GRUPO},          // Regresar a STATE_Grupo si fue lastState y no se ha podido leer el barcode
-                                        //{STATE_Barcode,STATE_raw,CRUDO},                  
-                                        //{STATE_Barcode,STATE_cooked,COCINADO},            // ¿LOS ALIMENTOS DE BARCODE SON DIFERENTES SEGÚN CRUDO/COCINADO?
                                         {STATE_Barcode,STATE_weighted,INCREMENTO},          // Se ha colocado alimento.
                                         //{STATE_Barcode,STATE_add_check,ADD_PLATO},          // Nuevo plato, aunque no se haya colocado alimento.
                                         //{STATE_Barcode,STATE_delete_check,DELETE_PLATO},    // Borrar plato actual. 
-                                        //{STATE_Barcode,STATE_save_check,GUARDAR},           // Guardar comida, aunque no se haya colocado alimento.         
+                                        //{STATE_Barcode,STATE_save_check,GUARDAR},           // Guardar comida, aunque no se haya colocado alimento.
+                                        {STATE_Barcode,STATE_CANCEL,TIPO_A},               
+                                        {STATE_Barcode,STATE_CANCEL,TIPO_B},        
+                                        {STATE_Barcode,STATE_CANCEL,CRUDO},                  
+                                        {STATE_Barcode,STATE_CANCEL,COCINADO},            
+                                        {STATE_Barcode,STATE_CANCEL,ADD_PLATO},         
+                                        {STATE_Barcode,STATE_CANCEL,DELETE_PLATO},     
+                                        {STATE_Barcode,STATE_CANCEL,GUARDAR},          
+                                        {STATE_Barcode,STATE_CANCEL,CANCELAR},        
+                                        {STATE_Barcode,STATE_AVISO,AVISO},
                                         {STATE_Barcode,STATE_ERROR,ERROR},               // Acción incorrecta
                                         // --------------------------
+
 
                                         // --- Alimento crudo ---
                                         {STATE_raw,STATE_Init,LIBERAR},                 // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
@@ -309,8 +317,9 @@ static transition_rule rules[RULES] =
                                         {STATE_weighted,STATE_weighted,DECREMENTO},         // Se retira alimento.  Esta regla permite que se coloque algo en la báscula y luego se retire para
                                                                                             //                      escoger un grupo diferente porque nos hayamos confundido y sin guardar lo 
                                                                                             //                      que se hubiera colocado, pues al retirarlo su peso sería 0.0 .
-                                        {STATE_weighted,STATE_Grupo,TIPO_A},                // Escoger nuevo grupo. Se guarda el peso del alimento en báscula.
-                                        {STATE_weighted,STATE_Grupo,TIPO_B},                // Escoger nuevo grupo. Se guarda el peso del alimento en báscula.
+                                        {STATE_weighted,STATE_Grupo,TIPO_A},                // Escoger nuevo grupo. Se guardará en STATE_Grupo el peso del alimento en báscula.
+                                        {STATE_weighted,STATE_Grupo,TIPO_B},                // Escoger nuevo grupo. Se guardará en STATE_Grupo el peso del alimento en báscula.}
+                                        {STATE_weighted,STATE_Barcode,BARCODE},             // Pulsado botón de barcode. Se guardará en STATE_Barcode el peso del alimento en báscula.
                                         {STATE_weighted,STATE_add_check,ADD_PLATO},         // Nuevo plato, aunque no se haya colocado alimento.
                                         {STATE_weighted,STATE_delete_check,DELETE_PLATO},   // Borrar plato actual. 
                                         {STATE_weighted,STATE_save_check,GUARDAR},          // Guardar comida, aunque no se haya colocado alimento. 
@@ -386,7 +395,7 @@ static transition_rule rules[RULES] =
                                         {STATE_ERROR,STATE_Init,GO_TO_INIT},                    // Regresar a STATE_Init tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_Plato,GO_TO_PLATO},                  // Regresar a STATE_Plato tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_Grupo,GO_TO_GRUPO},                  // Regresar a STATE_Grupo tras mostrar error cometido allí
-                                        //{STATE_ERROR,STATE_Barcode,GO_TO_BARCODE},            // Regresar a STATE_Barcode tras mostrar error cometido allí
+                                        {STATE_ERROR,STATE_Barcode,GO_TO_BARCODE},            // Regresar a STATE_Barcode tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_raw,GO_TO_RAW},                      // Regresar a STATE_raw tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_cooked,GO_TO_COOKED},                // Regresar a STATE_cooked tras mostrar error cometido allí
                                         {STATE_ERROR,STATE_weighted,GO_TO_WEIGHTED},            // Regresar a STATE_weighted tras mostrar error cometido allí
@@ -402,6 +411,7 @@ static transition_rule rules[RULES] =
 
                                         // --- CANCELAR ----------
                                         {STATE_CANCEL,STATE_Init,GO_TO_INIT},           // Regresar a STATE_Init tras cancelar acción de guardar iniciada desde STATE_Init
+                                        {STATE_CANCEL,STATE_Plato,GO_TO_PLATO},         // Regresar a STATE_Grupo tras cancelar acción de guardar iniciada desde STATE_Grupo
                                         {STATE_CANCEL,STATE_Grupo,GO_TO_GRUPO},         // Regresar a STATE_Grupo tras cancelar acción de guardar iniciada desde STATE_Grupo
                                         {STATE_CANCEL,STATE_raw,GO_TO_RAW},             // Regresar a STATE_raw tras cancelar add/delete/save iniciada desde STATE_raw   
                                         {STATE_CANCEL,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar add/delete/save iniciada desde STATE_cooked
@@ -1008,6 +1018,9 @@ void actGruposAlimentos()
         // ----- ACCIONES ------------------------------
         if(lastValidState == STATE_Plato) // Si se acaba de colocar el recipiente
         {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("\nGuardando peso recipiente..."));
+            #endif
             pesoRecipiente = pesoBascula;    // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
@@ -1017,11 +1030,22 @@ void actGruposAlimentos()
         // else if ((lastValidState == STATE_weighted) and (pesoBascula != 0.0)){
 
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
-                listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
-                #if defined(SM_DEBUG)
-                    listaComidaESP32.leerLista();
-                #endif 
+                // ¡¡¡¡IMPORTANTE!!!!
+
+                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
+                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
+                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
+                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                if(grupoAnterior.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
+                {
+                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
+                    #if defined(SM_DEBUG)
+                        listaComidaESP32.leerLista();
+                    #endif 
+                }
                 // -----------------------------------------------------------
                 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
@@ -1112,38 +1136,57 @@ void actStateBarcode()
     //const unsigned long scanningBarcodeInterval = 10500;            // Intervalo de tiempo para mostrar "Escaneando código de barras..." (10.5 segundos)
     const unsigned long barcodeNotReadInterval = 3000;             // Intervalo de tiempo para mostrar "Código de barras no detectado" (3 segundos)
     const unsigned long productNotFoundInterval = 3000;            // Intervalo de tiempo para mostrar "Producto no encontrado" (3 segundos)
+    const unsigned long productFound = 3000;                       // Intervalo de tiempo para mostrar la información del producto (3 segundos)
 
-    static bool showing_esp32_desconectado_o_sin_wifi;  
-    //static bool showing_scanning_barcode;
+    static bool showing_esp32_sin_wifi;  
+    static bool showing_scanning_barcode;
+    static bool showing_product_info;
     static bool showing_barcode_not_read;
     static bool showing_product_notFound;
+    static bool errorBarcode;
+
+    static bool groupChanged = false;
+
+    //static bool interruptionDuringReading = false;
 
 
     if(!doneState)
     {        
-        previousTimeBarcode = millis();
-        
         #if defined(SM_DEBUG)
-            SerialPC.println(F("\nProducto con código de barras..."));
+            SerialPC.println(F("\nLeer codigo de barras..."));
         #endif
         
         // ----- ACCIONES PREVIAS --------------------------------------
         if(lastValidState == STATE_Plato) // Si se acaba de colocar el recipiente
         {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("\nGuardando peso recipiente..."));
+            #endif
             pesoRecipiente = pesoBascula;    // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
-        //else if((state_prev != STATE_ERROR) and (state_prev != STATE_Barcode) and (pesoBascula != 0.0))
-        //{ 
+        else if((state_prev != STATE_ERROR) and (state_prev != STATE_Barcode) and (pesoBascula != 0.0))
+        { 
         // ¿Podría cambiarlo por esto? Entiendo que si pesoBascula no es 0, es que aún no se ha guardado el alimento y tarado:
-        else if ((lastValidState == STATE_weighted) and (pesoBascula != 0.0))
-        {
+        //else if ((lastValidState == STATE_weighted) and (pesoBascula != 0.0))
+        //{
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
-                listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
-                #if defined(SM_DEBUG)
-                    listaComidaESP32.leerLista();
-                #endif 
+                // ¡¡¡¡IMPORTANTE!!!!
+
+                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
+                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
+                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
+                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                if(grupoAnterior.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
+                {
+                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
+                    #if defined(SM_DEBUG)
+                        listaComidaESP32.leerLista();
+                    #endif 
+                }
                 // -----------------------------------------------------------
                 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
@@ -1176,18 +1219,27 @@ void actStateBarcode()
         // --- HAY INTERNET ---
         if(checkWifiConnection()) // Hay WiFi
         {
-            String barcode;                 // Código de barras leído
+            // ----- INFO DE PANTALLA -------------------------
+            showScanningBarcode();                                   // Mostrar "Escaneando código de barras..."
+            // ----- FIN INFO DE PANTALLA ---------------------
 
             // 1. Obtener barcode
-            // scanningBarcode();                                       // Mostrar "Escaneando código de barras..."
-            byte resultFromReadingBarcode = askForBarcode(barcode);     // Pedir código de barras. Se va a quedar aquí hasta 10.5 segundos
-            //showing_scanning_barcode = true;                            // Se está mostrando "Escaneando código de barras..."
-            showing_esp32_desconectado_o_sin_wifi = false;
+            String barcode;                 // Código de barras leído
+            byte resultFromReadingBarcode = askForBarcode(barcode);  // Pedir código de barras. Se va a quedar aquí hasta 10.5 segundos
+
+            showing_scanning_barcode = true;                         // Se está mostrando "Escaneando código de barras..."
+            showing_product_info = false;
+            showing_esp32_sin_wifi = false;
             showing_barcode_not_read = false;
+            errorBarcode = false;
 
             // 2. Si se ha leído el barcode, buscar información del producto
             if(resultFromReadingBarcode == BARCODE_READ)
             { 
+                // ----- INFO DE PANTALLA -------------------------
+                //showSearchingProductInfo(); // Mostrar "Buscando información del producto..."
+                // ----- FIN INFO DE PANTALLA ---------------------
+                
                 String productInfo;
                 byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts
 
@@ -1195,16 +1247,34 @@ void actStateBarcode()
                 {
                     case PRODUCT_FOUND: 
                         updateGrupoEscogidoFromBarcode(productInfo); // Actualizar información del grupo de alimentos con la info del producto
-                        //showProductInfo(); // Mostrar información del producto (grupoEscogido)
+                        // ----- INFO DE PANTALLA -------------------------
+                        showProductInfo(barcode); // Mostrar información del producto (grupoEscogido)
+                        // ----- FIN INFO DE PANTALLA ---------------------
+                        groupChanged = true;
+
+                        showing_product_info = true;
+                        showing_scanning_barcode = false;
+                        showing_esp32_sin_wifi = false;
+                        showing_barcode_not_read = false;
+                        errorBarcode = false;
                         // La información del producto se quedará en pantalla hasta que se coloque el producto en la báscula
                         break;
 
                     case PRODUCT_NOT_FOUND:  
-                        #ifndef SM_DEBUG
+                        #ifdef SM_DEBUG
                             SerialPC.println(F("Producto no encontrado"));
                         #endif
-                        //showProductNotFound(barcode); // Mostrar "Producto no encontrado"
+                        // ----- INFO DE PANTALLA -------------------------
+                        showProductNotFound(barcode); // Mostrar "Producto no encontrado"
+                        // ----- FIN INFO DE PANTALLA ---------------------
+                        groupChanged = false;
+
                         showing_product_notFound = true;
+                        showing_esp32_sin_wifi = false;
+                        showing_product_info = false;
+                        showing_barcode_not_read = false;
+                        showing_scanning_barcode = false;
+                        errorBarcode = false;
                         break;
 
                     case PRODUCT_TIMEOUT: //showProductTimeout();
@@ -1230,17 +1300,34 @@ void actStateBarcode()
                     SerialPC.println(F("No se va a buscar informacion del producto porque no se ha leido el barcode"));
                 #endif
 
-                //showBarcodeNotRead(); // Mostrar "Código de barras no leído"
+                showBarcodeNotRead(); // Mostrar "Código de barras no leído"
+                groupChanged = false;
                 showing_barcode_not_read = true;                           // Se está mostrando "Código de barras no detectado"
-                //showing_scanning_barcode = false;                            
-                showing_esp32_desconectado_o_sin_wifi = false;
+                showing_scanning_barcode = false;     
+                showing_product_info = false; 
+                showing_product_notFound = false;                      
+                showing_esp32_sin_wifi = false;
+                errorBarcode = false;
+            }
+            else if(resultFromReadingBarcode == INTERRUPTION) // Cancelar
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Interrupción durante lectura de barcode..."));
+                #endif
+                //interruptionDuringReading = true;
             }
             else 
             { 
                 #ifdef SM_DEBUG
-                    SerialPC.println(F("Error al leer código de barras."));
+                    SerialPC.println(F("Error al leer codigo de barras."));
                 #endif
-                //showBarcodeError(); // Mostrar "Error al leer código de barras"
+                //showBarcodeError(); // Mostrar "Error al leer codigo de barras"
+                errorBarcode = true;
+                showing_barcode_not_read = false;
+                showing_scanning_barcode = false;
+                showing_product_info = false;
+                showing_esp32_sin_wifi = false;
+                showing_product_notFound = false;
             }
 
         }
@@ -1250,20 +1337,29 @@ void actStateBarcode()
         else // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, se vuelve a STATE_Plato
         {
             #ifdef SM_DEBUG
-                SerialPC.println(F("No se procede a leer código de barras porque ESP32 está desconectado o no tiene WiFi"));
+                SerialPC.println(F("No se procede a leer codigo de barras porque ESP32 esta desconectado o no tiene WiFi"));
                 SerialPC.println(F("Mostrar mensaje y volver a STATE_Plato en 3 segundos..."));
             #endif
 
-            //esp32Desconectado_o_sinWifi();                // Mostrar "Error del sistema. Lector desconectado o sin WiFi" 
-            showing_esp32_desconectado_o_sin_wifi = true;   // Se está mostrando "Error del sistema. Lector desconectado o sin wifi"
-            //showing_scanning_barcode = false;
+            // ----- INFO DE PANTALLA -------------------------
+            esp32_sinWifi();                 // Mostrar "Sin conexión. No se puede leer el código de barras" 
+            // ----- FIN INFO DE PANTALLA ---------------------
+
+            groupChanged = false;
+            showing_esp32_sin_wifi = true;   // Se está mostrando "Sin conexión. No se puede leer el código de barras" 
             showing_barcode_not_read = false;
+            showing_scanning_barcode = false;
+            showing_product_info = false;
+            showing_product_notFound = false;
+            errorBarcode = false;
         }
         // --- FIN NO HAY INTERNET ---
         // ---- FIN CHEQUEO INTERNET --------------------
 
         // ----- FIN ACCIONES PRINCIPALES Y PANTALLAS -------------
 
+
+        previousTimeBarcode = millis();            // Inicializar 'previousTimeBarcode' 
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                                             // cada vez que se entre a esta función debido al loop de Arduino.
@@ -1274,13 +1370,29 @@ void actStateBarcode()
 
     // --- SALIDA AUTOMÁTICA -------
     // Si el ESP32 está desconectado, se vuelve automáticamente a STATE_Plato en 3 segundos
-    if(showing_esp32_desconectado_o_sin_wifi) // Mostrando "Error del sistema. Lector desconectado"
+    if(showing_esp32_sin_wifi) // Mostrando "Error del sistema. Lector desconectado"
     {
-        if (millis() - previousTimeBarcode >= ESP32Desconectado_SinWiFi_Interval)  // Si el "Error del sistema. Lector desconectado" ha estado 3 segundos, se vuelve a STATE_Plato
+        if (millis() - previousTimeBarcode >= ESP32Desconectado_SinWiFi_Interval)  // Si el "Error del sistema. Lector desconectado" ha estado 3 segundos, se vuelve a STATE_Plato o STATE_Grupo
         {
-            previousTimeBarcode = millis();
-            addEventToBuffer(GO_TO_PLATO);
-            flagEvent = true;
+            if(lastValidState == STATE_Plato || lastValidState == STATE_weighted)
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Volver a STATE_Plato o STATE_weighted porque no hay Wifi para leer barcode o el ESP32 no responde..."));
+                #endif
+                previousTimeBarcode = millis();
+                addEventToBuffer(GO_TO_PLATO);
+                flagEvent = true;
+            }
+            else if(lastValidState == STATE_Grupo)
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Volver a STATE_Grupo porque no hay Wifi para leer barcode o el ESP32 no responde..."));
+                #endif
+                previousTimeBarcode = millis();
+                addEventToBuffer(GO_TO_GRUPO);
+                flagEvent = true;
+            }
+            
         }
     }
     // --- FIN SALIDA AUTOMÁTICA ---
@@ -1288,11 +1400,26 @@ void actStateBarcode()
     //else if(showing_scanning_barcode) // Mostrando "Escaneando código de barras..."
     else if(showing_barcode_not_read) // Mostrando "Código de barras no detectado"
     {
-        if (millis() - previousTimeBarcode >= barcodeNotReadInterval)  // Si el "Código de barras no detectado" ha estado 3 segundos, se vuelve a STATE_Plato
+        if (millis() - previousTimeBarcode >= barcodeNotReadInterval)  // Si el "Código de barras no detectado" ha estado 3 segundos, se vuelve a STATE_Plato o STATE_Grupo
         {
-            previousTimeBarcode = millis();
-            addEventToBuffer(GO_TO_PLATO);
-            flagEvent = true;
+            if(lastValidState == STATE_Plato || lastValidState == STATE_weighted)
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Volver a STATE_Plato o STATE_weighted porque no se ha detectado codigo de barras..."));
+                #endif
+                previousTimeBarcode = millis();
+                addEventToBuffer(GO_TO_PLATO);
+                flagEvent = true;
+            }
+            else if(lastValidState == STATE_Grupo)
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Volver a STATE_Grupo porque no se ha detectado codigo de barras..."));
+                #endif
+                previousTimeBarcode = millis();
+                addEventToBuffer(GO_TO_GRUPO);
+                flagEvent = true;
+            }
         }   
     }
     // --- FIN ESCANEANDO CÓDIGO ---
@@ -1301,13 +1428,51 @@ void actStateBarcode()
     {
         if (millis() - previousTimeBarcode >= productNotFoundInterval)  // Si el "Producto no encontrado" ha estado 3 segundos, se vuelve a STATE_Plato
         {
+            if(lastValidState == STATE_Plato || lastValidState == STATE_weighted)
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Volver a STATE_Plato o STATE_weighted porque no se ha encontrado el producto en OpenFoodFacts..."));
+                #endif
+                previousTimeBarcode = millis();
+                addEventToBuffer(GO_TO_PLATO);
+                flagEvent = true;
+            }
+            else if(lastValidState == STATE_Grupo)
+            {
+                #ifdef SM_DEBUG
+                    SerialPC.println(F("Volver a STATE_Grupo porque no se ha encontrado el producto en OpenFoodFacts..."));
+                #endif
+                previousTimeBarcode = millis();
+                addEventToBuffer(GO_TO_GRUPO);
+                flagEvent = true;
+            }
+        }
+    }
+    // --- FIN BUSCANDO PRODUCTO ---
+    else if(errorBarcode)
+    {
+        //if (millis() - previousTimeBarcode >= 3)  
+        //{
             previousTimeBarcode = millis();
             addEventToBuffer(GO_TO_PLATO);
             flagEvent = true;
+        //}
+    }
+    else if(showing_scanning_barcode) // Si no se ha llegado a cambiar la pantalla, se habrá esperado 30 segundos máximo
+    {
+        previousTimeBarcode = millis();
+        addEventToBuffer(GO_TO_PLATO);
+        flagEvent = true;
+    }
+    else if(showing_product_info) // Si regreso a STATE_Plato sale como que no se ha escogido grupo
+    {
+        if (millis() - previousTimeBarcode >= productFound)  // Si "Producto encontrado" ha estado 3 segundos, se vuelve a STATE_Grupo
+        {
+            previousTimeBarcode = millis();
+            addEventToBuffer(GO_TO_GRUPO);
+            flagEvent = true;
         }
     }
-
-    // --- FIN BUSCANDO PRODUCTO ---
 
 }
 
@@ -1586,12 +1751,24 @@ void actStateAdded()
                                                                     // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar el plato, pues no se habría modificado.
 
+
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
-                listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
-                #if defined(SM_DEBUG)
-                    listaComidaESP32.leerLista();
-                #endif
+                // ¡¡¡¡IMPORTANTE!!!!
+
+                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
+                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
+                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
+                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                if(grupoEscogido.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
+                {
+                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
+                    #if defined(SM_DEBUG)
+                        listaComidaESP32.leerLista();
+                    #endif 
+                }
                 // -----------------------------------------------------------
                 
 
@@ -1888,6 +2065,11 @@ void actStateSaved()
                 SerialPC.println(F("\nGuardando comida..."));  
             #endif
 
+            // -----  INFORMACIÓN MOSTRADA  -------------------------
+            showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web. Habría que usar otra función para mostrar "Guardando comida..."
+            // ----- FIN INFORMACIÓN MOSTRADA -----------------------
+
+
             /* ----- ACTUALIZAR PLATO  ----------------------------------- */
             if(pesoBascula != 0.0)               // ==> Si se ha colocado algo nuevo en la báscula y no se ha retirado,
             {                                    //     debe incluirse en el plato. 
@@ -1896,11 +2078,22 @@ void actStateSaved()
                                                                     // actualizar la comida, pues no se habría modificado.
             
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
-                listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
-                #if defined(SM_DEBUG)
-                    listaComidaESP32.leerLista();
-                #endif
+                // ¡¡¡¡IMPORTANTE!!!!
+
+                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
+                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
+                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
+                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
+                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+                if(grupoEscogido.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
+                {
+                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
+                    #if defined(SM_DEBUG)
+                        listaComidaESP32.leerLista();
+                    #endif 
+                }
                 // -----------------------------------------------------------
                 
 
@@ -1953,11 +2146,17 @@ void actStateSaved()
 
                                                             //  Necesitamos saber qué tipo de guardado ha podido haber para mostrar un mensaje en pantalla
 
+                if(typeOfSavingDone == SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI)
+                {
+                    delay(1000); // Si no se ha intentado subir a database porque no hay wifi, se espera un poco para que dé tiempo a mostrar el mensaje de "Sincronizando..."
+                }
                                                             
                 #if defined(SM_DEBUG)
                     if(typeOfSavingDone != SAVE_EXECUTED_FULL) // Si no se ha guardado en la database, mostrar el fichero con la comida por guardar
                         readFileTXT();                          
                 #endif
+
+
                 // -----------------------------------
 
                 // --- ACTUALIZAR COPIA COMIDA -------
@@ -2086,6 +2285,8 @@ void actStateERROR()
                     } 
                                         showError(ERROR_STATE_GROUP);          break;  
 
+            //case STATE_Barcode:         showError(ERROR_STATE_BARCODE);         break;  // Barcode
+
             case STATE_raw: case STATE_cooked:  // Desde STATE_raw y STATE_cooked se puede hacer cualquier cosa (báscula y botones), así que no debería saltar error,
                                                 // pero se gestiona igualmente por si acaso.
                                         showError(ERROR_STATE_PROCESAMIENTO);   break;  // Crudo o Cocinado
@@ -2117,7 +2318,7 @@ void actStateERROR()
 
 
     // -----  TRANSICIONES TRAS ERROR  ----------------------------
-    if(!keepErrorScreen)
+    if(!keepErrorScreen) // Transiciones automáticas tras error
     {
         // ----- TIEMPO DE ESPERA -------------------------------------
         // Solo para regresar si el error cometido ha sido pulsar un botón.
@@ -2147,7 +2348,11 @@ void actStateERROR()
                                             #endif
                                             addEventToBuffer(GO_TO_GRUPO);            break;  // Grupo
 
-                // ¿VOLVER A STATE_BARCODE?
+                case STATE_Barcode:       
+                                            #if defined(SM_DEBUG)
+                                                SerialPC.println(F("\nRegreso a Barcode tras ERROR..."));      
+                                            #endif 
+                                            addEventToBuffer(GO_TO_BARCODE);          break;  // Barcode
 
                 case STATE_raw:             // Desde STATE_raw se puede hacer cualquier cosa (báscula y botones), así que no debería saltar error,
                                             // pero se gestiona igualmente por si acaso.
@@ -2356,13 +2561,13 @@ void actStateERROR()
                             #endif 
                             addEventToBuffer(GO_TO_GRUPO);            flagEvent = true;      break;
                         }
-                        /*else if(barcodeButtonInterruptOccurred()){ // Ha habido pulsación en botón Barcode
+                        else if(barcodeButtonInterruptOccurred()){ // Ha habido pulsación en botón Barcode
                             checkBarcodeButton();   // Marcar grupo Barcode
                             #if defined(SM_DEBUG)
                                 SerialPC.println(F("\nPidiendo barcode durante ERROR en STATE_Plato..."));           
                             #endif 
                             addEventToBuffer(GO_TO_BARCODE);      flagEvent = true;  break;
-                        }*/
+                        }
                     }
                     break;  
 
@@ -2412,13 +2617,13 @@ void actStateERROR()
                             #endif 
                             addEventToBuffer(GO_TO_GRUPO);      flagEvent = true;  break;
                         }
-                        /*else if(barcodeButtonInterruptOccurred()){ // Ha habido pulsación en botón Barcode
+                        else if(barcodeButtonInterruptOccurred()){ // Ha habido pulsación en botón Barcode
                             checkBarcodeButton();   // Marcar grupo Barcode
                             #if defined(SM_DEBUG)
                                 SerialPC.println(F("\nPidiendo barcode durante ERROR en STATE_Grupo..."));           
                             #endif 
                             addEventToBuffer(GO_TO_BARCODE);      flagEvent = true;  break;
-                        } */
+                        } 
                     }
                     break;  
 
@@ -2857,41 +3062,59 @@ void actStateCANCEL()
     {
         // Regreso al estado desde donde se inició la acción ahora cancelada.
 
-        // Ultimo estado válido puede ser Init, Grupos, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
-        // cancelable (add/delete/save).
-        switch (lastValidState)
+        if(state_prev == STATE_Barcode)
         {
-            case STATE_Init:      
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a Init tras CANCELACION..."));       
-                                #endif 
-                                addEventToBuffer(GO_TO_INIT);       break;  // Init
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("\nRegreso a STATE_Plato tras CANCELACION en STATE_Barcode..."));      
+            #endif 
+            addEventToBuffer(GO_TO_PLATO);    
+        }
+        else
+        {
+            // Ultimo estado válido puede ser Init, Grupos, Barcode, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
+            // cancelable (add/delete/save).
+            switch (lastValidState)
+            {
+                case STATE_Init:      
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nRegreso a Init tras CANCELACION..."));       
+                                    #endif 
+                                    addEventToBuffer(GO_TO_INIT);       break;  // Init
 
-            case STATE_Grupo:      
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a Grupos tras CANCELACION..."));       
-                                #endif 
-                                addEventToBuffer(GO_TO_GRUPO);       break;  // Grupo
+                case STATE_Grupo:      
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nRegreso a Grupos tras CANCELACION..."));       
+                                    #endif 
+                                    addEventToBuffer(GO_TO_GRUPO);       break;  // Grupo
 
-            case STATE_raw:       
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a raw tras CANCELACION..."));         
-                                #endif 
-                                addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+                /*case STATE_Barcode:
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nRegreso a STATE_Plato tras CANCELACION en STATE_Barcode..."));      
+                                    #endif 
+                                    addEventToBuffer(GO_TO_PLATO);     break;  // Barcode
+                                    */
 
-            case STATE_cooked:    
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a cooked tras CANCELACION..."));      
-                                #endif 
-                                addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+                case STATE_raw:       
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nRegreso a raw tras CANCELACION..."));         
+                                    #endif 
+                                    addEventToBuffer(GO_TO_RAW);         break;  // Crudo
 
-            case STATE_weighted:  
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a weighted tras CANCELACION..."));    
-                                #endif 
-                                addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+                case STATE_cooked:    
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nRegreso a cooked tras CANCELACION..."));      
+                                    #endif 
+                                    addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
 
-            default:  break;  
+                case STATE_weighted:  
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nRegreso a weighted tras CANCELACION..."));    
+                                    #endif 
+                                    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+
+                default:  break;  
+            }
+            
         }
 
         flagEvent = true; 
@@ -2936,6 +3159,14 @@ void actStateAVISO()
         // Mostrar información según el estado en el que se realizó la acción que ha generado aviso (added/deleted/saved)
         switch(state_prev)
         { 
+            /*case STATE_Barcode:
+                                showWarning(WARNING_RAW_COOKED_NOT_NEEDED);  
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("No hace falta crudo/cocinado al leer barcode"));  
+                                #endif 
+                                break;  // Barcode
+                                */
+
             case STATE_added:       showWarning(WARNING_NOT_ADDED);    
                                     #if defined(SM_DEBUG)
                                         SerialPC.println(F("No se ha creado otro plato porque el actual está vacío"));  

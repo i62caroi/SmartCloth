@@ -59,8 +59,8 @@ float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  a
 float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
-#define UMBRAL_MIN_CAMBIO_PESO 2.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
-
+#define UMBRAL_MIN_CAMBIO_PESO 5.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
+#define UMBRAL_RECIPIENTE_RETIRADO 20.0 // Umbral para considerar que se ha retirado todo (recipiente + alimentos) de la báscula
 
 
 
@@ -93,14 +93,23 @@ void    checkBascula();     // Comprobar si ha habido algún evento en la báscu
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Función para inicializar la báscula.
+ * 
+ * Pasos para calibrar la báscula:
+ *      1. Poner un objeto con peso conocido sobre la báscula. Por ejemplo, un objeto de 210 gramos.
+ *      2. Observar cuánto "peso" (valor bruto) marca la celda de carga con el peso conocido encima. Supongamos que la celda de carga muestra un valor de 1000.
+ *      3. Tomar el valor de escala inicial (el marcado en scale.set_scale(1058.22)) y multiplicarlo por el valor obtenido en el paso 2. Ejemplo: 1058.22 * 1000 = 1058220.
+ *      4. El resultado obtenido en el paso 3 se divide por el peso conocido en gramos. Ejemplo: 1058220 / 210 = 5039.14. Este es el nuevo valor de escala.
+ *      5. Usar el nuevo valor de escala obtenido en el paso 4 para ajustar la báscula correctamente llamando a scale.set_scale() con el nuevo valor. Ejemplo: scale.set_scale(5039.14);
  */
 /*-----------------------------------------------------------------------------*/
-void setupScale(){
-    scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-    //scale.set_scale(1093.48); // bad calibration!
-    scale.set_scale(939.51); // para celda de carga que pesa 30 gr
-    scale.tare(1);  
-    //scale.get_units(10);
+void setupScale()
+{
+    scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN); // Inicializa la celda de carga con los pines especificados
+
+    scale.set_scale(1058.22); // Establecer escala inicial. Este valor se ajustará para calibrar la báscula.
+    //scale.tare();  // Tarar tomando la media de 10 medidas
+    scale.tare(5);
+
     #if defined(SM_DEBUG)
         SerialPC.println(F("Scale initialized"));
     #endif
@@ -114,7 +123,7 @@ void setupScale(){
  */
 /*-----------------------------------------------------------------------------*/
 float weighScale(){
-    return scale.get_units(1);
+    return  scale.get_units(3);
 }
 
 
@@ -197,8 +206,8 @@ void checkBascula(){
                     eventoBascula = INCREMENTO;
                 }
                 else { // Decremento de peso 
-                    if(abs(abs(newWeight) - pesoARetirar) < 5.0){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
-                        // Se ha puesto un umbral de 5 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
+                    if(abs(abs(newWeight) - pesoARetirar) < UMBRAL_RECIPIENTE_RETIRADO){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
+                        // Se ha puesto un umbral de 10 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
                         #if defined(SM_DEBUG)
                             SerialPC.print(F("\nLIBERADA"));
                         #endif

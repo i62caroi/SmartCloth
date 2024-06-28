@@ -51,7 +51,8 @@
     const byte intPinGuardar      = 29;  
     const byte intPinDeletePlato  = 30;
     // ---- GRANDE ----
-    const byte interruptPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
+    //const byte interruptPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
+    const byte interruptPinGrande = 35;      
     // ---- BARCODE ----
     const byte intPinBarcode = 53;
 #endif

@@ -122,8 +122,7 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"L\xE1""cteos enteros","Leche 
                                       {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jam\xF3""n cocido, at\xFA""n natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.836939597,0.167436242,0.015221477,0.005798658},
                                       {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca\x2F""buey, jam\xF3""n curado (sin\n   grasa), pescados grasos (at\xFA""n, sardina, trucha, boquer\xF3""n\x85""), v\xED""sceras, pato\n   sin piel, codorniz, etc.",1.321273973,0.205972603,0.054369863,0.001726027},
                                       {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, at\xFA""n o sardinas en aceite, caballa,\n   salm\xF3""n, jam\xF3""n curado con grasa, huevo, queso fresco, reques\xF3""n, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443},
-
-                                      {BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} // Grupo de alimentos para el barcode
+                                      {BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} 
                                     };
 
 
@@ -213,6 +212,8 @@ void updateGrupoEscogidoFromBarcode(String &productInfo)
 
 
     // ----- ACTUALIZAR INFO DEL GRUPO -----
+    grupoEscogido = gruposAlimentos[26]; // Grupo de barcode. Toma el ID y el color, pero los datos los modificamos
+    // Modificar datos con info del producto
     grupoEscogido.Nombre_grupo = nombre_producto;
     grupoEscogido.Carb_g = carb_1g;
     grupoEscogido.Lip_g = lip_1g;
