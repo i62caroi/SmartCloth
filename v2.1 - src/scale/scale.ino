@@ -45,9 +45,8 @@ void loop()
 
 void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-    //scale.set_scale(1093.48); // bad calibration!
-    scale.set_scale(939.51); // para celda de carga que pesa 30 gr
-    scale.tare();  
+    scale.set_scale(1058.22); 
+    scale.tare(5);  // Media de 10 medidas (10 por defecto)
     //scale.get_units(10);
     Serial.println(F("Scale initialized"));
 }
