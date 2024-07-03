@@ -35,22 +35,35 @@
     }
 */
 
+// ------- CREDENCIALES -------------
 // Credenciales conexión red WiFi
-const char* ssid = "Irene";               // Nombre red
-const char* password =  "icradeba5050";   // Contraseña
-
+// Laboratorio:
 //const char* ssid = "UCOTEAM";
 //const char* password = "-polonio210alfileres-";
+// Casa:
+const char* ssid = "MOVISTAR_FB23";
+const char* password = "DP6BUuEtuFvRw3mHmFoG";
+
+// Testeos:
+//const char* ssid = "Irene";
+//const char* password = "icradeba5050";
+
+// Post testeos:
+//const char* ssid = "SmartCloth";
+//const char* password = "SM-pass24/";
+// -----------------------------------
 
 
 // URL del servidor donde enviar el JSON
 // Servidor de testeo
 const char* post_testServerName = "http://smartcloth.site/post-esp32-data-json.php"; 
 
-// URLs del servidor oficial
+// ------- DATABASE SMARTCLOTH -------
+// URL del servidor donde enviar el JSON
 const char* fetchTokenServerName = "https://smartclothweb.org/api/mac";
 const char* comidaServerName = "https://smartclothweb.org/api/comidas";
 const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
+// ----------------------------------
 
 
 /*-----------------------------------------------------------------------------
@@ -66,9 +79,24 @@ void    sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc);           
 bool    fetchTokenFromServer(String &bearerToken);                              // 1. Pedir token
 void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);  // 2. Subir JSON
 void    logoutFromServer(String &bearerToken);                                  // 3. Cerrar sesión
+
+
+void    uploadJSONtoServer_testServer(DynamicJsonDocument& JSONdoc);  // Subir JSON
 /*-----------------------------------------------------------------------------*/
 
-
+void scanNetworks() {
+    Serial.println("Escaneando redes WiFi...");
+    int n = WiFi.scanNetworks();
+    if (n == 0) {
+        Serial.println("No se encontraron redes");
+    } else {
+        Serial.println("Redes encontradas:");
+        for (int i = 0; i < n; ++i) {
+            Serial.printf("%d: %s, Señal: %d dBm\n", i + 1, WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+            delay(10);
+        }
+    }
+}
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -166,15 +194,16 @@ void connectToWiFi()
     unsigned long startTime = millis();
 
     // Esperar hasta que se establezca la conexión o se agote el tiempo
-    unsigned long timeout_waitConexion = 5000; // 5 segundos
+    unsigned long timeout_waitConexion = 30000; // 30 segundos
 
+    SerialPC.print("Conectando a red "); SerialPC.println(ssid);
     SerialPC.print(F("Conectando a WiFi..."));
     WiFi.begin(ssid, password);
 
     // Mientras no se haya conectado a WiFi y mientras no hayan pasado 5 segundos.
     // Si se conecta o si pasan los 5 segundos, sale del while.
     //while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
-    while(!hayConexionWiFi() && isTimeoutExceeded(startTime, timeout_waitConexion))
+    while(!hayConexionWiFi() && !isTimeoutExceeded(startTime, timeout_waitConexion))
     {
         delay(500);
         SerialPC.print(F("."));
@@ -192,6 +221,7 @@ void connectToWiFi()
     {
         // Si tras 10 segundos no se ha establecido la conexión:
         SerialPC.println(F("\nNo se pudo establecer la conexion WiFi."));
+        SerialPC.print("Estado de WiFi: "); SerialPC.println(WiFi.status());
         // No hace falta indicar al Due que NO se tiene WiFi, se pregunta después
     }
 
@@ -439,6 +469,62 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
         SerialPC.println(F("\nNo se puede SUBIR LA COMIDA porque ha perdido la conexion a Internet"));
         
         //SerialESP32Due.println(F("NO-WIFI"));
+        sendMsgToDue(F("NO-WIFI"));
+    }
+
+}
+
+
+void uploadJSONtoServer_testServer(DynamicJsonDocument& JSONdoc)
+{
+    // Sube la comida si sigue teniendo conexión
+    if(hayConexionWiFi())
+    {
+        SerialPC.println("\n2. Subiendo JSON...");
+
+        // Convertir el documento JSON en una cadena
+        String jsonString;
+        serializeJson(JSONdoc, jsonString);
+
+        // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
+        HTTPClient http;
+        http.begin(post_testServerName); // "http://smartcloth.site/post-esp32-data-json.php"
+        http.addHeader("Content-Type", "application/json");
+
+        // Enviar la petición HTTP
+        int httpResponseCode = http.POST(jsonString);
+
+        // Comprobar el código de respuesta HTTP
+        if(httpResponseCode > 0)
+        {
+            SerialPC.println();
+            SerialPC.print("Respuesta subir comida: "); SerialPC.println(httpResponseCode); // Imprimir el código de respuesta HTTP
+            // No se puede poner directamente SerialPC.println("\n" + httpResponseCode); porque se imprimen cosas raras
+
+            //String response = http.getString(); // Obtener la respuesta del servidor
+            //SerialPC.println(response);         // Imprimir la respuesta del servidor
+
+            if((httpResponseCode >= 200) && (httpResponseCode < 300)){
+                SerialPC.println("Comida subida\n");
+                sendMsgToDue(F("SAVED-OK"));
+            }
+            else{
+                SerialPC.println("Error en subir comida");
+                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+            }
+        }
+        else
+        {
+            SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
+            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+        }
+
+        // Cerrar la conexión
+        http.end();
+
+    }
+    else{
+        SerialPC.println(F("\nNo se puede SUBIR LA COMIDA porque ha perdido la conexion a Internet"));
         sendMsgToDue(F("NO-WIFI"));
     }
 

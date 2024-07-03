@@ -18,12 +18,12 @@ void setup()
     delay(100);
      
     // Inicializar SD
-    if (!setupSDcard())
+    /*if (!setupSDcard())
     {
         SerialPC.println(F("Card failed, or not present"));
         return;
     }
-    delay(100);
+    delay(100);*/
 
     SerialPC.println(F("ENVIAME \"go\" PARA COMENZAR"));
 
@@ -70,12 +70,12 @@ void loop()
 
             // --- Enviar cadena de simulación al ESP32 ------------
             //sendStringSimulationToEsp32(string2);             // Todas las comidas en un JSON
-            //sendStringSimulationToEsp32MealByMeal(string2);   // Un JSON por comida
+            sendStringSimulationToEsp32MealByMeal(string1);   // Un JSON por comida
             // -----------------------------------------------------
 
             // --- Enviar fichero TXT al ESP32 ---------------------
             //sendFileToESP32();            // Todas las cadenas de golpe --> todas las comidas en un JSON
-            sendFileToESP32MealByMeal();  // Enviar comida a comida --> un JSON por comida
+            //sendFileToESP32MealByMeal();  // Enviar comida a comida --> un JSON por comida
             // -----------------------------------------------------
 
         }

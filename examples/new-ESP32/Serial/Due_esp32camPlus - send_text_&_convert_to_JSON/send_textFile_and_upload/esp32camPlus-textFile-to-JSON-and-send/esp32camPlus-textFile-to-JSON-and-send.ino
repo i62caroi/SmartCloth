@@ -139,6 +139,7 @@ void setup()
     sendMsgToDue("HOLA DUE");
     // ---------------------------
 
+    //scanNetworks();
 
     // --- CONEXIÓN WIFI ---------
     setupWiFi();
@@ -161,13 +162,15 @@ void loop()
         SerialPC.println("Mensaje recibido: " + msgFromDue); 
 
         // ------ Comprobar Wifi y avisar al Due ---------
-        if (msgFromDue == "CHECK-WIFI") 
+        if (msgFromDue == "CHECK-WIFI"){ 
             checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
         // -----------------------------------------------
         // ------ Procesar líneas y generar JSON ---------
+        }
         else if (msgFromDue == "SAVE"){
             //processJSON();          // Procesa cada línea y las mete todas en un JSON
-            processJSON_OnePerMeal(); // Procesa cada línea y mete cada comida en un JSON
+            //processJSON_OnePerMeal(); // Procesa cada línea y mete cada comida en un JSON
+            processJSON_OnePerMeal_testServer(); // Procesa cada línea y mete cada comida en un JSON. Usa servidor de testeo (FreeHosting)
         }
         // -----------------------------------------------
         else{ 

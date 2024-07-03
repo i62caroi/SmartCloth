@@ -95,7 +95,7 @@ inline void readMsgFromSerialDue(String &msgFromDue) {
  */
 /*-----------------------------------------------------------------------------*/
 inline bool isTimeoutExceeded(unsigned long startTime, unsigned long timeout) {
-    return millis() - startTime < timeout;
+    return millis() - startTime > timeout;
 }
 
 

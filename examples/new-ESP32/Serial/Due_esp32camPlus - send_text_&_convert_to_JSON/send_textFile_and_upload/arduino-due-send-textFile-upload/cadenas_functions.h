@@ -12,13 +12,14 @@
 // Simular la lectura del archivo
 String string1 = "INICIO-COMIDA\n"
                 "INICIO-PLATO\n"
-                "ALIMENTO,15,53.50\n"
-                "ALIMENTO,9,53.50\n"
-                "FIN-COMIDA,02.05.2024,17:55:36\n"
+                "ALIMENTO,5,53.50\n"
+                "ALIMENTO,7,23.50\n"
+                "ALIMENTO,50,120.5,8424621001093\n"  // Línea con barcode (Mini Tostas de Trigo)
+                "FIN-COMIDA,03.07.2024,08:55:36\n"
                 "INICIO-COMIDA\n"
                 "INICIO-PLATO\n"
-                "ALIMENTO,15,24.40\n"
-                "FIN-COMIDA,02.05.2024,18:25:25\n";
+                "ALIMENTO,20,24.40\n"
+                "FIN-COMIDA,03.07.2024,18:25:25\n";
                 
                 
 
