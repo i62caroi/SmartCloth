@@ -1,6 +1,0 @@
-Wifi Name:ESP32-CAM
-
-192.168.4.1
-
-
-Password: 12345678

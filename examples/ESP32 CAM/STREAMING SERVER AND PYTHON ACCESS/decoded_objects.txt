@@ -1,0 +1,12 @@
+Type: CODE128
+Data: b'X001OZGMZ5'
+
+Type: CODE128
+Data: b'X001A36UVH'
+
+Type: EAN13
+Data: b'9788441540842'
+
+Type: I25
+Data: b'390231'
+

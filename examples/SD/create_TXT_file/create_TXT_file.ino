@@ -6,13 +6,13 @@
 #include <SD.h>
 
 
-#define SD_CARD_SCS  4      // SmartCloth v2.1
-//#define SD_CARD_SCS  13   // SmartCloth v2.2
+//#define SD_CARD_SCS  4      // SmartCloth v2.1
+#define SD_CARD_SCS  13   // SmartCloth v2.2
 
 
 
 // Fichero donde ir escribiendo la info para cuando haya wifi
-char fileTXT[30] = "data/data-esp.txt";
+char fileTXT[30] = "data/test.txt";
 
 
 
@@ -128,7 +128,7 @@ void createFileTXT()
     }
     else 
     {
-        Serial.println(F("Error al abrir el archivo data-ESP.txt"));
+        Serial.println(F("Error al abrir el archivo test.txt"));
     }
 }
 

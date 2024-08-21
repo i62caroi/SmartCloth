@@ -1,5 +1,0 @@
-{
-    "board": "arduino:sam:arduino_due_x_dbg",
-    "sketch": "arduino-due/arduino-due.ino",
-    "port": "/dev/tty.usbmodem112301"
-}

@@ -31,11 +31,10 @@ JPG: Programa de Raio (Raio Image Tool) => DA MENOS PROBLEMAS QUE PNG
 BIN: [ https://javl.github.io/image2cpp/ ] binary file
 	 Programa de Raio (Raio Image Tool): JPG => BIN
 	- SmartCloth:
-		- ===> logo => 482 x 350
-		- smartcloth => 384 x 279
-		- smart3 => 256 x 186
+		- logo => 482 x 350
 	- crudo => 95 x 91
 	- cocinado => 95 x 91
+
 	- ARRANQUE:
 		- symbol => 162 x 169
 		- S => 95 x 159 
@@ -47,14 +46,85 @@ BIN: [ https://javl.github.io/image2cpp/ ] binary file
 		- L => 85 x 159 
 		- O => 85 x 159 
 		- H => 85 x 159  
+
 	- PANTALLA INICIAL:
-		- brain => (74x61)
+		- brain1 => 120 x 108
+		- brain2 => 120 x 108
+
 	- GRUPO ALIMENTO:
-		- cuadro1 => (167x160) 
-		- cuadro2 => (167x160) 
-		- cuadro3 => (167x160) 
-		- cuadro4 => (167x160) 
-		- mano => (142x137)
+		- grupo1 => 130 x 125
+		- grupo2 => 130 x 125
+		- grupo3 => 130 x 125
+		- grupo4 => 130 x 125 
+		- manoR => 120 x 129 
+		- manoG => 120 x 129 
+		- manoW	 => 120 x 129
+		- handW => 120 x 129
+
+	- BOTONES:
+		- añadir => 172 x 130
+		- borrar => 172 x 130
+		- guardar => 172 x 130
+		- cociGra => 177 x 160
+		- crudoGra => 177 x 160
+
+	- DASHBOARD:
+		- cociPeq => 47 x 42
+		- crudoPeq => 47 x 42
+		- kcal => 80 x 87    
+		- kcal_10 => 70 x 76
+		- kcal_20 => 60 x 65
+		- kcal_30 => 50 x 54
+			
+
+	- ERROR:
+		- cruz 	   => 114 x 127
+		- cruzAll => 512 x 127
+
+	- AVISO:
+		- aviso1 => 135 x 113
+		- aviso2 => 135 x 113
+		- aviso3 => 135 x 119
+
+	- CARGA INICIAL:
+		- FULL:
+			- logFull => 324 x 67
+			- reloj1 => 260 x 410
+			- reloj2 => 260 x 410
+			- reloj3 => 260 x 410
+			- reloj4 => 260 x 410
+			- relGir1 => 380 x 458
+			- relGir2 => 462 x 464
+			- relGir3 => 473 x 392
+			- relGir4 => 402 x 261
+			- relGir5 => 454 x 376
+			- relGir6 => 398 x 454
+		- MITAD:
+			- logFull => 216 x 45 (2/3)
+			- reloj1 => 130 x 205
+			- reloj2 => 130 x 205
+			- reloj3 => 130 x 205
+			- reloj4 => 130 x 205
+			- relGir1 => 190 x 229
+			- relGir2 => 225 x 226
+			- relGir3 => 227 x 189
+			- relGir4 => 201 x 131
+			- relGir5 => 227 x 188
+			- relGir6 => 199 x 227
+		- CUARTO:
+			- logFull => QUITAR
+			- reloj1 => 65 x 103
+			- reloj2 => 65 x 103
+			- reloj3 => 65 x 103
+			- reloj4 => 65 x 103
+			- relGir1 => 95 x 115
+			- relGir2 => 112 x 112
+			- relGir3 => 113 x 94
+			- relGir4 => 100 x 65
+			- relGir5 => 113 x 94
+			- relGir6 => 99 x 113
+
+
 
 
 ---------------------------------------------------------------------

@@ -1,2 +1,0 @@
-1. Abrir XQuartz
-2. Abrir putty (Escritorio) o abrir terminal y ejecutar 'putty'

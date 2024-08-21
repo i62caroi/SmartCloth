@@ -45,7 +45,7 @@ void loop()
 
 void setupScale(){
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN);
-    scale.set_scale(1058.22); 
+    scale.set_scale(907.89); 
     scale.tare(5);  // Media de 10 medidas (10 por defecto)
     //scale.get_units(10);
     Serial.println(F("Scale initialized"));

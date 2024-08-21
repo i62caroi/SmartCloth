@@ -1,0 +1,69 @@
+
+
+¡¡¡¡¡ IMPORTANTE !!!!!
+
+USAR ARDUINO IDE. VSCODE NO MUESTRA NADA EN TERMINAL.
+
+USAR SIEMPRE EL HUB DE USB CON ALIMENTACIÓN PROPIA.
+
+
+
+--------------------------------------------------------------------
+--------------	CONEXION DUE Y PC 	--------------------------------
+--------------------------------------------------------------------
+
+      ESP32-CAM PLUS <--> PC con cable USB C
+
+      -------------------------------------------------
+      |    ESP32-CAM PLUS   |  Arduino Due (Serial1)  |
+      -------------------------------------------------
+      |    IO17 (Tx1)       |      pin 19 (Rx1)       |    
+      |    IO16 (Rx1)       |      pin 18 (Tx1)       |
+      |      3V3            |        3V3              |
+      |      GND            |        GND              | 
+      -------------------------------------------------
+
+
+--------------------------------------------------------------------
+--------------	PINES 	--------------------------------------------
+--------------------------------------------------------------------
+
+	#define PWDN_GPIO_NUM -1
+	#define RESET_GPIO_NUM 5
+	#define XCLK_GPIO_NUM 15
+	#define SIOD_GPIO_NUM 22
+	#define SIOC_GPIO_NUM 23
+
+	#define Y9_GPIO_NUM 39
+	#define Y8_GPIO_NUM 34
+	#define Y7_GPIO_NUM 33
+	#define Y6_GPIO_NUM 27
+	#define Y5_GPIO_NUM 12
+	#define Y4_GPIO_NUM 35
+	#define Y3_GPIO_NUM 14
+	#define Y2_GPIO_NUM 2
+
+	#define VSYNC_GPIO_NUM 18
+	#define HREF_GPIO_NUM  36
+	#define PCLK_GPIO_NUM  26
+
+	#define LED_GPIO_NUM   25
+
+
+--------------------------------------------------------------------
+--------------	CARGAR PROGRAMA 	--------------------------------
+--------------------------------------------------------------------
+
+
+  ARDUINO BOARD CONFIGURATION:
+  - Board: "ESP32 Dev Module"
+  - Partition Scheme: "Huge APP (3MB No OTA/1MB SPIFFS)"
+  - Flash Mode: "DIO"
+  - Upload Speed: "460800"
+
+  Con eso ya se puede subir el programa a la placa sin problemas y 
+  sin tener que presionar el botón de reset ni GIO0.
+
+
+
+  
