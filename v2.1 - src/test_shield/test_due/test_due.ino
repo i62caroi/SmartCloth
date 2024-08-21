@@ -7,9 +7,6 @@
 #include "ISR.h"
 
 
-bool initSD;
-bool initScreen;
-
 #define SerialPC Serial
 
 
@@ -18,7 +15,8 @@ const unsigned long   period = 50;
 unsigned long         prevMillis = 0;
 unsigned long         tiempoPrevio = 0;
 
-
+bool initSD = false;
+bool initScreen = false;
 
 void setup()
 {
@@ -29,31 +27,52 @@ void setup()
     delay(500); 
     // -----------------------------------------
 
-    // ------ COMUNICACION SERIAL ESP32 --------
-    setupSerialESP32();
-    SerialPC.println("1) Comunicacion Serial con ESP32 configurada");
-    delay(500);
+    // ------ PANTALLA --------------------------
+    initScreen = setupScreen();
+    if(initScreen){ 
+        SerialPC.println("1) PANTALLA inicializada correctamente");
+        tft.canvasImageStartAddress(PAGE1_START_ADDR); // Establecer la dirección de inicio de la imagen de la pantalla
+        tft.clearScreen(BLUE); // Limpiar pantalla
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+        tft.setTextForegroundColor(WHITE);
+        tft.setCursor(50,50);
+        tft.println("1) PANTALLA INICIALIZADA");
+    }
+    else            SerialPC.println("1) Error al inicializar PANTALLA");
+    delay(1000);
     // -----------------------------------------
 
-    // ------ RTC ------------------------------
-    setupRTC(); 
-    SerialPC.println("2) RTC configurado");
-    delay(500); 
-    // -----------------------------------------
 
     // ------ SD card --------------------------
     initSD = setupSDcard();
-    if(initSD)  SerialPC.println("3) SD inicializada correctamente");
-    else        SerialPC.println("3) Error al inicializar SD");
-    delay(500); 
+    if(initSD){  
+        SerialPC.println("2) SD inicializada correctamente");
+        if(initScreen){ tft.setCursor(50,100); tft.println("2) SD INICIALIZADA"); }
+    }
+    else{        
+        SerialPC.println("2) Error al inicializar SD");
+        if(initScreen){ tft.setCursor(50,100); tft.println("2) ERROR AL INICIALIZAR TARJETA SD"); }
+    }
+    delay(1000); 
     // -----------------------------------------
 
-    // ------ PANTALLA --------------------------
-    initScreen = setupScreen();
-    if(initScreen)  SerialPC.println("4) PANTALLA inicializada correctamente");
-    else            SerialPC.println("4) Error al inicializar PANTALLA");
-    delay(500);
+
+    // ------ RTC ------------------------------
+    setupRTC(); 
+    SerialPC.println("3) RTC configurado");
+    if(initScreen){ tft.setCursor(50,150); tft.println("3) RTC INICIALIZADO"); }
+    delay(1000); 
     // -----------------------------------------
+
+
+    // ------ COMUNICACION SERIAL ESP32 --------
+    setupSerialESP32();
+    SerialPC.println("4) Comunicacion Serial con ESP32 configurada");
+    if(initScreen){ tft.setCursor(50,200); tft.println("4) SERIAL CON ESP32 CONFIGURADA"); }
+    delay(1000);
+    // -----------------------------------------
+
 
     // ------ SCALE ----------------------------
     // ---- PINES ------------
@@ -65,8 +84,11 @@ void setup()
     ISR_Timer.setInterval(TIMER_INTERVAL_5MS,  ISR_pesarBascula); //timer llama a 'ISR_pesarBascula' cada 100 ms
     SerialPC.println("5.B) Interrupcion de la BASCULA configurada");
 
-    delay(500); 
+    if(initScreen){ tft.setCursor(50,250); tft.println("5) PINES E INTERRUPCION DE LA BASCULA CONFIGURADOS"); }
+
+    delay(1000); 
     // -----------------------------------------
+
 
     // ------ BOTONES --------------------------
     // ---- PINES ------------
@@ -84,6 +106,7 @@ void setup()
     pinMode(intPinGuardar, INPUT);
     pinMode(intPinBarcode, INPUT_PULLUP); // Entrada con resistencia pull-up interna
     SerialPC.println("6.A) Pines de los BOTONES configurados");
+    delay(200);
 
     // ---- INTERRUPCIONES -------
     attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);     
@@ -95,49 +118,88 @@ void setup()
     attachInterrupt(digitalPinToInterrupt(intPinBarcode), ISR_barcode, FALLING); // Interrupción en flanco de bajada
     SerialPC.println("6.B) Interrupciones de los BOTONES configuradas");
 
-    delay(500);
+    if(initScreen){ tft.setCursor(50,300); tft.println("6) PINES E INTERRUPCIONES DE LAS BOTONERAS CONFIGURADOS"); }
+
+    delay(2000);
     // -----------------------------------------
+    // ***************************************************************************
     // ***************************************************************************
 
 
 
+    // ***************************************************************************
     // ****** COMPROBACIONES AUTOMÁTICAS *****************************************
     SerialPC.println("\n\n\n***** COMPROBANDO COMPONENTES *****\n\n");
-
-    // ------ COMUNICACION ESP32 ---------------
-    SerialPC.println("1) Comprobando comunicacion con ESP32...");
-    pingESP32();
-    delay(1000);
-    // -----------------------------------------
-
-    // ------ RTC ------------------------------
-    SerialPC.println("\n2) Comprobando RTC...");
-    checkRTC(); // Obtiene la fecha y hora del RTC
-    delay(1000);
-    // -----------------------------------------
-
-    // ------ SD card --------------------------
-    if(initSD){ 
-        SerialPC.println("\n3) Comprobando escritura SD...");
-        checkSD(); // Escribe y lee un fichero en la SD
+    if(initScreen){
+        tft.clearScreen(BLUE); 
+        tft.setTextForegroundColor(WHITE);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(200,50); tft.println("COMPROBANDO COMPONENTES");
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+        delay(2000);
     }
-    else SerialPC.println("\n3) No se puede comprobar SD porque fallo su inicializacion\n");
-    delay(1000);
-    // -----------------------------------------
 
     // ------ PANTALLA --------------------------
     if(initScreen){
-        SerialPC.println("\n4) Comprobando lectura de SD y pantalla...");
+        SerialPC.println("\n1) Comprobando lectura de SD y pantalla...");
         checkScreen(); // Dibuja pantalla con imagen de 'COCINADO'
+
+        tft.clearScreen(BLUE); 
+        tft.setTextForegroundColor(WHITE);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(200,50); tft.println("COMPROBANDO COMPONENTES");
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+        if(initSD){ tft.setCursor(50,130); tft.println("1) PANTALLA OK. OBTENCION IMAGENES SD OK."); }
+        else{ tft.setCursor(50,130); tft.println("1) PANTALLA OK. ERROR AL INICIALIZAR SD"); }
     }
-    else SerialPC.println("\n4) No se puede comprobar pantalla porque fallo su inicializacion\n");
-    delay(1000);
+    else SerialPC.println("\n1) No se puede comprobar pantalla porque fallo su inicializacion\n");
+    delay(2000);
     // -----------------------------------------
+
+
+    // ------ SD card --------------------------
+    if(initSD){ 
+        SerialPC.println("\n2) Comprobando escritura SD...");
+        if(initScreen){tft.setCursor(50,180); tft.println("2) COMPROBANDO ESCRITURA Y LECTURA EN SD..."); }
+        checkSD(); // Escribe y lee un fichero en la SD
+    }
+    else{ 
+        SerialPC.println("\n2) No se puede comprobar SD porque fallo su inicializacion\n");
+        if(initScreen){ tft.setCursor(50,180); tft.println("2) NO SE PUEDE COMPROBAR SD. FALLO SU INIT."); }
+    }
+    delay(2000);
+    // -----------------------------------------
+
+    // ------ RTC ------------------------------
+    SerialPC.println("\n3) Comprobando RTC...");
+    if(initScreen){tft.setCursor(50,300); tft.println("3) COMPROBANDO RTC..."); }
+    checkRTC(); // Obtiene la fecha y hora del RTC
+    delay(2000);
+    // -----------------------------------------
+
+    // ------ COMUNICACION ESP32 ---------------
+    SerialPC.println("4) Comprobando comunicacion con ESP32...");
+    if(initScreen){tft.setCursor(50,430); tft.println("4) COMPROBANDO COMUNICACION CON ESP32..."); }
+    pingESP32();
+    delay(2000);
+    // -----------------------------------------
+
+    
+
+    
+
+    
     // ***************************************************************************
 
 
 
     SerialPC.println("\n\n***** COMPROBACIONES MANUALES *****\n\n");
+    if(initScreen){
+        tft.clearScreen(BLUE); 
+        tft.setTextForegroundColor(WHITE);        
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(200,50); tft.println("COMPROBACIONES MANUALES"); 
+    }
 
 
 }

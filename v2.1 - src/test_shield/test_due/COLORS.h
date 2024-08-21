@@ -26,6 +26,8 @@
 #ifndef COLORS_H
 #define COLORS_H
 
+extern bool initSD;
+extern bool initScreen;
 
 // ---------------- COLORES GENERALES ---------
 #define   BLACK     0x0000  // Limpiar páginas antes de escribir o copiar imágenes

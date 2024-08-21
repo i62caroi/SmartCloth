@@ -29,6 +29,7 @@
 #define SD_FUNCTIONS_H
 
 #include <SD.h>
+#include "Screen.h"
 #define SerialPC Serial
 
 
@@ -41,15 +42,15 @@
 char   testTXT[30] = "test.txt";
 // --------------------
 
-/******************************************************************************/
-inline bool    setupSDcard() { return SD.begin(SD_CARD_SCS); };      
-             
-void           checkSD();
-bool           writeTXT();    
-bool           readTXT();
-void           deleteTXT();
-/******************************************************************************/
 
+
+/******************************************************************************/
+inline bool     setupSDcard(){ return SD.begin(SD_CARD_SCS); };      
+void            checkSD();
+bool            writeTXT();    
+bool            readTXT();
+void            deleteTXT();
+/******************************************************************************/
 
 
 void checkSD()
@@ -58,13 +59,17 @@ void checkSD()
     {
         SerialPC.println("  Fichero TXT creado correctamente");
         SerialPC.println("  Leyendo fichero TXT...\n");
-        if(!readTXT()) SerialPC.println("       Error al leer fichero TXT");
+        if(!readTXT()) SerialPC.println("       Error al leer fichero TXT"); 
         else{ 
             SerialPC.println("    Borrando fichero TXT..."); 
+            if(initScreen){ tft.setCursor(50,230); tft.println("    -> FICHERO TXT ESCRITO, LEIDO Y BORRADO"); }
             deleteTXT(); 
         }
     }
-    else SerialPC.println("   Error al escribir fichero TXT");
+    else{ 
+        SerialPC.println("   Error al escribir fichero TXT");
+        if(initScreen){ tft.setCursor(50,230); tft.println("    -> ERROR AL ESCRIBIR FICHERO TXT"); }
+    }
 }
 
 

@@ -39,6 +39,7 @@
 
 
 #include "Serial_functions.h" // incluye debug.h
+#include <WiFi.h>
 
 
 
@@ -46,6 +47,16 @@ void setup()
 {
     // --- COMUNICACIÓN SERIAL ---
     setupAllSerial();
+    // ---------------------------
+
+
+    // --- OBTENER MAC -----------
+    // Inicializar WiFi
+    WiFi.mode(WIFI_MODE_STA);
+
+    // Imprimir la dirección MAC
+    SerialPC.print("\nDirección MAC: ");
+    SerialPC.println(WiFi.macAddress());
     // ---------------------------
 
   

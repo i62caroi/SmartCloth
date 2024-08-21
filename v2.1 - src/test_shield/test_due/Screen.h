@@ -46,6 +46,7 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 
 #include "ISR.h" 
 #include "RA8876_v2.h" // COLORS.h
+#include "SD.h"
 
 #define SerialPC Serial
 
@@ -65,8 +66,6 @@ RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 char  fileCocinadoGrande[30]  = "bin/botones/coci_gra.bin";
 // --------------------
 
-
-
 /******************************************************************************/
 bool    setupScreen();                    // Inicializar pantalla
 void    checkScreen();                    // Comprobar pantalla
@@ -80,30 +79,32 @@ bool setupScreen()
     pinMode(RA8876_BACKLIGHT, OUTPUT);  // Set backlight pin to OUTPUT mode
     digitalWrite(RA8876_BACKLIGHT, HIGH);  // Turn on backlight
 
-    bool init = tft.init(); // Inicializar pantalla
-    if(init){ 
-      tft.canvasImageStartAddress(PAGE1_START_ADDR); // Establecer la dirección de inicio de la imagen de la pantalla
-      tft.clearScreen(VERDE_PEDIR); // Limpiar pantalla
-    }
-
-    return init;
+    return tft.init(); // Inicializar pantalla
 }
 
 
 
 void checkScreen()
 {
-    // ----- CARGAR IMAGEN 'COCINADO' DESDE SD -----
-    tft.canvasImageStartAddress(PAGE3_START_ADDR); // Establecer la dirección de inicio de la imagen de la pantalla
-    tft.clearScreen(BLACK);
-    tft.sdCardDraw16bppBIN256bits(173,131,177,160,fileCocinadoGrande); // Cargar cociGra (172x130) en PAGE3 =>  x = 173   y = 131 
-    // ----------------------------------------------
+    if(initSD){
+      // ----- CARGAR IMAGEN 'COCINADO' DESDE SD -----
+      tft.canvasImageStartAddress(PAGE3_START_ADDR); // Establecer la dirección de inicio de la imagen de la pantalla
+      tft.clearScreen(BLACK);
+      tft.sdCardDraw16bppBIN256bits(173,131,177,160,fileCocinadoGrande); // Cargar cociGra (172x130) en PAGE3 =>  x = 173   y = 131 
+      // ----------------------------------------------
 
-    // ----- DIBUJAR PANTALLA CON IMAGEN ------------
-    tft.canvasImageStartAddress(PAGE1_START_ADDR);
-    tft.clearScreen(VERDE_PEDIR); // Limpiar pantalla
-    tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,800,350,PAGE1_START_ADDR,SCREEN_WIDTH,280,350,177,160,0);
-    // ----------------------------------------------
+      // ----- DIBUJAR PANTALLA CON IMAGEN ------------
+      tft.canvasImageStartAddress(PAGE1_START_ADDR);
+      tft.clearScreen(VERDE_PEDIR); // Limpiar pantalla
+      tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,800,350,PAGE1_START_ADDR,SCREEN_WIDTH,300,200,177,160,0);
+      // ----------------------------------------------
+
+      delay(1500);
+      tft.setCursor(50,100); tft.println("1) PANTALLA OK. OBTENCION IMAGENES SD OK.");
+    }
+    else{
+      tft.setCursor(50,100); tft.println("1) PANTALLA OK. ERROR AL INICIALIZAR SD");
+    }
 }
 
 

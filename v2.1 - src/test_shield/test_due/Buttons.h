@@ -65,6 +65,7 @@ byte  buttonGrande = 0;                  //Botón pulsado en la botonera grande 
 
 // Debajo de la declaración de buttonGrande para que esté en el ámbito de State_Machine.h 
 #include "ISR.h" 
+#include "Screen.h"
 
 #define SerialPC Serial
 
@@ -145,6 +146,7 @@ void readButtonsGrande(){
             if (digitalRead(rowsPins[r]) == HIGH){ // Activo en HIGH 
                   iRow = r;
                   iCol = c;
+                  SerialPC.print("Fila: "); SerialPC.print(iRow); SerialPC.print(" Columna: "); SerialPC.println(iCol);
             }
         }
         pinMode(columnsPins[c], INPUT); 
@@ -179,6 +181,14 @@ void checkGrandeButton()
         SerialPC.print(F("Boton pulsado: Grupo ")); SerialPC.println(buttonGrande); 
 
         pulsandoGrande = false;
+
+        if(initScreen){ 
+            tft.clearArea(280,240, 800, 400, BLUE);
+            tft.setTextForegroundColor(WHITE);   
+            tft.setCursor(300,250); 
+            String cad = "GRUPO " + String(buttonGrande);
+            tft.println(cad); 
+        }
     }
         
 }
@@ -203,16 +213,25 @@ void checkMainButton()
 {
     if(mainButtonInterruptOccurred()) // Se está pulsando un botón de la botonera principal
     {
+        String button = "";
         switch (buttonMain) 
         {
-            case 1:   SerialPC.println("Boton pulsado: COCINADO");         break;  
-            case 2:   SerialPC.println("Boton pulsado: CRUDO");            break;  
-            case 3:   SerialPC.println("Boton pulsado: ANADIR PLATO");     break;  
-            case 4:   SerialPC.println("Boton pulsado: BORRAR PLATO");     break;  
-            case 5:   SerialPC.println("Boton pulsado: GUARDAR");          break;  
+            case 1:   button = "COCINADO";          break;  
+            case 2:   button = "CRUDO";             break;  
+            case 3:   button = "ANADIR PLATO";      break;  
+            case 4:   button = "BORRAR PLATO";      break;  
+            case 5:   button = "GUARDAR";           break;  
         }
         
         buttonMain = 0;
+
+        SerialPC.println("Boton pulsado: " + button);
+        if(initScreen){ 
+            tft.clearArea(280,240, 800, 400, BLUE);
+            tft.setTextForegroundColor(WHITE);   
+            tft.setCursor(300,250); 
+            tft.println(button); 
+        }
     }
 
 }
@@ -233,9 +252,15 @@ void checkBarcodeButton()
 {
     if(barcodeButtonInterruptOccurred()) // Se está pulsando el botón de código de barras
     {
-        SerialPC.println("Boton pulsado: BARCODE"); 
-        
         pulsandoBarcode = false; // Reiniciar flag
+
+        SerialPC.println("Boton pulsado: BARCODE"); 
+        if(initScreen){ 
+            tft.clearArea(280,240, 800, 400, BLUE);
+            tft.setTextForegroundColor(WHITE);   
+            tft.setCursor(300,250); 
+            tft.println("BARCODE"); 
+        }
     }
 
 }

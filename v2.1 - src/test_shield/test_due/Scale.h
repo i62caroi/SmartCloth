@@ -21,6 +21,7 @@
 
 #include "ISR.h" 
 #include "HX711.h"
+#include "Screen.h"
 
 HX711 scale;
 #define SerialPC Serial
@@ -92,6 +93,13 @@ void checkBascula(){
             if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
 
             SerialPC.print("Peso: "); SerialPC.print(pesoBascula); SerialPC.println(" g");
+            if(initScreen){ 
+                tft.clearArea(280,240, 800, 400, BLUE);
+                tft.setTextForegroundColor(WHITE);   
+                tft.setCursor(300,250); 
+                String cad = "PESO: " + String(pesoBascula) + " g";
+                tft.println(cad); 
+            }
         }
         else scaleEventOccurred = false; // No ha habido evento
 

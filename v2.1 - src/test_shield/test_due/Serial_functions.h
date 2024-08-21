@@ -25,6 +25,7 @@
 #define SerialPC Serial
 #define SerialESP32 Serial1 // Comunicación Serial con ESP32
 
+#include "Screen.h"
 
 
 /******************************************************************************/
@@ -70,9 +71,18 @@ void pingESP32()
     unsigned long timeout = 3000; // Espera máxima de 3 segundos
     waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
 
-    if (msgFromESP32 == "PONG")             SerialPC.println("  ESP32: Saludos recibidos!");
-    else if (msgFromESP32 == "TIMEOUT")     SerialPC.println("  ESP32: TIMEOUT");
-    else                                    SerialPC.println("  ESP32: UNKNOWN MESSAGE");
+    if (msgFromESP32 == "PONG"){             
+        SerialPC.println("  ESP32: Saludos recibidos!");
+        if(initScreen){ tft.setCursor(50,470); tft.println("    -> ESP32: HOLA!!"); }
+    }
+    else if (msgFromESP32 == "TIMEOUT"){     
+        SerialPC.println("  ESP32: TIMEOUT");
+        if(initScreen){ tft.setCursor(50,470); tft.println("    -> ESP32: TIMEOUT"); }
+    }
+    else{
+        SerialPC.println("  ESP32: UNKNOWN MESSAGE");
+        if(initScreen){ tft.setCursor(50,470); tft.println("    -> ESP32: UNKNOWN MESSAGE"); }
+    }                                    
     // ---------------------------------------------------------
 }
 

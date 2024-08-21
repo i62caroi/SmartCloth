@@ -46,6 +46,8 @@
 
 #define SerialPC Serial
 
+#include "Screen.h"
+
 
 // ------ OBJETO RTC --------------
 DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la librería
@@ -89,6 +91,11 @@ void checkRTC()
     SerialPC.print("  FECHA: "); SerialPC.println(fecha); 
     SerialPC.print("  HORA: "); SerialPC.println(hora);
     // ------------------------------------------
+
+    if(initScreen){
+        tft.setCursor(50,340); tft.print("    -> FECHA: "); tft.println(fecha); 
+        tft.setCursor(50,370); tft.print("    -> HORA: "); tft.println(hora); 
+    }
 }
 
 

@@ -2,8 +2,8 @@
 #ifndef ISR_H
 #define ISR_H
 
-#define DEBOUNCE_TIME 350 // Tiempo de debouncing en ms
-#define DEBOUNCE_TIME_BARCODE 2000 // Tiempo de debouncing en ms para el botón de barcode
+#define DEBOUNCE_TIME 200 // Tiempo de debouncing en ms
+#define DEBOUNCE_TIME_BARCODE 5000 // Tiempo de debouncing en ms para el botón de barcode
 
 // ------------ PINES DE INTERRUPCIÓN ------------
 // ---- MAIN ----
@@ -28,6 +28,7 @@ volatile bool pulsandoGrande  = false;
 
 // Flag de botón pulsado en Barcode
 volatile bool pulsandoBarcode = false;
+volatile bool firstInterruptBarcode = true; // Al encender, por fluctuaciones de voltaje se detecta una pulsación fantasma
 // -----------------------------------------------
 
 
@@ -201,7 +202,8 @@ void ISR_pulsandoButtonsGrande(){
 void ISR_barcode(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME_BARCODE) pulsandoBarcode = true;
+    if (firstInterruptBarcode) { firstInterruptBarcode = false; return; } // Descartar la primera interrupción por fluctuaciones de voltaje
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }
 
