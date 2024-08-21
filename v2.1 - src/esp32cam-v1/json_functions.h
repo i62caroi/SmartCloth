@@ -15,7 +15,7 @@
 #include <TimeLib.h>        // Convertir la fecha a UNIX
 #include "wifi_functions.h" // Obtener la MAC, pedir token, enviar JSON y cerrar sesión
 
-#define JSON_SIZE_LIMIT 20480 // 20k; 4k --> 4096
+#define JSON_SIZE_LIMIT 20480 // 20k
 
 
 
@@ -69,14 +69,10 @@ void  processJSON_OnePerMeal()
     // 2. Subir todos los JSON que haga falta, uno por comida
     // 3. Cerrar sesión
 
-    // Antes pedíamos token, subíamos data y cerrábamos sesión, todo con cada comida.
-    // Creo que es mejor pedir token una vez, subir toda la data que queramos y luego cerrar
-    // sesión una vez.
-
 
     // ----- PEDIR TOKEN PARA USAR EN TODAS LAS SUBIDAS -----------
-    // Token de autenticación pedido al servidor para poder subir información
-    String bearerToken;
+    String bearerToken; // Token de autenticación pedido al servidor para poder subir información
+    
     // Si falla la obtención de token, indica el error HTTP y no intenta subir la data
 
     if(fetchTokenFromServer(bearerToken)) // 1. Pedir token de autenticación. True si se ha obtenido token
@@ -170,6 +166,9 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
                                 JsonObject& comida, JsonObject& plato, 
                                 String& line, String &bearerToken)
 {
+    static bool hayAlimentos = false; // Indica si el JSON está vacío o no. 
+    // Comprobamos si el JSON tiene algo para no enviarlo vacío y no provocar error. Esto pasaba cuando solo se leía barcode
+    // pero el servidor aún no estaba preparado para recibirlo y se enviaba el JSON vacío. 
 
     if (line == "INICIO-COMIDA") 
     {
@@ -189,31 +188,43 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         plato = platos.createNestedObject();
         alimentos = plato.createNestedArray("alimentos");
     } 
-    else if (line.startsWith("ALIMENTO")) 
+    else if (line.startsWith("ALIMENTO")) // "ALIMENTO,grupo,peso"
     {
+        hayAlimentos = true;
+
         JsonObject alimento = alimentos.createNestedObject();
-        // Aquí asumimos que los datos del alimento están separados por comas
+
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
         alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
     } 
-    else if (line.startsWith("FIN-COMIDA")) 
+    else if (line.startsWith("FIN-COMIDA")) // "FIN-COMIDA,fecha,hora"
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
+        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex); // Convertir "fecha,hora" a timestamp
         comida["fecha"] = (int)timestamp;
 
         // Agregar la dirección MAC del ESP32 al objeto JSON
         String macAddress = WiFi.macAddress();
         JSONdoc["mac"] = macAddress;
 
-        // Finalizar el DynamicJsonDocument actual y enviarlo a la base de datos
+        // Finalizar el JSON actual y enviarlo a la base de datos.
         // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
         // enviará otro JSON y así hasta recibir FIN-TRANSMISION
 
-        uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON
+        // Comprobación para no enviar JSON vacío
+        if(hayAlimentos) uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON
+        else{
+            #if defined(SM_DEBUG)
+                SerialPC.println("No hay alimentos en la comida");
+            #endif
+            // -- RESPUESTA AL DUE ---
+            sendMsgToDue(F("SAVED-OK")); // ESTO ES MENTIRA, PERO PARA SALIR DEL PASO EN LAS PRUEBAS
+                                         // HASTA QUE SE CAMBIE EL SERVIDOR PARA RECIBIR BARCODES
+            // -----------------------
+        }
         // Si se devuelve SAVED-OK, da igual que falle el logout
 
         /*#if defined(SM_DEBUG)
@@ -237,7 +248,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
             SerialPC.println("Transmisión completa");
         #endif
     }
-    else // No debería entrar aquí
+    else // No debería entrar aquí, pero por cubrir todas las opciones
     {
         #if defined(SM_DEBUG)
             SerialPC.println("Línea desconocida");

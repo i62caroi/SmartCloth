@@ -39,7 +39,6 @@ void          getFoodData(String barcode);
 -----------------------------------------------------------------------------*/
 // Funciones para manejar la comunicación Serial con el Due y el lector
 void           setupAllSerial();                                // Inicializar comunicación serie con PC, Due y lector de código de barras
-void           ackDue();                                        // Indicar que la comunicación está establecida
 
 // ----- Barcode -----
 void           tryGetBarcode();                                 // Intentar obtener el código de barras
@@ -93,24 +92,6 @@ void setupAllSerial()
     SerialBR.begin(9600); // Debe ser 9600 porque así trabaja el lector
     delay(100);
     // ---------------------------
-}
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Envia una respuesta "PONG" al Due para indicar que la comunicación está establecida.
- * 
- * Esta función envía un mensaje "PONG" al Due para indicar que la comunicación entre el ESP32 y el Due está establecida.
- */
-/*-----------------------------------------------------------------------------*/
-void ackDue() 
-{
-    // Enviar respuesta "PONG" al Due para indicar que la comunicación está establecida
-    sendMsgToDue("PONG");
-
-    #if defined(SM_DEBUG)
-        SerialPC.println(F("Comunicación con Due establecida"));
-    #endif
 }
 
 

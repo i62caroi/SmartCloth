@@ -147,16 +147,15 @@ void connectToWiFi()
     unsigned long startTime = millis();
 
     // Esperar hasta que se establezca la conexión o se agote el tiempo
-    unsigned long timeout_waitConexion = 15000; // 5 segundos
+    unsigned long timeout_waitConexion = 15000; // 15 segundos
 
     #if defined(SM_DEBUG)
         SerialPC.print(F("Conectando a WiFi..."));
     #endif
     WiFi.begin(ssid, password);
 
-    // Mientras no se haya conectado a WiFi y mientras no hayan pasado 5 segundos.
-    // Si se conecta o si pasan los 5 segundos, sale del while.
-    //while ((!hayConexionWiFi()) && (millis() - startTime < timeout_waitConexion)) 
+    // Mientras no se haya conectado a WiFi y mientras no hayan pasado 15 segundos.
+    // Si se conecta o si pasan los 15 segundos, sale del while.
     while(!hayConexionWiFi() && !isTimeoutExceeded(startTime, timeout_waitConexion))
     {
         delay(500);
@@ -176,7 +175,7 @@ void connectToWiFi()
     } 
     else 
     {
-        // Si tras 10 segundos no se ha establecido la conexión:
+        // Si tras 15 segundos no se ha establecido la conexión:
         #if defined(SM_DEBUG)
             SerialPC.println(F("\nNo se pudo establecer la conexion WiFi."));
         #endif
@@ -576,6 +575,8 @@ void getFoodData(String barcode)
         // y los campos que se quieren obtener
         HTTPClient http;  
         String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields; // Conformar URL de la API
+        // Por ejemplo, para tostas de trigo:
+        // "https://world.openfoodfacts.org/api/v2/product/5601560111905?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"
         http.begin(serverPath.c_str()); // Inicializar URL de la API
         http.setTimeout(5000); // Establecer 5 segundos de espera para la respuesta del servidor OpenFoodFacts
 
