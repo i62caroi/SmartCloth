@@ -230,6 +230,7 @@ void setupSerialPC()
     // Inicializar comunicación con PC (Serial)
     SerialPC.begin(115200);
     delay(100);
+    SerialPC.println(F("\nIniciando comunicacion Serial con PC..."));
 }
 #endif // SM_DEBUG
 
@@ -370,9 +371,10 @@ inline bool isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout)
 
 /*---------------------------------------------------------------------------------------------------------*/
 /**
- * @brief Espera la respuesta del ESP32 y la devuelve
+ * Espera la respuesta del ESP32 durante un tiempo determinado.
  * 
- * @return La respuesta del ESP32.
+ * @param msgFromESP32 Referencia a un objeto String donde se almacenará el mensaje recibido del ESP32.
+ * @param timeout Tiempo máximo de espera en milisegundos.
  */
 /*---------------------------------------------------------------------------------------------------------*/
 void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)

@@ -121,7 +121,7 @@ byte    saveComida();               // Guardar valores de la comida en fichero C
 // --------------------------
 
 // -- CSV: crear con header, leer, sumar comidas del día y guardar comida --
-void    writeHeaderFileCSV();       // Crear fichero CSV y escribir header 
+bool    writeHeaderFileCSV();       // Crear fichero CSV y escribir header 
 void    getAcumuladoHoyFromSD();    // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
 bool    saveComidaInCSV();          // Guardar comida en el fichero CSV
 bool    deleteFileCSV();            // Borrar contenido del fichero CSV
@@ -173,6 +173,10 @@ void    updateFileTXT(std::vector<String> &unsavedMeals);   // Actualizar ficher
 /*-----------------------------------------------------------------------------*/
 bool setupSDcard()
 {
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nInit SD..."));
+    #endif
+
     if(!SD.begin(SD_CARD_SCS))
     {
         #if defined(SM_DEBUG)
@@ -189,11 +193,14 @@ bool setupSDcard()
 
     if(!SD.exists(fileCSV)) //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
     {
-        writeHeaderFileCSV();
+        if(writeHeaderFileCSV()){
+            getAcumuladoHoyFromSD();   // Leer fichero csv de la SD y sumar los valores nutricionales y el peso de las 
+                               // comidas guardadas en el día de hoy
+        }
+        else return false;
     }
 
-    getAcumuladoHoyFromSD();   // Leer fichero csv de la SD y sumar los valores nutricionales y el peso de las 
-                               // comidas guardadas en el día de hoy
+    
     
     return true;
 }
@@ -266,7 +273,7 @@ byte saveComida()
  * El encabezado contiene los nombres de las columnas separados por ';'.
  */
 /*-----------------------------------------------------------------------------*/
-void writeHeaderFileCSV() 
+bool writeHeaderFileCSV() 
 {
     #if defined(SM_DEBUG)
         SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileCSV); SerialPC.println(F(" ...\n"));
@@ -282,12 +289,14 @@ void writeHeaderFileCSV()
     {
         myFile.println(header);
         myFile.close(); // close the file
+        return true;
     }
     else
     {
         #if defined(SM_DEBUG)
             SerialPC.println(F("Error abriendo archivo CSV!"));
         #endif
+        return false;
     }
 }
 

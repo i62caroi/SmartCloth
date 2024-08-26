@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 155   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
+#define RULES 157   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
             // 135 sin barcode y separando estados State_GroupA y State_GroupB
 
 
@@ -293,6 +293,7 @@ static transition_rule rules[RULES] =
                                         {STATE_raw,STATE_raw,DECREMENTO},               // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_raw,STATE_Grupo,TIPO_A},                 // Cambiar grupo alimentos
                                         {STATE_raw,STATE_Grupo,TIPO_B},                 // Cambiar grupo alimentos
+                                        {STATE_raw,STATE_Barcode,BARCODE},              // Pulsado botón de barcode
                                         {STATE_raw,STATE_raw,CRUDO},                    // Para que no dé error si se vuelve a pulsar 'crudo'.
                                         {STATE_raw,STATE_cooked,COCINADO},              // Cambiar procesamiento (crudo => cocinado).
                                         {STATE_raw,STATE_weighted,INCREMENTO},          // Se ha colocado alimento.
@@ -307,6 +308,7 @@ static transition_rule rules[RULES] =
                                         {STATE_cooked,STATE_cooked,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
                                         {STATE_cooked,STATE_Grupo,TIPO_A},              // Cambiar grupo alimentos
                                         {STATE_cooked,STATE_Grupo,TIPO_B},              // Cambiar grupo alimentos
+                                        {STATE_cooked,STATE_Barcode,BARCODE},              // Pulsado botón de barcode
                                         {STATE_cooked,STATE_cooked,COCINADO},           // Para que no dé error si se vuelve a pulsar 'cocinado'.
                                         {STATE_cooked,STATE_raw,CRUDO},                 // Cambiar procesamiento (cocinado => crudo).
                                         {STATE_cooked,STATE_weighted,INCREMENTO},       // Se ha colocado alimento.      
@@ -1391,7 +1393,7 @@ void actStateBarcode()
                 addEventToBuffer(GO_TO_PLATO);
                 flagEvent = true;
             }
-            else if(lastValidState == STATE_Grupo)
+            else if(lastValidState == STATE_Grupo || lastValidState == STATE_raw || lastValidState == STATE_cooked)
             {
                 #ifdef SM_DEBUG
                     SerialPC.println(F("Volver a STATE_Grupo porque no hay Wifi para leer barcode o el ESP32 no responde..."));
@@ -2074,7 +2076,14 @@ void actStateSaved()
             #endif
 
             // -----  INFORMACIÓN MOSTRADA  -------------------------
-            showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web. Habría que usar otra función para mostrar "Guardando comida..."
+            //showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web. Habría que usar otra función para mostrar "Guardando comida..."
+            showSavingMealBase();                // Mostrar "Guardando comida..." en pantalla
+            // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
+            // Esto se hace en saveComida() en la parte de subir la info. NO SE DEBERÍA PREGUNTAR AQUÍ Y LUEGO OTRA VEZ, ES REDUNDANTE,
+            // PERO SE DEJA PARA QUE SE MUESTRE EN PANTALLA QUE NO HAY CONEXIÓN A INTERNET. HABRÍA QUE MODIFICAR saveComida() PARA QUE
+            // SE LE PASE DE PRIMERAS SI HAY O NO INTERNET Y NO HACER LA COMPROBACIÓN AQUÍ.
+            if(checkWifiConnection()) completeSavingMeal(SAVING_LOCAL_AND_DATABASE);
+            else completeSavingMeal(SAVING_ONLY_LOCAL);
             // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
 
@@ -2156,7 +2165,7 @@ void actStateSaved()
 
                 if(typeOfSavingDone == SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI)
                 {
-                    delay(1000); // Si no se ha intentado subir a database porque no hay wifi, se espera un poco para que dé tiempo a mostrar el mensaje de "Sincronizando..."
+                    delay(1000); // Si no se ha intentado subir a database porque no hay wifi, se espera un poco para que dé tiempo a mostrar el mensaje de "Guardando comida..."
                 }
                                                             
                 #if defined(SM_DEBUG)

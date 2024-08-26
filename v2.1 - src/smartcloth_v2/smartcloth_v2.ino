@@ -64,12 +64,18 @@ void setup()
 
 
     // ------ RTC ------------------------------
+    #if defined(SM_DEBUG)
+      SerialPC.println(F("\nInicializando RTC..."));
+    #endif
     setupRTC(); 
     delay(100); 
     // -----------------------------------------
 
 
     // ------ SD card --------------------------
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nInicializando tarjeta SD..."));
+    #endif
     // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
     if (!setupSDcard()) falloCriticoSD = true; // Si la SD falla o no se encuentra, no se permitirá usar SM
     delay(100); 
@@ -77,12 +83,18 @@ void setup()
 
 
     // ------ SCALE ----------------------------
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nInicializando scale..."));
+    #endif
     setupScale();   
     delay(100); 
     // -----------------------------------------
     
     
     // ------ SCREEN ---------------------------
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nInicializando pantalla..."));
+    #endif
     setupScreen();  
     delay(100); 
     // -----------------------------------------
@@ -135,15 +147,15 @@ void setup()
     // --------- INTERRUPTIONS -----------------
     //  -----   MAIN    -----
     // RISING porque tienen resistencias pull-down que permiten activar al alza
-    attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);     
     attachInterrupt(digitalPinToInterrupt(intPinCocinado), ISR_cocinado, RISING);
+    attachInterrupt(digitalPinToInterrupt(intPinCrudo), ISR_crudo, RISING);     
     attachInterrupt(digitalPinToInterrupt(intPinAddPlato), ISR_addPlato, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinDeletePlato), ISR_deletePlato, RISING);
     attachInterrupt(digitalPinToInterrupt(intPinGuardar), ISR_guardar, RISING);
     
     //  -----   Grande    -----
     // RISING porque las filas tienen resistencias pull-down que permiten activar al alza
-    attachInterrupt(digitalPinToInterrupt(interruptPinGrande), ISR_pulsandoButtonsGrande, RISING);
+    attachInterrupt(digitalPinToInterrupt(intPinGrande), ISR_pulsandoButtonsGrande, RISING);
 
     //  -----   Barcode   -----
     // FALLING porque su resistencia (la interna del Due) está modo pull-up, así que el botón se activa a la baja

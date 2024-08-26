@@ -59,7 +59,7 @@ float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  a
 float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
-#define UMBRAL_MIN_CAMBIO_PESO 5.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
+#define UMBRAL_MIN_CAMBIO_PESO 2.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
 #define UMBRAL_RECIPIENTE_RETIRADO 20.0 // Umbral para considerar que se ha retirado todo (recipiente + alimentos) de la báscula
 
 
@@ -104,9 +104,13 @@ void    checkBascula();     // Comprobar si ha habido algún evento en la báscu
 /*-----------------------------------------------------------------------------*/
 void setupScale()
 {
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nInit Scale..."));
+    #endif
+
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN); // Inicializa la celda de carga con los pines especificados
 
-    scale.set_scale(1058.22); // Establecer escala inicial. Este valor se ajustará para calibrar la báscula.
+    scale.set_scale(1005.27); // Establecer escala inicial. Este valor se ajustará para calibrar la báscula.
     //scale.tare();  // Tarar tomando la media de 10 medidas
     scale.tare(5);
 

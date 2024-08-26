@@ -43,7 +43,7 @@
 #define RTC_H
 
 #include <DS3231.h>
-#include <DueFlashStorage.h> // Para guardar una flag si se está en horario de verano o invierno
+//#include <DueFlashStorage.h> // Para guardar una flag si se está en horario de verano o invierno
 #include "debug.h" // SM_DEBUG --> SerialPC
 
 
@@ -53,10 +53,10 @@ DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la libre
 
 
 // ----- FLAG VERANO/INVIERNO -----
-DueFlashStorage dueFlashStorage; // Crear objeto para guardar en la flash
+/*DueFlashStorage dueFlashStorage; // Crear objeto para guardar en la flash
 #define SUMMER_TIME_FLAG_ADDRESS 0 // Dirección en la flash para la bandera del horario de verano
 #define IS_SUMMER 1
-#define IS_WINTER 0
+#define IS_WINTER 0*/
 // --------------------------------
 
 
@@ -77,6 +77,7 @@ void      adjustWinterTime();  // Ajustar horario de invierno
 
 uint8_t   getLastSunday(uint8_t month, uint16_t year);       // Último domingo del mes
 uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día específico
+
 /******************************************************************************/
 /******************************************************************************/
 
@@ -100,12 +101,16 @@ uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día espe
 /*-----------------------------------------------------------------------------*/
 void setupRTC()
 {
+    #if defined(SM_DEBUG)
+      SerialPC.println(F("\nInit RTC..."));
+    #endif //SM_DEBUG
+
     // Initialize the rtc object
     rtc.begin();
 
     // ----- AJUSTAR HORA, SI ES NECESARIO ---------
     // Comprobar si es momento de cambiar la hora
-    uint8_t isRTCinSummerTime = dueFlashStorage.read(SUMMER_TIME_FLAG_ADDRESS); // Leer la bandera de la flash
+    /*uint8_t isRTCinSummerTime = dueFlashStorage.read(SUMMER_TIME_FLAG_ADDRESS); // Leer la bandera de la flash
     if (isSummerTime() && isRTCinSummerTime == IS_SUMMER) // Estamos en fechas de horario de verano, pero el RTC sigue en horario de invierno
     {
         #if defined(SM_DEBUG)
@@ -121,7 +126,7 @@ void setupRTC()
         #endif //SM_DEBUG
         adjustWinterTime();
         dueFlashStorage.write(SUMMER_TIME_FLAG_ADDRESS, IS_WINTER); // Modificar la bandera en la flash
-    }
+    }*/
     // --------------------------------------
 
     #if defined(SM_DEBUG)

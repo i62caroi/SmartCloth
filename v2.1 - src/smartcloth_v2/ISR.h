@@ -23,8 +23,7 @@
 
 #include "debug.h" // SM_DEBUG --> SerialPC
 
-#define DEBOUNCE_TIME 500 // Tiempo de debouncing en ms
-#define DEBOUNCE_TIME_BARCODE 2000 // Tiempo de debouncing en ms para el botón de barcode
+#define DEBOUNCE_TIME 200 // Tiempo de debouncing en ms
 
 // ------------ PINES DE INTERRUPCIÓN ------------
 #ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
@@ -36,7 +35,7 @@
     const byte intPinGuardar      = 25;   
 
     // ---- GRANDE ----
-    const byte interruptPinGrande = 37;     // Pin de interrupcion RISING para Grande (botonera A)
+    const byte intPinGrande = 37;     // Pin de interrupcion RISING para Grande (botonera A)
 
     // ---- BARCODE ----
     const byte intPinBarcode = 53;          // Pin de interrupción para el botón de barcode
@@ -51,8 +50,7 @@
     const byte intPinGuardar      = 29;  
     const byte intPinDeletePlato  = 30;
     // ---- GRANDE ----
-    //const byte interruptPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
-    const byte interruptPinGrande = 35;      
+    const byte intPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
     // ---- BARCODE ----
     const byte intPinBarcode = 53;
 #endif
@@ -61,13 +59,14 @@
 
 // ------------ FLAGS DE INTERRUPCIÓN ------------
 // Flag de botón pulsado en Main (botonera B)
-volatile byte buttonMain = 0; // No es flag, sino variable que almacena el botón pulsado
+volatile byte buttonMain = 0; // Variable que almacena el botón pulsado
 
 // Flag de botón pulsado en Grande (botonera A)
 volatile bool pulsandoGrande  = false;    
 
 // Flag de botón pulsado en Barcode
 volatile bool pulsandoBarcode = false;
+volatile bool firstInterruptBarcode = true; // Al encender, por fluctuaciones de voltaje se detecta una pulsación fantasma
 // -----------------------------------------------
 
 
@@ -101,8 +100,8 @@ volatile bool   pesado = false;       // Flag de haber pesado por ISR
 /******************************************************************************/
 
 // Botonera Main (acciones)
-void ISR_crudo();                         // ISR de botón de 'crudo'
 void ISR_cocinado();                      // ISR de botón de 'cocinado'
+void ISR_crudo();                         // ISR de botón de 'crudo'
 void ISR_addPlato();                      // ISR de botón de 'añadir plato'
 void ISR_deletePlato();                   // ISR de botón de 'eliminar plato'
 void ISR_guardar();                       // ISR de botón de 'guardar comida'
@@ -141,10 +140,10 @@ bool hasScaleEventOccurred();             // Devuelve true si se ha activado alg
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief ISR de botón de 'crudo'
+ * @brief ISR de botón de 'cocinado'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_crudo(){ 
+void ISR_cocinado(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 1;
@@ -152,13 +151,12 @@ void ISR_crudo(){
 }
 
 
-
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief ISR de botón de 'cocinado'
+ * @brief ISR de botón de 'crudo'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_cocinado(){ 
+void ISR_crudo(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 2;
@@ -241,7 +239,8 @@ void ISR_pulsandoButtonsGrande(){
 void ISR_barcode(){ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
-    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME_BARCODE) pulsandoBarcode = true;
+    if (firstInterruptBarcode) { firstInterruptBarcode = false; return; } // Descartar la primera interrupción por fluctuaciones de voltaje
+    if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }
 

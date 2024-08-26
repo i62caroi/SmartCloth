@@ -96,13 +96,9 @@ const byte countColumns = 5;
     const byte rowsPins[countRows] = {26,28,30,32}; // F1, F2, F3, F4
     const byte columnsPins[countColumns] = {44,46,48,50,52}; // C1, C2, C3, C4, C5
 #endif
-/*#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
+#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
     const byte rowsPins[countRows] = {44,45,46,47}; // F1, F2, F3, F4
     const byte columnsPins[countColumns] = {39,40,41,42,43}; // C1, C2, C3, C4, C5
-#endif*/
-#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
-    const byte rowsPins[countRows] = {41,42,43,44}; // F1, F2, F3, F4
-    const byte columnsPins[countColumns] = {36,37,38,39,40}; // C1, C2, C3, C4, C5
 #endif
 
 /* Buttons info => IDs de grupo (crudo) */
@@ -218,18 +214,21 @@ void checkAllButtons()
 
     return position;
 }*/
- void readButtonsGrande(){
+ void readButtonsGrande()
+ {
     for (byte c = 0; c < countColumns; c++){  
         pinMode(columnsPins[c], INPUT); //Para proteger eléctricamente los puertos de los botones y que no llegue 0 y 1 a la vez
     }
     
-    for (byte c = 0; c < countColumns; c++){
+    for (byte c = 0; c < countColumns; c++)
+    {
         pinMode(columnsPins[c], OUTPUT); 
-        digitalWrite(columnsPins[c], HIGH);
+        digitalWrite(columnsPins[c], HIGH); 
+
         for (byte r = 0; r < countRows; r++){
             if (digitalRead(rowsPins[r]) == HIGH){ // Activo en HIGH 
-                  iRow = r;
-                  iCol = c;
+                iRow = r;
+                iCol = c;
             }
         }
         pinMode(columnsPins[c], INPUT); 
@@ -337,8 +336,8 @@ void checkMainButton()
     {
         switch (buttonMain) 
         {
-            case 1:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // Crudo -> opción predeterminada
-            case 2:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  
+            case 1:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  
+            case 2:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // Crudo -> opción predeterminada
             case 3:   eventoMain = ADD_PLATO;       break;  
             case 4:   eventoMain = DELETE_PLATO;    break;  
             case 5:   eventoMain = GUARDAR;         break;  
@@ -371,7 +370,10 @@ void checkBarcodeButton()
         addEventToBuffer(BARCODE);
         flagEvent = true;
 
-        setGrupoAlimentos(50); // Grupo de barcode siempre
+        // Se actualiza 'grupoEscogido' si se ha leído barcode y encontrado el producto. 
+        // Si se hiciera setGrupoAlimentos(BARCODE_PRODUCT_INDEX) aquí y luego no se encontrara el producto,
+        // se mostraría en pantalla "Grupo Actual: " con el nombre vacío porque no se ha obtenido nada. Por eso
+        // solo se actualiza si se encuentra producto.
         
         pulsandoBarcode = false; // Reiniciar flag
     }
