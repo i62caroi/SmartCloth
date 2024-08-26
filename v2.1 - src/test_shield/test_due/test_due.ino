@@ -161,7 +161,8 @@ void setup()
     if(initSD){ 
         SerialPC.println("\n2) Comprobando escritura SD...");
         if(initScreen){tft.setCursor(50,180); tft.println("2) COMPROBANDO ESCRITURA Y LECTURA EN SD..."); }
-        checkSD(); // Escribe y lee un fichero en la SD
+        //checkSD(); // Escribe y lee un fichero en la SD
+        checkSD_CSV(); // Escribe y lee un fichero CSV en la SD
     }
     else{ 
         SerialPC.println("\n2) No se puede comprobar SD porque fallo su inicializacion\n");

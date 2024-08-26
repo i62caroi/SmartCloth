@@ -3,7 +3,6 @@
 #define ISR_H
 
 #define DEBOUNCE_TIME 200 // Tiempo de debouncing en ms
-#define DEBOUNCE_TIME_BARCODE 5000 // Tiempo de debouncing en ms para el botón de barcode
 
 // ------------ PINES DE INTERRUPCIÓN ------------
 // ---- MAIN ----

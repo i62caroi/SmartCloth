@@ -39,7 +39,8 @@
 
 
 // ---- FICHEROS ------
-char   testTXT[30] = "test.txt";
+char   testTXT[30] = "data/test.txt";
+char    fileCSV[30] = "data/data-sc.csv";
 // --------------------
 
 
@@ -47,9 +48,15 @@ char   testTXT[30] = "test.txt";
 /******************************************************************************/
 inline bool     setupSDcard(){ return SD.begin(SD_CARD_SCS); };      
 void            checkSD();
+void            checkSD_CSV();
+
 bool            writeTXT();    
 bool            readTXT();
 void            deleteTXT();
+
+bool            writeCSV();    
+bool            readCSV();
+void            deleteCSV();
 /******************************************************************************/
 
 
@@ -70,6 +77,59 @@ void checkSD()
         SerialPC.println("   Error al escribir fichero TXT");
         if(initScreen){ tft.setCursor(50,230); tft.println("    -> ERROR AL ESCRIBIR FICHERO TXT"); }
     }
+}
+
+void checkSD_CSV()
+{
+    if(writeCSV())
+    {
+        SerialPC.println("  Fichero CSV creado correctamente");
+        SerialPC.println("  Leyendo fichero CSV...\n");
+        if(!readCSV()) SerialPC.println("       Error al leer fichero CSV");
+        else{ 
+            SerialPC.println("    Borrando fichero CSV..."); 
+            if(initScreen){ tft.setCursor(50,230); tft.println("    -> FICHERO CSV ESCRITO, LEIDO Y BORRADO"); }
+            deleteCSV(); 
+        }
+    }
+    else{ 
+        SerialPC.println("   Error al escribir fichero CSV");
+        if(initScreen){ tft.setCursor(50,230); tft.println("    -> ERROR AL ESCRIBIR FICHERO CSV"); }
+    }
+}
+
+
+
+bool writeCSV()
+{
+    String header = "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso";
+
+    File myFile = SD.open(fileCSV, FILE_WRITE);
+
+    if (myFile) 
+    {
+        myFile.println(header);
+        myFile.close();
+
+        return true;
+    } 
+    else return false;
+}
+
+bool readCSV()
+{
+    File myFile = SD.open(fileCSV, FILE_READ);
+    if (myFile)
+    {
+        while (myFile.available()) 
+        {
+            SerialPC.write(myFile.read());
+        }
+        myFile.close();
+
+        return true;
+    }
+    else return false;
 }
 
 
@@ -108,6 +168,11 @@ bool readTXT()
 void deleteTXT()
 {
     if (SD.exists(testTXT)) SD.remove(testTXT);
+}
+
+void deleteCSV()
+{
+    if (SD.exists(fileCSV)) SD.remove(fileCSV);
 }
 
 
