@@ -12,30 +12,30 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios di
 - **Interfaz de Usuario Intuitiva:** La interfaz de usuario proporciona una experiencia fácil de usar para los usuarios, con opciones claras y accesibles.
 
 ### Comunicaciones
-<img src="Docs/Diseno-SmartCloth/Hardware/Diagrama_de_conexiones_v1.png" width="600">
+<img src="Docs/Diseño-SmartCloth/Hardware/Diagrama_de_comunicaciones_v1.png" width="600">
 
 ### Interfaz de Usuario
 #### Dashboard
-<img src="Docs/Diseno-SmartCloth/Interfaz/Dashboards/Dashboard2.png" width="400">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Dashboards/Dashboard2.png" width="400">
 
 #### Botonera de Grupos de Alimentos
-<img src="Docs/Diseno-SmartCloth/Interfaz/Iconografía/Botonera_5X4_con_bordes.png" width="300">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X4_con_bordes.png" width="300">
 
 #### Botonera de Acciones
-<img src="Docs/Diseno-SmartCloth/Interfaz/Iconografía/Botonera_5X1_con_bordes.png" width="300">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Iconografía/Botonera_5X1_con_bordes.png" width="300">
 
 ### Aspecto externo
-<img src="Docs/Diseno-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v1.jpg" width="600">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v1.jpg" width="600">
 
 ## SmartCloth 2.0
 ### Características adicionales
 - **Lectura de códigos de barras:** Utiliza un lector de códigos de barras para procesar alimentos precocinados o envasados.
 
 ### Comunicaciones 
-<img src="Docs/Diseno-SmartCloth/Hardware/Diagrama_de_conexiones_v2.png" width="600">
+<img src="Docs/Diseño-SmartCloth/Hardware/Diagrama_de_comunicaciones_v2.png" width="600">
 
 ### Aspecto externo
-<img src="Docs/Diseno-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v2.jpeg" width="600">
+<img src="Docs/Diseño-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v2_0.jpeg" width="600">
 
 ### Montaje del Hardware
 Para ensamblar el hardware de SmartCloth 2.0, por favor consulte el [documento de montaje](./Docs/SmartCloth%20assembly%20document%20V0.2.pdf).
