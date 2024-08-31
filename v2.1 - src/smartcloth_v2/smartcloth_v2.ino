@@ -191,6 +191,13 @@ void setup()
     delay(100);
     // -----------------------------------------
 
+
+
+    #if defined SM_DEBUG
+      SerialPC.println("\n-----------------------------------------");
+      SerialPC.println("-----------------------------------------\n\n");
+    #endif
+
 }
 
 
@@ -243,7 +250,7 @@ void loop() {
                     
                     if(state_prev != lastValidState){
                         switch(state_prev){ // Último estado válido 
-                            case STATE_Init: case STATE_Plato: case STATE_Grupo: case STATE_raw: case STATE_cooked: case STATE_weighted:
+                            case STATE_Init: case STATE_Plato: case STATE_Grupo: case STATE_Barcode: case STATE_raw: case STATE_cooked: case STATE_weighted:
                                 lastValidState = state_prev;
                                 break;
                             default: break;

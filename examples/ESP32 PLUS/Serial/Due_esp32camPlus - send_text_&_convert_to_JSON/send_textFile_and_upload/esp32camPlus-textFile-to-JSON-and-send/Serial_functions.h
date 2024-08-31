@@ -25,6 +25,8 @@ inline void     sendMsgToDue(const String &msg);              // Enviar 'msg' de
 inline bool     hayMsgFromDue();                              // Comprobar si hay mensajes del Due disponibles
 inline void     readMsgFromSerialDue(String &msgFromDue);     // Leer mensaje del puerto serie ESP32-Due
 
+void            waitMsgFromDue(String &msgFromESP32, unsigned long &timeout);   
+
 inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout); // Comprobar si se ha excedido el tiempo de espera
 /*-----------------------------------------------------------------------------*/
 
@@ -82,6 +84,36 @@ inline void readMsgFromSerialDue(String &msgFromDue) {
 }
 
 
+/*---------------------------------------------------------------------------------------------------------*/
+/**
+ * Espera un mensaje del Due durante un tiempo determinado.
+ * 
+ * @param msgFromESP32 Referencia a un objeto String donde se almacenará el mensaje recibido del Due.
+ * @param timeout Tiempo máximo de espera en milisegundos.
+ */
+/*---------------------------------------------------------------------------------------------------------*/
+void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+
+    // Esperar 'timeout' segundos a que el Due responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    while(!hayMsgFromDue() && !isTimeoutExceeded(startTime, timeout));
+
+    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
+    if (hayMsgFromDue())  // Si el Due ha respondido
+    {
+        readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
+        SerialPC.println("Respuesta del Due: " + msgFromDue);  
+    } 
+    else // No se ha recibido respuesta del Due
+    {
+        SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del Due"));
+
+        // Se considera que no hay conexión WiFi
+        msgFromDue = "TIMEOUT";;
+    }
+
+}
 
 /*-----------------------------------------------------------------------------*/
 /**

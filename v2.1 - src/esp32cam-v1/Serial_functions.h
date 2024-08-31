@@ -1,3 +1,11 @@
+/**
+ * @file Serial_functions.h
+ * @brief Este archivo contiene funciones para manejar las comunicaciones Serial entre el ESP32-Due y el ESP32-BarcodeReader, independientemente.
+ * 
+ * @author Irene Casares Rodríguez
+ * @date 18/04/2024
+ */
+
 #ifndef SERIAL_FUNCTIONS_H
 #define SERIAL_FUNCTIONS_H
 
@@ -28,35 +36,44 @@ SoftwareSerial mySerial(RXD2, TXD2); // RX, TX
 // ------------------------------
 
 
-#include "wifi_functions.h" 
-inline bool   hayConexionWiFi();
-void          getFoodData(String barcode);
 
+#define TIME_TO_READ_BARCODE 30000L // 30 segundos para leer el código de barras
+#define BUFFER_EMPTY "-" // Buffer vacío
 
 
 /*-----------------------------------------------------------------------------
                            DECLARACIÓN FUNCIONES
------------------------------------------------------------------------------*/
-// Funciones para manejar la comunicación Serial con el Due y el lector
-void           setupAllSerial();                                // Inicializar comunicación serie con PC, Due y lector de código de barras
-
-// ----- Barcode -----
-void           tryGetBarcode();                                 // Intentar obtener el código de barras
-void           getBarcode();                                    // Leer código de barras 
+-------------------------------------------------------------------------------
+ Funciones para manejar la comunicación Serial del ESP32 con el Due y el lector
+-------------------------------------------------------------------------------*/
+void           setupAllSerial();                                                // Inicializar comunicación serie con PC, Due y lector de código de barras
 
 // ----- Funciones auxiliares -----
+// Comunicación Serial ESP32-PC
+#ifdef SM_DEBUG
+    inline bool     hayMsgFromPC(){ return SerialPC.available() > 0; };         // Comprobar si hay mensajes del PC (escritos en terminal)
+    inline void     readMsgFromSerialPC(String &msgFromPC);                     // Leer mensaje del puerto serie ESP32-PC 
+#endif
+
 // Comunicación Serial ESP32-Due
-inline void    sendMsgToDue(const String &msg);                 // Enviar 'msg' del ESP32 al Due
-inline bool    hayMsgFromDue();                                 // Comprobar si hay mensajes del Due disponibles
-inline bool    isDueSerialEmpty(){ return !hayMsgFromDue(); }   // Comprobar si no hay mensajes del Due disponibles
-inline void    readMsgFromSerialDue(String &msgFromDue);        // Leer mensaje del puerto serie ESP32-Due
+inline bool    hayMsgFromDue() { return SerialDue.available() > 0; }                            // Comprobar si hay mensajes del Due disponibles
+inline bool    isDueSerialEmpty(){ return !hayMsgFromDue(); }                                   // Comprobar que el Serial del Due está vacío (no hay mensajes)
+inline void    readMsgFromSerialDue(String &msgFromDue);                                        // Leer mensaje del puerto serie ESP32-Due
+void           waitMsgFromDue(String &msgFromESP32, unsigned long &timeout);                    // Esperar mensaje del Due durante un tiempo determinado
+inline void    limpiarBufferDue(){ while(SerialDue.available() > 0) { SerialDue.read(); } };    // Limpiar buffer con el Due
+inline void    sendMsgToDue(const String &msg){ limpiarBufferDue(); SerialDue.println(msg); };  // Limpiar buffer y enviar 'msg' del ESP32 al Due
+
 // Comunicación Serial ESP32-BR
-inline bool     hayMsgFromBR();                               // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
-inline void     readMsgFromSerialBR(String &msgFromBR);       // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
+inline bool     hayMsgFromBR(){ return SerialBR.available() > 0; };                         // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
+inline void     limpiarBufferBR(){ while(SerialBR.available() > 0) { SerialBR.read(); } };  // Limpiar buffer del lector de códigos de barras
+inline void     readMsgFromSerialBR(String &msgFromBR);                                     // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
+void            waitForBarcode(String &buffer);                                             // Esperar a que se lea un código de barras
 
-
-inline bool    isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout); // Comprobar si se ha excedido el tiempo de espera
+inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout){ return millis() - startTime > timeout; }; // Comprobar si se ha excedido el tiempo de espera
 /*-----------------------------------------------------------------------------*/
+
+
+
 
 
 
@@ -98,115 +115,17 @@ void setupAllSerial()
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Intenta obtener el código de barras y obtener su información de OpenFoodFacts.
+ * Lee un mensaje desde el puerto serie con el PC y lo guarda en la variable proporcionada.
  * 
- * Si hay una conexión WiFi disponible, se intentará leer el código de barras y obtener su información de OpenFoodFacts.
- * Si no hay conexión WiFi, se mostrará un mensaje de error y se enviará un mensaje al dispositivo Due indicando la falta de conexión.
+ * @param msgFromPC La variable donde se guardará el mensaje leído.
  */
 /*-----------------------------------------------------------------------------*/
-void tryGetBarcode()
-{
-    if(hayConexionWiFi())
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println("Leyendo codigo de barras...");
-        #endif
-        getBarcode(); // Lee barcode con BR y obtiene su info de OpenFoodFacts
+#ifdef SM_DEBUG
+    inline void readMsgFromSerialPC(String &msgFromPC) { 
+        msgFromPC = SerialPC.readStringUntil('\n');
+        msgFromPC.trim(); // Elimina espacios en blanco al principio y al final
     }
-    else  
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
-        #endif
-        sendMsgToDue(F("NO-WIFI"));
-    }
-}
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Obtiene el códido de barras leído por el lector BR (Barcode Reader) y 
- *          envía la información del producto al Due.
- *
- *      Si no se lee ningún código de barras en un tiempo determinado, se envía un 
- *      mensaje de error al Due.
- * 
- * @note Esta función asume que hay una comunicación establecida con el lector de código de barras y el dispositivo Due.
- */
-/*-----------------------------------------------------------------------------*/
-void getBarcode()
-{
-    String barcode = "-"; // Cadena inicialmente "vacía"
-
-    unsigned long startMillis = millis();
-    unsigned long timeToRead = 30000; // 30 segundos para leer el código de barras
-
-    // A veces, al leer el Serial se lee el código de barras anterior. Limpiar el buffer podría
-    // acabar eliminando el código de barras que se está leyendo ahora, pero eso es mejor que enviar
-    // datos extraños en la petición a OpenFoodFacts. Si se borra sin querer lo leído ahora, que
-    // el usuario lo vuelva a escanear.
-    SerialBR.read(); // Lee y descarta cualquier dato pendiente en el buffer    
-
-    while((barcode == "-") && !isTimeoutExceeded(startMillis, timeToRead))  // Si aún no se ha leído y no han pasado 5 segundos
-    {
-        if (hayMsgFromBR())  // El BR leyó algo
-        {
-            readMsgFromSerialBR(barcode); // Obtener barcode del Serial con el lector
-            #if defined(SM_DEBUG)
-                SerialPC.print("\nBarcode leido: "); SerialPC.println(barcode);
-            #endif
-        }
-    }
-
-
-    // --- OBTENER INFO DEL PRODUCTO ---
-    if(barcode != "-")  // Si se ha leído barcode
-    {
-        //SerialPC.println("Obtieniendo información del producto...");
-
-        // Avisar al Due de que se ha leído el barcode
-        String msgToDue = "BARCODE:" + barcode; 
-        sendMsgToDue(msgToDue);
-        //SerialPC.println(msgToDue);
-        delay(100);
-
-        // ---- BUSCAR INFO DEL PRODUCTO ----
-        getFoodData(barcode); // Llama a getFoodData() con el código de barras leído
-        // ----------------------------------
-    } 
-    else // Si han pasado 5 segundos sin leer barcode (no se ve bien o el lector no responde)
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println("\nNo se ha leido ningún código de barras");
-        #endif
-        sendMsgToDue(F("NO-BARCODE"));
-    }
-    // ---------------------------------
-
-}
-
-
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Envía un mensaje desde el ESP32 al Arduino Due.
- * @param msg El mensaje a enviar.
- */
-/*-----------------------------------------------------------------------------*/
-inline void sendMsgToDue(const String &msg) { SerialDue.println(msg); }
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Comprueba si hay mensajes del Due disponibles en el puerto serial.
- * @return true si hay mensajes disponibles, false en caso contrario.
- */
-/*-----------------------------------------------------------------------------*/
-inline bool hayMsgFromDue() { return SerialDue.available() > 0; }
+#endif 
 
 
 
@@ -223,14 +142,35 @@ inline void readMsgFromSerialDue(String &msgFromDue) {
 }
 
 
-/*-----------------------------------------------------------------------------*/
+
+/*---------------------------------------------------------------------------------------------------------*/
 /**
- * @brief Comprueba si hay mensajes del BR (Barcode Reader) disponibles en el puerto serial.
- *          Se considera que hay mensajes disponibles si se ha leído un código de barras.
- * @return true si hay mensajes disponibles, false en caso contrario.
+ * Espera un mensaje del Due durante un tiempo determinado.
+ * 
+ * @param msgFromESP32 Referencia a un objeto String donde se almacenará el mensaje recibido del Due.
+ * @param timeout Tiempo máximo de espera en milisegundos.
  */
-/*-----------------------------------------------------------------------------*/
-inline bool hayMsgFromBR() { return SerialBR.available() > 0; }
+/*---------------------------------------------------------------------------------------------------------*/
+void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+
+    // Esperar 'timeout' segundos a que el Due responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    while(!hayMsgFromDue() && !isTimeoutExceeded(startTime, timeout));
+
+    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
+    if (hayMsgFromDue())  // Si el Due ha respondido
+    {
+        readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
+    } 
+    else // No se ha recibido respuesta del Due
+    {
+        // Se considera que no hay conexión WiFi
+        msgFromDue = "TIMEOUT";;
+    }
+
+}
+
 
 
 
@@ -248,21 +188,41 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
 
 
 
+
 /*-----------------------------------------------------------------------------*/
 /**
- * Comprueba si se ha excedido el tiempo de espera.
+ * Espera a que se lea un código de barras.
  * 
- * Esta función compara el tiempo actual con el tiempo de inicio y verifica si se ha excedido el tiempo de espera especificado.
+ * @param barcode Referencia a una cadena de caracteres donde se guardará el código de barras leído.
  * 
- * @param startTime El tiempo de inicio en milisegundos.
- * @param timeout El tiempo de espera en milisegundos.
- * @return true si se ha excedido el tiempo de espera, false en caso contrario.
+ * @note Esta función espera un máximo de 30 segundos para recibir un código de barras. Si no se recibe ningún código
+ *       de barras en ese tiempo, se considera que no se ha leído ningún código y se asigna el valor "-" a la variable barcode.
  */
 /*-----------------------------------------------------------------------------*/
-inline bool isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout) 
+void waitForBarcode(String &buffer)
 {
-    return millis() - startTime > timeout;
+    unsigned long startTime = millis();  
+
+    // Esperar 30 segundos a que se lea un código de barras. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    while((buffer == BUFFER_EMPTY) && !isTimeoutExceeded(startTime, TIME_TO_READ_BARCODE))
+    {
+        // ----- PRODUCTO DETECTADO ------------------------
+        if (hayMsgFromBR())  // Si se ha recibido un mensaje del lector de códigos de barras
+        {
+            // Leer buffer, todo su contenido. Luego se procesará el mensaje para obtener el código de barras
+            // por si tiene basura o mensajes anteriores
+            readMsgFromSerialBR(buffer); // Leer mensaje del puerto serie y guardarlo en barcode
+            #if defined(SM_DEBUG)
+                SerialPC.print("\nBuffer BR leido: "); SerialPC.println(buffer);
+            #endif
+        }
+        // --------------------------------------------------
+    }
+
+    // Si no se ha recibido un código de barras en el tiempo de espera, 
+    // se considera que no se ha leído ningún código de barras (buffer = "-")
 }
+
 
 
 

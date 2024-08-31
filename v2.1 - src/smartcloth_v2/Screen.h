@@ -173,8 +173,9 @@
 
 #include "debug.h" // SM_DEBUG --> SerialPC
 
-void    checkBascula();           // Está en Scale.h, pero hay que declararla aquí también para que esté en este ámbito
-bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aquí también para que esté en este ámbito
+bool    eventOccurred();
+//void    checkBascula();           // Está en Scale.h, pero hay que declararla aquí también para que esté en este ámbito
+//bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aquí también para que esté en este ámbito
 
 #include "ISR.h" 
 #include "RA8876_v2.h" // COLORS.h
@@ -397,11 +398,11 @@ void setupScreen()
 /*---------------------------------------------------------------------------------------------------------
    eventOccurred(): Comprobar si ha habido eventos en botoneras o báscula
 ----------------------------------------------------------------------------------------------------------*/
-bool eventOccurred(){
+/*bool eventOccurred(){
     checkBascula();     // Comprueba interrupción de báscula. Lo necesito para ver si hace falta marcar evento
     if(interruptionOccurred()) return true; // Si ha habido interrupción en botoneras (pulsación) o evento en báscula (cambio de peso, no solo interrupción)
     return false;
-}
+}*/
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -732,17 +733,17 @@ void printGrupoyEjemplos()
     tft.print("Grupo Actual: ");  // 16x32 escale x1
 
     // Color grupo
-    tft.setTextForegroundColor(grupoEscogido.color_grupo); // 'color_grupo' como atributo de struct 'Grupo'
+    tft.setTextForegroundColor(grupoActual.color_grupo); // 'color_grupo' como atributo de struct 'Grupo'
     
     // Nombre grupo
     tft.setCursor(tft.getCursorX(),tft.getCursorY());
-    tft.print(grupoEscogido.Nombre_grupo); // Nombre grupo -> 16x32 escale x1
-    SerialPC.println("Grupo escogido: " + grupoEscogido.Nombre_grupo);
+    tft.print(grupoActual.Nombre_grupo); // Nombre grupo -> 16x32 escale x1
+    SerialPC.print("Grupo escogido (" + grupoActual.ID_grupo); SerialPC.println("): " + grupoActual.Nombre_grupo); 
 
     // Ejemplos grupo
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setCursor(40,68);
-    tft.print(grupoEscogido.Ejemplos_grupo); // Ejemplos grupo -> 12x24 escale x1
+    tft.print(grupoActual.Ejemplos_grupo); // Ejemplos grupo -> 12x24 escale x1
     // -------- FIN TEXTO --------------------
     
 }
@@ -815,7 +816,7 @@ void printZona3(byte show_objeto){
         pesoMostrado = comidaActualCopia.getPesoComida();
     }
     else if(show_objeto == SHOW_ALIMENTO_ACTUAL_ZONA3){ // Valores temporales calculados a partir del peso del alimento, que puede variar
-        Alimento AlimentoAux(grupoEscogido, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
+        Alimento AlimentoAux(grupoActual, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
         float carb = AlimentoAux.getValoresAlimento().getCarbValores();
         float lip = AlimentoAux.getValoresAlimento().getLipValores();
         float prot = AlimentoAux.getValoresAlimento().getProtValores();
@@ -892,7 +893,7 @@ void printZona4(byte show_objeto){
                                   // En el caso de SHOW_COMIDA_ACTUAL_ZONA4, se mostrarán los valores temporales con los valores no definitivos del alimento pesado
 
     if(show_objeto == SHOW_COMIDA_ACTUAL_ZONA4){ // Valores temporales de la comida actual
-        Alimento AlimentoAux(grupoEscogido, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
+        Alimento AlimentoAux(grupoActual, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
         float carb = AlimentoAux.getValoresAlimento().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
         float lip = AlimentoAux.getValoresAlimento().getLipValores() + comidaActual.getValoresComida().getLipValores();
         float prot = AlimentoAux.getValoresAlimento().getProtValores() + comidaActual.getValoresComida().getProtValores();
@@ -2190,23 +2191,23 @@ void showProductInfo(String &barcode)
 
     // Mostrar el nombre del producto
     tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(90, 342); tft.println("Nombre: " + grupoEscogido.Nombre_grupo);
+    tft.setCursor(90, 342); tft.println("Nombre: " + grupoActual.Nombre_grupo);
 
     // Mostrar los valores nutricionales como valores flotantes
     tft.setTextForegroundColor(AZUL_CARB); 
-    tft.setCursor(90, 382); tft.print("Carbohidratos (por gr): "); tft.println(grupoEscogido.Carb_g, 2);
+    tft.setCursor(90, 382); tft.print("Carbohidratos (por gr): "); tft.println(grupoActual.Carb_g, 2);
 
     tft.setTextForegroundColor(NARANJA_PROT); 
     //tft.setCursor(90, 422); tft.print("Prote\xED""nas (por gr): "); 
     tft.setCursor(90, 422); tft.print(convertSpecialCharactersToHEX("Proteínas (por gr): ")); 
-    tft.println(grupoEscogido.Prot_g, 2);
+    tft.println(grupoActual.Prot_g, 2);
 
     tft.setTextForegroundColor(AMARILLO_GRASAS); 
-    tft.setCursor(90, 462); tft.print("Grasas (por gr): "); tft.println(grupoEscogido.Lip_g, 2);
+    tft.setCursor(90, 462); tft.print("Grasas (por gr): "); tft.println(grupoActual.Lip_g, 2);
 
     tft.setTextForegroundColor(ROJO_KCAL);
-    //tft.setCursor(90, 502); tft.print("Calor\xED""as (por gr): "); tft.println(grupoEscogido.Kcal_g, 2);
-    tft.setCursor(90, 502); tft.print(convertSpecialCharactersToHEX("Calorías (por gr): ")); tft.println(grupoEscogido.Kcal_g, 2);
+    //tft.setCursor(90, 502); tft.print("Calor\xED""as (por gr): "); tft.println(grupoActual.Kcal_g, 2);
+    tft.setCursor(90, 502); tft.print(convertSpecialCharactersToHEX("Calorías (por gr): ")); tft.println(grupoActual.Kcal_g, 2);
     // -----------------------------------------------------------------------------------------------
 
     // Dibujar líneas divisorias entre cada campo de información

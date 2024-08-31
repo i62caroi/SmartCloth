@@ -62,13 +62,14 @@ const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
 
 
 // ------- OPEN FOOD FACTS ----------
-// URL de la API de OpenFoodFacts
 /*  [27/05/24 12:37] 
     El entorno de staging de OpenFoodFacts (https://world.openfoodfacts.net) está fallando, devuelve un error 500.
     En la documentación (https://openfoodfacts.github.io/openfoodfacts-server/api/) dicen que usemos el staging si no
     estamos en producción, pero como no funciona, vamos a usar el entorno de producción (https://world.openfoodfacts.org).*/
-//const char* openFoodFacts_server = "https://world.openfoodfacts.net/api/v2/product/"; // Staging environment
-const char* openFoodFacts_server = "https://world.openfoodfacts.org/api/v2/product/";   // Production environment
+
+// URL de la API de OpenFoodFacts
+const char* openFoodFacts_server = "https://world.openfoodfacts.net/api/v2/product/"; // Staging environment
+//const char* openFoodFacts_server = "https://world.openfoodfacts.org/api/v2/product/";   // Production environment
 const char* openFoodFacts_fields = "?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"; // Campos requeridos
 
 #define JSON_SIZE_LIMIT_BARCODE 512 // El JSON devuelto suele de ser de 200 bytes, pero ponemos 512 por segurarnos
@@ -197,6 +198,12 @@ void connectToWiFi()
 /*-----------------------------------------------------------------------------*/
 void checkWiFi()
 {
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    limpiarBufferBR();
+    // ---------------------------------------------------------
+
     if(hayConexionWiFi())
     {
         #if defined(SM_DEBUG)
@@ -228,6 +235,12 @@ void checkWiFi()
 /*-----------------------------------------------------------------------------*/
 bool fetchTokenFromServer(String &bearerToken)
 {
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    limpiarBufferBR();
+    // ---------------------------------------------------------
+
     // Pide el token si sigue teniendo conexión
     if(hayConexionWiFi())
     {
@@ -276,12 +289,7 @@ bool fetchTokenFromServer(String &bearerToken)
 
                 #if defined(SM_DEBUG)
                     SerialPC.println("\nTOKEN: " + bearerToken + "\n");     
-                    SerialPC.println(F("Esperando data..."));
                 #endif
-
-                // -- RESPUESTA AL DUE ---
-                sendMsgToDue(F("WAITING-FOR-DATA"));
-                // -----------------------
 
                 return true; // Token obtenido
             }
@@ -292,7 +300,7 @@ bool fetchTokenFromServer(String &bearerToken)
                 #endif
 
                 // -- RESPUESTA AL DUE ---
-                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+                sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
                 // -----------------------
 
                 bearerToken = ""; // Token vacío por error en autenticación
@@ -307,7 +315,7 @@ bool fetchTokenFromServer(String &bearerToken)
             #endif
             
             // -- RESPUESTA AL DUE ---
-            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+            sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
             // -----------------------
 
             bearerToken = ""; // Token vacío por error en autenticación
@@ -348,6 +356,12 @@ bool fetchTokenFromServer(String &bearerToken)
  */
 void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 {
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    limpiarBufferBR();
+    // ---------------------------------------------------------
+
     // Sube la comida si sigue teniendo conexión
     if(hayConexionWiFi())
     {
@@ -400,7 +414,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
                 #endif
 
                 // -- RESPUESTA AL DUE ---
-                sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+                sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
                 // -----------------------
             }
         }
@@ -411,7 +425,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
             #endif
     
             // -- RESPUESTA AL DUE ---
-            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+            sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
             // -----------------------
         }
         // --------------------------------
@@ -444,6 +458,12 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 /*-----------------------------------------------------------------------------*/
 void logoutFromServer(String &bearerToken)
 {
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    //limpiarBufferBR();
+    // ---------------------------------------------------------
+
     // Cierra sesión si sigue teniendo conexión
     //
     // Creo que no pasa nada si se queda abierta, se cerrará a la media hora por si fallara el cerrar sesión y 
@@ -503,7 +523,7 @@ void logoutFromServer(String &bearerToken)
                     SerialPC.print(F("A. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
                 #endif
                 
-                //sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+                //sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode));
                 // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
             }
             
@@ -513,7 +533,7 @@ void logoutFromServer(String &bearerToken)
                 SerialPC.print(F("B. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
             #endif
 
-            //sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
+            //sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode));
             // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
         }
         // --------------------------------
@@ -558,8 +578,14 @@ void logoutFromServer(String &bearerToken)
 /*-----------------------------------------------------------------------------*/
 void getFoodData(String barcode) 
 {
-    // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    limpiarBufferBR();
+    // ---------------------------------------------------------
 
+
+    // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
     // Si no hay conexión a Internet, no merece la pena escanear el código de barras porque no se podrá buscar su información en OpenFoodFacts
     // Creo que esto ya se hace en Due antes de pedir leer el barcode, pero por si acaso.
 
@@ -567,18 +593,19 @@ void getFoodData(String barcode)
     if(hayConexionWiFi())    //Comprueba si la conexión WiFi sigue activa
     {
         #if defined(SM_DEBUG)
-            SerialPC.println("Obtieniendo información del producto...");
+            SerialPC.println("\nObteniendo información del producto...");
         #endif
         
         // --- CONFIGURAR PETICIÓN HTTP ---
-        // Configurar la petición HTTP: un GET a la URL de la API de OpenFoodFacts con el código de barras
-        // y los campos que se quieren obtener
+        // Configurar la petición HTTP: un GET a la URL de la API de OpenFoodFacts con el código de barras y los campos que se quieren obtener
         HTTPClient http;  
         String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields; // Conformar URL de la API
+
         // Por ejemplo, para tostas de trigo:
         // "https://world.openfoodfacts.org/api/v2/product/5601560111905?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"
+
         http.begin(serverPath.c_str()); // Inicializar URL de la API
-        http.setTimeout(5000); // Establecer 5 segundos de espera para la respuesta del servidor OpenFoodFacts
+        http.setTimeout(5000);          // Establecer 5 segundos de espera para la respuesta del servidor OpenFoodFacts
 
         // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
         // En las operaciones de escritura hace falta más autenticación (credenciales), pero no nos afecta porque 
@@ -591,10 +618,11 @@ void getFoodData(String barcode)
         int httpResponseCode = http.GET();  // Método de petición HTTP
         // --------------------------------
 
-        // --- PROCESAR RESPUESTA HTTP -----
+        // --- PROCESAR RESPUESTA HTTP -----------------------
         // Comprobar el código de respuesta HTTP
         if(httpResponseCode>0)
         {
+            // --- PRODUCTO ENCONTRADO --------------
             if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Se encontró la info del producto
             {
                 // --- OBTENER INFO DEL PRODUCTO ---
@@ -604,11 +632,13 @@ void getFoodData(String barcode)
                                                       //   "PRODUCT:barcode;nombreProducto;carb_1g;lip_1g;prot_1g;kcal_1g"
                 // --------------------------------
 
-                // --- RESPUESTA AL DUE -----------
+                // --- ENVIAR INFO AL DUE ---------
                 sendMsgToDue(productInfo);
                 // --------------------------------
             }
-            else // No se encontró la info del producto
+            // --------------------------------------
+            // --- PRODUCTO NO ENCONTRADO -----------
+            else // No se encontró la info del producto porque no está en database o por error en la petición
             {
                 if(httpResponseCode == 404) 
                 {
@@ -629,11 +659,12 @@ void getFoodData(String barcode)
                     #endif
 
                     // -- RESPUESTA AL DUE ---
-                    sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+                    sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
                     // -----------------------
                 
                 }
             }
+            // --------------------------------------
         }
         else if(httpResponseCode==-1) 
         {
@@ -652,14 +683,14 @@ void getFoodData(String barcode)
             #endif
 
             // -- RESPUESTA AL DUE ---
-            sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode)); // Error en la petición HTTP
+            sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
             // -----------------------
         }
-        // --------------------------------
+        // ---------------------------------------------------
 
-        // --- CERRAR CONEXIÓN HTTP -------
+        // --- CERRAR CONEXIÓN HTTP --------------------------
         http.end();   //Cierra la conexión
-        // --------------------------------
+        // ---------------------------------------------------
     }
     // --- FIN HAY INTERNET --
 

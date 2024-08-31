@@ -84,7 +84,7 @@ class Comida{
      * 
      * @return True si la comida está vacía, False en caso contrario.
      */
-    inline bool isComidaEmpty(){ if(_getNumPlatos() == 0) return true; else return false;}; 
+    inline bool isComidaEmpty(){ return _getNumPlatos() == 0; }; 
 
 
 

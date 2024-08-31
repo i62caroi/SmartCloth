@@ -59,7 +59,7 @@ float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  a
 float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
-#define UMBRAL_MIN_CAMBIO_PESO 2.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
+#define UMBRAL_MIN_CAMBIO_PESO 5.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
 #define UMBRAL_RECIPIENTE_RETIRADO 20.0 // Umbral para considerar que se ha retirado todo (recipiente + alimentos) de la báscula
 
 
@@ -184,7 +184,7 @@ void checkBascula(){
 
         if(tarado){
             #if defined(SM_DEBUG)
-                SerialPC.print(F("\nTARANDO"));
+                SerialPC.println(F("\nTARANDO"));
             #endif
             eventoBascula = TARAR;
         }

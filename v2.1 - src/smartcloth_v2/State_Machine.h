@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 157   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
+#define RULES 160   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
             // 135 sin barcode y separando estados State_GroupA y State_GroupB
 
 
@@ -438,11 +438,14 @@ static transition_rule rules[RULES] =
 
 
                                          // --- CHECK DELETE CSV ---
+                                        {STATE_DELETE_CSV_CHECK,STATE_DELETE_CSV_CHECK,TIPO_A},   // Entrar de nuevo a DELETE_CSV_CHECK y entonces confirmar o no el borrado según el grupo pulsado
+                                        {STATE_DELETE_CSV_CHECK,STATE_DELETE_CSV_CHECK,TIPO_B},
                                         {STATE_DELETE_CSV_CHECK,STATE_DELETED_CSV,DELETE_CSV},    // CONFIRMAR BORRAR CSV
                                         {STATE_DELETE_CSV_CHECK,STATE_Init,GO_TO_INIT},           // Regresar a STATE_Init tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_Init
                                         {STATE_DELETE_CSV_CHECK,STATE_raw,GO_TO_RAW},             // Regresar a STATE_raw tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_raw   
                                         {STATE_DELETE_CSV_CHECK,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_cooked
                                         {STATE_DELETE_CSV_CHECK,STATE_weighted,GO_TO_WEIGHTED},   // Regresar a STATE_weighted tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_weighted
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,CANCELAR},           // Cancelar manualmente el BORRAR CSV pulsando cualquier botón distinto del grupo 20
                                         // --------------------------
 
                                         // --- FICHERO CSV BORRADO ---
@@ -509,7 +512,13 @@ typedef enum
 } procesado_t;
 
 procesado_t procesamiento;
-// ------ FIN PROCESAMIENTO ------------------------------------------------------------
+
+
+
+// ------ CODIGO DE BARRAS -------------------------------------------------------------
+// Global para que puedan acceder STATE_Grupo, STATE_Barcode, STATE_added y STATE_saved
+String barcode = ""; // Código de barras leído 
+// ------ FIN CODIGO DE BARRAS ---------------------------------------------------------
 
 
 
@@ -912,37 +921,39 @@ void actStatePlato()
 
     if(!doneState)
     {
-        if(state_prev != STATE_Plato)  // Solo hacer esta parte la primera que se detecta peso en báscula (plato).
+        if(state_prev != STATE_Plato)  // Solo hacer esta parte la primera vez que se detecta peso en báscula (plato).
         {                              // Si recoloca, provocando INCREMENTO o DECREMENTO, no hace falta repetir esta parte.
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("\nPlato colocado")); 
-            #endif
+            if(lastValidState == STATE_Init) // Si se viene de Init o a través de un error (se colocó el plato durante el error), realmente se acaba de colocar plato. 
+            {                               // Así no se inicia plato en la lista cuando se regrese a STATE_Plato tras error o cancelación
+                #if defined(SM_DEBUG)
+                    SerialPC.println(F("\nPlato colocado")); 
+                #endif
 
-            // ----- INICIAR PLATO --------------------------------------
-            // Si lo último escrito no es INICIO-PLATO (la comida está vacía o se está empezando otro plato), 
-            // se añade a la lista "INICIO-PLATO"
-            listaComidaESP32.iniciarPlato();
-            #if defined(SM_DEBUG)
-                listaComidaESP32.leerLista();
-            #endif 
-            // -----------------------------------------------------------
+                // ----- INICIAR PLATO --------------------------------------
+                // Si lo último escrito no es INICIO-PLATO (la comida está vacía o se está empezando otro plato), 
+                // se añade a la lista "INICIO-PLATO"
+                listaComidaESP32.iniciarPlato();
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif 
+                // -----------------------------------------------------------
 
-            // ----- REINICIAR COPIA DE COMIDA GUARDADA -------------------------
-            // Si se acaba de guardar la comida, ya se ha mostrado la copia de su info en STATE_Init. Entonces, si la comida real
-            // está vacía porque se ha reiniciado tras guardarla, al colocar recipiente se entiende que va a comenzar una nueva,
-            // por lo que se debe reiniciar también la copia.
-            // De esta forma, si se retira el plato y se regresa a Init, ya no vuelve a aparecer la info de la comida guardada antes, 
-            // sino que ya se está haciendo la nueva comida, que aún está a 0.
-            // 
-            if((comidaActual.isComidaEmpty() == true) and (comidaActualCopia.isComidaEmpty() == false)) comidaActualCopia.restoreComida();   
+                // ----- REINICIAR COPIA DE COMIDA GUARDADA -------------------------
+                // Si se acaba de guardar la comida, ya se ha mostrado la copia de su info en STATE_Init. Entonces, si la comida real
+                // está vacía porque se ha reiniciado tras guardarla, al colocar recipiente se entiende que va a comenzar una nueva,
+                // por lo que se debe reiniciar también la copia.
+                // De esta forma, si se retira el plato y se regresa a Init, ya no vuelve a aparecer la info de la comida guardada antes, 
+                // sino que ya se está haciendo la nueva comida, que aún está a 0.
+                // 
+                if((comidaActual.isComidaEmpty() == true) and (comidaActualCopia.isComidaEmpty() == false)) comidaActualCopia.restoreComida();   
 
-            if(flagComidaSaved) flagComidaSaved = false;  // Si se había guardado comida, se muestra "Comida guardada" en lugar de "Comida actual" en printZona3()
-                                                          // en STATE_Init, por eso ahora se resetea la flag.
-            // ----- FIN REINICIAR COPIA DE COMIDA GUARDADA ----------------------
+                if(flagComidaSaved) flagComidaSaved = false;  // Si se había guardado comida, se muestra "Comida guardada" en lugar de "Comida actual" en printZona3()
+                                                            // en STATE_Init, por eso ahora se resetea la flag.
+                // ----- FIN REINICIAR COPIA DE COMIDA GUARDADA ----------------------
 
             // ----- INFO INICIAL DE PANTALLA -------------------------
-            if(lastValidState == STATE_Init) // Si se viene directo de Init o a través de un error (se colocó el plato durante el error)
-            {
+                //if(lastValidState == STATE_Init) // Si se viene directo de Init o a través de un error (se colocó el plato durante el error)
+                //{
                 recipienteColocado();                 // Mostrar "Recipiente colocado" una vez al inicio. No volverlo a mostrar si se comete error en STATE_Plato.
                 showing_recipiente_colocado = true;   // Se está mostrando "Recipiente colocado"
                 showing_dash = false;      
@@ -957,7 +968,7 @@ void actStatePlato()
             }
             // ----- FIN INFO INICIAL DE PANTALLA ---------------------
         }
-
+        
 
         previousTime = millis();                              // Inicializar 'previousTime' para la alternancia de pantallas
 
@@ -1023,7 +1034,7 @@ void actGruposAlimentos()
         #endif
         
         // ----- ACCIONES ------------------------------
-        if(lastValidState == STATE_Plato) // Si se acaba de colocar el recipiente
+        if((lastValidState == STATE_Plato) && (pesoBascula != 0.0)) // Si se acaba de colocar el recipiente. Comprobamos que no sea 0.0 el pesoBascula por si acaso
         {
             #if defined(SM_DEBUG)
                 SerialPC.println(F("\nGuardando peso recipiente..."));
@@ -1031,28 +1042,24 @@ void actGruposAlimentos()
             pesoRecipiente = pesoBascula;    // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
-        else if((state_prev != STATE_ERROR) and (state_prev != STATE_Grupo) and (pesoBascula != 0.0))
-        { 
+        //else if((state_prev != STATE_ERROR) and (state_prev != STATE_Grupo) and (pesoBascula != 0.0))
+        //{ 
         // ¿Podría cambiarlo por esto? Entiendo que si pesoBascula no es 0, es que aún no se ha guardado el alimento y tarado:
-        // else if ((lastValidState == STATE_weighted) and (pesoBascula != 0.0)){
-
+        else if (pesoBascula != 0.0)
+        {
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // ¡¡¡¡IMPORTANTE!!!!
-
-                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
-                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
-                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
-                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
-                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                if(grupoAnterior.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
-                {
-                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
+                if(grupoAnterior.ID_grupo != 50)  // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
+                {                                 // siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
                     listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
-                    #if defined(SM_DEBUG)
-                        listaComidaESP32.leerLista();
-                    #endif 
                 }
+                else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
+                {
+                    listaComidaESP32.addAlimentoBarcode(grupoAnterior.ID_grupo, pesoBascula, barcode);
+                }
+
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif 
                 // -----------------------------------------------------------
                 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
@@ -1062,9 +1069,10 @@ void actGruposAlimentos()
 
                 Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
                                                                             // Al escoger un nuevo grupo se guarda el alimento del grupo anterior
-                                                                            // colocado en la iteración anterior. Por eso se utiliza 'grupoAnterior' para
-                                                                            // crear el alimento, porque 'grupoEscogido' ya ha tomado el valor del
-                                                                            // nuevo grupo.
+                                                                            // colocado en la báscula en la iteración anterior. Por eso se utiliza 'grupoAnterior' para
+                                                                            // crear el alimento, porque 'grupoActual' ya ha tomado el valor del nuevo grupo.
+                                                                            // Si el 'grupoAnterior' hubiera sido un barcode, se habrían modificado los valores nutricionales 
+                                                                            // del grupo en State_Barcode, por lo que se habrían guardado en 'grupoAnterior' y se usarían aquí.
                                                              
                 platoActual.addAlimentoPlato(alimento);                     // Alimento ==> Plato
                 comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
@@ -1164,7 +1172,7 @@ void actStateBarcode()
         #endif
         
         // ----- ACCIONES PREVIAS --------------------------------------
-        if(lastValidState == STATE_Plato) // Si se acaba de colocar el recipiente
+        if((lastValidState == STATE_Plato) && (pesoBascula != 0.0)) // Si se acaba de colocar el recipiente. Comprobamos que no sea 0.0 el pesoBascula por si acaso
         {
             #if defined(SM_DEBUG)
                 SerialPC.println(F("\nGuardando peso recipiente..."));
@@ -1172,28 +1180,26 @@ void actStateBarcode()
             pesoRecipiente = pesoBascula;    // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
             tareScale();                     // Se tara la báscula, preparándola para el primer alimento
         }
-        else if((state_prev != STATE_ERROR) and (state_prev != STATE_Barcode) and (pesoBascula != 0.0))
-        { 
+        //else if((state_prev != STATE_ERROR) and (state_prev != STATE_Barcode) and (pesoBascula != 0.0))
+        //{ 
         // ¿Podría cambiarlo por esto? Entiendo que si pesoBascula no es 0, es que aún no se ha guardado el alimento y tarado:
-        //else if ((lastValidState == STATE_weighted) and (pesoBascula != 0.0))
-        //{
+        else if (pesoBascula != 0.0)
+        {
+            // A DIFERENCIA DE STATE_GROUP, AÚN NO SE HA ACTUALIZADO grupoActual, ASÍ QUE EL ALIMENTO QUE SE COLOCÓ ANTES DE PULSAR BARCODE SE GUARDA CON EL grupoActual
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // ¡¡¡¡IMPORTANTE!!!!
-
-                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
-                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
-                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
-                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
-                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                if(grupoAnterior.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
-                {
-                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoAnterior' y <peso> el valor de 'pesoBascula'.
-                    listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
-                    #if defined(SM_DEBUG)
-                        listaComidaESP32.leerLista();
-                    #endif 
+                // Usamos 'grupoActual' porque aún no se ha actualizado
+                if(grupoActual.ID_grupo != BARCODE_PRODUCT_INDEX) // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
+                {                                                 // siendo <grupo> el ID de 'grupoActual' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoActual.ID_grupo, pesoBascula);
                 }
+                else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
+                {
+                    listaComidaESP32.addAlimentoBarcode(grupoActual.ID_grupo, pesoBascula, barcode);
+                }
+
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif 
                 // -----------------------------------------------------------
                 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
@@ -1201,11 +1207,12 @@ void actStateBarcode()
                     SerialPC.println(F("Añadiendo alimento al plato..."));
                 #endif
 
-                Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
-                                                                            // Al escoger un nuevo grupo se guarda el alimento del grupo anterior
-                                                                            // colocado en la iteración anterior. Por eso se utiliza 'grupoAnterior' para
-                                                                            // crear el alimento, porque 'grupoEscogido' ya ha tomado el valor del
-                                                                            // nuevo grupo.
+                Alimento alimento(grupoActual, pesoBascula);              // Cálculo automático de valores nutricionales.
+                                                                          // Usamos 'grupoActual' porque aún no se ha actualizado
+                                                                            // En el caso de STATE_group, al escoger nuevo grupo se actualiza automáticamente grupoActual con el
+                                                                            // nuevo grupo, por eso el alimento pesado antes se guarda con grupoAnterior. Sin embargo, en el
+                                                                            // caso de STATE_Barcode, hasta que no se compruebe el producto no se actualiza el grupoActual,
+                                                                            // por lo que el alimento pesado antes se puede guardar con grupoActual, pues sigue siendo válido.
                                                              
                 platoActual.addAlimentoPlato(alimento);                     // Alimento ==> Plato
                 comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
@@ -1231,7 +1238,6 @@ void actStateBarcode()
             // ----- FIN INFO DE PANTALLA ---------------------
 
             // 1. Obtener barcode
-            String barcode;                 // Código de barras leído
             byte resultFromReadingBarcode = askForBarcode(barcode);  // Pedir código de barras. Se va a quedar aquí hasta 10.5 segundos
 
             showing_scanning_barcode = true;                         // Se está mostrando "Escaneando código de barras..."
@@ -1253,10 +1259,14 @@ void actStateBarcode()
                 switch(resultFromGettingProductInfo)
                 {
                     case PRODUCT_FOUND: 
-                        updateGrupoEscogidoFromBarcode(productInfo); // Actualizar información del grupo de alimentos con la info del producto
+                        // ----- ACTUALIZAR grupoActual -------------------
+                        updateGrupoActualFromBarcode(productInfo); // Actualizar información del grupoActual con la info del producto
+                        // ------------------------------------------------
+
                         // ----- INFO DE PANTALLA -------------------------
-                        showProductInfo(barcode); // Mostrar información del producto (grupoEscogido)
+                        showProductInfo(barcode); // Mostrar información del producto (grupoActual)
                         // ----- FIN INFO DE PANTALLA ---------------------
+
                         groupChanged = true;
 
                         showing_product_info = true;
@@ -1521,6 +1531,7 @@ void actStateRaw()
         // ya fuera con "crudo" o "cocinado" escogido, solo se modifica la zona 2 con la imagen de "crudo" activa.
         if(showingTemporalScreen) showDashboardStyle2();  // Mostrar dashboard estilo 2 con el procesamiento "crudo"
         else printProcesamiento();                        // Modificar solamente zona 2 con el procesamiento "crudo"
+
         showing_dash = true;                // Se está mostrando dashboard estilo 2 (Alimento | Comida)
         showing_colocar_alimento = false;   
         previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
@@ -1590,6 +1601,7 @@ void actStateCooked()
         // ya fuera con "crudo" o "cocinado" escogido, solo se modifica la zona 2 con la imagen de "cocinado" activa.
         if(showingTemporalScreen) showDashboardStyle2();  // Mostrar dashboard estilo 2 con el procesamiento "cocinado"
         else printProcesamiento();                        // Modificar solamente zona 2 con el procesamiento "cocinado"
+
         showing_dash = true;                // Se está mostrando dashboard estilo 2 (Alimento | Comida)
         showing_colocar_alimento = false;   
         previousTime = millis();            // Inicializar 'previousTime' para la alternancia de pantallas
@@ -1761,30 +1773,26 @@ void actStateAdded()
                                                                     // añadir un nuevo plato sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar el plato, pues no se habría modificado.
 
-
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // ¡¡¡¡IMPORTANTE!!!!
-
-                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
-                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
-                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
-                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
-                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                if(grupoEscogido.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
-                {
-                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
-                    listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
-                    #if defined(SM_DEBUG)
-                        listaComidaESP32.leerLista();
-                    #endif 
+                // Usamos 'grupoActual' porque no se ha modificado (no se ha pulsado otro grupo).
+                if(grupoActual.ID_grupo != BARCODE_PRODUCT_INDEX)  // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
+                {                                 // siendo <grupo> el ID de 'grupoActual' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoActual.ID_grupo, pesoBascula);
                 }
+                else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
+                {
+                    listaComidaESP32.addAlimentoBarcode(grupoActual.ID_grupo, pesoBascula, barcode);
+                }
+
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif 
                 // -----------------------------------------------------------
                 
 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
-                Alimento alimento(grupoEscogido, pesoBascula);      // Cálculo automático de valores nutricionales. 
-                                                                    // Usamos 'grupoEscogido' porque no se ha modificado. 
+                Alimento alimento(grupoActual, pesoBascula);      // Cálculo automático de valores nutricionales. 
+                                                                    // Usamos 'grupoActual' porque no se ha modificado (no se ha pulsado otro grupo).
                 
                 platoActual.addAlimentoPlato(alimento);             // Alimento ==> Plato
                 comidaActual.addAlimentoComida(alimento);           // Alimento ==> Comida
@@ -2093,30 +2101,28 @@ void actStateSaved()
                                                                     // Estando en cualquiera de los estados previos a STATE_weighted, si se decidiera 
                                                                     // guardar la comida actual sin haber colocado un nuevo alimento, no haría falta
                                                                     // actualizar la comida, pues no se habría modificado.
-            
+
+
                 // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // ¡¡¡¡IMPORTANTE!!!!
-
-                // ¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡
-                // EN LA BASE DE DATOS NO SE CONTEMPLA UN GRUPO CON ID 50 (BARCODE), ASÍ QUE SI SE AÑADE A LA LISTA Y SE SUBE, 
-                // EL SERVIDOR DARÁ ERROR. PARA LAS PRUEBAS, SI EL ALIMENTO ES UN BARCODE, NO SE VA A AÑADIR A LA LISTA PORQUE, 
-                // DE TODAS FORMAS, NO VAN A MIRAR LO QUE HAN SUBIDO A LA WEB. PERO HAY QUE CORREGIRLO. ES IMPORTANTE.
-                // !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-                if(grupoEscogido.ID_grupo != 50) // Si lo último pesado es un barcode (grupo 50), no se añade a la lista porque peta el servidor.
-                {
-                    // Escribir ALIMENTO,<grupo>,<peso> a la lista, siendo <grupo> el ID de 'grupoEscogido' y <peso> el valor de 'pesoBascula'.
-                    listaComidaESP32.addAlimento(grupoEscogido.ID_grupo, pesoBascula);
-                    #if defined(SM_DEBUG)
-                        listaComidaESP32.leerLista();
-                    #endif 
+                // Usamos 'grupoActual' porque no se ha modificado (no se ha pulsado otro grupo).
+                if(grupoActual.ID_grupo != BARCODE_PRODUCT_INDEX)  // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
+                {                                 // siendo <grupo> el ID de 'grupoActual' y <peso> el valor de 'pesoBascula'.
+                    listaComidaESP32.addAlimento(grupoActual.ID_grupo, pesoBascula);
                 }
+                else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
+                {
+                    listaComidaESP32.addAlimentoBarcode(grupoActual.ID_grupo, pesoBascula, barcode);
+                }
+
+                #if defined(SM_DEBUG)
+                    listaComidaESP32.leerLista();
+                #endif 
                 // -----------------------------------------------------------
                 
 
                 // ----- AÑADIR ALIMENTO A PLATO -----------------------------
-                Alimento alimento(grupoEscogido, pesoBascula);      // Cálculo automático de valores nutricionales.
-                                                                    // Usamos 'grupoEscogido' porque no se ha modificado. 
+                Alimento alimento(grupoActual, pesoBascula);      // Cálculo automático de valores nutricionales.
+                                                                    // Usamos 'grupoActual' porque no se ha modificado (no se ha pulsado otro grupo).
                 
                 platoActual.addAlimentoPlato(alimento);             // Alimento ==> Plato
                 comidaActual.addAlimentoComida(alimento);           // Alimento ==> Comida
@@ -2145,6 +2151,7 @@ void actStateSaved()
 
 
             /* ----- GUARDAR COMIDA EN DIARIO ----------------------------- */
+            // Guardar comida localmente y enviarla a la base de datos, si hay conexión a internet
             if(!comidaActual.isComidaEmpty())    // COMIDA CON PLATOS ==> HAY QUE GUARDAR
             {
                 errorComidaWasEmpty = false;
@@ -2247,7 +2254,7 @@ void actStateSaved()
             if(typeOfSavingDone == SAVE_EXECUTED_ONLY_DATABASE || typeOfSavingDone == ERROR_SAVING_DATA) timeout = 5000;  // Si ha fallado el guardado local, se deja más tiempo para el mensaje
             else timeout = 3000; // Si no ha fallado el guardado local, se deja menos tiempo para el mensaje. Solo tienen que mirar la esquina inferior izquierda (éxito) o derecha (error en web).
 
-            // Si se ha guardado desde cualquier otro estado, con algo sobre la báscula, la pantalla de confirmación de acción pedirá retirar el plato.
+            // Si se ha guardado desde cualquier otro estado distinto a Init, con algo sobre la báscula, la pantalla de confirmación de acción pedirá retirar el plato.
             // Este chequeo de tiempo solo es para regresar a STATE_Init si se ha guardado la comida desde STATE_Init tras eliminar o añadir plato.
             currentTime = millis();
             if ((currentTime - previousTimeComidaSaved) > timeout)     // Tras 'timeout' segundos mostrando confirmación de haber guardado...
@@ -3086,6 +3093,13 @@ void actStateCANCEL()
             #endif 
             addEventToBuffer(GO_TO_PLATO);    
         }
+        else if(state_prev == STATE_DELETE_CSV_CHECK)
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("\nRegreso a STATE_Init tras CANCELACION de BORRAR CSV..."));      
+            #endif 
+            addEventToBuffer(GO_TO_INIT);
+        }
         else
         {
             // Ultimo estado válido puede ser Init, Grupos, Barcode, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
@@ -3294,14 +3308,23 @@ void actState_DELETE_CSV_CHECK()
     if(buttonInterruptOccurred()) // Pulsación de botón
     {
         checkAllButtons(); // Qué botón se ha pulsado
-        if(buttonGrande == 20) // Se ha pulsado grupo20
-        {
+        //if(grandeButtonInterruptOccurred() && (buttonGrande == 20)) // Si se pulsa el grupo 20, se confirma el borrado.
+        if(buttonGrande == 20)
+        {                                                       
             #if defined(SM_DEBUG)
                 SerialPC.println(F("\ngrupo20 pulsado durante DELETE_CSV_CHECK. Iniciando borrado..."));   
             #endif
             addEventToBuffer(DELETE_CSV);      
             flagEvent = true; 
         }
+        /*else // Cualquier otro botón (grupo o acción), cancela el borrado
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("\nCANCELAR borrado de fichero CSV."));   
+            #endif
+            addEventToBuffer(CANCELAR);      
+            flagEvent = true; 
+        }*/
     }
     // ----- FIN CONFIRMACIÓN DE ACCIÓN ------
 
@@ -3320,25 +3343,25 @@ void actState_DELETE_CSV_CHECK()
             {
               case STATE_Init:     
                                     #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a Init tras cancelar BORRAR CSV..."));       
+                                        SerialPC.println(F("\nRegreso a Init tras cancelar automáticamente BORRAR CSV..."));       
                                     #endif 
                                     addEventToBuffer(GO_TO_INIT);       break;  // Init
 
               case STATE_raw:       
                                     #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a raw tras cancelar BORRAR CSV..."));         
+                                        SerialPC.println(F("\nRegreso a raw tras cancelar automáticamente BORRAR CSV..."));         
                                     #endif 
                                     addEventToBuffer(GO_TO_RAW);         break;  // Crudo
 
               case STATE_cooked:        
                                     #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a cooked tras cancelar BORRAR CSV..."));      
+                                        SerialPC.println(F("\nRegreso a cooked tras cancelar automáticamente BORRAR CSV..."));      
                                     #endif 
                                     addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
 
               case STATE_weighted:  
                                     #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a weighted tras cancelar BORRAR CSV..."));    
+                                        SerialPC.println(F("\nRegreso a weighted tras cancelar automáticamente BORRAR CSV..."));    
                                     #endif 
                                     addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
 
@@ -3458,28 +3481,33 @@ void actState_UPLOAD_DATA()
         {
             // -----  INFORMACIÓN MOSTRADA  -------------------------
             showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web
-            //delay(2000);
             // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
             // -----  ENVIAR INFORMACION AL ESP32  ------------------
             // Avisar al ESP32 de que le va a enviar info. El ESP32 debe autenticarse en database y responder
-            byte responseToSavePrompt = prepareSaving(); 
+            byte responseFromESP32ToSavePrompt = prepareSaving(); 
 
-            if(responseToSavePrompt == WAITING_FOR_DATA) // El ESP32 se ha autenticado correctamente en la database
+            // ----- ESP32 EN ESPERA ----------------------------------
+            if(responseFromESP32ToSavePrompt == WAITING_FOR_DATA) // El ESP32 se ha autenticado correctamente en la database
             {
-                // Enviar el fichero TXT línea a línea
+                // ----- ENVIAR TXT A ESP32 Y ESPERAR RESPUESTA --
+                // Enviar el fichero TXT línea a línea y esperar respuesta de la subida
                 byte uploadResult = sendTXTFileToESP32(); 
 
-                if(uploadResult == MEALS_LEFT) showWarning(WARNING_MEALS_LEFT);  // No se han subido todas las comidas
-
+                // ----- MOSTRAR PANTALLA SEGÚN RESPUESTA --------
                 // Mostrar en pantalla el resultado de la subida de datos
-                showDataUploadState(uploadResult); // ALL_MEALS_UPLOADED, ERROR_READING_TXT
+                if(uploadResult == MEALS_LEFT) showWarning(WARNING_MEALS_LEFT);  // No se han subido todas las comidas
+                else showDataUploadState(uploadResult); // ALL_MEALS_UPLOADED, ERROR_READING_TXT
             }
+            // ------- FIN ESP32 EN ESPERA ----------------------------
+            // ------ ESP32 NO RESPONDE O FALLA AUTENTICACIÓN ---------
             else // Al avisar del guardado, ha fallado la comunicación con el ESP32 o la autenticación
             {
+                // -- MOSTRAR PANTALLA DE ERROR AL INDICAR GUARDADO --
                 // Mostrar en pantalla el fallo al indicar que se va a guardar
-                showDataUploadState(responseToSavePrompt); // NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
+                showDataUploadState(responseFromESP32ToSavePrompt); // NO_INTERNET_CONNECTION, HTTP_ERROR (al autenticarse en web), TIMEOUT, UNKNOWN_ERROR
             }
+            // --------------------------------------------------------
     
             // El delay y el GO_TO_INIT se hace al final para todos los casos
 

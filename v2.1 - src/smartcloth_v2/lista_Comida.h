@@ -31,13 +31,13 @@
         - Escribir "ALIMENTO,<grupoAnterior>,<pesoBascula>" al incluir alimento anterior en plato
 
     STATE_added:
-        - Al actualizar plato actual previo al nuevo plato, escribir "ALIMENTO,<grupoEscogido>,<pesoBascula>"
+        - Al actualizar plato actual previo al nuevo plato, escribir "ALIMENTO,<grupoActual>,<pesoBascula>"
 
     STATE_deleted:
         - Borra todas las lineas finales de la lista hasta la última aparición de "INICIO-PLATO", inclusive.
 
     STATE_saved:
-        - Al actualizar plato actual previo a guardar comida, escribir "ALIMENTO,<grupoEscogido>,<pesoBascula>"
+        - Al actualizar plato actual previo a guardar comida, escribir "ALIMENTO,<grupoActual>,<pesoBascula>"
         - Si se llega a guardar porque la comida no está vacía, escribir "FIN-COMIDA,<fecha>,<hora>"" en la lista, 
         copiar la lista en el fichero y limpiar la lista.
 */
@@ -121,12 +121,13 @@ class Lista
         inline void clearList() { _lines.clear(); };
 
 
-        void iniciarComida();                       // Inicia una comida.
-        void iniciarPlato();                        // Inicia un plato.
-        void addAlimento(byte grupo, float peso);   // Añade un alimento a la lista.
-        void borrarLastPlato();                     // Borra el último plato de la lista.
-        void finishComida();                        // Finaliza la comida añadiendo la fecha y hora
-        void sendListToESP32();                     // Envía la lista elemento a elemento al ESP32 por Serial
+        void iniciarComida();                                               // Inicia una comida.
+        void iniciarPlato();                                                // Inicia un plato.
+        void addAlimento(byte grupo, float peso);                           // Añade un alimento a la lista.
+        void addAlimentoBarcode(byte grupo, float peso, String barcode);    // Añade un alimento de tipo barcode a la lista.
+        void borrarLastPlato();                                             // Borra el último plato de la lista.
+        void finishComida();                                                // Finaliza la comida añadiendo la fecha y hora
+        void sendListToESP32();                                             // Envía la lista elemento a elemento al ESP32 por Serial
 
 
         #if defined(SM_DEBUG)
@@ -193,19 +194,21 @@ void Lista::iniciarPlato()
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Añade un alimento a la lista.
- * @param grupo El grupo del alimento.
- * @param peso El peso del alimento.
  * 
  * Al escoger un nuevo grupo se guarda el alimento del grupo anterior
- * colocado en la iteración anterior. Por eso se utiliza 'grupoAnterior',
- * porque 'grupoEscogido' ya ha tomado el valor del nuevo grupo.
+ * colocado en la báscula en la iteración anterior. Por eso se utiliza 'grupoAnterior',
+ * porque 'grupoActual' ya ha tomado el valor del nuevo grupo.
  *  
  * Si se está actualizando el plato antes de añadir otro o de guardar la comida,
- * en esos casos sí se usa 'grupoEscogido', porque es el que actualmente se 
+ * en esos casos sí se usa 'grupoActual', porque es el que actualmente se 
  * tiene marcado.
  *      
  * También se pasa el peso de la báscula (pesoBascula) para no tener que incluir 
  * todo el Scale.h solo para eso.
+ * 
+ * @param grupo El grupo del alimento (grupoAnterior).
+ * @param peso El peso del alimento (pesoBascula).
+ * 
  */
 /*-----------------------------------------------------------------------------*/
 void Lista::addAlimento(byte grupo, float peso) 
@@ -215,10 +218,48 @@ void Lista::addAlimento(byte grupo, float peso)
     #endif
     
     // Obtener cadena "ALIMENTO,<grupo>,<peso>"
-    String parGrupoPeso = "ALIMENTO," + String(grupo) + "," + String(peso);
+    String cad = "ALIMENTO," + String(grupo) + "," + String(peso);
     
     // Añadir cadena a la lista
-    addLineToList(parGrupoPeso);
+    addLineToList(cad);
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Agrega un alimento con código de barras a la lista.
+ * 
+ * Esta función agrega un alimento a la lista utilizando su código de barras.
+ * El alimento se identifica por su grupo, peso y código de barras.
+ * 
+ * Al escoger un nuevo grupo se guarda el alimento del grupo anterior
+ * colocado en la báscula en la iteración anterior. Por eso se utiliza 'grupoAnterior',
+ * porque 'grupoActual' ya ha tomado el valor del nuevo grupo.
+ *  
+ * Si se está actualizando el plato antes de añadir otro o de guardar la comida,
+ * en esos casos sí se usa 'grupoActual', porque es el que actualmente se 
+ * tiene marcado.
+ *      
+ * También se pasa el peso de la báscula (pesoBascula) para no tener que incluir 
+ * todo el Scale.h solo para eso.
+ * 
+ * @param grupo El grupo al que pertenece el alimento (grupoAnterior).
+ * @param peso El peso del alimento (pesoBascula).
+ * @param barcode El código de barras del alimento (barcode).
+ * 
+ */
+/*-----------------------------------------------------------------------------*/
+void Lista::addAlimentoBarcode(byte grupo, float peso, String barcode) 
+{
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("Guardando alimento tipo barcode con peso e EAN en lista...\n"));
+    #endif
+    
+    // Obtener cadena "ALIMENTO,<grupo>,<peso>,<ean>"
+    String cad = "ALIMENTO," + String(grupo) + "," + String(peso) + "," + barcode;
+    
+    // Añadir cadena a la lista
+    addLineToList(cad);
 }
 
 
@@ -413,7 +454,8 @@ void Lista::leerLista()
 // **************************************************************************************************************************
 
 
-Lista    listaComidaESP32; // Objeto de la lista a guardar en el fichero ESP32
+Lista    listaComidaESP32;  // Objeto de la lista a guardar en el fichero TXT que se enviará al ESP32 para actualizar la base de datos 
+                            // con la información guardada localmente en SmartCloth cuando no había conexión a internet.
 
 
 

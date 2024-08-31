@@ -236,7 +236,7 @@ void getBarcode()
     {
         if (hayMsgFromBR())  // El BR leyó algo
         {
-            readMsgFromSerialBR(barcode); // Enviar barcode al Due
+            readMsgFromSerialBR(barcode); // Obtener código de barras en 'barcode'
             SerialPC.print("\nBarcode leido: "); SerialPC.println(barcode);
         }
     }

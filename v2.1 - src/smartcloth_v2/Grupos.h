@@ -20,8 +20,8 @@
 #include "COLORS.h" // Colores del texto de nombre de grupo y ejemplos
 #include "debug.h"  // SM_DEBUG --> SerialPC
 
-//#define NUM_GRUPOS 26 
-#define NUM_GRUPOS 27 // 26 nuestros (crudos y cocinados) y el de barcode
+ 
+#define NUM_GRUPOS 28 // 27 nuestros (crudos y cocinados) y el de barcode
 #define BARCODE_PRODUCT_INDEX 50 // ID del grupo de alimentos para el barcode
 
 
@@ -32,7 +32,7 @@
 /******************************************************************************/
 /******************************************************************************/
 void    setGrupoAlimentos(byte id);                             // Establece el grupo de alimentos seleccionado
-void    updateGrupoEscogidoFromBarcode(String &productInfo);    // Actualiza el grupo de alimentos seleccionado con la info del producto barcode leído
+void    updateGrupoActualFromBarcode(String &productInfo);    // Actualiza el grupo de alimentos seleccionado con la info del producto barcode leído
 
 // --- CONVERSIÓN DE TEXTO ---
 void    convertSpecialCharactersToHEX_ref(String &input);       // Convierte a HEX caracteres especiales en una cadena de texto pasada por referencia
@@ -82,8 +82,8 @@ typedef struct {
 // es crudo, mientras que su correspondiente cocinado es el grupo 27. Por eso, si es un grupo de TIPO_A COCINADO se hace (buttonGrande+20)
 // en checkAllButtons(), para acceder a los valores de ese grupo pero cocinado.
 //
-// Los grupos de TIPO_A son: 7 (27), 8 (28), 9 (29), 16 (36), 17 (37) y 18 (38)
-// Los grupos de TIPO_B son: 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 19 y 20
+// Los grupos de TIPO_A son: 7 (27), 8 (28), 9 (29), 16 (36), 17 (37), 18 (38) y 19 (39)
+// Los grupos de TIPO_B son: 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15 y 20
 //
 // El usuario puede escoger crudo o cocinado independientemente del grupo seleccionado y así se mostrará en pantalla, pero solo afectará
 // a los valores si el grupo es de TIPO_A. Esto se hace porque el usuario no tiene por qué saber para qué grupos cambian los valores según
@@ -103,68 +103,39 @@ typedef struct {
  * Este array almacena los distintos grupos de alimentos y sus características.
  */               
 /*-----------------------------------------------------------------------------*/                    
-/* Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"Lácteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.684059925,0.038014981,0.037910112,0.047191011},
-                                      {2,COLOR_G2,"Lácteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.465,0.033,0.016,0.046},
-                                      {3,COLOR_G3,"Lácteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.391466667,0.041822222,0.0016,0.052133333},
-                                      {4,COLOR_G4,"Lácteos azucarados","Batidos lácteos de cacao y otros sabores, leche entera fermentada con\n   frutas, yogures enteros de sabores y azucarados, yogures líquidos de\n   sabores y azucarados",0.841395349,0.032483721,0.02067907,0.131274419},
-                                      {5,COLOR_G5,"Postres lácteos","Arroz con leche, flan de huevo, flan de vainilla y natillas...",1.130612245,0.036653061,0.026938776,0.184489796},
-                                      {6,COLOR_G6,"Frutas frescas, desecadas y zumos","Albaricoque, arándanos, cerezas, ciruelas, dátil seco, fresa, granada,\n   higos, kiwi, mandarina,manzana, melocotón, melón, naranja, pera, piña,\n   plátano, sandía, uvas...",0.455913978,0.00719086,0.001747312,0.102822581},
-                                      {7,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.224860335,0.01673743,0.003128492,0.035195531},
-                                      {8,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",2.095873684,0.063073684,0.015621053,0.4256},
-                                      {9,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",3.01,0.219,0.03,0.465},
-                                      {10,COLOR_G10,"Repostería, pastelería y otros","Bizcocho, bollo, croissant, ensaimada, galletas (de cualquier tipo),\n   magdalena, muesli, pan de pasas, tartas, pasteles, bollería industrial...",4.193949153,0.071186441,0.211423729,0.501864407},
-                                      {11,COLOR_G11,"Alimentos ricos en grasas saludables","Aceites de cacahuete, de oliva y de hígado de bacalao, aceitunas,\n   aguacate, almendras, avellanas, cacahuetes, pistachos, mayonesa de aceite\n   de oliva, etc.",6.517826087,0.053478261,0.679565217,0.045652174},
-                                      {12,COLOR_G12,"Alimentos ricos en grasas vegetales","Aceite de girasol, aceite de maíz, aceite de soja, mayonesa light, nueces,\n   piñones, etc.",0.87375,0.0110625,0.0879375,0.00975},
-                                      {13,COLOR_G13,"Alimentos ricos en grasas saturadas","Coco fresco o seco, aceite de coco, mantequilla, nata líquida para cocinar\n   o montar, etc.",3.625396825,0.029365079,0.367460317,0.049206349},
-                                      {14,COLOR_G14,"Alimentos muy grasos (mezclas)","Margarina light, margarina vegetal enriquecida, manteca y tocino de cerdo",6.08,0.0272,0.6624,0.0032},
-                                      {15,COLOR_G15,"Azúcares y dulces","Azúcar blanco y moreno, miel, leche condensada, cacao soluble azucarado,\n   confitura de fruta baja en calorías",3.491368421,0.021052632,0.018526316,0.810947368},
-                                      {16,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.368903088,0.073801917,0.006709265,0.002555911},
-                                      {17,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",0.73488,0.11456,0.03024,0.00096},
-                                      {18,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.706813187,0.153186813,0.113186813,0.008351648},
-                                      {19,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",3.601914894,0.222765957,0.299361702,0.004468085},
-                                      {20,COLOR_G20,"Alimentos proteicos muy grasos","Carne picada sazonada, panceta de cerdo, morcilla, mortadela, paté,\n   salami, salchichón, etc.",3.419606061,0.145090909,0.308212121,0.016333333},
-                                      {27,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.237068966,0.017646177,0.003298351,0.037106447},
-                                      {28,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",1.170534979,0.035226337,0.00872428,0.237695473},
-                                      {29,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",1.119421488,0.081446281,0.011157025,0.172933884},
-                                      {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.836939597,0.167436242,0.015221477,0.005798658},
-                                      {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.321273973,0.205972603,0.054369863,0.001726027},
-                                      {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443},
-                                      {BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} 
-                                    };
-*/
-
-Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"Lácteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.684059925,0.038014981,0.037910112,0.047191011},
-                                      {2,COLOR_G2,"Lácteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.465,0.033,0.016,0.046},
-                                      {3,COLOR_G3,"Lácteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.391466667,0.041822222,0.0016,0.052133333},
-                                      {4,COLOR_G4,"Lácteos azucarados","Batidos lácteos de cacao y otros sabores, leche entera fermentada con\n   frutas, yogures enteros de sabores y azucarados, yogures líquidos de\n   sabores y azucarados",0.841395349,0.032483721,0.02067907,0.131274419},
-                                      {5,COLOR_G5,"Postres lácteos","Arroz con leche, flan de huevo, flan de vainilla y natillas...",1.130612245,0.036653061,0.026938776,0.184489796},
-                                      {6,COLOR_G6,"Frutas frescas, desecadas y zumos","Albaricoque, arándanos, cerezas, ciruelas, dátil seco, fresa, granada,\n   higos, kiwi, mandarina,manzana, melocotón, melón, naranja, pera, piña,\n   plátano, sandía, uvas...",0.455913978,0.00719086,0.001747312,0.102822581},
-                                      {7,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.224860335,0.01673743,0.003128492,0.035195531},
-                                      {8,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",2.095873684,0.063073684,0.015621053,0.4256},
-                                      {9,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",3.01,0.219,0.03,0.465},
-                                      {10,COLOR_G10,"Repostería, pastelería y otros","Bizcocho, bollo, croissant, ensaimada, galletas (de cualquier tipo),\n   magdalena, muesli, pan de pasas, tartas, pasteles, bollería industrial...",4.193949153,0.071186441,0.211423729,0.501864407},
-                                      {11,COLOR_G11,"Alimentos ricos en grasas saludables","Aceites de cacahuete, de oliva y de hígado de bacalao, aceitunas,\n   aguacate, almendras, avellanas, cacahuetes, pistachos, mayonesa de aceite\n   de oliva, etc.",6.517826087,0.053478261,0.679565217,0.045652174},
-                                      {12,COLOR_G12,"Alimentos ricos en grasas vegetales","Aceite de girasol, aceite de maíz, aceite de soja, mayonesa light, nueces,\n   piñones, etc.",0.87375,0.0110625,0.0879375,0.00975},
-                                      {13,COLOR_G13,"Alimentos ricos en grasas saturadas","Coco fresco o seco, aceite de coco, mantequilla, nata líquida para cocinar\n   o montar, etc.",3.625396825,0.029365079,0.367460317,0.049206349},
-                                      {14,COLOR_G14,"Alimentos muy grasos (mezclas)","Margarina light, margarina vegetal enriquecida, manteca y tocino de cerdo",6.08,0.0272,0.6624,0.0032},
-                                      {15,COLOR_G15,"Azúcares y dulces","Azúcar blanco y moreno, miel, leche condensada, cacao soluble azucarado,\n   confitura de fruta baja en calorías",3.491368421,0.021052632,0.018526316,0.810947368},
-                                      {16,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.368903088,0.073801917,0.006709265,0.002555911},
-                                      {17,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",0.73488,0.11456,0.03024,0.00096},
-                                      {18,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.706813187,0.153186813,0.113186813,0.008351648},
-                                      {19,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",3.601914894,0.222765957,0.299361702,0.004468085},
-                                      {20,COLOR_G20,"Alimentos proteicos muy grasos","Carne picada sazonada, panceta de cerdo, morcilla, mortadela, paté,\n   salami, salchichón, etc.",3.419606061,0.145090909,0.308212121,0.016333333},
-                                      {27,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.237068966,0.017646177,0.003298351,0.037106447},
-                                      {28,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",1.170534979,0.035226337,0.00872428,0.237695473},
-                                      {29,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",1.119421488,0.081446281,0.011157025,0.172933884},
-                                      {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.836939597,0.167436242,0.015221477,0.005798658},
-                                      {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.321273973,0.205972603,0.054369863,0.001726027},
-                                      {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.897038168,0.170259542,0.125801527,0.009282443},
-                                      {BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} 
+Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"Lácteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.7105,0.0378,0.0414,0.0515},
+                                      {2,COLOR_G2,"Lácteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.4729,0.0332,0.0174,0.0495},
+                                      {3,COLOR_G3,"Lácteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.3393,0.0338,0.0028,0.0478},
+                                      {4,COLOR_G4,"Lácteos azucarados","Batidos lácteos de cacao y otros sabores, leche entera fermentada con\n   frutas, yogures enteros de sabores y azucarados, yogures líquidos de\n   sabores y azucarados",0.8598,0.0301,0.0257,0.1316},
+                                      {5,COLOR_G5,"Postres lácteos","Arroz con leche, flan de huevo, flan de vainilla y natillas...",1.8484,0.0356,0.0806,0.2478},
+                                      {6,COLOR_G6,"Frutas frescas, desecadas y zumos","Albaricoque, arándanos, cerezas, ciruelas, dátil seco, fresa, granada,\n   higos, kiwi, mandarina,manzana, melocotón, melón, naranja, pera, piña,\n   plátano, sandía, uvas...",0.4809,0.0082,0.0025,0.1119},
+                                      {7,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.2454,0.0148,0.0037,0.0412},
+                                      {8,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",2.1053,0.0622,0.0142,0.4452},
+                                      {9,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",3.2236,0.2148,0.0327,0.5523},
+                                      {10,COLOR_G10,"Repostería, pastelería y otros","Bizcocho, bollo, croissant, ensaimada, galletas (de cualquier tipo),\n   magdalena, muesli, pan de pasas, tartas, pasteles, bollería industrial...",3.8755,0.0707,0.1883,0.5055},
+                                      {11,COLOR_G11,"Alimentos ricos en grasas saludables","Aceites de cacahuete, de oliva y de hígado de bacalao, aceitunas,\n   aguacate, almendras, avellanas, cacahuetes, pistachos, mayonesa de aceite\n   de oliva, etc.",7.2434,0.0283,0.7874,0.0275},
+                                      {12,COLOR_G12,"Alimentos ricos en grasas vegetales","Aceite de girasol, aceite de maíz, aceite de soja, mayonesa light, nueces,\n   piñones, etc.",8.3561,0.0232,0.9312,0.0066},
+                                      {13,COLOR_G13,"Alimentos ricos en grasas saturadas","Coco fresco o seco, aceite de coco, mantequilla, nata líquida para cocinar\n   o montar, etc.",5.6178,0.0126,0.6115,0.0178},
+                                      {14,COLOR_G14,"Alimentos muy grasos (mezclas)","Margarina light, margarina vegetal enriquecida, manteca y tocino de cerdo",8.2686,0.0107,0.9136,0.0007},
+                                      {15,COLOR_G15,"Azúcares y dulces","Azúcar blanco y moreno, miel, leche condensada, cacao soluble azucarado,\n   confitura de fruta baja en calorías",3.5162,0.0262,0.0247,0.8446},
+                                      {16,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.9947,0.1930,0.0176,0.0101},
+                                      {17,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.3225,0.1814,0.0505,0.0375},
+                                      {18,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.5525,0.1347,0.1126,0.0064},
+                                      {19,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.7904,0.2061,0.2160,0.0},
+                                      {20,COLOR_G20,"Alimentos proteicos muy grasos","Carne picada sazonada, panceta de cerdo, morcilla, mortadela, paté,\n   salami, salchichón, etc.",3.1614,0.1316,0.2817,0.0364},
+                                      {27,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.2282,0.0158,0.0098,0.0235},
+                                      {28,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",0.9617,0.0195,0.0051,0.2375},
+                                      {29,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",1.1762,0.0858,0.0146,0.1868},
+                                      {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.9450,0.1978,0.0131,0.0013},
+                                      {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.6939,0.2269,0.0728,0.0258},
+                                      {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.4769,0.1298,0.1067,0.0064},
+                                      {39,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.8156,0.1869,0.2260,0.0}
+                                      //{BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} 
                                     };
 
 
 
-Grupo grupoEscogido; // Grupo de alimentos seleccionado
+Grupo grupoActual; // Grupo de alimentos seleccionado
 Grupo grupoAnterior; // Grupo de alimentos seleccionado anteriormente, necesario para saber qué valores guardar al
                      // poner peso y luego escoger otro grupo, lo que confirma el peso puesto.
 
@@ -199,12 +170,12 @@ void setGrupoAlimentos(byte id)
             break;
         }
     }
-    grupoAnterior = grupoEscogido;
-    grupoEscogido = gruposAlimentos[posGrupo]; 
+    grupoAnterior = grupoActual;
+    grupoActual = gruposAlimentos[posGrupo]; 
 
-    // Convertir caracteres especiales a HEX en grupoEscogido
-    convertSpecialCharactersToHEX_ref(grupoEscogido.Nombre_grupo);
-    convertSpecialCharactersToHEX_ref(grupoEscogido.Ejemplos_grupo);
+    // Convertir caracteres especiales a HEX en grupoActual
+    convertSpecialCharactersToHEX_ref(grupoActual.Nombre_grupo);
+    convertSpecialCharactersToHEX_ref(grupoActual.Ejemplos_grupo);
     // No hace falta para el grupoAnterior porque no se muestra en pantalla, 
     // solo se usa para guardar los valores al poner peso y luego escoger otro grupo.
 
@@ -234,16 +205,17 @@ void setGrupoAlimentos(byte id)
  * @param productInfo Una cadena de texto que contiene la información del producto, incluyendo el nombre y los valores nutricionales.
  */
 /*-----------------------------------------------------------------------------*/
-void updateGrupoEscogidoFromBarcode(String &productInfo)
+void updateGrupoActualFromBarcode(String &productInfo)
 {
     #ifdef SM_DEBUG
-        SerialPC.println("Actualizando 'grupoEscogido' con la info del producto...");
+        SerialPC.println("Actualizando 'grupoActual' con la info del producto...");
     #endif
 
-    // ----- ACTUALIZAR GRUPO ESCOGIDO -----
-    setGrupoAlimentos(BARCODE_PRODUCT_INDEX); // Grupo de barcode siempre con id 50
+    // ----- ACTUALIZAR GRUPO ANTERIOR -----
+    // Actualizar grupoAnterior con el valor que tiene grupoActual antes de modificarlo con los valores del barcode
+    grupoAnterior = grupoActual;
 
-    // ----- OBTENER INFO DEL PRODUCTO -----
+    // ----- OBTENER INFO DEL PRODUCTO ------------------------
     String cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
 
     int idx_nombre = cad.indexOf(';');
@@ -258,27 +230,46 @@ void updateGrupoEscogidoFromBarcode(String &productInfo)
     float lip_1g = cad.substring(idx_lip + 1, idx_prot).toFloat();
     float prot_1g = cad.substring(idx_prot + 1, idx_kcal).toFloat();
     float kcal_1g = cad.substring(idx_kcal + 1).toFloat();
-    // -------------------------------------
+    // --------------------------------------------------------
 
 
-    // ----- ACTUALIZAR INFO DEL GRUPO -----
-    grupoEscogido = gruposAlimentos[26]; // Grupo de barcode. Toma el ID (50) y el color, pero los datos los modificamos
-    // Modificar datos con info del producto
-    grupoEscogido.Nombre_grupo = nombre_producto;
-    grupoEscogido.Carb_g = carb_1g;
-    grupoEscogido.Lip_g = lip_1g;
-    grupoEscogido.Prot_g = prot_1g;
-    grupoEscogido.Kcal_g = kcal_1g;
+    // ----- ACTUALIZAR GRUPO ACTUAL CON INFO DEL BARCODE -----
+    // Obtener posición del grupo de barcode en el array por automatizarlo, pero podríamos poner directamente 27 porque es el último
+    /*byte posGrupo = 0;
+    for(byte i = 0; i < NUM_GRUPOS; i++){
+        if(gruposAlimentos[i].ID_grupo == BARCODE_PRODUCT_INDEX){ 
+            posGrupo = i; 
+            break;
+        }
+    }
+
+    // Actualizar grupoActual con la info por defecto del grupo barcode (nombre y ejemplos vacíos, y valores nutricionales a 0)
+    grupoActual = gruposAlimentos[posGrupo]; // Grupo de barcode. Toma el ID (50) y el color, pero los datos los modificamos
+    */
+
+    //grupoActual = gruposAlimentos[gruposAlimentos.length() - 1];
+    //grupoActual = gruposAlimentos[27];
+
+    // Modificar datos con info del producto:
+    grupoActual.ID_grupo = BARCODE_PRODUCT_INDEX; // 50
+    grupoActual.color_grupo = COLOR_G50;
+    grupoActual.Nombre_grupo = convertSpecialCharactersToHEX(nombre_producto); // Convertir caracteres especiales en el nombre a HEX
+    grupoActual.Ejemplos_grupo = ""; // No hay ejemplos para el producto barcode
+    grupoActual.Carb_g = carb_1g;
+    grupoActual.Lip_g = lip_1g;
+    grupoActual.Prot_g = prot_1g;
+    grupoActual.Kcal_g = kcal_1g;
 
     #ifdef SM_DEBUG
         SerialPC.println("\nCodigo: " + barcode);
-        SerialPC.println("Nombre: " + grupoEscogido.Nombre_grupo);
-        SerialPC.println("Carb_1g: " + String(grupoEscogido.Carb_g));
-        SerialPC.println("Lip_1g: " + String(grupoEscogido.Lip_g));
-        SerialPC.println("Prot_1g: " + String(grupoEscogido.Prot_g));
-        SerialPC.println("Kcal_1g: " + String(grupoEscogido.Kcal_g));
+        SerialPC.println("ID grupo: " + String(grupoActual.ID_grupo));
+        SerialPC.println("Nombre: " + grupoActual.Nombre_grupo);
+        SerialPC.println("Carb_1g: " + String(grupoActual.Carb_g));
+        SerialPC.println("Lip_1g: " + String(grupoActual.Lip_g));
+        SerialPC.println("Prot_1g: " + String(grupoActual.Prot_g));
+        SerialPC.println("Kcal_1g: " + String(grupoActual.Kcal_g));
     #endif
-    // -------------------------------------
+    // ---------------------------------------------------------
 
 }
 

@@ -9,6 +9,8 @@
 #ifndef CADENAS_FUNCTIONS_H
 #define CADENAS_FUNCTIONS_H
 
+#include "Serial_functions.h"
+
 // Simular la lectura del archivo
 String string1 = "INICIO-COMIDA\n"
                 "INICIO-PLATO\n"
@@ -111,7 +113,6 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
 
     int start = 0;
     int end = fileContent.indexOf('\n');
-    unsigned long timeout = 10000; // Tiempo de espera máximo de 10 segundos
 
     while (end != -1) 
     {
@@ -132,59 +133,44 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
         SerialDueESP32.println(line);
         // -------------------------------------
 
-        // ----- ESPERAR SUBIDA A DATABASE ----------------
+        // ----- INDICAR SUBIDA A DATABASE ----------------
         // Si se ha llegado al final de la comida, se espera si se ha subido correctamente
         if (line.startsWith("FIN-COMIDA")) 
         {
-            unsigned long startTime = millis();
+            // ---- ESPERAR RESPUESTA DEL ESP32 ---------------
+            // Esperar hasta 10 segundos a que el ESP32 responda
+            String responseFromESP32;
+            unsigned long timeout_waitUpload = 10000; // Tiempo de espera máximo de 10 segundos para que el esp32 responda tras subir el JSON
+            waitResponseFromESP32(responseFromESP32, timeout_waitUpload); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
+            // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
+            // ------------------------------------------------
 
-            // Esperar 10 segundos a que el ESP32 responda
-            while (SerialDueESP32.available() == 0 && millis() - startTime < timeout);
-
-            // ---------------------------------------------
-            // Cuando se recibe mensaje o se pasa el timout, 
-            // entonces se comprueba la respuesta
-            // ---------------------------------------------
-
-            // ------- RESPUESTA DEL ESP32 --------------------
-            if (SerialDueESP32.available() > 0)  // El ESP32 ha respondido
-            {
-                String response = SerialDueESP32.readStringUntil('\n');
-                response.trim(); 
-
-                // ----- COMIDA SUBIDA ----------
-                if(response == "SAVED-OK")
-                    // Si se recibió SAVED-OK, no se añade a unsavedMeals 
-                    SerialPC.println("Comida guardada correctamente\n\n");
-                // ------------------------------
-
-                // ----- COMIDA NO SUBIDA -------
-                else if (response == "NO-WIFI" || response.startsWith("HTTP-ERROR")) 
-                {
+            // ---- ANALIZAR RESPUESTA DEL ESP32 --------------
+            // ----- EXITO: COMIDA SUBIDA ----------
+            if(responseFromESP32 == "SAVED-OK"){
+                // Si se recibió SAVED-OK, no se añade a unsavedMeals 
+                SerialPC.println("Comida guardada correctamente\n\n");
+            }
+            // -------------------------------------
+            // ----- ERROR: COMIDA NO SUBIDA -------
+            else
+            { 
+                if (responseFromESP32 == "NO-WIFI" || responseFromESP32.startsWith("HTTP-ERROR")) 
                     SerialPC.println("Sin WiFi o error en la petición HTTP\n");
-                    // -- AÑADIR A unsavedMeals --
-                    // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al vector de comidas no subidas
-                    saveMealForLaterCadenas(actualMeal, unsavedMeals);
-                    // ---------------------------
-                }
+                else if(responseFromESP32 == "TIMEOUT")
+                    SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
                 else 
                     SerialPC.println("Respuesta desconocida\n");
-                // ------------------------------
-            } 
-            // ------------------------------------------------
 
-            // ----- TIMEOUT DEL ESP32 ------------------------
-            else {
-                SerialPC.println("Timeout: No se ha recibido respuesta del ESP32\n");
-                // -- COMIDA NO SUBIDA. AÑADIR A unsavedMeals --
-                // Si no se recibe respuesta del ESP32 en 5 segundos, se asume que no se ha subido la comida y se guarda en 'unsavedMeals'
+                // -- AÑADIR A unsavedMeals --
+                // Si no se ha subido la comida por error o timeout, se añade la comida actual al vector de comidas no subidas
                 saveMealForLaterCadenas(actualMeal, unsavedMeals);
-                // ---------------------------------------------
+                // ---------------------------
             }
+            // -------------------------------------
             // ------------------------------------------------
 
-
-            // ---- REINCIAR actualMeal -----------------------
+            // ---- REINICIAR actualMeal ----------------------
             // Reseta el vector de la comida actual
             actualMeal.clear();
             // ------------------------------------------------

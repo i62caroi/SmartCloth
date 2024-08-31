@@ -1,16 +1,31 @@
-/*
-// Función para comprobar si hay concatenación de varios códigos de barras en el buffer del lector
-// OpenFoodFacts admite los formatos EAN-13 (13 caracteres), UPC-A (12 caracteres) y EAN-8 (8 caracteres),
-// entre otros. Estos son los más comunes y los que se tendrán en cuenta al comprobar si se han concatenado
-// varios códigos por haber pasado el producto varias veces por el lector sin dejar que se procese.
-//
-// Entonces, si la longitud del mensaje es mayor a 13, es que hay más de un código de barras, porque
-// el más largo es el EAN-13. Si hubiera más de un código, se tomarían los últimos 13 caracteres y se 
-// comprobaría si es un EAN-13 válido. Si no lo es, se tomarían los últimos 12 caracteres y se comprobaría
-// si es un UPC-A válido. Si tampoco lo es, se tomarían los últimos 8 caracteres y se comprobaría si es un
-// EAN-8 válido. Si no es ninguno de estos, se considera que no hay un código de barras válido.
 
+/** 
+ * @file Serial_functions.h
+ * A veces, al leer el Serial con el lector se obtiene una cadena que incluye varios códigos de barras o basura,
+ * muy probablemente porque el usuario haya pasado demasiadas veces el producto por el lector en lugar de esperar
+ * a que se procese y se muestre su información. Inicialmente se pensó en simplemente limpiar el buffer antes de leer
+ * el producto, pero el sistema no sabe cuándo es "antes". Además, tras la limpieza el usuario podría igualmente pasar
+ * el producto demasiadas veces. 
+ *
+ * Entonces, se pensó en comprobar si había códigos concatenados en el buffer chequeando si había más de 13 caracteres 
+ * (longitud de EAN-13). Se tomarían los últimos 13 caracteres y se comprobaría si es un EAN-13. Si no, se tomarían los 
+ * últimos 12 caracteres y se comprobaría si es un UPC-A. Si tampoco lo fuera, se tomarían los últimos 8 caracteres y se 
+ * comprobaría si es un EAN-8. Si no fuera ninguno de esos formatos, los más comunes en OpenFoodFacts, se indicaría como 
+ * código inválido. El problema es que si hubiera algo de basura en el buffer antes de leer un EAN-8, podría haber menos 
+ * de 13 caracteres pero no ser un código válido (por ejemplo si hubiera 10 caracteres). 
+ * 
+ * Finalmente, se decidió que lo mejor sería siempre extraer y validar el código, sin comprobar previamente si hay más de 13 caracteres.
+ * 
+ * Es cierto que si se lee un código que no sea EAN-13, UPC-A o EAN-8, no se podrá obtener la información del producto, 
+ * pero al menos no se enviará basura a OpenFoodFacts. Aunque en realidad no pasa nada si se envía basura, porque OpenFoodFacts 
+ * no devuelve nada si no encuentra el código, pero es mejor no enviar basura.
+ * 
+ * En resumen, se extrae y valida el código siempre, sin comprobar previamente si hay más de 13 caracteres. Si no es un 
+ * código válido (EAN-13, UPC-A o EAN-8), se indica como inválido.
+ * 
 */
+
+
 
 #ifndef SERIAL_FUNCTIONS_H
 #define SERIAL_FUNCTIONS_H
@@ -53,7 +68,8 @@ inline void     readMsgFromSerialPC(String &msgFromPC);       // Leer mensaje de
 // Comunicación Serial ESP32-BR
 inline bool     hayMsgFromBR(){ return SerialBR.available() > 0; };   // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
 inline void     readMsgFromSerialBR(String &msgFromBR);       // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
-void            limpiarBufferBR();                            // Limpiar buffer del lector de códigos de barras
+inline void     limpiarBufferBR(){ while(SerialBR.available() > 0) { SerialBR.read(); } }; // Limpiar buffer del lector de códigos de barras
+
 
 // Comprobación códigos de barras
 //inline bool    hayVariosCodigos(const String &input){ return input.length() > EAN13_LENGTH; };   // Comprobar si hay varios códigos de barras concatenados en el buffer del lector
@@ -136,23 +152,6 @@ inline void readMsgFromSerialPC(String &msgFromPC) {
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Limpia el buffer de entrada de la comunicación serial con el lector de códigos de barras,
- *        para evitar acumular varios códigos seguidos.  
- */
-/*-----------------------------------------------------------------------------*/
-void limpiarBufferBR() 
-{
-    while(SerialBR.available() > 0) 
-    {
-        SerialBR.read();
-    }
-}
-
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
  * @brief Verifica si un código de barras es válido según el estándar EAN-13.
  *        Se suman todos los valores, multiplicando por 3 aquellos en posición PAR (perspectiva humana). 
  *        Luego, se hace el módulo 10 de la suma total y se resta el resultado de 10. Si el dígito de
@@ -177,21 +176,9 @@ bool isValidEAN13(const String &barcode)
         SerialPC.println("No tiene 13 digitos");
         return false;
     }
-
-    /*int sum = 0;
     
-    for (int i = 0; i < EAN13_LENGTH-1; i++)  // Iterar sobre los primeros 12 dígitos del código de barras. El último es el check digit
-    {
-        int digit = barcode[i] - '0';               // Convertir el carácter actual a un dígito entero
-        sum += (i % 2 == 0) ? digit : digit * 3;    // Sumar el dígito a la suma total, multiplicando por 3 si está en una posición impar (perspectiva vector)
-        // La primera posición se considera par porque es posición 0 (0 % 2 = 0). Se toma la perspectiva del vector, 
-        // no del humano, que tomaría la primera posición como impar (1 % 2 != 0)
-    }
-
     // Calcular el dígito de comprobación esperado
-    int checkDigit = (10 - (sum % 10)) % 10; */
-    
-    int checkDigit = calculateCheckDigit(barcode, MULT_IMPAR);
+    int checkDigit = calculateCheckDigit(barcode, MULT_IMPAR); // Multiplicar por 3 los dígitos en posiciones impares (perspectiva vector)
 
     // Comparar el dígito de comprobación calculado con el último dígito del código de barras
     // Si son iguales, el código de barras es un EAN-13 válido
@@ -225,20 +212,8 @@ bool isValidUPCA(const String &barcode)
         return false;
     }
 
-    /*int sum = 0;
-    
-    for (int i = 0; i < UPC_A_LENGTH-1; i++) // Itera sobre los primeros 11 dígitos del código de barras. El último es el check digit
-    {
-        int digit = barcode[i] - '0';               // Convierte el carácter actual a un dígito entero
-        sum += (i % 2 == 0) ? digit * 3 : digit;    // Suma el dígito a la suma total, multiplicando por 3 si está en una posición par (perspectiva vector)
-        // La primera posición se considera par porque es posición 0 (0 % 2 = 0). Se toma la perspectiva del vector, 
-        // no del humano, que tomaría la primera posición como impar (1 % 2 != 0)
-    }
-    
     // Calcula el dígito de comprobación esperado
-    int checkDigit = (10 - (sum % 10)) % 10;*/
-
-    int checkDigit = calculateCheckDigit(barcode, MULT_PAR);
+    int checkDigit = calculateCheckDigit(barcode, MULT_PAR); // Multiplicar por 3 los dígitos en posiciones pares (perspectiva vector)
     
     // Compara el dígito de comprobación calculado con el último dígito del código de barras
     // Si son iguales, el código de barras es un UPC-A válido
@@ -273,25 +248,14 @@ bool isValidEAN8(const String &barcode)
         return false;
     }
 
-    /*int sum = 0;
-    
-    for (int i = 0; i < EAN8_LENGTH-1; i++)  // Itera sobre los primeros 7 dígitos del código de barras. El último es el check digit
-    {
-        int digit = barcode[i] - '0';               // Convierte el carácter actual a un dígito entero
-        sum += (i % 2 == 0) ? digit * 3: digit;    // Suma el dígito a la suma total, multiplicando por 3 si está en una posición par (perspectiva vector)
-        // La primera posición se considera par porque es posición 0 (0 % 2 = 0). Se toma la perspectiva del vector, 
-        // no del humano, que tomaría la primera posición como impar (1 % 2 != 0)
-    }
-
     // Calcula el dígito de comprobación esperado
-    int checkDigit = (10 - (sum % 10)) % 10;*/
-
-    int checkDigit = calculateCheckDigit(barcode, MULT_PAR);
+    int checkDigit = calculateCheckDigit(barcode, MULT_PAR); // Multiplicar por 3 los dígitos en posiciones pares (perspectiva vector)
     
     // Compara el dígito de comprobación calculado con el último dígito del código de barras
     // Si son iguales, el código de barras es un EAN-8 válido
     return (barcode[EAN8_LENGTH-1] - '0') == checkDigit;
 }
+
 
 
 
@@ -305,43 +269,12 @@ bool isValidEAN8(const String &barcode)
  * Si no lo es, toma los 8 últimos caracteres y comprueba si es un EAN-8.
  * Si no es ninguno de los tres, se indica como código no válido.
  * 
+ * Al validar un código, se sale de la función sin seguir comprobando los demás formatos.
+ * 
  * @param barcode El código de barras a comprobar.
  * @return true si el código de barras es válido, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
-/*bool isValidFormat(String &barcode)
-{   
-
-    String auxBarcode = takeLast13(barcode); // Tomar los últimos 13 caracteres
-    if(isValidEAN13(auxBarcode))
-    { 
-        SerialPC.println("Código EAN-13 válido");
-        barcode = auxBarcode; // Es un EAN-13. Tomar ese código y procesarlo
-        return true;
-    }
-    else
-    {
-        auxBarcode = takeLast12(barcode); // Tomar los últimos 12 caracteres
-        if(isValidUPCA(auxBarcode))
-        { 
-            SerialPC.println("Código UPC-A válido");
-            barcode = auxBarcode; // Es un UPC-A. Tomar ese código y procesarlo
-            return true;
-        }
-        else
-        {
-            auxBarcode = takeLast8(barcode); // Tomar los últimos 8 caracteres
-            if(isValidEAN8(auxBarcode))
-            { 
-                SerialPC.println("Código EAN-8 válido");
-                barcode = auxBarcode; // Es un EAN-8. Tomar ese código y procesarlo
-                return true;
-            }
-            else
-                return false; // No es un código de barras válido
-        }
-    }
-}*/
 bool extractAndValidateBarcode(String &barcode)
 {   
     // ---- MINIMO 13 CARACTERES -------------
@@ -397,17 +330,33 @@ bool extractAndValidateBarcode(String &barcode)
 
 
 
-
-
+/*-----------------------------------------------------------------------------*/
+/**
+ * Calcula el dígito de comprobación para un código de barras dado.
+ * 
+ * @param barcode El código de barras para el cual se calculará el dígito de comprobación.
+ * @param multImpar Indica si se debe multiplicar por 3 los dígitos en posiciones impares (true) o pares (false).
+ * @return El dígito de comprobación calculado.
+ */
+/*-----------------------------------------------------------------------------*/
 int calculateCheckDigit(const String& barcode, bool multImpar) 
 {
     int sum = 0;
-    for (int i = 0; i < barcode.length() - 1; ++i) {
-        int digit = barcode[i] - '0';
-        sum += (i % 2 == multImpar) ? digit * 3 : digit;
+
+    for (int i = 0; i < barcode.length() - 1; ++i)  // Itera sobre los dígitos del código de barras, excepto el último (check digit)
+    {
+        int digit = barcode[i] - '0';                       // Convierte el carácter actual a un dígito entero
+        sum += (i % 2 == multImpar) ? digit * 3 : digit;    // Suma el dígito a la suma total, multiplicando por 3 si está en una posición impar (perspectiva vector)
+        // La primera posición se considera par porque es posición 0 (0 % 2 = 0). Se toma la perspectiva del vector, 
+        // no del humano, que tomaría la primera posición como impar (1 % 2 != 0)
     }
+
+     // Calcula y devuelve el dígito de comprobación esperado
     return (10 - (sum % 10)) % 10;
 }
+
+
+
 
 
 #endif

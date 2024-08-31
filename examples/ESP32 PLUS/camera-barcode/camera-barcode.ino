@@ -1,7 +1,7 @@
 /**
  * @brief Activa el Serial entre el ESP32 y el lector para recibir el código de barras que lea el lector, 
- *        continuamente activo, y busca la información del producto en OpenFoodFacts con una petición HTTP POST 
- *        con el EAN del producto leído y la muestra en terminal.
+ *        continuamente activo, extraer y valida el código para eliminar basura del buffer, y busca la información 
+ *        del producto en OpenFoodFacts con una petición HTTP POST con el EAN del producto leído y la muestra en terminal.
  *
  * @author Irene Casares Rodríguez
  * @date 09/05/2024
@@ -87,7 +87,7 @@ void setup()
     setupWiFi();  // Configurar módulo WiFi y conectar a red
     // ---------------------------
 
-    
+/*    
     // --- COMPROBAR FUNCIONES DE VALIDACION DE CODIGOS ------------------
     String barEAN13 = "9780201379624"; // EAN13 de un producto válido
     SerialPC.println("\nBarcode EAN-13: " + barEAN13);
@@ -123,13 +123,13 @@ void setup()
     if(isValidEAN8(barEAN8)) SerialPC.println(" EAN8 válido");
     else SerialPC.println(" EAN8 NO válido");
     // -------------------------------------------------------------------
-    
+    */
 }
 
 
 void loop() 
 {
-  /*
+  
     // ----- LIMPIAR BUFFER ANTES DE LEER --------------
     // A veces, al leer el Serial se lee el código de barras anterior o dos códigos concatenados. 
     // Limpiar el buffer podría acabar eliminando el código de barras que se está leyendo ahora, 
@@ -173,7 +173,7 @@ void loop()
     }
     // --------------------------------------------------
 
-*/
+
     delay(200);
 
 }

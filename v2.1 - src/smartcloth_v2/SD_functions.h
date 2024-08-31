@@ -613,10 +613,11 @@ byte saveComidaInDatabase_or_TXT()
         // Avisar al ESP32 de que le va a enviar info. El ESP32 debe autenticarse en database y responder
         byte responseFromESP32ToSavePrompt = prepareSaving(); 
 
+        // ----- EXITO: ESP32 EN ESPERA --------------------------
         if(responseFromESP32ToSavePrompt == WAITING_FOR_DATA) // El ESP32 se ha autenticado correctamente en la database
         {
-            // EN LA SINCRONIZACIÓN DEL INICIO SÍ SE INDICA "SINCRONIZANDO...", PERO AL SUBIR LA COMIDA RECIÉN HECHA NO HACE FALTA.
-            // YA SE INDICARÁ QUE SE HA SUBIDO SI EN LA PANTALLA DE "COMIDA GUARDADA" APARECE "Subido a web" EN LA ESQUINA.
+            // PANTALLA: en la sincronización del inicio sí se indica "SINCRONIZANDO...", pero al subir la comida recién hecha no hace falta.
+            //           Ya se indicará que se ha subido si en la pantalla "COMIDA GUARDADA" aparece "Subido a web" en la esquina.
 
             // ---- ENVIAR LISTA DE COMIDA AL ESP32 ----
             listaComidaESP32.sendListToESP32(); // Solo envía la lista línea a línea
@@ -628,14 +629,7 @@ byte saveComidaInDatabase_or_TXT()
             unsigned long timeout = 10000; // Tiempo de espera máximo de 10 segundos para que el esp32 responda
             waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
             // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-            // ------------------------------------------------
-
-            // ---- INDICAR FIN DE INFO -----------------------
-            // Se indica después de esperar la respuesta de si se ha subido la info a database para
-            // mantener un orden en la comunicación
-            //SerialESP32.println(F("FIN-TRANSMISION"));
-            sendMsgToESP32(F("FIN-TRANSMISION"));
-            // ------------------------------------------------
+            // ---- FIN ESPERAR RESPUESTA ESP32 ---------------
 
             // ---- ANALIZAR RESPUESTA DEL ESP32 --------------
             // --- EXITO: COMIDA SUBIDA ----------------
@@ -653,7 +647,7 @@ byte saveComidaInDatabase_or_TXT()
                     SerialPC.println("--------------------------------------------------");
                 #endif
 
-                // EN LA PANTALLA DE "COMIDA GUARDADA" APARECE "Subido a web" EN LA ESQUINA PARA INDICAR LA SINCRONIZACIÓN.
+                // PANTALLA: en la pantalla de "COMIDA GUARDADA" aparece "Subido a web" en la esquina para indicar la sincronización.
 
                 return MEAL_UPLOADED; // Comida subida a database
             } 
@@ -662,7 +656,7 @@ byte saveComidaInDatabase_or_TXT()
             // --- ERRORES -----------------------------
             else // Falló subir la comida a database
             {
-                // EN LA PANTALLA DE "COMIDA GUARDADA" APARECE EL ERROR EN LA ESQUINA PARA INDICAR FALLO DE SINCRONIZACIÓN.
+                // PANTALLA: en la pantalla de "COMIDA GUARDADA" aparecer el error en la esquina para indicar el fallo de sincronización.
 
                 // --- GUARDAR LISTA EN TXT -------
                 #if defined SM_DEBUG
@@ -714,13 +708,29 @@ byte saveComidaInDatabase_or_TXT()
             }
             // ---- FIN DE ERRORES EN SUBIDA -----------
             // ---- FIN DE ANALIZAR RESPUESTA DEL ESP32 -------
+            // ---- FIN DE SUBIDA A DATABASE ---------------------------
 
+            // ---- INDICAR FIN DE INFO -----------------------
+            // Tras enviar la comida, se envía un mensaje de fin de transmisión
+            sendMsgToESP32(F("FIN-TRANSMISION"));
+            // ------------------------------------------------
         }
-        else // Falló la autenticación del ESP32
+        // ------- FIN DE EXITO: ESP32 EN ESPERA ------------------
+
+        // ---- ERROR: ESP32 NO RESPONDE O FALLA AUTENTICACIÓN ----
+        else // Al avisar del guardado, ha fallado la comunicación con el ESP32 o la autenticación
         {
+            // Entra aquí si recibe:
+            //      NO_INTERNET_CONNECTION --> Perdió la conexión WiFi
+            //      HTTP_ERROR --> Error al autenticar
+            //      TIMEOUT --> ESP32 no responde
+            //      UNKNOWN_ERROR
             #if defined SM_DEBUG
                 SerialPC.println("\nEl ESP32 no respondio WAITING-FOR-DATA cuando se quiso subir lista comida actual!");
             #endif
+
+            // Se devuelve el mismo valor de 'responseFromESP32ToSavePrompt', que será valor de error
+            return responseFromESP32ToSavePrompt; // Solo CSV
         }
         // ------------------------------------------------------
     }
@@ -974,44 +984,33 @@ byte sendTXTFileToESP32()
                     #endif
 
                     // Se resetea la comida actual (final del if)
+                    // No se hace return porque se sigue con el bucle de lectura de otras comidas del fichero TXT
+                    // Al terminar el fichero, se comprueba si se han podido subir las comidas y entonces se devuelve un resultado
                 }
                 // -------------------------------
                 // --- ERRORES -------------------
                 else
                 {
-                    if(msgFromESP32 == "NO-WIFI") // Se ha perdido la conexion WiFi
-                    {
-                        #if defined SM_DEBUG
-                            SerialPC.println(F("Se ha perdido la conexión WiFi..."));
-                        #endif
-                        //return NO_INTERNET_CONNECTION;
-                    }
-                    else if(msgFromESP32.startsWith("HTTP-ERROR")) // Error HTTP al subir la info al ESP32
-                    {
-                        #if defined SM_DEBUG
-                            SerialPC.println(F("Error HTTP al subir la info a database..."));
-                        #endif
-                        //return HTTP_ERROR;
-                    }
-                    else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32()
-                    {
-                        #if defined SM_DEBUG
-                            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
-                        #endif
-                        //return TIMEOUT;
-                    } 
-                    else 
-                    {
-                        #if defined(SM_DEBUG)
-                            SerialPC.println("Error desconocido al subir la comida a database...\n");
-                        #endif
-                        //return UNKNOWN_ERROR;
-                    }
-
-                    // -- AÑADIR A unsavedMeals --
+                    // -- AÑADIR a unsavedMeals --
                     // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al vector de comidas no subidas
                     saveMealForLater(actualMeal, unsavedMeals);
                     // ---------------------------
+
+                    // No se hace return porque se sigue con el bucle de lectura de otras comidas del fichero TXT
+                    // Al terminar el fichero, se comprueba si se han podido subir las comidas y entonces se devuelve un resultado
+                    
+                    #if defined SM_DEBUG
+                        if(msgFromESP32 == "NO-WIFI") // Se ha perdido la conexion WiFi
+                            SerialPC.println(F("Se ha perdido la conexión WiFi al subir una comida en la actualización de SM..."));
+                        else if(msgFromESP32.startsWith("HTTP-ERROR")) // Error HTTP al subir la info al ESP32
+                            SerialPC.println(F("Error HTTP al subir la info a database en la actualización de SM..."));
+                        else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32()
+                            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32 en la actualización de SM"));
+                        else 
+                            SerialPC.println("Error desconocido al subir la comida a database en la actualización de SM...\n");
+                    #endif
+
+                    
                 }
                 // -------------------------------
 

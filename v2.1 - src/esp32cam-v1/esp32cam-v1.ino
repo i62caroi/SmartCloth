@@ -146,6 +146,7 @@
 
 #include "json_functions.h" // incluye "wifi_functions.h"
 #include "Serial_functions.h" // incluye debug.h
+#include "barcode.h"
 
 
 

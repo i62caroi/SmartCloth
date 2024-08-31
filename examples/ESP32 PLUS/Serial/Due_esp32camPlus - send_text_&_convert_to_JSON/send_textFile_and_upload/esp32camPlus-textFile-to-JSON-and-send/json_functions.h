@@ -298,33 +298,37 @@ void  processJSON_OnePerMeal_testServer()
     unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda
 
     while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
-    //while (true)  // Bucle infinito hasta recibir FIN-TRANSMISION
     {
         // Se sale del while después de procesar FIN-TRANSMISION o si no se recibe nada durante 15 segundos
 
-        // ------- SIN MENSAJE DEL DUE ----------------------
+        // ---- ESPERAR RESPUESTA DEL DUE ---------------
+        // Esperar hasta 15 segundos a que el Due envíe la línea
+        String line;
+        unsigned long timeout_waitLine = 15000; // Tiempo de espera máximo de 15 segundos para que el Due envíe la línea
+        waitMsgFromDue(line, timeout_waitLine); // Espera mensaje del Due y lo devuelve en 'line'
+        // Cuando se recibe mensaje o se pasa el timeout, entonces se comprueba la respuesta
+        // ------------------------------------------------
+
+        // ---- ANALIZAR MENSAJE DEL DUE ----------------
+        // --- Fallo en la comunicación ---
         // Si no se recibe nada durante 15 segundos, se cierra sesión
         //
         // Se comprueba si no hay nada en el Serial y si han pasado más de 'timeout' segundos
         // sin nada en el Serial. Cuando se recibe algo, se reinician los 15 segundos
         // Se hace esta comprobación por si ha habido algún error en la lectura del fichero en el Due o
         // si se ha perdido la comunicación ESP32-Due, para que el ESP32 no se quede esperando indefinidamente.
-        //if (SerialESP32Due.available() == 0 && millis() - startTime > timeout){
-        if (!hayMsgFromDue() && isTimeoutExceeded(startTime, timeout))
-        {
+        if(line == "TIMEOUT")
+        { 
+            // Cerrar sesión aquí
             break;
         }
-        // --------------------------------------------------
-
-        // ------- RECIBIDO MENSAJE -------------------------
-        //if (SerialESP32Due.available() > 0)  // Comprobar si hay algún mensaje del Due
-        if (hayMsgFromDue())  // Comprobar si hay algún mensaje del Due
+        // --------------------------------
+        // --- Línea recibida -------------
+        else
         {
             // Restablecer el tiempo de inicio si hay datos disponibles
             startTime = millis();
 
-            line = SerialESP32Due.readStringUntil('\n'); 
-            line.trim();
             //readMsgFromSerialDue(line); // Leer mensaje del Due
             SerialPC.println("Linea recibida: " + line); 
 
@@ -332,15 +336,9 @@ void  processJSON_OnePerMeal_testServer()
             addLineToJSON_oneJsonPerMeal_testServer(JSONdoc, comidas, platos, alimentos, comida, plato, line);           
             //  Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
             //  Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
-        
-            // Si se recibe FIN-TRANSMISION, salir del while
-            /*if (line == "FIN-TRANSMISION")
-            {
-                SerialPC.println("Saliendo del while...");
-                break;
-            }*/
         }
-        // --------------------------------------------------
+        // --------------------------------
+        // ------------------------------------------------
     }
     // ------------------------------------------------------------
 
@@ -619,32 +617,35 @@ void addLineToJSON_oneJsonPerMeal_testServer(DynamicJsonDocument& JSONdoc,
         plato = platos.createNestedObject();
         alimentos = plato.createNestedArray("alimentos");
     } 
-    else if (line.startsWith("ALIMENTO")) 
+    else if (line.startsWith("ALIMENTO")) // "ALIMENTO,grupo,peso" o "ALIMENTO,grupo,peso,ean" si es barcode
     {
         JsonObject alimento = alimentos.createNestedObject();
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.indexOf(',', firstCommaIndex + 1);
-        //alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
-        //alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
 
+        // Completar JSON según el tipo de alimento indicado por el ID: grupo o barcode (ID 50)
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
       
-        if (alimento["grupo"] != 50) // Alimento de grupos
+        // --- ALIMENTO DE GRUPOS PREESTABLECIDOS ---
+        if (alimento["grupo"] != 50) // "ALIMENTO,grupo,peso"
         {
             alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
         }
-        else // Alimento de barcode
+        // ------------------------------------------
+        // --- ALIMENTO DE BARCODE ------------------
+        else // "ALIMENTO,grupo,peso,ean"
         {
             int thirdCommaIndex = line.indexOf(',', secondCommaIndex + 1);
             alimento["peso"] = line.substring(secondCommaIndex + 1, thirdCommaIndex).toFloat();
             alimento["ean"] = line.substring(thirdCommaIndex + 1);
         } 
+        // ------------------------------------------
     } 
     else if (line.startsWith("FIN-COMIDA")) 
     {
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
-        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex);
+        time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex); // Converto "fecha,hora" a timestamp
         comida["fecha"] = (int)timestamp;
 
         // Agregar la dirección MAC del ESP32 al objeto JSON

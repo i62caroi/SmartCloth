@@ -77,8 +77,13 @@ void  processJSON_OnePerMeal()
 
     if(fetchTokenFromServer(bearerToken)) // 1. Pedir token de autenticación. True si se ha obtenido token
     {
+        // ------- ESPERAR DATA ----------------------
         // El ESP32 se ha autenticado en la database y está listo para subir datos
-        // En fetchTokenFromServer() se indica WAITING-FOR-DATA al obtener token
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("Esperando data..."));
+        #endif
+        sendMsgToDue("WAITING-FOR-DATA");
+        // -------------------------------------------
 
         // ------------- GENERAR JSON ---------------------------------
         #if defined(SM_DEBUG)
@@ -90,39 +95,51 @@ void  processJSON_OnePerMeal()
         unsigned long startTime = millis();
         unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda
 
-        while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
+        //while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
+        while(!line.equals("FIN-TRANSMISION"))
         {
             // Se sale del while después de procesar FIN-TRANSMISION o si no se recibe nada durante 15 segundos
 
-            // ------- SIN MENSAJE DEL DUE ----------------------
-            // Si no se recibe nada durante 15 segundos, se cierra sesión
-            //
+            // ---- ESPERAR RESPUESTA DEL DUE ---------------
+            // Esperar hasta 15 segundos a que el Due envíe la línea
+            String line;
+            unsigned long timeout_waitLine = 15000; // Tiempo de espera máximo de 15 segundos para que el Due envíe la línea
+            waitMsgFromDue(line, timeout_waitLine); // Espera mensaje del Due y lo devuelve en 'line'
+            // Cuando se recibe mensaje o se pasa el timeout, entonces se comprueba la respuesta
+            
             // Se comprueba si no hay nada en el Serial y si han pasado más de 'timeout' segundos
             // sin nada en el Serial. Cuando se recibe algo, se reinician los 15 segundos
             // Se hace esta comprobación por si ha habido algún error en la lectura del fichero en el Due o
             // si se ha perdido la comunicación ESP32-Due, para que el ESP32 no se quede esperando indefinidamente.
-            if (!hayMsgFromDue() && isTimeoutExceeded(startTime, timeout))
-            {
-                logoutFromServer(bearerToken); // Cerrar sesión aquí
+            // ------------------------------------------------
+
+            // ---- ANALIZAR MENSAJE DEL DUE ----------------
+            // --- Fallo en la comunicación ---
+            // Si no se recibe nada durante 15 segundos, se cierra sesión
+            if(line == "TIMEOUT")
+            { 
+                #if defined(SM_DEBUG)
+                    SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del Due"));
+                    SerialPC.println(F("Cerrando sesión..."));
+                #endif
+
+                logoutFromServer(bearerToken); // Cerrar sesión sin haber subido nada
+
                 break;
             }
-            // --------------------------------------------------
-
-            // ------- RECIBIDO MENSAJE -------------------------
-            else if (hayMsgFromDue())  // Comprobar si hay algún mensaje del Due
+            // --------------------------------
+            // --- Línea recibida -------------
+            else 
             {
-                // Reiniciar el tiempo de espera
+                // Reiniciar el tiempo de espera hasta la próxima recepción de línea
                 startTime = millis();
 
-                // ------ LEER MENSAJE ---------
-                readMsgFromSerialDue(line); // Leer mensaje del Due
-
+                // La línea se ha leído en waitMsgFromDue() y se ha guardado en 'line'
                 #if defined(SM_DEBUG)
-                    SerialPC.println("Linea recibida: " + line); 
+                    SerialPC.println("\nLinea recibida en processJSON: " + line); 
                 #endif
-                // -----------------------------
 
-                // ------ AÑASIR A JSON --------
+                // ------ AÑADIR A JSON --------
                 // Comprobar linea y conformar JSON. Enviar un JSON por comida
                 //  Si es FIN-COMIDA, se sube info (uploadJSONtoServer()) con el token.
                 //  Si es FIN-TRANSMISION, se cierra sesión (logoutFromServer()) con el token.
@@ -141,7 +158,7 @@ void  processJSON_OnePerMeal()
             SerialPC.println(F("Error al pedir token"));
         #endif
 
-        // En fetchTokenFromServer() se muestra el error (NO-WIFI, ERROR-HTTP, etc.)
+        // En fetchTokenFromServer() se muestra el error (NO-WIFI, HTTP-ERROR, etc.)
         // -------------------------------------------
     }
     // ------------------------------------------------------------
@@ -166,10 +183,6 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
                                 JsonObject& comida, JsonObject& plato, 
                                 String& line, String &bearerToken)
 {
-    static bool hayAlimentos = false; // Indica si el JSON está vacío o no. 
-    // Comprobamos si el JSON tiene algo para no enviarlo vacío y no provocar error. Esto pasaba cuando solo se leía barcode
-    // pero el servidor aún no estaba preparado para recibirlo y se enviaba el JSON vacío. 
-
     if (line == "INICIO-COMIDA") 
     {
         #if defined(SM_DEBUG)
@@ -188,19 +201,35 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         plato = platos.createNestedObject();
         alimentos = plato.createNestedArray("alimentos");
     } 
-    else if (line.startsWith("ALIMENTO")) // "ALIMENTO,grupo,peso"
+    else if (line.startsWith("ALIMENTO")) // "ALIMENTO,grupo,peso" o "ALIMENTO,grupo,peso,ean" si es barcode
     {
-        hayAlimentos = true;
-
         JsonObject alimento = alimentos.createNestedObject();
 
         int firstCommaIndex = line.indexOf(',');
-        int secondCommaIndex = line.lastIndexOf(',');
+        int secondCommaIndex = line.indexOf(',', firstCommaIndex + 1);
+
+        // Completar JSON según el tipo de alimento indicado por el ID: grupo o barcode (ID 50)
         alimento["grupo"] = line.substring(firstCommaIndex + 1, secondCommaIndex).toInt();
-        alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
+      
+        // --- ALIMENTO DE GRUPOS PREESTABLECIDOS ---
+        if (alimento["grupo"] != 50) // "ALIMENTO,grupo,peso"
+        {
+            alimento["peso"] = line.substring(secondCommaIndex + 1).toFloat();
+        }
+        // ------------------------------------------
+        // --- ALIMENTO DE BARCODE ------------------
+        else // "ALIMENTO,grupo,peso,ean"
+        {
+            int thirdCommaIndex = line.indexOf(',', secondCommaIndex + 1);
+            alimento["peso"] = line.substring(secondCommaIndex + 1, thirdCommaIndex).toFloat();
+            alimento["ean"] = line.substring(thirdCommaIndex + 1);
+        } 
+        // ------------------------------------------
     } 
     else if (line.startsWith("FIN-COMIDA")) // "FIN-COMIDA,fecha,hora"
     {
+        // Finalizar el JSON actual y enviarlo a la base de datos.
+
         int firstCommaIndex = line.indexOf(',');
         int secondCommaIndex = line.lastIndexOf(',');
         time_t timestamp = convertTimeToUnix(line, firstCommaIndex, secondCommaIndex); // Convertir "fecha,hora" a timestamp
@@ -210,24 +239,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         String macAddress = WiFi.macAddress();
         JSONdoc["mac"] = macAddress;
 
-        // Finalizar el JSON actual y enviarlo a la base de datos.
-        // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
-        // enviará otro JSON y así hasta recibir FIN-TRANSMISION
-
-        // Comprobación para no enviar JSON vacío
-        if(hayAlimentos) uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON
-        else{
-            #if defined(SM_DEBUG)
-                SerialPC.println("No hay alimentos en la comida");
-            #endif
-            // -- RESPUESTA AL DUE ---
-            sendMsgToDue(F("SAVED-OK")); // ESTO ES MENTIRA, PERO PARA SALIR DEL PASO EN LAS PRUEBAS
-                                         // HASTA QUE SE CAMBIE EL SERVIDOR PARA RECIBIR BARCODES
-            // -----------------------
-        }
-        // Si se devuelve SAVED-OK, da igual que falle el logout
-
-        /*#if defined(SM_DEBUG)
+        #if defined(SM_DEBUG)
             // ---- MOSTRAR JSON -----
             SerialPC.println();
             serializeJsonPretty(JSONdoc, SerialPC);
@@ -237,7 +249,14 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
             // -------- MEMORIA RAM USADA POR EL JSON ---------------------
             SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
             // ------------------------------------------------------------
-        #endif*/
+        #endif
+
+        // ----- ENVIAR JSON AL SERVIDOR ----------------
+        // Se envía solo la info de la comida actual. Si hay otro INICIO-COMIDA, se
+        // enviará otro JSON y así hasta recibir FIN-TRANSMISION
+        uploadJSONtoServer(JSONdoc,bearerToken);    // 2. Enviar JSON al servidor
+        // Si se devuelve SAVED-OK, da igual que falle el logout
+        // ----------------------------------------------
 
     }
     else if (line == "FIN-TRANSMISION") // El Due ha terminado de enviar el fichero
@@ -245,13 +264,13 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
         logoutFromServer(bearerToken);              // 3. Cerrar sesión
 
         #if defined(SM_DEBUG)
-            SerialPC.println("Transmisión completa");
+            SerialPC.println("Transmisión completa\n");
         #endif
     }
     else // No debería entrar aquí, pero por cubrir todas las opciones
     {
         #if defined(SM_DEBUG)
-            SerialPC.println("Línea desconocida");
+            SerialPC.println("Línea desconocida procesando JSON");
         #endif
     }
 

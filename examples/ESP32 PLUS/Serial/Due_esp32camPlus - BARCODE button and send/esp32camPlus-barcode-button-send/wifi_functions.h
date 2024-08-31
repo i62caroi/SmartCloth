@@ -48,7 +48,6 @@ inline bool    hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); };  // 
 
 void    setupWiFi();                    // Configurar modo del WiFi y conectar a la red, si se puede
 void    connectToWiFi();                // Conectar a la red WiFi
-bool    hayConexionWiFi();              // Comprobar si hay conexión WiFi
 void    getFoodData(String barcode);    // Obtener los datos de un alimento
 void    getProductInfo(const String &payload, String &productInfo); // Obtener la información del producto a partir de un JSON
 /*-----------------------------------------------------------------------------*/

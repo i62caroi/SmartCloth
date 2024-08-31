@@ -124,6 +124,8 @@ bool mainButtonInterruptOccurred();       // Devuelve true si se ha activado alg
 bool grandeButtonInterruptOccurred();     // Devuelve true si se ha activado alguna interrupción en botonera Grande
 bool barcodeButtonInterruptOccurred();    // Devuelve true si se ha activado alguna interrupción en botón Barcode
 bool hasScaleEventOccurred();             // Devuelve true si se ha activado algún evento en báscula
+
+bool eventOccurred();
 /******************************************************************************/
 /******************************************************************************/
 
@@ -366,6 +368,21 @@ void TimerHandler() { ISR_Timer.run(); }
     if(scaleEventOccurred) return true;
     else return false;
  }
+
+
+
+ /*-----------------------------------------------------------------------------*/
+/**
+ * @brief Aviso de evento en báscula
+ * @return 'true' si ha ocurrido algún evento en báscula
+ */
+ /*-----------------------------------------------------------------------------*/
+bool eventOccurred()
+{
+    checkBascula();     // Comprueba interrupción de báscula. Marca el evento ocurrido en la báscula
+    return interruptionOccurred(); // Si ha habido interrupción en botoneras (pulsación) o evento en báscula (cambio de peso, no solo interrupción)
+}
+
 
 
 

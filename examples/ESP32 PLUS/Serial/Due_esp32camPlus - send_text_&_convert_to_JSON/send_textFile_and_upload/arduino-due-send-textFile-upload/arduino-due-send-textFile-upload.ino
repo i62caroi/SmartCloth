@@ -58,9 +58,8 @@ void loop()
     //if (SerialDueESP32.available() > 0)  // Si se recibe algo desde el esp32
     if(hayMsgFromESP32())
     {
-        /*String msgFromESP32 = SerialDueESP32.readStringUntil('\n');
-        msgFromESP32.trim();  */
-        String msgFromESP32 = readMsgFromESP32();
+        String msgFromESP32;
+        readMsgFromESP32(msgFromESP32);
         SerialPC.print("\nMensaje recibido en loop: "); SerialPC.println(msgFromESP32); 
 
         // Esperando datos a subir
@@ -83,7 +82,7 @@ void loop()
         {
             SerialPC.println(F("Fallo en la autenticacion del SmartCloth en la database"));
         }
-        /*else if(msg == "NO-WIFI")
+        /*else if(msg == "NO-WIFI") // Se comprueba antes, en la parte de "ENVIO"
         {
             SerialPC.println(F("Se ha perdido la conexion a Internet"));
         }*/

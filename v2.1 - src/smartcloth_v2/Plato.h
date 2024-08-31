@@ -84,7 +84,7 @@ class Plato{
      * 
      * @return true si el plato está vacío, false en caso contrario
      */
-    inline bool isPlatoEmpty(){ if(_getNumAlimentos() == 0) return true; else return false; };
+    inline bool isPlatoEmpty(){ return _getNumAlimentos() == 0; };
     
 
 

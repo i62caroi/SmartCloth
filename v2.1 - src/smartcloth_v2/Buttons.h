@@ -248,8 +248,8 @@ void checkAllButtons()
  * @brief Verifica si se ha pulsado el botón "Grande" y realiza las acciones correspondientes.
  * 
  *  Comprueba si se ha pulsado algún botón de grupos de alimentos y obtiene el grupo escogido:
- *      Si el grupo está entre [7, 9] o [16, 18], se considera TIPO_A.
- *      Si el grupo está entre [1, 6], [10, 15] o [19, 20], se considera TIPO_B.
+ *      Si el grupo está entre [7, 9] o [16, 19], se considera TIPO_A.
+ *      Si el grupo está entre [1, 6], [10, 15] o [20], se considera TIPO_B.
  * 
  *  Reestablece la flag 'pulsandoGrande' a false hasta la próxima pulsación.
  */
@@ -279,11 +279,11 @@ void checkGrandeButton()
                     eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
         }*/
         if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
-            (buttons[iRow][iCol] <= 18))){
+            (buttons[iRow][iCol] <= 19))){
                     eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
         }
         else if(((buttons[iRow][iCol] >= 1) and (buttons[iRow][iCol] <= 6)) or ((buttons[iRow][iCol] >= 10) and 
-                (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] >=19)){
+                (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] == 20)){
                     eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
         }
         
@@ -370,7 +370,7 @@ void checkBarcodeButton()
         addEventToBuffer(BARCODE);
         flagEvent = true;
 
-        // Se actualiza 'grupoEscogido' si se ha leído barcode y encontrado el producto. 
+        // Se actualiza 'grupoActual' si se ha leído barcode y encontrado el producto. 
         // Si se hiciera setGrupoAlimentos(BARCODE_PRODUCT_INDEX) aquí y luego no se encontrara el producto,
         // se mostraría en pantalla "Grupo Actual: " con el nombre vacío porque no se ha obtenido nada. Por eso
         // solo se actualiza si se encuentra producto.
