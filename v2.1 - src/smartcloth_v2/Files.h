@@ -3,7 +3,7 @@
  * @brief Contiene los nombres de los ficheros guardados en la SD y utilizados para mostrar imágenes o guardar información.
  *
  * @author Irene Casares Rodríguez
- * @date 17/07/23
+ * @date 25/07/24
  * @version 1.0
  *  
  */
@@ -84,6 +84,32 @@ char    fileCruz[30]          = "bin/error/cruz.bin";           // 114x127
 
 // --- IMAGENES AVISO ---
 char    fileAvisoYellow[30]   = "bin/aviso/aviso_y.bin";        // 135x113
+char    fileAvisoNew[30]      = "bin/aviso/aviso.bin";          // 143x126. Usado para "PRODUCTO NO ENCONTRADO"
+
+
+
+// --- IMAGENES SINCRONIZACION ---
+char    fileSincronizando[40] = "bin/sync/sync.bin";            // 188x123
+char    fileSMSincronizado[40]  = "bin/sync/sync_ok.bin";       // 220x136
+
+
+
+// --- IMAGENES BARCODE ------------
+char    fileScanBarcode[30]    = "bin/barcode/scan.bin";        // 171x128
+char    fileSearchProduct[30]  = "bin/barcode/lupa.bin";        // 82x130
+char    fileProductFound[30]   = "bin/barcode/pr_found.bin";    // 297x104
+// "PRODUCTO NO ENCONTRADO" se hace con imagen de aviso
+
+
+
+// --- IMAGENES GUARDAR COMIDA ----
+char    fileGuardando[30] = "bin/guardar/disquete.bin";         // 91x98
+char    fileGuardandoWifi[30] = "bin/guardar/conexion.bin";     // 42x67
+char    fileGuardandoNoWifi[30] = "bin/guardar/no_conex.bin";   // 54x85
+
+
+
+
 
 
 

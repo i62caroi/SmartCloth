@@ -1552,6 +1552,85 @@ void RA8876::drawPixel(uint16_t x, uint16_t y, uint16_t color)
 }
 
 
+/* *************************************************************
+   ************************************************************* */
+
+void RA8876::drawThickLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t thickness, uint16_t lineColor) 
+{
+    // Dibujar líneas desplazadas para crear un grosor
+    for (int i = 0; i < thickness; i++) {
+        drawLine(x1 + i, y1, x2 + i, y2, lineColor); // Desplazamiento positivo en x
+        drawLine(x1 - i, y1, x2 - i, y2, lineColor); // Desplazamiento negativo en x
+    }
+}
+
+
+/* *************************************************************
+   ************************************************************* */
+
+
+void RA8876::drawThickLineWithAngle(uint16_t x1, uint16_t y1, float length, float angle, uint16_t thickness, uint16_t lineColor)
+{
+    // Convertir el ángulo de grados a radianes
+    float radian = angle * (M_PI / 180.0);
+
+    // Calcular las coordenadas finales usando longitud y ángulo
+    uint16_t x2 = x1 + length * cos(radian);
+    uint16_t y2 = y1 - length * sin(radian);
+
+    // Dibujar líneas desplazadas para crear un grosor
+    for (int i = 0; i < thickness; i++) {
+        drawLine(x1 + i, y1, x2 + i, y2, lineColor); // Desplazamiento positivo
+        drawLine(x1 - i, y1, x2 - i, y2, lineColor); // Desplazamiento negativo
+    }
+}
+
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::drawThickRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t thickness, uint16_t borderColor) 
+{
+    // Dibujar los bordes del rectángulo con el grosor especificado
+    for (uint16_t i = 0; i < thickness; i++) {
+        drawRect(x + i, y + i, x + width - i, y + height - i, borderColor);
+    }
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::drawThickFillRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t thickness, uint16_t borderColor, uint16_t fillColor) 
+{
+    // Dibujar los bordes del rectángulo con el grosor especificado
+    for (uint16_t i = 0; i < thickness; i++) {
+        drawRect(x + i, y + i, x + width - i, y + height - i, borderColor);
+    }
+    // Rellenar el rectángulo interno con el color de relleno
+    fillRect(x + thickness, y + thickness, x + width - thickness, y + height - thickness, fillColor);
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::drawThickRoundRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint16_t thickness, uint16_t borderColor) 
+{
+    // Dibujar los bordes del rectángulo con el grosor especificado
+    for (uint16_t i = 0; i < thickness; i++) {
+        drawRoundRect(x + i, y + i, x + width - i, y + height - i, radius, borderColor);
+    }
+}
+
+/* *************************************************************
+   ************************************************************* */
+void RA8876::drawThickRoundFillRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint16_t thickness, uint16_t borderColor, uint16_t fillColor) 
+{
+    // Dibujar los bordes del rectángulo con el grosor especificado
+    for (uint16_t i = 0; i < thickness; i++) {
+        drawRoundRect(x + i, y + i, x + width - i, y + height - i, radius, borderColor);
+    }
+    // Rellenar el rectángulo interno con el color de relleno
+    fillRoundRect(x + thickness, y + thickness, x + width - thickness, y + height - thickness, radius, fillColor);
+}
+
+
 
 /* *************************************************************
    ************************************************************* */

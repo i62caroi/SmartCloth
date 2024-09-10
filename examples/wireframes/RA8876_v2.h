@@ -1117,13 +1117,21 @@ public:
   void            drawPixel(uint16_t x, uint16_t y, uint16_t color);
 
   inline void     drawLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR0, RA8876_DRAW_LINE); }; //0x80
+  void            drawThickLine(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t thickness, uint16_t lineColor);
+  void            drawThickLineWithAngle(uint16_t x1, uint16_t y1, float length, float angle, uint16_t thickness, uint16_t lineColor);
+ // inline void     drawHorizontalThickLine(uint16_t x1, uint16_t y1, uint16_t length, uint16_t thickness, uint16_t lineColor) { drawThickLineWithAngle_2(x1, y1, length, 0, thickness, lineColor); };
+ // inline void     drawVerticalThickLine(uint16_t x1, uint16_t y1, uint16_t length, uint16_t thickness, uint16_t lineColor) { drawThickLineWithAngle_2(x1, y1, length, 90, thickness, lineColor); };
   
   inline void     drawRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE); }; //0xA0
   inline void     fillRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color) { _drawTwoPointShape(x1, y1, x2, y2, color, RA8876_REG_DCR1, RA8876_DRAW_SQUARE_FILL); }; //0xE0
+  void            drawThickRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t thickness, uint16_t borderColor);
+  void            drawThickFillRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t thickness, uint16_t borderColor, uint16_t fillColor);
   
   inline void     drawRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT); }; //0xB0
   inline void     fillRoundRect(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t radius, uint16_t color) { _drawRoundRectShape(x1, y1, x2, y2, radius, color, RA8876_DRAW_ROUND_RECT_FILL); }; //0xF0
-  
+  void            drawThickRoundRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint16_t thickness, uint16_t borderColor);
+  void            drawThickRoundFillRect(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t radius, uint16_t thickness, uint16_t borderColor, uint16_t fillColor);
+
   inline void     drawTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xA2); }; //RA8876_DRAW_TRIANGLE => 0x82
   inline void     fillTriangle(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color) { _drawThreePointShape(x1, y1, x2, y2, x3, y3, color, 0xE2); }; //RA8876_DRAW_TRIANGLE_FILL => 0xA2
   

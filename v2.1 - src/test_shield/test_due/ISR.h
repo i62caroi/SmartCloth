@@ -2,7 +2,7 @@
 #ifndef ISR_H
 #define ISR_H
 
-#define DEBOUNCE_TIME 200 // Tiempo de debouncing en ms
+#define DEBOUNCE_TIME 300 // Tiempo de debouncing en ms
 
 // ------------ PINES DE INTERRUPCIÓN ------------
 // ---- MAIN ----

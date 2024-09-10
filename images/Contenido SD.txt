@@ -1,0 +1,109 @@
+
+
+data/
+	data-sc.csv
+	data-esp.txt
+
+
+bin/
+
+	alimento/
+		scale_g.bin (150x150)	
+
+
+	arranque/
+		a.bin
+		c.bin		
+		h.bin
+		l.bin
+		log.bin
+		m.bin
+		o.bin
+		r.bin
+		s.bin
+		t.bin
+
+
+	aviso/
+		aviso_y.bin 	(135x113)
+		aviso.bin 	(143x126)
+
+
+	barcode/
+		lupa.bin	(82x130)
+		pr_found.bin	(297x104)
+		scan.bin	(171x128)
+
+
+	botones/
+		anadir.bin  	(172x130)
+		borrar.bin  	(172x130)
+		cociGra.bin  	(177x160)
+		crudoGra.bin 	(177x160)
+		guardar.bin 	(172x130)
+	
+
+	carga/
+		reloj1.bin
+		reloj2.bin
+		reloj3.bin
+		reloj4.bin
+		relGir1.bin
+		relGir2.bin
+		relGir3.bin
+		relGir4.bin
+		relGir5.bin
+		relGir6.bin
+
+
+	dash/
+		cociPeq.bin
+		crudo_peq.bin
+		kcal.bin
+
+
+	error/
+		cruz.bin
+
+
+	grupo/
+		grupo1.bin (130x125)
+		grupo2.bin (130x125)
+		grupo3.bin (130x125)
+		grupo4.bin (130x125)
+
+	guardar/
+		conexion.bin	(43x67)
+		disquete.bin	(91x98)
+		no_conex.bin	(54x85)
+	
+
+	inicial/
+		brain1.bin
+		brain2_g.bin (120x108)
+
+
+	manos/
+		manogppt.bin (120x128)
+		manowppt.bin (120x128)
+		
+
+	sync/
+		sync_ok,bin	(220x136)
+		sync.bin	(188x123)
+
+	
+
+	
+	
+	
+
+	
+
+	
+		
+
+	
+	
+	
+		

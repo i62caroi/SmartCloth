@@ -1,0 +1,9 @@
+
+
+Las imágenes se deben utilizar en binario en la pantalla. Para eso, se deben pasar de JPG a BIN usando el programa "RAiO Image Tool" de RAiO, que está preparado específicamente para este modelo de pantalla. Se deben escoger las siguientes opciones:
+
+- Chip: RA8871/RA8873/RA8876/RA8877
+- Output File Format: Binary File (*.bin)
+- Display Input Data Format: 16bpp mode (RGB 5:6:5)
+
+IMPORTANTE: las imágenes a convertir deben estar en formato JPG. Si se usa la opción de convertir desde PNG en lugar de JPG, no se convierte correctamente.

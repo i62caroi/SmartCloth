@@ -35,7 +35,7 @@
 
 
 // ---------------- COLORES PANTALLAS TRANSITORIAS --------------
-#define   VERDE_PEDIR                 0x6468  // Wireframes pedir recipiente, grupo y crudo-cocinado
+#define   VERDE_PEDIR_Y_EXITO                 0x6468  // Wireframes pedir recipiente, grupo y crudo-cocinado
 #define   VERDE_BORDE_PEDIR_COCCION   0x0184  // Borde de pantalla pedir crudo-cocinado superpuesta al dashboard
 
 #define   AMARILLO_CONFIRM_Y_AVISO    0xFEC4  // Wireframes de aviso y para confirmar acción de añadir, eliminar y guardar
@@ -50,10 +50,13 @@
 
 #define   DARKPURPLE                  0x30C6  // Mini mensaje cuando guardado completo (local y database)
 
-#define   AZUL_PROCESO                0x1B9F  // Pantalla de sincronización, de escanear producto y de buscar info producto
+//#define   AZUL_PROCESO                0x1B9F  // Pantalla de sincronización, de escanear producto y de buscar info producto
 #define   AZUL_RECUADRO_PROCESO       0x0010  // Recuadro para el texto
 
 #define   GRIS_CAMPOS_INFO            0x7BEF  // Líneas de separación en la información del producto barcode
+
+//#define   AZUL_PROCESO_2              0x029F
+#define   AZUL_PROCESO                0x037F  // Pantalla de guardando, sincronización, de escanear producto y de buscar info producto
 // --------------------------------------------------------------
 
 

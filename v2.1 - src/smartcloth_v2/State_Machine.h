@@ -42,9 +42,10 @@
 #define  MSG_SIN_GRUPO      2
 
 // --- PEDIR CONFIRMACIÓN ---
-#define  ASK_CONFIRMATION_ADD     1
-#define  ASK_CONFIRMATION_DELETE  2
-#define  ASK_CONFIRMATION_SAVE    3  
+#define  ASK_CONFIRMATION_ADD                   1
+#define  ASK_CONFIRMATION_DELETE                2
+#define  ASK_CONFIRMATION_SAVE_CON_INTERNET     3  
+#define  ASK_CONFIRMATION_SAVE_SIN_INTERNET     4  
 
 // --- ACCIÓN CONFIRMADA ---
 #define  ADD_EXECUTED                             1  // Se ha añadido un plato
@@ -512,7 +513,12 @@ typedef enum
 } procesado_t;
 
 procesado_t procesamiento;
+// ------ FIN PROCESAMIENTO -----------------------------------------------------------
 
+
+// ------ CONEXION INTERNET -----------------------------------------------------------
+bool hayConexionInternet;  // Flag para saber si hay conexión a internet. Se pregunta una vez en save_check y se guarda para STATE_saved
+// ------ FIN CONEXION INTERNET -------------------------------------------------------
 
 
 // ------ CODIGO DE BARRAS -------------------------------------------------------------
@@ -1361,7 +1367,6 @@ void actStateBarcode()
             #endif
 
             // ----- INFO DE PANTALLA -------------------------
-            //esp32_sinWifi();                 // Mostrar "Sin conexión. No se puede leer el código de barras" 
             showWarning(WARNING_NO_INTERNET_NO_BARCODE); // Mostrar "Sin conexión. No se puede leer el código de barras"
             // ----- FIN INFO DE PANTALLA ---------------------
 
@@ -2023,8 +2028,14 @@ void actStateSaveCheck()
         #if defined(SM_DEBUG)
             SerialPC.println(F("\n¿Seguro que quiere guardar la comida?")); 
         #endif
+
+        // ----- CONEXION A INTERNET O NO (GUARDAR COMIDA -----------------------------------------------------
+        hayConexionInternet = checkWifiConnection();
+        // ----------------------------------------------------------------------------------------------------
         
-        pedirConfirmacion(ASK_CONFIRMATION_SAVE);       // Mostrar pregunta de confirmación para guardar comida
+        // Mostrar pregunta de confirmación para guardar comida
+        if(hayConexionInternet) pedirConfirmacion(ASK_CONFIRMATION_SAVE_CON_INTERNET);  // Si hay conexión a internet, se muestra un mensaje   
+        else pedirConfirmacion(ASK_CONFIRMATION_SAVE_SIN_INTERNET);     // Si no hay conexión a internet, se muestra otro mensaje  
         
         doneState = true;                               // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                                         // cada vez que se entre a esta función debido al loop de Arduino.
@@ -2084,14 +2095,16 @@ void actStateSaved()
             #endif
 
             // -----  INFORMACIÓN MOSTRADA  -------------------------
-            //showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web. Habría que usar otra función para mostrar "Guardando comida..."
-            showSavingMealBase();                // Mostrar "Guardando comida..." en pantalla
+            /*showSavingMealBase();                // Mostrar "Guardando comida..." en pantalla
             // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
             // Esto se hace en saveComida() en la parte de subir la info. NO SE DEBERÍA PREGUNTAR AQUÍ Y LUEGO OTRA VEZ, ES REDUNDANTE,
             // PERO SE DEJA PARA QUE SE MUESTRE EN PANTALLA QUE NO HAY CONEXIÓN A INTERNET. HABRÍA QUE MODIFICAR saveComida() PARA QUE
             // SE LE PASE DE PRIMERAS SI HAY O NO INTERNET Y NO HACER LA COMPROBACIÓN AQUÍ.
             if(checkWifiConnection()) completeSavingMeal(SAVING_LOCAL_AND_DATABASE);
-            else completeSavingMeal(SAVING_ONLY_LOCAL);
+            else completeSavingMeal(SAVING_ONLY_LOCAL);*/
+
+            // En STATE_save_check se comprueba si hay conexión a internet y se guarda en 'hayConexionInternet'
+            showSavingMeal(hayConexionInternet);   // Mostrar "Guardando comida..." en pantalla y un mensaje de si hay o no conexión a internet
             // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
 
@@ -3480,7 +3493,7 @@ void actState_UPLOAD_DATA()
         if(checkWifiConnection()) // Hay WiFi 
         {
             // -----  INFORMACIÓN MOSTRADA  -------------------------
-            showDataUploadState(UPLOADING_DATA); // Sincronizando data del SM con web
+            showSyncState(UPLOADING_DATA); // Sincronizando data del SM con web
             // ----- FIN INFORMACIÓN MOSTRADA -----------------------
 
             // -----  ENVIAR INFORMACION AL ESP32  ------------------
@@ -3497,7 +3510,7 @@ void actState_UPLOAD_DATA()
                 // ----- MOSTRAR PANTALLA SEGÚN RESPUESTA --------
                 // Mostrar en pantalla el resultado de la subida de datos
                 if(uploadResult == MEALS_LEFT) showWarning(WARNING_MEALS_LEFT);  // No se han subido todas las comidas
-                else showDataUploadState(uploadResult); // ALL_MEALS_UPLOADED, ERROR_READING_TXT
+                else showSyncState(uploadResult); // ALL_MEALS_UPLOADED, ERROR_READING_TXT
             }
             // ------- FIN ESP32 EN ESPERA ----------------------------
             // ------ ESP32 NO RESPONDE O FALLA AUTENTICACIÓN ---------
@@ -3505,7 +3518,7 @@ void actState_UPLOAD_DATA()
             {
                 // -- MOSTRAR PANTALLA DE ERROR AL INDICAR GUARDADO --
                 // Mostrar en pantalla el fallo al indicar que se va a guardar
-                showDataUploadState(responseFromESP32ToSavePrompt); // NO_INTERNET_CONNECTION, HTTP_ERROR (al autenticarse en web), TIMEOUT, UNKNOWN_ERROR
+                showSyncState(responseFromESP32ToSavePrompt); // NO_INTERNET_CONNECTION, HTTP_ERROR (al autenticarse en web), TIMEOUT, UNKNOWN_ERROR
             }
             // --------------------------------------------------------
     
@@ -3515,7 +3528,7 @@ void actState_UPLOAD_DATA()
                 handleResponseFromESP32AfterUpload(SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta y mostrar mensaje acorde
                 // En este caso, ignoramos el valor devuelto de handleResponseFromESP32AfterUpload() porque no lo necesitamos
             else // El ESP32 no respondió en 3 segundos o falló el paso de información. Actuamos como si no hubiera WiFi
-                showDataUploadState(NO_INTERNET_CONNECTION); // No hay conexión, no se puede sincronizar SM con web
+                showSyncState(NO_INTERNET_CONNECTION); // No hay conexión, no se puede sincronizar SM con web
                 // El delay y el GO_TO_INIT se hace al final para todos los casos
             */
 
