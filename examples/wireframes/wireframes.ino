@@ -176,8 +176,9 @@ void loop() {
             case 52:    showNewSearchingProduct();                                                          break;  // Buscando información del producto
             // -- PRODUCTO ENCONTRADO --
             case 53:    showNewProductFound();                                                              break; // Código de barras y nombre del producto leído
+            case 54:    showNewProductFound("PRODUCT:8437002353025;Tortas de Andalucía;0.0;0.0;0.0;0.0");      break; // Info del producto leído
 
-
+            case 55:    dashboard_barcode(); break;
 
 
             // Simulación de iconos con funciones gráficas

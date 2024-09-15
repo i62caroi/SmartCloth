@@ -691,6 +691,68 @@ void showNewProductFound()
 }
 
 
+void showNewProductFound(String productInfo)
+{
+    // ---- PARSER INFORMACIÓN PRODUCTO -------------------------------------------------------------------
+    String cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
+    int idx_nombre = cad.indexOf(';');
+    int idx_carb = cad.indexOf(';', idx_nombre + 1);
+    String barcode = cad.substring(0, idx_nombre);                      // Extraer <barcode>
+    String nombreProducto = convertSpecialCharactersToHEX(cad.substring(idx_nombre + 1, idx_carb));   // Extraer <nombre_producto> y convertir caracteres especiales
+    // ----------------------------------------------------------------------------------------------------
+
+    // ---- COLOR FONDO -----------------------------------------------------------------------------------
+    // Aplicar color al fondo
+    tft.clearScreen(AZUL_PROCESO); // 0x037F en RGB565 (#006CFF en HEX) es el color que dio Guillermo, pero por el ángulo se ve celeste
+    // ----------------------------------------------------------------------------------------------------
+
+    // ----- TEXTO (INFORMACIÓN) --------------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
+    tft.setTextForegroundColor(WHITE);
+
+    tft.setCursor(125, 30);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO ENCONTRADO!"));
+    // ----------------------------------------------------------------------------------------------------
+
+    // ----- TEXTO (COMENTARIO) ---------------------------------------------------------------------------
+    //tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+
+    tft.setCursor(150, 125);                                        tft.print(convertSpecialCharactersToHEX("Pulse el botón de lectura si es"));
+    tft.setCursor(265, tft.getCursorY() + tft.getTextSizeY() + 15); tft.println("el producto correcto");
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------ ICONO (PRODUCTO + BOTÓN BARCODE) ------------------------------------------------------------
+    tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,369,137,PAGE1_START_ADDR,SCREEN_WIDTH,350,240,297,104); // Mostrar producto encontrado (297x104) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------------ LINEA ---------------------------------------------------------------------------------
+    tft.fillRoundRect(210,370,814,378,3,WHITE);
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------ RECUADRO REDONDEADO -------------------------------------------------------------------------
+    // Para encuadrar el texto con el código y el nombre del producto
+    // Tres recuadros para simular grosor
+    tft.drawRoundRect(95, 420, 905, 570, 20, WHITE);
+    tft.drawRoundRect(96, 421, 904, 569, 19, WHITE);
+    tft.drawRoundRect(97, 422, 903, 568, 18, WHITE);
+    // ----------------------------------------------------------------------------------------------------
+
+    // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+
+    //String barcode = "8437002353025";
+    //String nombreProducto = "Tortas de aceite";
+
+    tft.setCursor(110, 440);                                         tft.print(convertSpecialCharactersToHEX("Código: "));  tft.println(barcode);
+    tft.setCursor(110,tft.getCursorY() + tft.getTextSizeY() - 10);   tft.print("Nombre:");                                  tft.println(nombreProducto);
+    // ----------------------------------------------------------------------------------------------------
+
+}
+
+
+
 /*
 void esp32_sinWifi()
 {
@@ -3132,6 +3194,344 @@ void dashboard(){ // OK ==> HECHO
 
 
 
+void dashboard_barcode()
+{ 
+    float raciones;
+    //int integerPart;
+
+    // NO HACE FALTA VOLVER A PAG1, YA SE HACE EN loadPicturesShowHourglass()
+    //tft.canvasImageStartAddress(PAGE1_START_ADDR); // Regresar a PAGE1
+    tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
+
+    // ------------ ZONA SUPERIOR --------------------------------------------
+    // ---------- GRÁFICOS -------------------
+    // Recuadro grupo 
+    tft.fillRoundRect(30,20,994,135,20,GRIS_CUADROS); // 964 x 115
+    // ---------- FIN GRÁFICOS ---------------
+
+
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+
+    // Título
+    tft.setCursor(40,30);
+    tft.print("Grupo Actual: ");  // 32 escale x1
+
+    // Nombre grupo
+    tft.setTextForegroundColor(COLOR_G1); // COLOR como atributo de struct 'grupo'
+    tft.setCursor(tft.getCursorX(),tft.getCursorY());
+    tft.print("Tortas de aceite"); // Nombre grupo // 32 escale x1
+    // -------- FIN TEXTO --------------------
+    // ------------- FIN ZONA SUPERIOR ---------------------------------------
+
+
+    // ------------- PLATO ACTUAL  -------------------------------------------
+    // ---------- GRÁFICOS -------------------
+    // Recuadro "Plato actual"
+    /*tft.fillRoundRect(30,145,504,580,20,GRIS_CUADROS); // 474 x 425
+    tft.drawRoundRect(30,145,504,580,20,AZUL_BORDE_CUADRO); // Borde => 474 x 425
+    tft.drawRoundRect(31,146,503,579,20,AZUL_BORDE_CUADRO); // Borde => 473 x 424
+    */
+    uint16_t xOrigin = 30, yOrigin = 145, ancho = 474, alto = 435, radio = 20, grosor = 2; 
+    tft.drawThickRoundFillRect(xOrigin,yOrigin,ancho,alto,radio,grosor,AZUL_BORDE_CUADRO, GRIS_CUADROS); // Recuadro azul de 474x435 con grosor de 2 pixeles
+
+    // Recuadro Raciones Carbohidratos
+    tft.fillRoundRect(401,288,479,345,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Raciones Proteinas
+    tft.fillRoundRect(401,365,479,422,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Raciones Grasas
+    tft.fillRoundRect(401,442,479,499,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+     // Dibujo kcal
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,117,497,70,75);  // Mostrar kcal_10 (70x76) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,127,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,117,496,50,54);  // Mostrar kcal_30 (50x54) en PAGE1
+   
+    // ---------- FIN GRÁFICOS ---------------
+
+
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setTextForegroundColor(WHITE); 
+
+    // Título
+    tft.setCursor(120,155);
+    tft.print("Comida actual");  // 24 escale x2
+
+    // Peso
+    tft.setCursor(50,220);
+    tft.setTextForegroundColor(ROJO_PESO); 
+    tft.print("PESO: 145.2g"); // 24 escale x2
+
+
+    // ---- VALORES ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1);
+
+    // Carbohidratos
+    tft.setCursor(50,303);
+    tft.setTextForegroundColor(AZUL_CARB); 
+    tft.print("CARBOHIDRATOS: 100.1g"); // 32 escale x1
+    
+    // Proteinas
+    tft.setCursor(50,380);
+    tft.setTextForegroundColor(NARANJA_PROT); 
+    tft.print("PROTE\xCD""NAS: 70.1g"); // 32 escale x1
+    
+    // Grasas
+    tft.setCursor(50,457);
+    tft.setTextForegroundColor(AMARILLO_GRASAS); 
+    tft.print("GRASAS: 49.1g");  // 32 escale x1
+    
+    // Kcal
+    tft.setCursor(197,516);
+    tft.setTextForegroundColor(ROJO_KCAL); 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.print("121 Kcal."); // 24 escale x2
+    // ----- FIN VALORES ----
+
+
+    // ---- RACIONES ------
+    // Texto "Raciones"
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(370,243);
+    tft.print("Raciones"); // 32 escale x1
+
+    // Cambiamos el tamaño de texto para los valores de Raciones. 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+
+    // ------------ Raciones de Carbohidratos ------------
+    /*
+        CARB: 22.2 --> 2.20
+        PROT: 38.3 --> 3.80
+        LIP: 43.6 --> 4.40
+
+        CARB: 1.3 --> 0.10
+        PROT: 0.4 --> 0.00
+        LIP: 9.9 --> 1.00
+    */
+    raciones = 50.50;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
+        tft.setCursor(406,293);
+    } 
+    else { // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(416,293); 
+        tft.setCursor(408,291);
+    }         
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
+    
+
+
+
+    // ------------ Raciones de Proteinas ------------ 
+    raciones = 0.00;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(406,370);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(416,370); 
+        tft.setCursor(408,368);        
+    } 
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+
+
+
+    // ---------- Raciones de Grasas ------------
+    raciones = 1.00;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(406,447);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(416,447);  
+        tft.setCursor(408,445);         
+    }   
+    tft.print(raciones,1); // Si no termina en .0 , termina en .5 , entonces sí lo mostramos. 12x24 escale x2 solo altura
+
+    // ---- FIN RACIONES ----
+
+    // ---- RACIONES ------ 
+
+    
+    // -------- FIN TEXTO --------------------
+    // ------------- FIN PLATO ACTUAL ----------------------------------------
+
+
+
+
+    // ------------- ACUMULADO HOY  -------------------------------------------
+    // ---------- GRÁFICOS -------------------
+    // Recuadro "Acumulado hoy"
+    tft.fillRoundRect(520,145,994,580,20,GRIS_CUADROS); // 474 x 425
+
+    // Recuadro Carbohidratos
+    tft.fillRoundRect(891,288,969,345,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Proteinas
+    tft.fillRoundRect(891,365,969,422,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // Recuadro Grasas
+    tft.fillRoundRect(891,442,969,499,10,GRIS_CUADROS_VALORES); // 78 x 57
+
+    // kcal
+    //tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,174,PAGE1_START_ADDR,SCREEN_WIDTH,607,483,80,87);  // Mostrar kcal (80x87) en PAGE1
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,529,175,PAGE1_START_ADDR,SCREEN_WIDTH,617,507,60,64);  // Mostrar kcal_20 (60x65) en PAGE1
+
+    // ---------- FIN GRÁFICOS ---------------
+
+
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setTextForegroundColor(WHITE); 
+
+    // Título
+    tft.setCursor(590, 155);
+    tft.print("Acumulado hoy");  // 24 escale x2
+
+    // Peso
+    tft.setCursor(540,220);
+    tft.setTextForegroundColor(ROJO_PESO); 
+    tft.print("PESO: 2145.2g"); // 24 escale x2
+
+
+    // ---- VALORES ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1);
+    
+    // Carbohidratos
+    tft.setCursor(540,303);
+    tft.setTextForegroundColor(AZUL_CARB); 
+    tft.print("CARBOHIDRATOS: 1000.1g"); // 32 escale x1
+    
+    // Proteinas
+    tft.setCursor(540,380);
+    tft.setTextForegroundColor(NARANJA_PROT); 
+    tft.print("PROTE\xCD""NAS: 700.1g"); // 32 escale x1
+    
+    // Grasas
+    tft.setCursor(540,457);
+    tft.setTextForegroundColor(AMARILLO_GRASAS); 
+    tft.print("GRASAS: 490.1g");  // 32 escale x1
+    
+    // Kcal
+    tft.setCursor(687,516);
+    tft.setTextForegroundColor(ROJO_KCAL); 
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.print("1121 Kcal."); // 24 escale x2
+    // ----- FIN VALORES ----
+
+
+    // ---- RACIONES ------
+    // Texto "Raciones"
+    tft.selectInternalFont(RA8876_FONT_SIZE_32); 
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(860,243);
+    tft.print("Raciones"); // 32 escale x1
+
+    // Cambiamos el tamaño de texto para los valores de Raciones. 
+    //tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    //tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    // ------------ Raciones de Carbohidratos ------------
+    /*
+    // Raciones de Carbohidratos
+    tft.setCursor(906,293);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("10"); // 24 escale x2
+    */
+    raciones = 20.50;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(896,293);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(906,293); 
+        tft.setCursor(898,291);
+    }          
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
+    
+
+    // ------------ Raciones de Proteinas ------------ 
+    /*
+    // Raciones de Proteinas
+    tft.setCursor(916,370);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("7"); // 24 escale x2
+    */
+    raciones = 7.60;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(896,370);
+    } 
+    else{ // 2 o más cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(906,370);
+        tft.setCursor(898,368);        
+    } 
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
+
+    
+    // ---------- Raciones de Grasas ------------
+    /*
+    // Raciones de Grasas
+    tft.setCursor(916,447);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("5"); // 24 escale x2
+    */
+    raciones = 1.00;
+    // Cursor y tamaño según la cantidad de cifras enteras para centrar en el cuadro
+    if(abs((int)raciones) < 10){   // 1 cifra entera
+        tft.selectInternalFont(RA8876_FONT_SIZE_24);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+        tft.setCursor(896,447);
+    } 
+    else{ // 2 cifras enteras
+        tft.selectInternalFont(RA8876_FONT_SIZE_16);
+        tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X3); // Alargar
+        //tft.setCursor(906,447);  
+        tft.setCursor(898,445);         
+    }   
+    tft.print(raciones,1); // Mostrar 1 decimal, para evitar el 0 que se queda al final (p.ej. 3.20 muestra 3.2)
+    // ---- FIN RACIONES ----
+    // -------- FIN TEXTO --------------------
+    // -------------- FIN ACUMULADO HOY ---------------------------------------
+
+
+
+}
 
 
 
@@ -3337,7 +3737,7 @@ void showWarning(byte option, String barcode)
             break;
 
         case WARNING_RAW_COOKED_NOT_NEEDED: // NO HACE FALTA CRUDO/COCINADO PARA PRODUCTO BARCODE
-            tft.setCursor(50, 410);                                         tft.println("NO HACE FALTA ESCOGER GRUPO O COCINADO"); 
+            tft.setCursor(50, 410);                                         tft.println("NO HACE FALTA ESCOGER CRUDO O COCINADO"); 
             tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());      tft.print("PARA ESTE PRODUCTO");  
             break;
 
