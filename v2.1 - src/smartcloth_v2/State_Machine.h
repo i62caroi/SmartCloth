@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 191   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
+#define RULES 195   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
 
 
 #include "SD_functions.h" // Incluye lista_Comida.h y Serial_functions.h
@@ -363,6 +363,7 @@ static transition_rule rules[RULES] =
                                         // --- Alimento crudo ---
                                         {STATE_raw,STATE_Init,LIBERAR},                 // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
                                         {STATE_raw,STATE_raw,DECREMENTO},               // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
+                                        {STATE_raw,STATE_raw,TARAR},                    // Tarar tras pesar alimento y querer cambiar procesamiento, por lo que se ha debido de guardar el alimento pesado antes de cambiar procesamiento
                                         {STATE_raw,STATE_Grupo,TIPO_A},                 // Cambiar grupo alimentos
                                         {STATE_raw,STATE_Grupo,TIPO_B},                 // Cambiar grupo alimentos
                                         {STATE_raw,STATE_Barcode_read,BARCODE},         // Pulsado botón de barcode para iniciar lectura
@@ -378,6 +379,7 @@ static transition_rule rules[RULES] =
                                         // --- Alimento cocinado ---
                                         {STATE_cooked,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
                                         {STATE_cooked,STATE_cooked,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
+                                        {STATE_cooked,STATE_cooked,TARAR},              // Tarar tras pesar alimento y querer cambiar procesamiento, por lo que se ha debido de guardar el alimento pesado antes de cambiar procesamiento
                                         {STATE_cooked,STATE_Grupo,TIPO_A},              // Cambiar grupo alimentos
                                         {STATE_cooked,STATE_Grupo,TIPO_B},              // Cambiar grupo alimentos
                                         {STATE_cooked,STATE_Barcode_read,BARCODE},      // Pulsado botón de barcode para iniciar lectura
@@ -395,12 +397,14 @@ static transition_rule rules[RULES] =
                                         {STATE_weighted,STATE_weighted,INCREMENTO},         // Se coloca más alimento.  
                                         {STATE_weighted,STATE_weighted,DECREMENTO},         // Se retira alimento.
                                         {STATE_weighted,STATE_Grupo,TIPO_A},                // Escoger nuevo grupo. Se guardará en STATE_Grupo el peso del alimento en báscula.
-                                        {STATE_weighted,STATE_Grupo,TIPO_B},                // Escoger nuevo grupo. Se guardará en STATE_Grupo el peso del alimento en báscula.}
+                                        {STATE_weighted,STATE_Grupo,TIPO_B},                // Escoger nuevo grupo. Se guardará en STATE_Grupo el peso del alimento en báscula.
+                                        {STATE_weighted,STATE_raw,CRUDO},                   // Cambiar procesamiento (pesado => crudo).
+                                        {STATE_weighted,STATE_cooked,COCINADO},             // Cambiar procesamiento (pesado => cocinado).
                                         {STATE_weighted,STATE_Barcode_read,BARCODE},        // Pulsado botón de barcode para iniciar lectura. Se guardará en STATE_Barcode el peso del alimento en báscula.
                                         {STATE_weighted,STATE_add_check,ADD_PLATO},         // Nuevo plato, aunque no se haya colocado alimento.
                                         {STATE_weighted,STATE_delete_check,DELETE_PLATO},   // Borrar plato actual. 
                                         {STATE_weighted,STATE_save_check,GUARDAR},          // Guardar comida, aunque no se haya colocado alimento. 
-                                        {STATE_weighted,STATE_ERROR,ERROR},                 // Acción incorrecta
+                                        {STATE_weighted,STATE_ERROR,ERROR},                 // Acción incorrecta ????? Parece que todas las posibles acciones del usuario están contempladas en las reglas de transición
                                         // -----------------------
 
                                         // --- Check añadir plato ---
@@ -2048,7 +2052,50 @@ void actStateRaw()
 
     if(!doneState)
     {
+        // ----- ACCIONES PREVIAS ----------------------
+        // Se comprueba que el último estado válido sea STATE_weighted por si, tras pesar un alimento, se ha decidido cambiar el procesamiento sin cambiar de grupo.
+        // Entonces, si había algo pesándose, se debe guardar en la lista de alimentos y en el plato antes de cambiar el procesamiento para pesar otro alimento del 
+        // mismo grupo actualmente escogido pero con otro procesamiento.
+        if((lastValidState == STATE_weighted) && (pesoBascula != 0.0))
+        {       
+            // Al pulsar el botón de CRUDO se han actualiza 'grupoActual' y 'grupoAnterior', pero aún no se ha guardado el alimento pesado, por lo que se guarda 
+            // con 'grupoAnterior' porque representa al grupo del alimento pesado, que aunque fuera del mismo grupo oficial, se ha pesado antes de cambiar el procesamiento.
+            // ----- AÑADIR ALIMENTO A LISTA -----------------------------
+            if(grupoAnterior.ID_grupo != BARCODE_PRODUCT_INDEX)  // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
+            {                                                  //   siendo <grupo> el ID de 'grupoActual' y <peso> el valor de 'pesoBascula'.
+                listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
+            }
+            else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
+            {
+                listaComidaESP32.addAlimentoBarcode(grupoAnterior.ID_grupo, pesoBascula, barcode);
+            }
+
+            #if defined(SM_DEBUG)
+                listaComidaESP32.leerLista();
+            #endif 
+            // -----------------------------------------------------------
+                
+            // ----- AÑADIR ALIMENTO A PLATO -----------------------------
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("Añadiendo alimento al plato..."));
+            #endif
+
+            Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
+                                                            
+            platoActual.addAlimentoPlato(alimento);                     // Alimento ==> Plato
+            comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
+
+            pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
+
+            tareScale();                                                // Tras guardar la información del último alimento colocado, se tara la báscula
+                                                                        // para pesar el siguiente alimento
+            // -----------------------------------------------------------
+        }
+        // ----- FIN ACCIONES PREVIAS --------------------
+
         // ----- ACCIONES ------------------------------
+        // Se comprueba no venir del propio STATE_raw por si se ha retirado el plato, se detecta DECREMENTO (previo a LIBERAR) y se entra 
+        // de nuevo en STATE_raw, para que no se vuelva a modificar el procesamiento, aunque no pasaría nada. 
         if(state_prev != STATE_raw)
         {
             #if defined(SM_DEBUG)
@@ -2118,7 +2165,50 @@ void actStateCooked()
 
     if(!doneState)
     {
+        // ----- ACCIONES PREVIAS ----------------------
+        // Se comprueba que el último estado válido sea STATE_weighted por si, tras pesar un alimento, se ha decidido cambiar el procesamiento sin cambiar de grupo.
+        // Entonces, si había algo pesándose, se debe guardar en la lista de alimentos y en el plato antes de cambiar el procesamiento para pesar otro alimento del 
+        // mismo grupo actualmente escogido pero con otro procesamiento.
+        if((lastValidState == STATE_weighted) && (pesoBascula != 0.0))
+        {       
+            // Al pulsar el botón de COCINADO se han actualiza 'grupoActual' y 'grupoAnterior', pero aún no se ha guardado el alimento pesado, por lo que se guarda 
+            // con 'grupoAnterior' porque representa al grupo del alimento pesado, que aunque fuera del mismo grupo oficial, se ha pesado antes de cambiar el procesamiento.
+            // ----- AÑADIR ALIMENTO A LISTA -----------------------------
+            if(grupoAnterior.ID_grupo != BARCODE_PRODUCT_INDEX)  // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
+            {                                                  //   siendo <grupo> el ID de 'grupoActual' y <peso> el valor de 'pesoBascula'.
+                listaComidaESP32.addAlimento(grupoAnterior.ID_grupo, pesoBascula);
+            }
+            else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
+            {
+                listaComidaESP32.addAlimentoBarcode(grupoAnterior.ID_grupo, pesoBascula, barcode);
+            }
+
+            #if defined(SM_DEBUG)
+                listaComidaESP32.leerLista();
+            #endif 
+            // -----------------------------------------------------------
+            
+            // ----- AÑADIR ALIMENTO A PLATO -----------------------------
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("Añadiendo alimento al plato..."));
+            #endif
+
+            Alimento alimento(grupoAnterior, pesoBascula);              // Cálculo automático de valores nutricionales.
+                                                            
+            platoActual.addAlimentoPlato(alimento);                     // Alimento ==> Plato
+            comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
+
+            pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
+
+            tareScale();                                                // Tras guardar la información del último alimento colocado, se tara la báscula
+                                                                        // para pesar el siguiente alimento
+            // -----------------------------------------------------------
+        }
+        // ----- FIN ACCIONES PREVIAS --------------------
+
         // ----- ACCIONES ------------------------------
+        // Se comprueba no venir del propio STATE_cooked por si se ha retirado el plato, se detecta DECREMENTO (previo a LIBERAR) y se entra 
+        // de nuevo en STATE_cooked, para que no se vuelva a modificar el procesamiento, aunque no pasaría nada. 
         if(state_prev != STATE_cooked)
         {
             #if defined(SM_DEBUG)

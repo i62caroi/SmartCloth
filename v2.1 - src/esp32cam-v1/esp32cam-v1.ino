@@ -198,7 +198,7 @@ void loop()
         // como ocurría a veces.
 
         // ------ Intentar obtener Barcode ---------------
-        else if (msgFromDue == "GET-BARCODE") tryGetBarcode(); // Si hay WiFi, leer barcode
+        else if (msgFromDue == "GET-BARCODE") tryGetBarcode(); // Leer barcode
         // -----------------------------------------------
 
         // ------ Intentar buscar producto ---------------
