@@ -191,9 +191,10 @@ void setGrupoAlimentos(byte id)
  * Esta función toma una cadena de texto que representa la información del producto obtenida a través
  * de un código de barras. La información del producto debe seguir un formato específico donde los
  * diferentes campos están separados por punto y coma (;). El formato esperado es:
- * "PRODUCT:<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+ * "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
  * 
  * Los campos extraídos son:
+ * - barcode: El código de barras del producto.
  * - nombre_producto: El nombre del producto.
  * - carb_1g: La cantidad de carbohidratos por gramo.
  * - lip_1g: La cantidad de lípidos (grasas) por gramo.

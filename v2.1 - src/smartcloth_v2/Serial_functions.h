@@ -54,68 +54,66 @@
 
 
     -------- MENSAJES ARDUINO -> ESP32 --------------
-        ----- COMPROBAR COMUNICACIÓN --
-        1) Comprobar conexión:
-            "PING"
-
         ----- CONEXIÓN A INTERNET -----
-        2) Check wifi:
+        1) Check wifi:
             "CHECK-WIFI"
 
         ----- INFO COMIDAS ------------
-        3) Guardar info en base de datos al inicio:
-            3.1. Indicar guardado:
+        2) Guardar info en base de datos al inicio:
+            2.1. Indicar guardado:
                 "SAVE"
-            3.2. Mandar datos a guardar, línea a línea:
+            2.2. Mandar datos a guardar, línea a línea:
                 "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,9,54.35" ... --> sendFileToEsp32MealByMeal()
 
         ----- BARCODE ----------------
-        4) Leer código de barras:
-            "GET-BARCODE"
+            3) Leer código de barras:
+                "GET-BARCODE"
+                3.1) Cancelar leer código de barras (para que el ESP32 no siga esperándolo si se cancela la acción):
+                    "CANCEL-BARCODE"
+
+            4) Buscar producto:
+                "GET-PRODUCT:<barcode>"
+
 
 
 
     -------- MENSAJES ESP32 -> ARDUINO -------------- 
-        ----- COMPROBAR COMUNICACIÓN --
-        1) Comprobación de conexión:
-            "PONG"
-
         ----- CONEXIÓN A INTERNET -----
-        2) Hay wifi:
+        1) Hay wifi:
             "WIFI-OK"
 
-        3) No hay wifi:
+        2) No hay wifi:
             "NO-WIFI"
         
         ----- INFO COMIDAS ------------
-        4) Esperando datos a subir:
+        3) Esperando datos a subir:
             "WAITING-FOR-DATA"
 
-        5) JSON guardado correctamente:
+        4) JSON guardado correctamente:
             "SAVED-OK"
 
-        6) Error en el guardado de la comida (petición HTTP POST):
+        5) Error en el guardado de la comida (petición HTTP POST):
             "ERROR-HTTP:<codigo_error>"
 
         ----- BARCODE ----------------
             ----- LEER BARCODE -----
-            7) Código de barras leído. Buscando información del producto:
+            6) Código de barras leído. Buscando información del producto:
                 "BARCODE:<barcode>"
         
-            8) No se ha podido leer el código de barras (no se ve bien o el lector no responde):
+            7) No se ha podido leer el código de barras (no se ve bien o el lector no responde):
                 "NO-BARCODE"
     
             ----- BUSCAR PRODUCTO -----
-            9) Información del producto:
+            8) Información del producto:
                 "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
             
-            10) No se ha encontrado el producto en OpenFoodFacts (error HTTP 404 not found):
+            9) No se ha encontrado el producto en OpenFoodFacts (error HTTP 404 not found):
                 "NO-PRODUCT"
 
-            11) Error al buscar producto (diferente a no encontrado):
+            10) Error al buscar producto (diferente a no encontrado):
                 "ERROR-HTTP:<codigo_error>"
 
-            12) El servidor de OpenFoodFacts no responde:
+            11) El servidor de OpenFoodFacts no responde:
                 "PRODUCT-TIMEOUT"
 
 
@@ -195,7 +193,7 @@ inline bool     isTimeoutExceeded(unsigned long &startTime, unsigned long &timeo
 
 bool    checkWifiConnection();                                      // Comprobar conexion a internet
 byte    prepareSaving();                                            // Indica al ESP32 que se le va a enviar info y espera su respuesta WAITING-FOR-DATA
-void    getBarcodeAndProductInfo();                                 // Leer código de barras y buscar información del producto
+//void    getBarcodeAndProductInfo();                                 // Leer código de barras y buscar información del producto
 byte    askForBarcode(String &barcode);                             // Obtener el código de barras
 byte    getProductInfo(String &barcode, String &productInfo);       // Obtener la información del producto a partir de un código de barras
 /******************************************************************************/
@@ -687,7 +685,7 @@ byte prepareSaving()
  * @param productInfo Referencia a una cadena de caracteres donde se almacenará la información del producto.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-void getBarcodeAndProductInfo()
+/*void getBarcodeAndProductInfo()
 {
     String barcode;
     // 1. Obtener barcode
@@ -706,7 +704,7 @@ void getBarcodeAndProductInfo()
             SerialPC.println(F("\nNo se va a buscar info del producto porque no se ha leido el barcode"));
         #endif
     } 
-}
+}*/
 
 
 
@@ -739,7 +737,7 @@ byte askForBarcode(String &barcode)
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
     String msgFromESP32;
-    unsigned long timeout = 30500; // Espera máxima de 30.5 segundos (el tiempo que da el ESP32 para colocar el producto)
+    unsigned long timeout = 30500; // Espera máxima de 30.5 segundos (el ESP32 da 30 segundos para colocar el producto)
     //waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
     waitResponseFromESP32WithEvents(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32. Atiende a interrupciones
     // --------------------------------------
@@ -748,7 +746,7 @@ byte askForBarcode(String &barcode)
     if(msgFromESP32 == "INTERRUPTION") 
         return INTERRUPTION; // Se ha interrumpido la lectura del barcode (evento de interrupción)
     // --- EXITO ------
-    else if(msgFromESP32.startsWith("BARCODE:")) 
+    else if(msgFromESP32.startsWith("BARCODE:")) // "BARCODE:<barcode>"
     {
         barcode = msgFromESP32.substring(8);
         #ifdef SM_DEBUG
@@ -765,7 +763,8 @@ byte askForBarcode(String &barcode)
         #endif
         return BARCODE_NOT_READ;
     }
-    else if(msgFromESP32 == "TIMEOUT") return TIMEOUT; // No se ha recibido respuesta del ESP32
+    else if(msgFromESP32 == "TIMEOUT") 
+        return TIMEOUT; // No se ha recibido respuesta del ESP32
     else // Mensaje desconocido
     {
         #ifdef SM_DEBUG
@@ -799,16 +798,25 @@ byte getProductInfo(String &barcode, String &productInfo)
     #endif
     // ---------------------------------------------------------
 
+    // ---- PEDIR BUSCAR PRODUCTO ------------------------------
+    #ifdef SM_DEBUG
+        SerialPC.println(F("\nPidiendo buscar producto..."));
+    #endif
+    String msgToESP32 = "GET-PRODUCT:" + barcode; 
+    sendMsgToESP32(msgToESP32); // Envía la cadena al ESP32
+    // ---------------------------------------------------------
+    
+
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
     String msgFromESP32;
-    unsigned long timeout = 10000; // Espera máxima de 10 segundos (el tiempo que se da el ESP32 para buscar el producto)
+    unsigned long timeout = 10500; // Espera máxima de 10.5 segundos (el ESP32 tiene 10 segundos para buscar el producto)
     waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
     // --------------------------------------
 
     // ---- ANALIZAR RESPUESTA DEL ESP32 ----
     // --- EXITO ------
-    if(msgFromESP32.startsWith("PRODUCT:")) 
+    if(msgFromESP32.startsWith("PRODUCT:")) // "PRODUCT:<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
     {
         #ifdef SM_DEBUG
             SerialPC.println("\nInformacion del producto: " + msgFromESP32);
@@ -832,13 +840,6 @@ byte getProductInfo(String &barcode, String &productInfo)
         #endif
         return PRODUCT_TIMEOUT;
     }
-    else if(msgFromESP32 == "NO-WIFI") 
-    {
-        #ifdef SM_DEBUG
-            SerialPC.println("\nNo hay wifi");
-        #endif
-        return NO_INTERNET_CONNECTION;
-    }
     else if(msgFromESP32.startsWith("ERROR-HTTP:")) 
     {
         #ifdef SM_DEBUG
@@ -847,7 +848,8 @@ byte getProductInfo(String &barcode, String &productInfo)
         #endif
         return HTTP_ERROR;
     }
-    else if(msgFromESP32 == "TIMEOUT") return TIMEOUT; // No se ha recibido respuesta del ESP32
+    else if(msgFromESP32 == "TIMEOUT") 
+        return TIMEOUT; // No se ha recibido respuesta del ESP32
     else // Mensaje desconocido
     {
         #ifdef SM_DEBUG

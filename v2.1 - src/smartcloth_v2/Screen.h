@@ -233,7 +233,7 @@ bool    eventOccurred();
 
 // --- MENSAJE DE GUARDADO ---
 #define  SAVING_ONLY_LOCAL          1   // Solo se puede guardar localmente porque no hay conexión a internet
-#define  SAVING_LOCAL_AND_DATABASE                2   // Guardado completo: local y en la database
+#define  SAVING_LOCAL_AND_DATABASE  2   // Guardado completo: local y en la database
 
 
 
@@ -269,6 +269,10 @@ void    showRaciones(ValoresNutricionales &valores, byte zona); // Mostrar racio
 void    showDashboardStyle1(byte msg_option);                   // Mostrar dashboard estilo 1 (zonas 1-2 vacías y con mensaje, Comida copiada en zona 3 y Acumulado en zona 4) => STATE_Init y STATE_Plato
 void    showDashboardStyle2();                                  // Mostrar dashboard estilo 2 (zonas 1-2 rellenas, Alimento en zona 3 y Comida en zona 4) => STATE_groupA/B, STATE_raw/cooked y STATE_weighted
 bool    showSemiDashboard_PedirProcesamiento();                 // Mostrar medio dashboard (zonas 1 y 2). Las zonas 3 y 4 se tapan con pantalla de pedir procesamiento => STATE_groupA/B
+// -- Dahsboard barcode ------
+void    printGrupo_Barcode();                                   // Mostrar grupo de alimentos (50, barcode) en zona 1 que cubre zona 2
+void    showDashboardStyle2_Barcode();                          // Mostrar dashboard estilo 2 con el producto leído y el alimento en zona 3 y la comida en zona 4 => STATE_Barcode
+
 
 // --- PANTALLAS TRANSITORIAS ---
 // -- Guardando comida ---
@@ -281,9 +285,13 @@ void    recipienteColocado();               // Mostrar "Recipiente colocado"    
 void    recipienteRetirado();               // Mostrar "Recipiente retirado"     =>  solo si se ha retirado (LIBERAR --> STATE_Init)
 // -- Grupo --------------
 void    pedirGrupoAlimentos();              // Pedir escoger grupo de alimentos  =>  STATE_Plato
+
 // -- Barcode ------------
 void    showScanningBarcode();                  // Mostrar "Escaneando código"        =>  STATE_Barcode
 void    showSearchingProductInfo();             // Pantalla: Buscando información del producto
+//void    showProductoCancelado();                // Pantalla: Producto cancelado
+void    showProductInfo(String &productInfo);   // Mostrar información del producto
+
 
 // -- Procesamiento ------
 //void    pedirProcesamiento();             // Pedir escoger crudo o cocinado    =>  STATE_groupA y STATE_groupB
@@ -299,12 +307,15 @@ void    pedirConfirmacion(byte option);     // Pregunta de confirmación general
 // -- Acción realizada ---
 void    showAccionRealizada(byte option);   // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Acción cancelada ---
-void    showAccionCancelada();              // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
+//void    showAccionCancelada();              // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
+void    showCancel(byte option);            // Mensaje de "Acción cancelada" para add/delete/save o leer barcode, o "Producto cancelado" para el producto buscado
 // -- Fallo crítico en SD ---
 void    showCriticFailureSD();              // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
 // --- Errores o avisos ---
 void    showError(byte option);             // Pantalla de error con mensaje según estado 
-void    showWarning(byte option, String barcode = "");           // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+void    showWarning(byte option);           // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
+                                            // o de no haber leído el barcode => STATE_Barcode (option: 4) o de no haber encontrado el producto => STATE_Barcode (option: 5)
+                                            // Si no se encuentra el producto, se indica con su código, que está como global en State_Machine.h y se tiene acceso desde Screen.h
 // -- Aparición/Desaparición imágenes --
 bool    slowAppearanceImage(byte option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
 bool    slowAppearanceAndDisappareanceProcesamiento(byte option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
@@ -743,6 +754,35 @@ void printGrupoyEjemplos()
     tft.selectInternalFont(RA8876_FONT_SIZE_24); 
     tft.setCursor(40,68);
     tft.print(grupoActual.Ejemplos_grupo); // Ejemplos grupo -> 12x24 escale x1
+    // -------- FIN TEXTO --------------------
+    
+}
+
+
+/*---------------------------------------------------------------------------------------------------------
+   printGrupo_Barcode(): Zona 1 cubriendo Zona 2 => Muestra el nombre del producto escaneado.
+----------------------------------------------------------------------------------------------------------*/
+void printGrupo_Barcode()
+{    
+    // -------- TEXTO ------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_32);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
+
+    // Recuadro grupo 
+    tft.fillRoundRect(30,20,994,135,20,GRIS_CUADROS); // 964 x 115
+
+    // Título
+    tft.setCursor(40,30);
+    tft.setTextForegroundColor(WHITE); 
+    tft.print("Grupo Actual: ");  // 16x32 escale x1
+
+    // Color grupo
+    tft.setTextForegroundColor(grupoActual.color_grupo); // 'color_grupo' como atributo de struct 'Grupo'
+    
+    // Nombre grupo
+    tft.setCursor(tft.getCursorX(),tft.getCursorY());
+    tft.print(grupoActual.Nombre_grupo); // Nombre grupo -> 16x32 escale x1
+    SerialPC.print("Grupo escogido (" + grupoActual.ID_grupo); SerialPC.println("): " + grupoActual.Nombre_grupo); 
     // -------- FIN TEXTO --------------------
     
 }
@@ -1200,13 +1240,33 @@ void showDashboardStyle1(byte msg_option){
 
                           Este dashboard se muestra en STATE_groupA, STATE_groupB, STATE_raw, STATE_cooked y STATE_weighted.
 ----------------------------------------------------------------------------------------------------------*/
-void showDashboardStyle2(){
+void showDashboardStyle2()
+{
     showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
 
     tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
 
     printGrupoyEjemplos();                  // Zona 1 - Grupo y ejemplos 
     printProcesamiento();                   // Zona 2 - Procesamiento crudo o cocinado (según modo: ALIMENTO_CRUDO o ALIMENTO_COCINADO)
+    printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
+    printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   showDashboardStyle2_Barcode(): Muestra el dashboard de estilo 2 con Zona 1 (grupo, nombre producto) cubriendo 
+                                  la Zona 2 (no se necesita procesamiento), Zona 3 (Alimento Actual) y Zona 4 (Comida Actual).
+
+                          Este dashboard se muestra en STATE_Barcode y STATE_weighted, si el grupo es el 50 (Barcode).
+----------------------------------------------------------------------------------------------------------*/
+void showDashboardStyle2_Barcode()
+{
+    showingTemporalScreen = false; // Desactivar flag de estar mostrando pantalla temporal/transitoria
+
+    tft.clearScreen(AZUL_FONDO); // Fondo azul oscuro en PAGE1
+
+    printGrupo_Barcode();                   // Zona 1 y 2 - Grupo (nombre producto)
     printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
     printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
 }
@@ -2051,6 +2111,9 @@ void showScanningBarcode()
 ----------------------------------------------------------------------------------------------------------*/
 void showSearchingProductInfo() 
 {
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+    // En este caso es temporal en el sentido de que si no se lee barcode en 30 segundos, se regresa a lastValidState
+
     // ---- COLOR FONDO -----------------------------------------------------------------------------------
     // Aplicar color al fondo
     tft.clearScreen(AZUL_PROCESO); // 0x037F en RGB565 (#006CFF en HEX) es el color que dio Guillermo, pero por el ángulo se ve celeste
@@ -2088,14 +2151,33 @@ void showSearchingProductInfo()
    showProductInfo(): Mostrar el código de barras y el nombre del producto leído. Indicar que se vuelva
                       a pulsar el botón de lectura (barcode) para confirmar el producto.
 ----------------------------------------------------------------------------------------------------------*/
-void showProductInfo(String &barcode) 
+/**
+ * Muestra la información de un producto encontrado en la pantalla.
+ * 
+ * @param productInfo La información del producto en formato de cadena.
+ *                    Debe tener el prefijo "PRODUCT:" seguido del código de barras y el nombre del producto separados por punto y coma (;).
+ *                    Los caracteres especiales en el nombre del producto deben estar codificados en formato HEX.
+ *                    Ejemplo: "PRODUCT:1234567890;Nombre%20del%20Producto"
+ */
+void showProductInfo(String &productInfo)
 {
-    // ---- COLOR FONDO ------------------------------------------------------------------------------
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+    // En este caso es temporal en el sentido de que si no se lee barcode en 30 segundos, se regresa a lastValidState
+
+    // ---- PARSEAR INFORMACIÓN PRODUCTO ------------------------------------------------------------------
+    String cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
+    int idx_nombre = cad.indexOf(';');
+    int idx_carb = cad.indexOf(';', idx_nombre + 1);
+    String barcode = cad.substring(0, idx_nombre);                      // Extraer <barcode>
+    String nombreProducto = convertSpecialCharactersToHEX(cad.substring(idx_nombre + 1, idx_carb));   // Extraer <nombre_producto> y convertir caracteres especiales
+    // ----------------------------------------------------------------------------------------------------
+
+    // ---- COLOR FONDO -----------------------------------------------------------------------------------
     // Aplicar color al fondo
     tft.clearScreen(AZUL_PROCESO); // 0x037F en RGB565 (#006CFF en HEX) es el color que dio Guillermo, pero por el ángulo se ve celeste
-    // -----------------------------------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
 
-     // ----- TEXTO (INFORMACIÓN) --------------------------------------------------------------------------
+    // ----- TEXTO (INFORMACIÓN) --------------------------------------------------------------------------
     tft.selectInternalFont(RA8876_FONT_SIZE_24);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
     tft.setTextForegroundColor(WHITE);
@@ -2132,86 +2214,18 @@ void showProductInfo(String &barcode)
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
 
     tft.setCursor(110, 440);                                         tft.print(convertSpecialCharactersToHEX("Código: "));  tft.println(barcode);
-    tft.setCursor(110,tft.getCursorY() + tft.getTextSizeY() - 10);   tft.println("Nombre: " + grupoActual.Nombre_grupo);
+    tft.setCursor(110,tft.getCursorY() + tft.getTextSizeY() - 10);   tft.print("Nombre:");                                  tft.println(nombreProducto);
+    
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nCodigo: " + barcode); 
+        SerialPC.println("Nombre: " + nombreProducto);
+    #endif
     // ----------------------------------------------------------------------------------------------------
 
 }
 
 
 
-
-/*---------------------------------------------------------------------------------------------------------
-   showBarcodeNotRead(): Indicar que no se ha detectado código de barras
-----------------------------------------------------------------------------------------------------------*/
-/*void showBarcodeNotRead()
-{
-    // ---- COLOR FONDO ------------------------------------------------------------------------------
-    // Aplicar color al fondo
-    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO);
-    // -----------------------------------------------------------------------------------------------
-
-    // ----- DIBUJO ----------------------------------------------------------------------------------
-    tft.fillRoundRect(252,110,764,118,3,ROJO_TEXTO_CONFIRM_Y_AVISO); // Línea superior
-    tft.fillRoundRect(252,270,764,278,3,ROJO_TEXTO_CONFIRM_Y_AVISO); // Línea inferior
-    // ------------------
-
-    // Restablecer color de texto. Al dibujar (recuadro o líneas), el foregroundColor se cambia a lineColor
-    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO);
-    // -----------------------------------------------------------------------------------------------
-
-
-    // ----- TEXTO (INFORMACIÓN) ---------------------------------------------------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
-
-    tft.setCursor(100, 158);        tft.println("PRODUCTO NO DETECTADO");
-    // -----------------------------------------------------------------------------------------------
-
-
-    // ------ TEXTO (COMENTARIO) ---------------------------------------------------------------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-
-    //tft.setCursor(100, 358);         tft.println("NO SE HA LE\xCD""DO EL C\xD3""DIGO DE BARRAS");
-    tft.setCursor(100, 358);         tft.println(convertSpecialCharactersToHEX("NO SE HA LEÍDO EL CÓDIGO DE BARRAS"));
-    // -----------------------------------------------------------------------------------------------
-}*/
-
-
-/*---------------------------------------------------------------------------------------------------------
-   showProductNotFound(): Indicar que no se ha encontrado el producto con el barcode leído
-----------------------------------------------------------------------------------------------------------*/
-/*void showProductNotFound(String &barcode)
-{
-    // ---- COLOR FONDO ------------------------------------------------------------------------------
-    // Aplicar color al fondo
-    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO);
-    // -----------------------------------------------------------------------------------------------
-
-    // ----- DIBUJO ----------------------------------------------------------------------------------
-    tft.fillRoundRect(252,110,764,118,3,ROJO_TEXTO_CONFIRM_Y_AVISO); // Línea superior
-    tft.fillRoundRect(252,270,764,278,3,ROJO_TEXTO_CONFIRM_Y_AVISO); // Línea inferior
-    // ------------------
-
-    // Restablecer color de texto. Al dibujar (recuadro o líneas), el foregroundColor se cambia a lineColor
-    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO);
-    // -----------------------------------------------------------------------------------------------
-
-
-    // ----- TEXTO (INFORMACIÓN) ---------------------------------------------------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
-
-    tft.setCursor(100, 158);        tft.println("PRODUCTO NO ENCONTRADO");
-    // -----------------------------------------------------------------------------------------------
-
-
-    // ------ TEXTO (COMENTARIO) ---------------------------------------------------------------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-
-    tft.setCursor(100, 358);         tft.println("NO SE HA ENCONTRADO EL PRODUCTO");
-    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY()+10);   tft.print(convertSpecialCharactersToHEX("CON EL CÓDIGO: ")); tft.println(barcode);
-    // -----------------------------------------------------------------------------------------------
-}*/
 /*-------------------------------- FIN ESCANEAR BARCODE -------------------------------------------------*/
 
 
@@ -2820,7 +2834,8 @@ void showAccionRealizada(byte option)
    showAccionCancelada(): Indica que se ha cancelado la acción de añadir, eliminar o guardar.
                           Puede ser indicado por el usuario o por time-out de 10 segundos.
 ----------------------------------------------------------------------------------------------------------*/
-void showAccionCancelada(){
+/*void showAccionCancelada()
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (ACCION CANCELADA) -----------------------------------
@@ -2832,16 +2847,63 @@ void showAccionCancelada(){
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
     tft.setCursor(220, 258);  
-    //tft.println("ACCI\xD3""N CANCELADA"); // 12x24 escalado x3
-    tft.println(convertSpecialCharactersToHEX("ACCIÓN CANCELADA")); // 12x24 escalado x3
+    tft.println(convertSpecialCharactersToHEX("ACCIÓN CANCELADA")); 
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,380,764,388,3,WHITE);
+    // -------------------------------------------------------------------
+}*/
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   showProductoCancelado(): Indica que se ha cancelado el producto buscado.
+                          Puede ser indicado por el usuario o por time-out de 20 segundos.
+----------------------------------------------------------------------------------------------------------*/
+/*void showProductoCancelado()
+{
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
+    // ----- TEXTO (PRODUCTO CANCELADO) ---------------------------------
+    tft.clearScreen(RED_ERROR_Y_CANCEL);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,200,764,208,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    tft.setCursor(200, 258);  
+    tft.println("PRODUCTO CANCELADO"); 
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,380,764,388,3,WHITE);
+    // -------------------------------------------------------------------
+}*/
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   showCancel(): Indica que se ha cancelado la acción de añadir, eliminar o guardar, o el producto buscado.
+                          Puede ser indicado por el usuario o por time-out de inactividad.
+----------------------------------------------------------------------------------------------------------*/
+void showCancel(byte option)
+{
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
+    // ----- TEXTO (ACCION CANCELADA) -----------------------------------
+    tft.clearScreen(RED_ERROR_Y_CANCEL);
+    // ------ LINEA ---------
+    tft.fillRoundRect(252,200,764,208,3,WHITE);
+    // ------ TEXTO ---------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(WHITE); 
+    
+    if(option == ACTION_CANCELLED){ tft.setCursor(220, 258);  tft.println(convertSpecialCharactersToHEX("ACCIÓN CANCELADA")); }
+    else if(option == PRODUCT_CANCELLED){ tft.setCursor(200, 258);  tft.println("PRODUCTO CANCELADO"); }
+    
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);
     // -------------------------------------------------------------------
 }
-
-
-
-
 
 
 /*-------------------------------------------------------------------------------------------------------*/
@@ -2855,7 +2917,7 @@ void showAccionCancelada(){
         Parámetros: 
             option  - 1: añadir   2: eliminar   3: guardar
 ----------------------------------------------------------------------------------------------------------*/
-void showWarning(byte option, String barcode)
+void showWarning(byte option)
 {
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
@@ -2867,12 +2929,14 @@ void showWarning(byte option, String barcode)
     tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
 
     // Título principal de la pantalla
-    switch(option){
+    switch(option)
+    {
         case WARNING_BARCODE_NOT_READ:      tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO NO DETECTADO!"));           break;
         case WARNING_PRODUCT_NOT_FOUND:     tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO NO ENCONTRADO!"));          break;
         case WARNING_MEALS_LEFT:            tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡SINCRONIZACIÓN PARCIAL!"));     break;
         case WARNING_NO_INTERNET_NO_BARCODE:           tft.setCursor(70, 100);    tft.println(convertSpecialCharactersToHEX("¡SIN CONEXIÓN A INTERNET!"));    break;
-        // ADD, DELETE, SAVE
+        
+        // ADD, DELETE, SAVE, RAW_COOKED_NOT_NEEDED
         default:                            tft.setCursor(384, 100);    tft.println(convertSpecialCharactersToHEX("¡AVISO!"));                           break;
     }
     
@@ -2922,7 +2986,7 @@ void showWarning(byte option, String barcode)
             break;
 
         case WARNING_RAW_COOKED_NOT_NEEDED: // NO HACE FALTA CRUDO/COCINADO PARA PRODUCTO BARCODE
-            tft.setCursor(50, 410);                                         tft.println("NO HACE FALTA ESCOGER GRUPO O COCINADO"); 
+            tft.setCursor(50, 410);                                         tft.println("NO HACE FALTA ESCOGER CRUDO O COCINADO"); 
             tft.setCursor(300, tft.getCursorY() + tft.getTextSizeY());      tft.print("PARA ESTE PRODUCTO");  
             break;
 
@@ -3041,8 +3105,6 @@ void showError(byte option){
     switch (option){
       case ERROR_STATE_INIT: // Init
               tft.setCursor(250, 420);                                     tft.println("COLOQUE UN RECIPIENTE"); 
-              //tft.setCursor(160, 420);                                     tft.println("COLOQUE UN RECIPIENTE ANTES DE"); 
-              //tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY());   tft.print("ESCOGER UN GRUPO DE ALIMENTOS"); // "O GUARDE LA COMIDA"
               break;
 
       case ERROR_STATE_PLATO: // Plato
@@ -3053,38 +3115,25 @@ void showError(byte option){
               break;
 
       case ERROR_STATE_GROUP: // Grupos (grupoA o groupB)
-              if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
+              tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
+              /*if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
                   tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  
-                  /*
-                  tft.selectInternalFont(RA8876_FONT_SIZE_32);
-                  tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-                  tft.setCursor(200,tft.getCursorY() + tft.getTextSizeY()); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
-                  
-                  tft.selectInternalFont(RA8876_FONT_SIZE_32);
-                  tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-                  tft.setCursor(130,tft.getCursorY() + tft.getTextSizeY()); tft.println(convertSpecialCharactersToHEX("TAMBIÉN PUEDE RETIRAR EL PLATO PARA COMENZAR DE NUEVO")); 
-                  */
               }
-              else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar)
+              else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar). 
                   tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
-                  //tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY());   tft.print("ANTES DE PESAR EL ALIMENTO"); 
-              }
+              }*/
               break;
 
       case ERROR_STATE_PROCESAMIENTO: // Crudo o Cocinado
-              //tft.setCursor(100, 450);                                      tft.println("COLOQUE UN ALIMENTO SOBRE LA B\xC1""SCULA"); 
               tft.setCursor(100, 450);                                      tft.println(convertSpecialCharactersToHEX("COLOQUE UN ALIMENTO SOBRE LA BÁSCULA"));  
               break;
 
       case ERROR_STATE_WEIGHTED: // Pesado
               tft.setCursor(140, 420);                                      tft.println("ESCOJA GRUPO PARA OTRO ALIMENTO,"); 
-              //tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print("A\xD1""ADA OTRO PLATO O GUARDE LA COMIDA"); 
               tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print(convertSpecialCharactersToHEX("AÑADA OTRO PLATO O GUARDE LA COMIDA")); 
               break;
 
       case ERROR_STATE_ADD_CHECK: // add_check
-              /*tft.setCursor(70, 420);                                       tft.println("PULSE \"A\xD1""ADIR\" DE NUEVO PARA CONFIRMAR"); 
-              tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); */
               tft.setCursor(70, 420);                                       tft.println(convertSpecialCharactersToHEX("PULSE \"AÑADIR\" DE NUEVO PARA CONFIRMAR")); 
               tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
               break;
@@ -3095,7 +3144,6 @@ void showError(byte option){
 
       case ERROR_STATE_DELETE_CHECK: // delete_check
               tft.setCursor(60, 420);                                       tft.println("PULSE \"BORRAR\" DE NUEVO PARA CONFIRMAR"); 
-              //tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
               tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
               break;
 
@@ -3105,7 +3153,6 @@ void showError(byte option){
 
       case ERROR_STATE_SAVE_CHECK: // save_check
               tft.setCursor(50, 420);                                       tft.println("PULSE \"GUARDAR\" DE NUEVO PARA CONFIRMAR"); 
-              //tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print("O CUALQUIER OTRO BOT\xD3""N PARA CANCELAR"); 
               tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
               break;
 
@@ -3114,7 +3161,6 @@ void showError(byte option){
               break;
       
       case ERROR_STATE_CANCEL: // Cancelado
-              //tft.setCursor(90, 450);                                      tft.println("ESPERE A QUE TERMINE LA CANCELACI\xD3""N");
               tft.setCursor(90, 450);                                      tft.println(convertSpecialCharactersToHEX("ESPERE A QUE TERMINE LA CANCELACIÓN"));  
               break;
 
@@ -3122,7 +3168,7 @@ void showError(byte option){
               tft.setCursor(155, 450);                                      tft.println("ESPERE A QUE TERMINE EL AVISO");  
               break;
 
-      default: break;
+      default: break; // La opción ERROR_GENERAL entraría aquí (Barcode_read, Barcode_search, Barcode_check y Barcode)
     }
     // ---------------------------------------------------------------------------------------------------- 
 
