@@ -97,8 +97,13 @@
                 "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,9,54.35" ... --> sendFileToEsp32MealByMeal()
 
         ----- BARCODE ----------------
-        3) Leer código de barras:
-            "GET-BARCODE"
+            3) Leer código de barras:
+                "GET-BARCODE"
+                3.1) Cancelar leer código de barras (para que el ESP32 no siga esperándolo si se cancela la acción):
+                    "CANCEL-BARCODE"
+
+            4) Buscar producto:
+                "GET-PRODUCT:<barcode>"
 
 
 
@@ -186,8 +191,18 @@ void loop()
         else if (msgFromDue == "SAVE") processJSON_OnePerMeal(); // Autentica esp32, recibe líneas y genera JSON por comida
         // -----------------------------------------------
 
+        // Se ha dividido en dos partes para que no se mezclen los mensajes:
+        //      1) Leer código de barras cuando se reciba "GET-BARCODE"
+        //      2) Buscar producto en OpenFoodFacts cuando se reciba "GET-PRODUCT:<barcode>"
+        // Así no hay problemas de que al Due le llegue "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>" sin antes haber recibido "BARCODE:<barcode>",
+        // como ocurría a veces.
+
         // ------ Intentar obtener Barcode ---------------
         else if (msgFromDue == "GET-BARCODE") tryGetBarcode(); // Si hay WiFi, leer barcode
+        // -----------------------------------------------
+
+        // ------ Intentar buscar producto ---------------
+        else if (msgFromDue.startsWith("GET-PRODUCT:")) tryGetProduct(msgFromDue); // Buscar producto en OpenFoodFacts
         // -----------------------------------------------
 
         else{ 

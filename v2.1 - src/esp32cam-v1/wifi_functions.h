@@ -37,15 +37,15 @@
 // ------- CREDENCIALES -------------
 // Credenciales conexión red WiFi
 // Laboratorio:
-//const char* ssid = "UCOTEAM";
-//const char* password = "-polonio210alfileres-";
+const char* ssid = "UCOTEAM";
+const char* password = "-polonio210alfileres-";
 // Casa:
 //const char* ssid = "MOVISTAR_FB23_EXT";
 //const char* password = "DP6BUuEtuFvRw3mHmFoG";
 
 // Testeos:
-const char* ssid = "Irene";
-const char* password = "icradeba5050";
+//const char* ssid = "Irene";
+//const char* password = "icradeba5050";
 
 // Post testeos:
 //const char* ssid = "SmartCloth";
@@ -92,6 +92,7 @@ void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);  
 void    logoutFromServer(String &bearerToken);                                      // 3. Cerrar sesión
 
 // Barcode
+void    tryGetProduct(String msgFromDue);                               // Comprobar si hay WiFi y leer código de barras
 void    getFoodData(String barcode);                                    // Obtener los datos de un alimento
 void    getProductInfo(const String &payload, String &productInfo);     // Obtener la información del producto a partir de un JSON
 /*-----------------------------------------------------------------------------*/
@@ -557,6 +558,40 @@ void logoutFromServer(String &bearerToken)
 
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Intenta obtener la información nutricional de un producto en OpenFoodFacts.
+ * @param msgFromDue El mensaje del Due que incluye el código de barras del producto --> "GET-PRODUCT:<barcode>"
+ * 
+ * Si hay una conexión WiFi disponible, se intentará obtener su información de OpenFoodFacts.
+ * Si no hay conexión WiFi, se mostrará un mensaje de error y se enviará un mensaje al dispositivo Due indicando la falta de conexión.
+ */
+/*-----------------------------------------------------------------------------*/
+void tryGetProduct(String msgFromDue)
+{
+    // Ya se pregunta si hay conexión antes de enviar el mensaje "GET-PRODUCT:<barcode>"
+    
+    //if(hayConexionWiFi())
+    //{
+        #if defined(SM_DEBUG)
+            SerialPC.println("Leyendo codigo de barras...");
+        #endif
+
+        String barcode = msgFromDue.substring(12); // Extraer la parte de <barcode> de la cadena "GET-PRODUCT:<barcode>"
+        
+        // ---- BUSCAR PRODUCTO ---------
+        getFoodData(barcode); // Obtener información del 'barcode' en OpenFoodFacts
+        // ------------------------------
+    /*}
+    else  
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
+        #endif
+        sendMsgToDue(F("NO-WIFI"));
+    }*/
+}
+
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -578,132 +613,118 @@ void logoutFromServer(String &bearerToken)
 /*-----------------------------------------------------------------------------*/
 void getFoodData(String barcode) 
 {
-    // ---- LIMPIAR BUFFER -------------------------------------
-    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
-    // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferBR();
-    // ---------------------------------------------------------
+    // He borrado lo de limpiar buffer del lector porque no tenía sentido hacerlo aquí si no se usa el Serial
 
+    // Comprobar si hay conexión a Internet ya se hace en Due antes de pedir leer el barcode y también en el ESP32 en la función tryGetProduct()
 
-    // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
-    // Si no hay conexión a Internet, no merece la pena escanear el código de barras porque no se podrá buscar su información en OpenFoodFacts
-    // Creo que esto ya se hace en Due antes de pedir leer el barcode, pero por si acaso.
+    #if defined(SM_DEBUG)
+        SerialPC.println("\nObteniendo información del producto...");
+    #endif
+    
+    // --- CONFIGURAR PETICIÓN HTTP ---
+    // Configurar la petición HTTP: un GET a la URL de la API de OpenFoodFacts con el código de barras y los campos que se quieren obtener
+    HTTPClient http;  
+    String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields; // Conformar URL de la API
 
-    // --- HAY INTERNET ---
-    if(hayConexionWiFi())    //Comprueba si la conexión WiFi sigue activa
+    // Por ejemplo, para tostas de trigo:
+    // "https://world.openfoodfacts.org/api/v2/product/5601560111905?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"
+
+    http.begin(serverPath.c_str()); // Inicializar URL de la API
+    http.setTimeout(10000);          // Establecer 10 segundos de espera para la respuesta del servidor OpenFoodFacts
+
+    // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
+    // En las operaciones de escritura hace falta más autenticación (credenciales), pero no nos afecta porque 
+    // no vamos a modificar productos.
+    //http.setUserAgent("SmartCloth/1.0 (irene.casares@imibic.org)"); // Establece el User-Agent personalizado
+    http.setUserAgent("SmartCloth/1.0 (i62caroi@uco.es)"); // Establece el User-Agent personalizado
+    // --------------------------------
+
+    // --- ENVIAR PETICIÓN HTTP -------
+    // Enviar la petición HTTP
+    int httpResponseCode = http.GET();  // Método de petición HTTP
+    // --------------------------------
+
+    // --- PROCESAR RESPUESTA HTTP -----------------------
+    // Comprobar el código de respuesta HTTP
+    // ------ SOLICITUD EXITOSA -----------------
+    if(httpResponseCode>0)
+    {
+        // --- PRODUCTO ENCONTRADO --------------
+        if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Se encontró la info del producto
+        {
+            // --- OBTENER INFO DEL PRODUCTO ---
+            String payload = http.getString();  // Obtener la respuesta del servidor de OpenFoodFacts
+            String productInfo;
+            getProductInfo(payload, productInfo); // Obtener la información del producto del 'payload' y almacenarla en 'productInfo' con la estuctura adecuada:
+                                                    //   "PRODUCT:barcode;nombreProducto;carb_1g;lip_1g;prot_1g;kcal_1g"
+            // --------------------------------
+
+            // --- ENVIAR INFO AL DUE ---------
+            sendMsgToDue(productInfo);
+            // --------------------------------
+        }
+        // --------------------------------------
+        // --- PRODUCTO NO ENCONTRADO -----------
+        else // No se encontró la info del producto porque no está en database o por error en la petición
+        {
+            if(httpResponseCode == 404) 
+            {
+                // Si no se encuentra el producto, se obtiene código 404 (Not Found) y un JSON como este:
+                // { "code": "8422114932702", "status": 0, "status_verbose": "product not found" }
+                #if defined(SM_DEBUG)
+                    SerialPC.println("Producto no encontrado.");
+                #endif
+
+                // -- RESPUESTA AL DUE ---
+                sendMsgToDue(F("NO-PRODUCT"));
+                // -----------------------
+            }
+            else 
+            {
+                #if defined(SM_DEBUG)
+                    SerialPC.println("Error en la solicitud: " + httpResponseCode);
+                #endif
+
+                // -- RESPUESTA AL DUE ---
+                sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
+                // -----------------------
+            }
+        }
+        // --------------------------------------
+    }
+    // ---- FIN SOLICITUD EXITOSA ---------------
+
+    // ------ TIMEOUT DE OPENFOODFACTS ----------
+    else if(httpResponseCode==-1) 
     {
         #if defined(SM_DEBUG)
-            SerialPC.println("\nObteniendo información del producto...");
+            SerialPC.println("Tiempo de espera agotado. OpenFoodFacts no responde.");
         #endif
-        
-        // --- CONFIGURAR PETICIÓN HTTP ---
-        // Configurar la petición HTTP: un GET a la URL de la API de OpenFoodFacts con el código de barras y los campos que se quieren obtener
-        HTTPClient http;  
-        String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields; // Conformar URL de la API
 
-        // Por ejemplo, para tostas de trigo:
-        // "https://world.openfoodfacts.org/api/v2/product/5601560111905?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"
-
-        http.begin(serverPath.c_str()); // Inicializar URL de la API
-        http.setTimeout(5000);          // Establecer 5 segundos de espera para la respuesta del servidor OpenFoodFacts
-
-        // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
-        // En las operaciones de escritura hace falta más autenticación (credenciales), pero no nos afecta porque 
-        // no vamos a modificar productos.
-        http.setUserAgent("SmartCloth/1.0 (irene.casares@imibic.org)"); // Establece el User-Agent personalizado
-        // --------------------------------
-
-        // --- ENVIAR PETICIÓN HTTP -------
-        // Enviar la petición HTTP
-        int httpResponseCode = http.GET();  // Método de petición HTTP
-        // --------------------------------
-
-        // --- PROCESAR RESPUESTA HTTP -----------------------
-        // Comprobar el código de respuesta HTTP
-        if(httpResponseCode>0)
-        {
-            // --- PRODUCTO ENCONTRADO --------------
-            if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Se encontró la info del producto
-            {
-                // --- OBTENER INFO DEL PRODUCTO ---
-                String payload = http.getString();  // Obtener la respuesta del servidor de OpenFoodFacts
-                String productInfo;
-                getProductInfo(payload, productInfo); // Obtener la información del producto del 'payload' y almacenarla en 'productInfo' con la estuctura adecuada:
-                                                      //   "PRODUCT:barcode;nombreProducto;carb_1g;lip_1g;prot_1g;kcal_1g"
-                // --------------------------------
-
-                // --- ENVIAR INFO AL DUE ---------
-                sendMsgToDue(productInfo);
-                // --------------------------------
-            }
-            // --------------------------------------
-            // --- PRODUCTO NO ENCONTRADO -----------
-            else // No se encontró la info del producto porque no está en database o por error en la petición
-            {
-                if(httpResponseCode == 404) 
-                {
-                    // Si no se encuentra el producto, se obtiene código 404 (Not Found) y un JSON como este:
-                    // { "code": "8422114932702", "status": 0, "status_verbose": "product not found" }
-                    #if defined(SM_DEBUG)
-                        SerialPC.println("Producto no encontrado.");
-                    #endif
-
-                    // -- RESPUESTA AL DUE ---
-                    sendMsgToDue(F("NO-PRODUCT"));
-                    // -----------------------
-                }
-                else 
-                {
-                    #if defined(SM_DEBUG)
-                        SerialPC.println("Error en la solicitud: " + httpResponseCode);
-                    #endif
-
-                    // -- RESPUESTA AL DUE ---
-                    sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
-                    // -----------------------
-                
-                }
-            }
-            // --------------------------------------
-        }
-        else if(httpResponseCode==-1) 
-        {
-            #if defined(SM_DEBUG)
-                SerialPC.println("Tiempo de espera agotado. OpenFoodFacts no responde.");
-            #endif
-
-            // -- RESPUESTA AL DUE ---
-            sendMsgToDue(F("PRODUCT-TIMEOUT"));
-            // -----------------------
-        }
-        else 
-        { // Creo que nunca llegaría a esta condición
-            #if defined(SM_DEBUG)
-                SerialPC.println("Error en la solicitud: " + httpResponseCode);
-            #endif
-
-            // -- RESPUESTA AL DUE ---
-            sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
-            // -----------------------
-        }
-        // ---------------------------------------------------
-
-        // --- CERRAR CONEXIÓN HTTP --------------------------
-        http.end();   //Cierra la conexión
-        // ---------------------------------------------------
+        // -- RESPUESTA AL DUE ---
+        sendMsgToDue(F("PRODUCT-TIMEOUT"));
+        // -----------------------
     }
-    // --- FIN HAY INTERNET --
+    // ---- FIN TIMEOUT DE OPENFOODFACTS --------
 
-    // --- NO HAY INTERNET ---
+    // ------- ERROR EN SOLICITUD ---------------
     else 
-    {
+    { // Creo que nunca llegaría a esta condición
         #if defined(SM_DEBUG)
-            SerialPC.println("No se puede obtener la información del producto porque ha perdido la conexión a Internet");
+            SerialPC.println("Error en la solicitud: " + httpResponseCode);
         #endif
-        sendMsgToDue(F("NO-WIFI"));
+
+        // -- RESPUESTA AL DUE ---
+        sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
+        // -----------------------
     }
-    // --- FIN NO HAY INTERNET ---
-    // ---- FIN CHEQUEO INTERNET --------------------
+    // ---- FIN ERROR EN SOLICITUD ---------------
+    // ---- FIN PROCESAR SOLICITUD HTTP ------------------
+
+
+    // --- CERRAR CONEXIÓN HTTP --------------------------
+    http.end();   //Cierra la conexión
+    // ---------------------------------------------------
 }
 
 

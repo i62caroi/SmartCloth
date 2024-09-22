@@ -82,9 +82,9 @@ int             calculateCheckDigit(const String& barcode, bool multImpar);  // 
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Intenta obtener el código de barras y obtener su información de OpenFoodFacts.
+ * @brief Intenta obtener el código de barras.
  * 
- * Si hay una conexión WiFi disponible, se intentará leer el código de barras y obtener su información de OpenFoodFacts.
+ * Si hay una conexión WiFi disponible, se intentará leer el código de barras.
  * Si no hay conexión WiFi, se mostrará un mensaje de error y se enviará un mensaje al dispositivo Due indicando la falta de conexión.
  */
 /*-----------------------------------------------------------------------------*/
@@ -96,20 +96,22 @@ void tryGetBarcode()
     limpiarBufferBR();
     // ---------------------------------------------------------
 
-    if(hayConexionWiFi())
-    {
+    // Ya se pregunta si hay conexión antes de enviar el mensaje "GET-BARCODE"
+    
+    //if(hayConexionWiFi())
+    //{
         #if defined(SM_DEBUG)
             SerialPC.println("Leyendo codigo de barras...");
         #endif
-        getBarcode(); // Lee barcode con BR y obtiene su info de OpenFoodFacts
-    }
+        getBarcode(); // Lee barcode con BR 
+    /*}
     else  
     {
         #if defined(SM_DEBUG)
             SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
         #endif
         sendMsgToDue(F("NO-WIFI"));
-    }
+    }*/
 }
 
 
@@ -128,8 +130,8 @@ void tryGetBarcode()
 /*-----------------------------------------------------------------------------*/
 void getBarcode()
 {
-    String buffer = BUFFER_EMPTY; // Cadena inicialmente "vacía"
-    String barcode = BUFFER_EMPTY; // Código de barras leído
+    String buffer = BUFFER_EMPTY; // Cadena inicialmente vacía con "-"
+    String barcode = BUFFER_EMPTY; // Código de barras por leer
 
     /*unsigned long startMillis = millis();
     unsigned long timeToRead = TIME_TO_READ_BARCODE; // 30 segundos para leer el código de barras
@@ -154,48 +156,65 @@ void getBarcode()
     // Limpiar el buffer antes de esperar hasta 30 segundos a que se detecte algo.
     // Si con esta limpieza se borrara el código que justo se ha leído, el usuario lo notaría
     // porque el sistema no lo buscaría, así que lo pasaría de nuevo y ya sí se podrá detectar
+
     //limpiarBufferBR(); // Ya se hace en tryGetBarcode()
     // ---------------------------------------------------
 
 
     // --- ESPERAR LECTURA DE CÓDIGO DE BARRAS -----------
     // Tras limpiar el buffer, se dan 30 segundos al usuario para que coloque el producto sobre el lector.
+    // Si se recibe "CANCEL-BARCODE" del Due antes de leer código de barras, significa que el usuario ha cancelado la lectura. 
     waitForBarcode(buffer); // Esperar 30 segundos a que haya algo en el buffer del lector
     // ---------------------------------------------------
     
 
     // ---- BARCODE DETECTADO ----------------------------
     if(buffer != BUFFER_EMPTY)  // Si había algo en el buffer, se ha guardado en 'buffer'
-    {
-        // ---- COMPROBAR VALIDEZ CODIGO -------------
-        // Se comprueba el contenido del buffer por si se ha unido el código con residuos de lecturas previas
-        // o si se ha leído varias veces seguidas, habiéndose concatenado varias veces el mismo código. Si es así, 
-        // se toma el último código leído y se valida si es un EAN-13, UPC-A o EAN-8 válido, los más comunes.
-        
-        if(extractAndValidateBarcode(buffer, barcode)) // Comprobar si en la parte final del buffer hay un código válido (EAN-13, UPC-A o EAN-8)
-        {                                              // y devolverlo en 'barcode'
-            // ---- ENVIAR BARCODE AL DUE ---
-            // Avisar al Due de que se ha leído el barcode
-            #if defined(SM_DEBUG)
-                SerialPC.println("Enviando barcode al Due: " + barcode);
-            #endif
-            String msgToDue = "BARCODE:" + barcode; 
-            sendMsgToDue(msgToDue);
-            delay(500);
-            // ------------------------------
-
-            // ---- BUSCAR PRODUCTO ---------
-            getFoodData(barcode); // Obtener información del 'barcode' en OpenFoodFacts
-            // ------------------------------
-        }
-        else
+    {   
+        // ----- LECTURA CANCELADA ------------------------
+        if(buffer == "CANCEL-BARCODE")  // Mientras se esperaba barcode, el usuario ha cancelado la lectura pulsando un botón
+                                        // y el Due ha avisado al ESP32 de que cancele la lectura
         {
             #if defined(SM_DEBUG)
-                SerialPC.println("Código no válido");
+                SerialPC.println("Cancelada lectura de codigo de barras...");
             #endif
-            //sendMsgToDue(F("BARCODE-NOT-VALID"));
         }
-        // --------------------------------------------
+        // -------------------------------------------------
+        // ----- PRODUCTO DETECTADO ------------------------
+        else
+        {
+            // ---- COMPROBAR VALIDEZ CODIGO -------------
+            // Se comprueba el contenido del buffer por si se ha unido el código con residuos de lecturas previas
+            // o si se ha leído varias veces seguidas, habiéndose concatenado varias veces el mismo código. Si es así, 
+            // se toma el último código leído y se valida si es un EAN-13, UPC-A o EAN-8 válido, los más comunes.
+            
+            if(extractAndValidateBarcode(buffer, barcode)) // Comprobar si en la parte final del buffer hay un código válido (EAN-13, UPC-A o EAN-8)
+            {                                              // y devolverlo en 'barcode'
+                // ---- ENVIAR BARCODE AL DUE ---
+                // Avisar al Due de que se ha leído el barcode
+                #if defined(SM_DEBUG)
+                    SerialPC.println("Enviando barcode al Due: " + barcode);
+                #endif
+                String msgToDue = "BARCODE:" + barcode; 
+                sendMsgToDue(msgToDue);
+                //delay(500); // Creo que estaba para darle tiempo al Due a saber que se ha leído el barcode, pero que el ESP32 no obtuviera su info demasiado rápido.
+                            // Al cambiarlo para que hasta que no reciba el mensaje "GET-PRODUCT:<barcode>" no busque la info, no hace falta.
+                // ------------------------------
+
+                // ---- BUSCAR PRODUCTO ---------
+                //getFoodData(barcode); // Obtener información del 'barcode' en OpenFoodFacts
+                // ------------------------------
+            }
+            else
+            {
+                #if defined(SM_DEBUG)
+                    SerialPC.println("Código no válido");
+                #endif
+                sendMsgToDue(F("NO-BARCODE")); // Enviar mensaje al Due de que no se ha leído un código de barras válido
+            }
+            // --------------------------------------------
+        }
+        // -------------------------------------------------
     } 
     // ---------------------------------------------------
     // ---- NO DETECTADO ---------------------------------

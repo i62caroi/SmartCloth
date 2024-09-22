@@ -191,7 +191,9 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
 
 /*-----------------------------------------------------------------------------*/
 /**
- * Espera a que se lea un código de barras.
+ * @brief Espera a que se lea un código de barras.
+ *        Mientras espera el código, comprueba si el Due le indica que el usuario ha cancelado
+ *        la lectura recibiendo el mensaje "CANCEL-BARCODE".
  * 
  * @param barcode Referencia a una cadena de caracteres donde se guardará el código de barras leído.
  * 
@@ -204,6 +206,8 @@ void waitForBarcode(String &buffer)
     unsigned long startTime = millis();  
 
     // Esperar 30 segundos a que se lea un código de barras. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    //      Si no se ha recibido un código de barras en el tiempo de espera, 
+    //      se considera que no se ha leído ningún código de barras (buffer = "-")
     while((buffer == BUFFER_EMPTY) && !isTimeoutExceeded(startTime, TIME_TO_READ_BARCODE))
     {
         // ----- PRODUCTO DETECTADO ------------------------
@@ -211,16 +215,28 @@ void waitForBarcode(String &buffer)
         {
             // Leer buffer, todo su contenido. Luego se procesará el mensaje para obtener el código de barras
             // por si tiene basura o mensajes anteriores
-            readMsgFromSerialBR(buffer); // Leer mensaje del puerto serie y guardarlo en barcode
+            readMsgFromSerialBR(buffer); // Leer mensaje del puerto serie y guardarlo en 'buffer'
             #if defined(SM_DEBUG)
                 SerialPC.print("\nBuffer BR leido: "); SerialPC.println(buffer);
             #endif
         }
         // --------------------------------------------------
+
+        // ----- CANCELAR LECTURA ---------------------------
+        // Si el usuario pulsa cualquier botón, se cancela la lectura del código de barras
+        if (hayMsgFromDue())  // Si se ha recibido un mensaje del Due
+        {
+            String msgFromDue;
+            readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
+
+            // Si el mensaje es "CANCEL-BARCODE", se cancela la lectura del código de barras
+            //      Si se recibe algo del Due, no debería ser nada distinto a "CANCEL-BARCODE", pero hacemos
+            //      una comprobación por si acaso
+            if(msgFromDue == "CANCEL-BARCODE")  buffer = msgFromDue; // Sale del while y de la función
+        }
+        // --------------------------------------------------
     }
 
-    // Si no se ha recibido un código de barras en el tiempo de espera, 
-    // se considera que no se ha leído ningún código de barras (buffer = "-")
 }
 
 
