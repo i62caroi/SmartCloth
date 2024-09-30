@@ -117,7 +117,7 @@ bool    setupSDcard();              // Inicializar tarjeta SD
 // --------------------
 
 // -- Guardar en CSV y TXT --
-byte    saveComida();               // Guardar valores de la comida en fichero CSV y TXT
+byte    saveComida(bool &hayConexionWifi);               // Guardar valores de la comida en fichero CSV y TXT
 // --------------------------
 
 // -- CSV: crear con header, leer, sumar comidas del día y guardar comida --
@@ -129,9 +129,9 @@ bool    deleteFileCSV();            // Borrar contenido del fichero CSV
 
 // -- TXT: guardar (TXT o database), leer, enviar al ESP32, borrar --
 // --- Guardar comida en database o TXT ---
-byte    saveComidaInDatabase_or_TXT();  // Guardar lista en base de datos en el fichero TXT
-void    saveListInTXT();                // Guardar lista de la comida en el fichero TXT
-bool    isFileTXTEmpty();               // Comprobar si el fichero TXT del ESP32 está vacío
+byte    saveComidaInDatabase_or_TXT(bool &hayConexionWifi);  // Guardar lista en base de datos o en el fichero TXT, según valor de 'hayConexionWifi'
+void    saveListInTXT();                                    // Guardar lista de la comida en el fichero TXT
+bool    isFileTXTEmpty();                                   // Comprobar si el fichero TXT del ESP32 está vacío
 #if defined(SM_DEBUG)
 void    readFileTXT();                  // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
 #endif 
@@ -214,7 +214,7 @@ bool setupSDcard()
  * La información se guarda en un archivo CSV y en un archivo TXT para el ESP32.
  */
 /*-----------------------------------------------------------------------------*/
-byte saveComida()
+byte saveComida(bool &hayConexionWifi)
 {
     #if defined(SM_DEBUG)
     SerialPC.println("--------------------------------------------------");
@@ -226,7 +226,7 @@ byte saveComida()
     // -----------------------------------------------
 
     // ---- 2. GUARDADO EN DATABASE O FICHERO TXT ----
-    byte saveDatabaseOrTXT = saveComidaInDatabase_or_TXT(); // MEAL_UPLOADED, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
+    byte saveDatabaseOrTXT = saveComidaInDatabase_or_TXT(hayConexionWifi); // MEAL_UPLOADED, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
     // -----------------------------------------------
 
     // ---- 3. RESULTADO DEL GUARDADO ----------------
@@ -240,7 +240,7 @@ byte saveComida()
             case MEAL_UPLOADED:             return SAVE_EXECUTED_FULL;                          
             
             // B) Se ha guardado en el CSV (acumulado actualizado) pero no en la database
-            // Cuando se enciendo el SM, se intentará subir la info que haya quedado a la espera en el TXT
+            // Cuando se vuelva a encender el SM, se intentará subir la info que haya quedado a la espera en el TXT
             case HTTP_ERROR:                return SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP;         
             case NO_INTERNET_CONNECTION:    return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;            
             case TIMEOUT:                   return SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT;            
@@ -598,7 +598,7 @@ bool deleteFileCSV()
  *         - UNKNOWN_ERROR: Error desconocido al subir la comida a la base de datos.
  */
 /*-----------------------------------------------------------------------------*/
-byte saveComidaInDatabase_or_TXT()
+byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
 {
 
     // --- CERRAR LISTA DE COMIDA -------
@@ -607,33 +607,33 @@ byte saveComidaInDatabase_or_TXT()
 
     // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
     // --- HAY INTERNET ---
-    if(checkWifiConnection()) // Hay WiFi
-    {
+    if(hayConexionWifi) // Se pregunta por WiFi en actStateSaved() para saber qué mensaje poner en pantalla y se pasa a saveComida(), 
+    {                   // que lo pasa a esta función. No hace falta preguntar de nuevo.
+
         // -----  ENVIAR INFORMACION AL ESP32  ------------------        
         // Avisar al ESP32 de que le va a enviar info. El ESP32 debe autenticarse en database y responder
-        byte responseFromESP32ToSavePrompt = prepareSaving(); 
+        byte responseFromESP32ToSavePrompt = prepareSaving();   // Envía "SAVE" al ESP32, espera su respuesta y devuelve WAITING_FOR_DATA o 
+                                                                // algún valor indicando error (NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT o UNKNOWN_ERROR)
 
         // ----- EXITO: ESP32 EN ESPERA --------------------------
-        if(responseFromESP32ToSavePrompt == WAITING_FOR_DATA) // El ESP32 se ha autenticado correctamente en la database
+        if(responseFromESP32ToSavePrompt == WAITING_FOR_DATA) // El ESP32 se ha autenticado correctamente en la database y está esperando información
         {
-            // PANTALLA: en la sincronización del inicio sí se indica "SINCRONIZANDO...", pero al subir la comida recién hecha no hace falta.
-            //           Ya se indicará que se ha subido si en la pantalla "COMIDA GUARDADA" aparece "Subido a web" en la esquina.
-
             // ---- ENVIAR LISTA DE COMIDA AL ESP32 ----
-            listaComidaESP32.sendListToESP32(); // Solo envía la lista línea a línea
+            listaComidaESP32.sendListToESP32(); // Envía la lista de la comida actual línea a línea
             // -----------------------------------------
 
             // ----- SUBIDA A DATABASE --------------------------------
             // ---- ESPERAR RESPUESTA DEL ESP32 ---------------
+            // Tras enviar las líneas de toda la comida actual, espera hasta 10 segundos a que el ESP32 responda si se ha podido subir la comida a la database
             String msgFromESP32;
-            unsigned long timeout = 10000; // Tiempo de espera máximo de 10 segundos para que el esp32 responda
+            unsigned long timeout = 10500; // Tiempo de espera máximo de 10.5 segundos para que el esp32 responda (espera hasta 10 segundos a que el servidor responda)
             waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
             // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
             // ---- FIN ESPERAR RESPUESTA ESP32 ---------------
 
             // ---- ANALIZAR RESPUESTA DEL ESP32 --------------
             // --- EXITO: COMIDA SUBIDA ----------------
-            if (msgFromESP32 == "SAVED-OK") // El ESP32 ha creado el JSON y subido la comida a la database
+            if (msgFromESP32 == "SAVED-OK") // El ESP32 ha creado el JSON y ha subido la comida a la database
             {
                 #if defined(SM_DEBUG)
                     SerialPC.println(F("\nLista completa enviada"));
@@ -647,7 +647,7 @@ byte saveComidaInDatabase_or_TXT()
                     SerialPC.println("--------------------------------------------------");
                 #endif
 
-                // PANTALLA: en la pantalla de "COMIDA GUARDADA" aparece "Subido a web" en la esquina para indicar la sincronización.
+                // PANTALLA: en la pantalla de "COMIDA GUARDADA" aparece "Subido a web" en la esquina para indicar la sincronización correcta.
 
                 return MEAL_UPLOADED; // Comida subida a database
             } 
@@ -656,7 +656,7 @@ byte saveComidaInDatabase_or_TXT()
             // --- ERRORES -----------------------------
             else // Falló subir la comida a database
             {
-                // PANTALLA: en la pantalla de "COMIDA GUARDADA" aparecer el error en la esquina para indicar el fallo de sincronización.
+                // PANTALLA: en la pantalla de "COMIDA GUARDADA" aparece el error en la esquina para indicar el fallo de sincronización.
 
                 // --- GUARDAR LISTA EN TXT -------
                 #if defined SM_DEBUG
@@ -711,33 +711,41 @@ byte saveComidaInDatabase_or_TXT()
             // ---- FIN DE SUBIDA A DATABASE ---------------------------
 
             // ---- INDICAR FIN DE INFO -----------------------
-            // Tras enviar la comida, se envía un mensaje de fin de transmisión
+            // Tras enviar la comida, se envía al ESP32 un mensaje de fin de transmisión
+            #if defined SM_DEBUG
+                SerialPC.println(F("Indicando al ESP32 que terminó la transmisión..."));
+            #endif
             sendMsgToESP32(F("FIN-TRANSMISION"));
             // ------------------------------------------------
         }
         // ------- FIN DE EXITO: ESP32 EN ESPERA ------------------
 
         // ---- ERROR: ESP32 NO RESPONDE O FALLA AUTENTICACIÓN ----
-        else // Al avisar del guardado, ha fallado la comunicación con el ESP32 o la autenticación
+        else // Al avisar del guardado, ha fallado la comunicación con el ESP32 o la autenticación en la base de datos, previa a subir información
         {
-            // Entra aquí si recibe:
+            // Entra aquí si recibe EL ESP32 NO RESPONDE o FALLA AUTENTICACIÓN y responde con:
             //      NO_INTERNET_CONNECTION --> Perdió la conexión WiFi
             //      HTTP_ERROR --> Error al autenticar
             //      TIMEOUT --> ESP32 no responde
             //      UNKNOWN_ERROR
             #if defined SM_DEBUG
                 SerialPC.println("\nEl ESP32 no respondio WAITING-FOR-DATA cuando se quiso subir lista comida actual!");
+                SerialPC.println("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
             #endif
 
-            // Se devuelve el mismo valor de 'responseFromESP32ToSavePrompt', que será valor de error
-            return responseFromESP32ToSavePrompt; // Solo CSV
+            // --- GUARDAR LISTA EN TXT -------
+            saveListInTXT(); // Copiar lista en TXT y limpiarla
+            // --------------------------------
+            
+            // Se devuelve el mismo valor de 'responseFromESP32ToSavePrompt', que será valor de error (NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT o UNKNOWN_ERROR)
+            return responseFromESP32ToSavePrompt; // Solo guardado en CSV
         }
         // ------------------------------------------------------
     }
     // --- FIN HAY INTERNET --
 
     // --- NO HAY INTERNET ---
-    else // Si no hay WiFi o si TIMEOUT, se guarda la lista en el TXT y se limpia la lista para la próxima comida
+    else // Si no hay WiFi, se guarda la lista en el TXT y se limpia la lista para la próxima comida
     {
         #if defined SM_DEBUG
             SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
@@ -756,11 +764,6 @@ byte saveComidaInDatabase_or_TXT()
     // --- FIN NO HAY INTERNET ---
     // ---- FIN CHEQUEO INTERNET --------------------
 
-
-    // Si por lo que fuera no entrara en ninguna de las condiciones anteriores, 
-    // solo se habría guardado localmente y por error desconocido, aunque esto
-    // no debería ocurrir.
-    //return UNKNOWN_ERROR; // No debería llegar a este return
 }
 
 

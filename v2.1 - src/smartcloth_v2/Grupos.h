@@ -21,8 +21,9 @@
 #include "debug.h"  // SM_DEBUG --> SerialPC
 
  
-#define NUM_GRUPOS 28 // 27 nuestros (crudos y cocinados) y el de barcode
+#define NUM_GRUPOS 27 // 27 nuestros (crudos y cocinados), el de barcode se actualiza automáticamente con los valores buscado
 #define BARCODE_PRODUCT_INDEX 50 // ID del grupo de alimentos para el barcode
+#define ID_GRUPO_NOT_SELECTED 0 // ID de grupo no seleccionado
 
 
 
@@ -69,6 +70,7 @@ typedef struct {
     float         Prot_g;           /**< Proteínas por gramo */
     float         Lip_g;            /**< Lípidos por gramo */
     float         Carb_g;           /**< Carbohidratos por gramo */
+
 }Grupo;
 
 
@@ -130,14 +132,16 @@ Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"Lácteos enteros","Leche ente
                                       {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.6939,0.2269,0.0728,0.0258},
                                       {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.4769,0.1298,0.1067,0.0064},
                                       {39,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.8156,0.1869,0.2260,0.0}
-                                      //{BARCODE_PRODUCT_INDEX,COLOR_G50,"","",0.0,0.0,0.0,0.0} 
                                     };
 
 
 
-Grupo grupoActual; // Grupo de alimentos seleccionado
-Grupo grupoAnterior; // Grupo de alimentos seleccionado anteriormente, necesario para saber qué valores guardar al
-                     // poner peso y luego escoger otro grupo, lo que confirma el peso puesto.
+// Grupo de alimentos seleccionado
+Grupo grupoActual {ID_GRUPO_NOT_SELECTED,WHITE,"","",0.0,0.0,0.0,0.0}; 
+
+// Grupo de alimentos seleccionado anteriormente, necesario para saber qué valores guardar al
+// poner peso y luego escoger otro grupo, lo que confirma el peso puesto.
+Grupo grupoAnterior {ID_GRUPO_NOT_SELECTED,WHITE,"","",0.0,0.0,0.0,0.0};
 
 
 /******************************************************************************/
@@ -164,7 +168,7 @@ void setGrupoAlimentos(byte id)
 {
     // Obtener posición del grupo en el array
     byte posGrupo = 0;
-    for(byte i = 0; i < NUM_GRUPOS; i++){
+    for(byte i = 0; i < NUM_GRUPOS; i++){ 
         if(gruposAlimentos[i].ID_grupo == id){ 
             posGrupo = i;
             break;

@@ -23,7 +23,7 @@
 
 #include "debug.h" // SM_DEBUG --> SerialPC
 
-#define DEBOUNCE_TIME 200 // Tiempo de debouncing en ms
+#define DEBOUNCE_TIME 300 // Tiempo de debouncing en ms
 
 // ------------ PINES DE INTERRUPCIÓN ------------
 #ifdef SM_V2_1 // SmartCloth v2.1 (cartón)

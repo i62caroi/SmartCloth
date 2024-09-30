@@ -80,16 +80,12 @@
 
 
 //  -----   GRANDE  -------------------------------------
-/* Estructura que representa la posición de un botón. */
-/*struct ButtonPosition {
-    byte row;
-    byte col;
-};*/
-byte iRow = 0, iCol = 0;
+// Variables para la botonera grande
+byte iRow = 0, iCol = 0; // Fila y columna del botón pulsado
 
-/* Keyboards variables */
-const byte countRows = 4;
-const byte countColumns = 5;
+
+const byte countRows = 4; // F1, F2, F3, F4
+const byte countColumns = 5; // C1, C2, C3, C4, C5
 
 /* Buttons */
 #ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
@@ -128,7 +124,10 @@ byte  buttonGrande = 0;                  //Botón pulsado en la botonera grande 
 void            checkAllButtons();       // Asignación de eventos según botón pulsado en Grande, Main o Barcode
 
 // BOTONERA GRUPOS ALIMENTOS
-//ButtonPosition  readButtonsGrande();     // Polling de botonera grande tras saltar interrupción de pulsación
+inline bool     isButtonGrandeTipoA() { // Comprueba si el grupo de alimentos seleccionado es de TIPO_A ([7, 9] o [16, 19])
+                    return (((buttonGrande >= 7) && (buttonGrande <= 9)) || ((buttonGrande >= 16) && (buttonGrande <= 19))); 
+                };  
+
 void            readButtonsGrande();
 void            checkGrandeButton();
 
@@ -182,38 +181,10 @@ void checkAllButtons()
  * 
  * Esta función realiza la lectura del botón pulsado en la botonera grande
  * utilizando el método de polling. Se busca el botón activo en cada fila y columna
- * y se devuelve la posición del botón pulsado.
+ * y se modifican las variables iRow e iCol con los valores.
  * 
- * @return ButtonPosition - Posición del botón pulsado en el teclado matricial
  */
 /*-----------------------------------------------------------------------------*/
-/*ButtonPosition readButtonsGrande()
-{
-    ButtonPosition position;
-
-    for (byte c = 0; c < countColumns; c++){  
-        pinMode(columnsPins[c], INPUT); //Para proteger eléctricamente los puertos de los botones y que no llegue 0 y 1 a la vez
-    }
-    
-    for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], OUTPUT); 
-        digitalWrite(columnsPins[c], HIGH);
-        for (byte r = 0; r < countRows; r++){
-            if (digitalRead(rowsPins[r]) == HIGH){ // Activo en HIGH 
-                position.row = r;
-                position.col = c;
-            }
-        }
-        pinMode(columnsPins[c], INPUT); 
-    }
-    
-    for (byte c = 0; c < countColumns; c++){
-        pinMode(columnsPins[c], OUTPUT);
-        digitalWrite(columnsPins[c], HIGH);
-    }
-
-    return position;
-}*/
  void readButtonsGrande()
  {
     for (byte c = 0; c < countColumns; c++){  
@@ -248,13 +219,13 @@ void checkAllButtons()
  * @brief Verifica si se ha pulsado el botón "Grande" y realiza las acciones correspondientes.
  * 
  *  Comprueba si se ha pulsado algún botón de grupos de alimentos y obtiene el grupo escogido:
- *      Si el grupo está entre [7, 9] o [16, 19], se considera TIPO_A.
+ *      Si el grupo está entre [7, 9] o [16, 19], se considera TIPO_A (necesita diferenciar entre crudo y cocinado).
  *      Si el grupo está entre [1, 6], [10, 15] o [20], se considera TIPO_B.
  * 
  *  Reestablece la flag 'pulsandoGrande' a false hasta la próxima pulsación.
  */
 /*-----------------------------------------------------------------------------*/
-void checkGrandeButton()
+/*void checkGrandeButton()
 {
     if(grandeButtonInterruptOccurred()) // Se está pulsando un grupo de alimentos
     {
@@ -267,17 +238,17 @@ void checkGrandeButton()
             SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
         #endif 
         
-        /* ----- EVENTO ------- */ 
+        // ----- EVENTO ------- 
         // Tipo A: [7, 9] o [16, 18]
-        /*if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
-            (buttons[position.row][position.col] <= 18))){
-                    eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
-        }
+        //if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
+        //    (buttons[position.row][position.col] <= 18))){
+        //            eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
+        //}
         // Tipo B: [1, 6], [10, 15] o [19, 20]
-        else if(((buttons[position.row][position.col] >= 1) and (buttons[position.row][position.col] <= 6)) or ((buttons[position.row][position.col] >= 10) and 
-                (buttons[position.row][position.col] <= 15)) or (buttons[position.row][position.col] >=19)){
-                    eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-        }*/
+        //else if(((buttons[position.row][position.col] >= 1) and (buttons[position.row][position.col] <= 6)) or ((buttons[position.row][position.col] >= 10) and 
+        //        (buttons[position.row][position.col] <= 15)) or (buttons[position.row][position.col] >=19)){
+        //            eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
+        //}
         if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
             (buttons[iRow][iCol] <= 19))){
                     eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
@@ -290,13 +261,42 @@ void checkGrandeButton()
         addEventToBuffer(eventoGrande);
         flagEvent = true;
 
-        /*----- Grupo alimentos ---- */
+        //----- Grupo alimentos ---- 
+        setGrupoAlimentos(buttonGrande);
+        
+        pulsandoGrande = false;
+    }
+        
+}*/
+void checkGrandeButton()
+{
+    if(grandeButtonInterruptOccurred()) // Se está pulsando un grupo de alimentos
+    {
+        readButtonsGrande(); // Qué tecla se está pulsando 
+        buttonGrande = buttons[iRow][iCol];
+
+        #if defined(SM_DEBUG)
+            SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
+        #endif 
+        
+        // ----- EVENTO ------- 
+        // Tipo A (necesita crudo/cocinado): [7, 9] o [16, 19] 
+        // Tipo B (no necesita crudo/cocinado): [1, 6], [10, 15] o [20] 
+        if (isButtonGrandeTipoA()) eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
+        else eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
+        
+        addEventToBuffer(eventoGrande);
+        flagEvent = true;
+
+        // ----- Grupo alimentos ----
         setGrupoAlimentos(buttonGrande);
         
         pulsandoGrande = false;
     }
         
 }
+
+
 
 
 
@@ -321,7 +321,7 @@ void checkMainButton()
     // nutricionales son diferentes según el caso. Para los de TIPO_B no importa si los cocinas o no. 
     //
     // Los IDs de los grupos van del 1 al 20 para los crudos y después van los de cocinado. Por ejemplo, el grupo 7 (Verduras y Hortalizas)
-    // es crudo, mientras que su correspondiente cocinado es el grupo 27. Por eso, si es un grupo de TIPO_A y se marca COCINADO, se cocinado se hace (buttonGrande+20),
+    // es crudo, mientras que su correspondiente cocinado es el grupo 27. Por eso, si es un grupo de TIPO_A y se marca COCINADO, se hace (buttonGrande+20),
     // para acceder a los valores de ese grupo pero cocinado.
     //
     // Los grupos de TIPO_A son: 7 (27), 8 (28), 9 (29), 16 (36), 17 (37) y 18 (38)
@@ -336,6 +336,10 @@ void checkMainButton()
     {
         switch (buttonMain) 
         {
+            // Se comprueba el último eventoGrande para saber si el buttonGrande es tipo A o B, pero también se podría hacer isButtonGrandeTipoA()
+            // Da igual que se pulsen varias veces seguidas COCINADO, no se irá sumando 20 cada vez al buttonGrande, sino que siempre se pasará
+            // a la función setGrupoAlimentos() el valor buttonGrande+20 si el grupo es de TIPO_A. Osea que si buttonGrande es 7 y no cambia mientras
+            // se pulsa varias veces COCINADO, siempre se establecerá el grupo 27 (cocinado de Verduras y Hortalizas) como 'grupoActual' en setGrupoAlimentos().
             case 1:   eventoMain = COCINADO;        if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande+20);     break;  
             case 2:   eventoMain = CRUDO;           if(eventoGrande == TIPO_A) setGrupoAlimentos(buttonGrande);        break;  // Crudo -> opción predeterminada
             case 3:   eventoMain = ADD_PLATO;       break;  
