@@ -92,8 +92,8 @@ void  processJSON_OnePerMeal()
 
         String line = "";
         
-        unsigned long startTime = millis();
-        unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda
+        //unsigned long startTime = millis();
+        //unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda con líneas de comidas
 
         //while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
         while(!line.equals("FIN-TRANSMISION"))
@@ -116,10 +116,10 @@ void  processJSON_OnePerMeal()
             // ---- ANALIZAR MENSAJE DEL DUE ----------------
             // --- Fallo en la comunicación ---
             // Si no se recibe nada durante 15 segundos, se cierra sesión
-            if(line == "TIMEOUT")
+            if(line == "TIMEOUT-DUE")
             { 
                 #if defined(SM_DEBUG)
-                    SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del Due"));
+                    SerialPC.println(F("TIMEOUT-DUE. No se ha recibido respuesta del Due"));
                     SerialPC.println(F("Cerrando sesión..."));
                 #endif
 
@@ -132,7 +132,7 @@ void  processJSON_OnePerMeal()
             else 
             {
                 // Reiniciar el tiempo de espera hasta la próxima recepción de línea
-                startTime = millis();
+                //startTime = millis();
 
                 // La línea se ha leído en waitMsgFromDue() y se ha guardado en 'line'
                 #if defined(SM_DEBUG)

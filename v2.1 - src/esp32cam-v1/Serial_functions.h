@@ -166,7 +166,7 @@ void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
     else // No se ha recibido respuesta del Due
     {
         // Se considera que no hay conexión WiFi
-        msgFromDue = "TIMEOUT";;
+        msgFromDue = "TIMEOUT-DUE";;
     }
 
 }
@@ -228,6 +228,9 @@ void waitForBarcode(String &buffer)
         {
             String msgFromDue;
             readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
+            #if defined(SM_DEBUG)
+                SerialPC.print("\nMensaje del Due leido: "); SerialPC.println(msgFromDue);
+            #endif
 
             // Si el mensaje es "CANCEL-BARCODE", se cancela la lectura del código de barras
             //      Si se recibe algo del Due, no debería ser nada distinto a "CANCEL-BARCODE", pero hacemos

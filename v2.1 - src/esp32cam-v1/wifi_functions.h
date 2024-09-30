@@ -37,11 +37,11 @@
 // ------- CREDENCIALES -------------
 // Credenciales conexión red WiFi
 // Laboratorio:
-const char* ssid = "UCOTEAM";
-const char* password = "-polonio210alfileres-";
+//const char* ssid = "UCOTEAM";
+//const char* password = "-polonio210alfileres-";
 // Casa:
-//const char* ssid = "MOVISTAR_FB23_EXT";
-//const char* password = "DP6BUuEtuFvRw3mHmFoG";
+const char* ssid = "MOVISTAR_FB23_EXT";
+const char* password = "DP6BUuEtuFvRw3mHmFoG";
 
 // Testeos:
 //const char* ssid = "Irene";
@@ -357,12 +357,6 @@ bool fetchTokenFromServer(String &bearerToken)
  */
 void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 {
-    // ---- LIMPIAR BUFFER -------------------------------------
-    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
-    // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferBR();
-    // ---------------------------------------------------------
-
     // Sube la comida si sigue teniendo conexión
     if(hayConexionWiFi())
     {
@@ -378,6 +372,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
         // Configurar la petición HTTP: un POST con la info de la comida en el body y el token en el header
         HTTPClient http;
         http.begin(comidaServerName);
+        http.setTimeout(10000);          // Establecer 10 segundos de espera para la respuesta del servidor de SmartCloth
         http.addHeader("Content-Type", "application/json");
         http.addHeader("Authorization", "Bearer " + bearerToken); // Añadir el token de autenticación
         // --------------------------------
@@ -389,16 +384,18 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 
         // --- PROCESAR RESPUESTA HTTP -----
         // Comprobar el código de respuesta HTTP
-        if(httpResponseCode > 0)
+        // ------ SOLICITUD EXITOSA -----------------
+        if(httpResponseCode > 0) 
         {
             #if defined(SM_DEBUG)
                 SerialPC.print("Respuesta HTTP: "); SerialPC.println(httpResponseCode); 
             #endif
 
-            String response = http.getString(); // Obtener la respuesta del servidor
+            //String response = http.getString(); // Obtener la respuesta del servidor
             //SerialPC.println(response);         // Imprimir la respuesta del servidor
 
-            if((httpResponseCode >= 200) && (httpResponseCode < 300))
+            // --- COMIDA GUARDADA ------------------
+            if((httpResponseCode >= HTTP_CODE_OK) && (httpResponseCode < HTTP_CODE_MULTIPLE_CHOICES)) // Petición exitosa [200,300)
             {
                 #if defined(SM_DEBUG)
                     SerialPC.print(F("Comida subida")); 
@@ -408,6 +405,8 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
                 sendMsgToDue(F("SAVED-OK"));
                 // -----------------------
             }
+            // --------------------------------------
+            // --- ERROR GUARDANDO COMIDA -----------
             else
             {
                 #if defined(SM_DEBUG)
@@ -418,7 +417,24 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
                 sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
                 // -----------------------
             }
+            // --------------------------------------
         }
+        // ---- FIN SOLICITUD EXITOSA ---------------
+
+        // ------ TIMEOUT DE SERVIDOR ---------------
+        else if(httpResponseCode == HTTPC_ERROR_READ_TIMEOUT) // Tiempo de espera agotado (código -11)
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println("Tiempo de espera agotado. Servidor de SmartCloth no responde.");
+            #endif
+
+            // -- RESPUESTA AL DUE ---
+            sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
+            // -----------------------
+        }
+        // ---- FIN TIMEOUT DE OPENFOODFACTS --------
+
+        // ------- ERROR EN SOLICITUD ---------------
         else
         {
             #if defined(SM_DEBUG)
@@ -429,7 +445,8 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
             sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode)); // Error en la petición HTTP
             // -----------------------
         }
-        // --------------------------------
+        // ---- FIN ERROR EN SOLICITUD ---------------
+        // ---- FIN PROCESAR SOLICITUD HTTP ------------------
 
         // --- CERRAR CONEXIÓN HTTP -------
         http.end(); // Cierra la conexión
@@ -570,7 +587,7 @@ void logoutFromServer(String &bearerToken)
 void tryGetProduct(String msgFromDue)
 {
     // Ya se pregunta si hay conexión antes de enviar el mensaje "GET-PRODUCT:<barcode>"
-    
+
     //if(hayConexionWiFi())
     //{
         #if defined(SM_DEBUG)
@@ -629,7 +646,7 @@ void getFoodData(String barcode)
     // Por ejemplo, para tostas de trigo:
     // "https://world.openfoodfacts.org/api/v2/product/5601560111905?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"
 
-    http.begin(serverPath.c_str()); // Inicializar URL de la API
+    http.begin(serverPath.c_str());  // Inicializar URL de la API. Se hace c_str() para obtener un const char* en lugar de un String
     http.setTimeout(10000);          // Establecer 10 segundos de espera para la respuesta del servidor OpenFoodFacts
 
     // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
@@ -647,10 +664,10 @@ void getFoodData(String barcode)
     // --- PROCESAR RESPUESTA HTTP -----------------------
     // Comprobar el código de respuesta HTTP
     // ------ SOLICITUD EXITOSA -----------------
-    if(httpResponseCode>0)
+    if(httpResponseCode > 0)
     {
         // --- PRODUCTO ENCONTRADO --------------
-        if((httpResponseCode >= 200) && (httpResponseCode < 300)) // Se encontró la info del producto
+        if((httpResponseCode >= HTTP_CODE_OK) && (httpResponseCode < HTTP_CODE_MULTIPLE_CHOICES)) // Se encontró la info del producto. Código [200, 300)
         {
             // --- OBTENER INFO DEL PRODUCTO ---
             String payload = http.getString();  // Obtener la respuesta del servidor de OpenFoodFacts
@@ -667,7 +684,7 @@ void getFoodData(String barcode)
         // --- PRODUCTO NO ENCONTRADO -----------
         else // No se encontró la info del producto porque no está en database o por error en la petición
         {
-            if(httpResponseCode == 404) 
+            if(httpResponseCode == HTTP_CODE_NOT_FOUND) // Código 404 (Not Found)
             {
                 // Si no se encuentra el producto, se obtiene código 404 (Not Found) y un JSON como este:
                 // { "code": "8422114932702", "status": 0, "status_verbose": "product not found" }
@@ -695,7 +712,8 @@ void getFoodData(String barcode)
     // ---- FIN SOLICITUD EXITOSA ---------------
 
     // ------ TIMEOUT DE OPENFOODFACTS ----------
-    else if(httpResponseCode==-1) 
+    //else if(httpResponseCode == -1) 
+    else if(httpResponseCode == HTTPC_ERROR_READ_TIMEOUT) // Tiempo de espera agotado (código -11)
     {
         #if defined(SM_DEBUG)
             SerialPC.println("Tiempo de espera agotado. OpenFoodFacts no responde.");

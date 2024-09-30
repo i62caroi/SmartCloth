@@ -192,10 +192,10 @@ void getBarcode()
             {                                              // y devolverlo en 'barcode'
                 // ---- ENVIAR BARCODE AL DUE ---
                 // Avisar al Due de que se ha leído el barcode
-                #if defined(SM_DEBUG)
-                    SerialPC.println("Enviando barcode al Due: " + barcode);
-                #endif
                 String msgToDue = "BARCODE:" + barcode; 
+                #if defined(SM_DEBUG)
+                    SerialPC.print("Enviando barcode al Due: "); SerialPC.print("\"" + msgToDue); SerialPC.println("\"");
+                #endif
                 sendMsgToDue(msgToDue);
                 //delay(500); // Creo que estaba para darle tiempo al Due a saber que se ha leído el barcode, pero que el ESP32 no obtuviera su info demasiado rápido.
                             // Al cambiarlo para que hasta que no reciba el mensaje "GET-PRODUCT:<barcode>" no busque la info, no hace falta.
