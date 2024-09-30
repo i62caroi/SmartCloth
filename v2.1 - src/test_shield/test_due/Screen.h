@@ -50,10 +50,12 @@ bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aqu
 
 #define SerialPC Serial
 
-/* Screen circuit wiring */
+// ----- Screen circuit wiring -------
 #define RA8876_CS        12 
 #define RA8876_RESET     11
 #define RA8876_BACKLIGHT 10 
+// -----------------------------------
+
 
 #define SCREEN_WIDTH 1024
 #define SCREEN_HEIGHT 600

@@ -32,7 +32,6 @@
 #include "Screen.h"
 #define SerialPC Serial
 
-
 // ------- ChipSelect de SD --------------
 #define SD_CARD_SCS  13 
 // ---------------------------------------
@@ -40,7 +39,7 @@
 
 // ---- FICHEROS ------
 char   testTXT[30] = "data/test.txt";
-char    fileCSV[30] = "data/data-sc.csv";
+char   fileCSV[30] = "data/data-sc.csv";
 // --------------------
 
 
