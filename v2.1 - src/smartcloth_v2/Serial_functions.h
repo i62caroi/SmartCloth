@@ -350,7 +350,7 @@ void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
         SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
     #endif
 
-    // Se considera que no hay conexión WiFi
+    // Con TIMEOUT se considera que no hay conexión WiFi
     msgFromESP32 = "TIMEOUT";
 
 }
@@ -468,66 +468,6 @@ void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeou
  * @return true si hay conexión WiFi, false si no la hay o por TIMEOUT.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-/*bool checkWifiConnection() 
-{
-    #if defined(SM_DEBUG)
-        SerialPC.println(F("Comprobando la conexión WiFi del ESP32..."));
-        //SerialPC.println(F("Cadena enviada al esp32: CHECK-WIFI")); 
-    #endif
-    
-    //SerialESP32.print(F("CHECK-WIFI")); //Envía la cadena al esp32
-    sendMsgToESP32("CHECK-WIFI"); // Envía la cadena al ESP32
-
-    unsigned long timeout = 3000;        // Espera máxima de 3 segundos
-    unsigned long startTime = millis();  // Obtenemos el tiempo actual
-
-    // Bucle while se ejecuta mientras no se recibe una respuesta del ESP32 y no se ha superado el tiempo de espera.
-    // Es más eficiente que while(true) porque se detiene en cuanto se recibe la respuesta o se supera el tiempo de espera,
-    // pero no ejecuta las líneas de comprobación continuamente si no se ha recibido respuesta del ESP32.
-
-    // Esperar 3 segundos a que el ESP32 responda
-    //while ((SerialESP32.available() == 0) && (millis() - startTime < timeout)); 
-    while(isESP32SerialEmpty() && isTimeoutExceeded(startTime, timeout));
-    
-    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-   // if (SerialESP32.available() > 0) { // Si el esp32 ha respondido
-    if(hayMsgFromESP32()) // Si el esp32 ha respondido
-    {
-        //tring msgFromESP32 = SerialESP32.readStringUntil('\n');
-        //msgFromESP32.trim();  // Elimina espacios en blanco al principio y al final
-        String msgFromESP32;
-        readMsgFromSerialESP32(msgFromESP32);
-
-        #if defined(SM_DEBUG)
-            SerialPC.println("Respuesta del ESP32: " + msgFromESP32);  
-        #endif
-
-        if (msgFromESP32 == "WIFI-OK") {
-            // Respuesta OK, hay conexión WiFi
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("Dice que hay wifi"));
-            #endif
-            return true;
-        } 
-        else if (msgFromESP32 == "NO-WIFI") {
-            // Respuesta NO-WIFI, no hay conexión WiFi
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("Dice que NO hay wifi"));
-            #endif
-            return false;
-        }
-    } 
-    else {
-        // No se ha recibido respuesta del ESP32
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
-        #endif
-
-        // Se considera que no hay conexión WiFi
-        return false;
-    }
-
-}*/
 bool checkWifiConnection() 
 {
     // ---- LIMPIAR BUFFER -------------------------------------
@@ -547,7 +487,7 @@ bool checkWifiConnection()
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
     String msgFromESP32;
-    unsigned long timeout = 5000; // Espera máxima de 3 segundos
+    unsigned long timeout = 3000; // Espera máxima de 3 segundos
     waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
     // --------------------------------------
 
@@ -725,6 +665,7 @@ byte askForBarcode(String &barcode)
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
     limpiarBufferESP32();
+    delay(100);
     // ---------------------------------------------------------
 
     // ---- PEDIR LEER BARCODE ---------------------------------
@@ -743,8 +684,15 @@ byte askForBarcode(String &barcode)
     // --------------------------------------
 
     // ---- ANALIZAR RESPUESTA DEL ESP32 ----
+    // --- CANCELAR LECTURA ---
     if(msgFromESP32 == "INTERRUPTION") 
+    {
+        #ifdef SM_DEBUG
+            SerialPC.println(F("\nIndicando al ESP32 que cancele la lectura..."));
+        #endif
+        sendMsgToESP32("CANCEL-BARCODE"); // Cancelar la lectura del barcode
         return INTERRUPTION; // Se ha interrumpido la lectura del barcode (evento de interrupción)
+    }
     // --- EXITO ------
     else if(msgFromESP32.startsWith("BARCODE:")) // "BARCODE:<barcode>"
     {
