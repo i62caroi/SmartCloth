@@ -6,6 +6,40 @@
  * @date 18/04/2024
  */
 
+
+ /*
+    --------------------------------------------------------
+    Estrategias para asegurar la correcta lectura de datos:
+    --------------------------------------------------------
+
+        1.	Protocolo de comunicación con encabezado y longitud:
+                Una técnica común es enviar un encabezado o marca de inicio junto con la longitud del mensaje. Esto te permite saber cuántos bytes debes esperar antes de leer el mensaje completo.
+                Ejemplo de protocolo simple:
+                    •	El ESP32 envía algo como: LEN:<longitud><mensaje>\n.
+                    •	El Due primero lee la longitud (<longitud>) del mensaje, y entonces sabe cuántos bytes debe esperar para que el mensaje esté completo.
+                Este enfoque permite a tu programa saber cuándo esperar más bytes antes de procesar el mensaje completo.
+
+        2.	Verificar mensajes incompletos:
+                Si recibes mensajes vacíos, podrías intentar implementar un sistema de retransmisión o un mecanismo que verifique si el mensaje recibido es válido (completo o no). Por ejemplo, 
+                podrías enviar un código de confirmación desde el Due al ESP32 cuando se recibe el mensaje completo y correcto, de modo que si el ESP32 no recibe este código, pueda retransmitir el mensaje.
+        
+        3.	Buffer circular o cola de mensajes:
+                Implementar un buffer circular o cola de mensajes en el ESP32 y el Due podría ayudar a manejar de manera más eficiente los datos recibidos, asegurando que se procesen todos los bytes en el 
+                orden correcto, y se eviten problemas de sobresaturación.
+        
+        4.	Reintentos automáticos:
+                Puedes agregar un contador de reintentos en el Due. Si el Due no recibe una respuesta adecuada en un tiempo razonable o recibe un mensaje vacío, podría enviar un comando de reintento al ESP32, 
+                solicitando que reenvíe el último mensaje.
+        
+        5.	Esperar datos adicionales:
+                Si lees un mensaje parcial o vacío, en lugar de descartar la lectura inmediatamente, puedes esperar un poco más (aumentar el tiempo de espera) para asegurarte de que se hayan recibido todos los bytes. 
+                De esta manera, evitas procesar datos antes de que todos hayan llegado.
+        
+        6.	Monitorización de tiempo real (debugging):
+                Como parte del proceso de depuración, asegúrate de que ambos dispositivos (Due y ESP32) están bien sincronizados en términos de tiempos de espera y respuesta. Puedes aumentar los tiempos de espera 
+                temporalmente para ver si se reduce la pérdida de datos.
+*/
+
 #ifndef SERIAL_FUNCTIONS_H
 #define SERIAL_FUNCTIONS_H
 
