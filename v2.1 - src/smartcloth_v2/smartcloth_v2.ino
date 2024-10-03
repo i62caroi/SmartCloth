@@ -65,7 +65,8 @@ void setup()
 
     // ------ RTC ------------------------------
     #if defined(SM_DEBUG)
-      SerialPC.println(F("\nInicializando RTC..."));
+        SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
+        SerialPC.println(F("Inicializando RTC..."));
     #endif
     setupRTC(); 
     delay(100); 
@@ -74,7 +75,8 @@ void setup()
 
     // ------ SD card --------------------------
     #if defined(SM_DEBUG)
-        SerialPC.println(F("\nInicializando tarjeta SD..."));
+        SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
+        SerialPC.println(F("Inicializando tarjeta SD..."));
     #endif
     // Incluye crear fichero .csv, si no existe, y sumar en "Acumulado hoy" las comidas guardadas el día de hoy
     if (!setupSDcard()) falloCriticoSD = true; // Si la SD falla o no se encuentra, no se permitirá usar SM
@@ -84,7 +86,8 @@ void setup()
 
     // ------ SCALE ----------------------------
     #if defined(SM_DEBUG)
-        SerialPC.println(F("\nInicializando scale..."));
+        SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
+        SerialPC.println(F("Inicializando scale..."));
     #endif
     setupScale();   
     delay(100); 
@@ -93,7 +96,8 @@ void setup()
     
     // ------ SCREEN ---------------------------
     #if defined(SM_DEBUG)
-        SerialPC.println(F("\nInicializando pantalla..."));
+        SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
+        SerialPC.println(F("Inicializando pantalla..."));
     #endif
     setupScreen();  
     delay(100); 
@@ -105,7 +109,8 @@ void setup()
         dataToUpload = !isFileTXTEmpty(); // Si el fichero no está vacío, hay data para subir
         if(dataToUpload) {
             #if defined(SM_DEBUG)
-                SerialPC.println(F("Hay data para subir\n"));
+                SerialPC.println(F("Hay data para subir"));
+                SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
             #endif //SM_DEBUG
         }
     }
@@ -193,10 +198,10 @@ void setup()
 
 
 
-    #if defined SM_DEBUG
+   /*#if defined SM_DEBUG
       SerialPC.println("\n-----------------------------------------");
       SerialPC.println("-----------------------------------------\n\n");
-    #endif
+    #endif*/
 
 }
 
@@ -257,17 +262,25 @@ void loop() {
                         }
                     }
                     #if defined SM_DEBUG
-                        SerialPC.print(F("\n\nEstado anterior: "));    printStateName(state_prev);      SerialPC.println();
-                        SerialPC.print(F("Nuevo estado: "));           printStateName(state_new);       SerialPC.println();
-                        SerialPC.print(F("Ultimo estado valido: "));   printStateName(lastValidState);  SerialPC.println();
+                        SerialPC.print(F("\nEstado anterior: "));       printStateName(state_prev);      SerialPC.println();
+                        SerialPC.print(F("Nuevo estado: "));            printStateName(state_new);       SerialPC.println();
+                        SerialPC.print(F("Ultimo estado valido: "));    printStateName(lastValidState);  SerialPC.println();
                         SerialPC.println("--------------------------------------------------");
+                        SerialPC.println("--------------------------------------------------\n\n");
                     #endif
                 }
-                else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO)){ 
+                else if((state_actual != STATE_ERROR) and (state_actual != STATE_CANCEL) and (state_actual != STATE_AVISO))
+                //else if(state_actual != STATE_ERROR) // PROBAR ESTO SOLO
+                { 
                         // Se hace esta comprobación para evitar seguir marcando error durante los 3 segundos que no se cumple
                         // ninguna regla de transición porque se está en el estado de error.
+
                         // ¡¡¡ CHEQUEAR ESTO !!!! ¿HACE FALTA STATE_CANCEL Y STATE_AVISO?
-                    //SerialPC.println(F("\nERROR DE EVENTO"));
+                        // Creo que solo haría falta comprobar no estar en STATE_ERROR, porque en ese estado se marca todo el rato
+                        // error porque la flagError está activa, entonces entra en la condición y al revisar las reglas se ve que no 
+                        // ha ocurrido ningún evento de los establecidos en las reglas (lo que ha ocurrido es un error), por lo que
+                        // entra en un ciclo "infinito" de marcar evento de error durante los 3 segundos que dura el estado (si es transitorio).
+                        // La 'flagError' se desactiva en actStateERROR() tras los 3 segundos,
                     actEventError();       // Mensaje de error por evento erróneo según el estado actual
                 }
                 flagEvent = false;

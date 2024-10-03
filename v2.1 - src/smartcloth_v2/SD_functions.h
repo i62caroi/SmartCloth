@@ -181,6 +181,7 @@ bool setupSDcard()
     {
         #if defined(SM_DEBUG)
             SerialPC.println(F("SD card failure!"));
+            SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
         #endif
         return false;
     }
@@ -188,6 +189,7 @@ bool setupSDcard()
     {
         #if defined(SM_DEBUG)
             SerialPC.println(F("SD card initialized"));
+            SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
         #endif
     }
 
@@ -626,7 +628,7 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
             // ---- ESPERAR RESPUESTA DEL ESP32 ---------------
             // Tras enviar las líneas de toda la comida actual, espera hasta 10 segundos a que el ESP32 responda si se ha podido subir la comida a la database
             String msgFromESP32;
-            unsigned long timeout = 10500; // Tiempo de espera máximo de 10.5 segundos para que el esp32 responda (espera hasta 10 segundos a que el servidor responda)
+            unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (espera hasta 10 segundos a que el servidor responda)
             waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
             // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
             // ---- FIN ESPERAR RESPUESTA ESP32 ---------------
@@ -815,7 +817,8 @@ void saveListInTXT()
 bool isFileTXTEmpty() 
 {
     #if defined(SM_DEBUG)
-        SerialPC.println(F("\nComprobando contenido del fichero TXT del ESP32..."));
+        SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
+        SerialPC.println(F("Comprobando contenido del fichero TXT del ESP32..."));
     #endif
 
     File myFile = SD.open(fileTXT, FILE_READ);
@@ -828,7 +831,8 @@ bool isFileTXTEmpty()
     {
         #if defined(SM_DEBUG)
             if (!myFile) {
-                SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacio\n"));
+                SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacio"));
+                SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
             }
         #endif
         if (myFile) {
@@ -937,6 +941,10 @@ void readFileTXT()
 
 byte sendTXTFileToESP32()
 {
+    #if defined SM_DEBUG
+        SerialPC.println(F("\nEnviando TXT al esp32..."));
+    #endif
+
     std::vector<String> actualMeal;   // Vector que guarda los datos de la comida actual
     std::vector<String> unsavedMeals; // Vector que guarda las comidas que no se han podido subir
 
@@ -971,8 +979,8 @@ byte sendTXTFileToESP32()
             if (line.startsWith("FIN-COMIDA")) 
             {
                 // ---- ESPERAR RESPUESTA DEL ESP32 -----
-                String msgFromESP32;
-                unsigned long timeout = 10000; // Tiempo de espera máximo de 10 segundos para que el esp32 responda
+                String msgFromESP32 = "";
+                unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (tiene 10 segundos para subir info)
                 waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
                 // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
                 // --------------------------------------
@@ -983,7 +991,7 @@ byte sendTXTFileToESP32()
                 {
                     // Si se recibió SAVED-OK, no se añade a unsavedMeals 
                     #if defined(SM_DEBUG)
-                        SerialPC.println("Comida guardada correctamente\n\n");
+                        SerialPC.println("Comida guardada correctamente\n");
                     #endif
 
                     // Se resetea la comida actual (final del if)
@@ -1003,14 +1011,10 @@ byte sendTXTFileToESP32()
                     // Al terminar el fichero, se comprueba si se han podido subir las comidas y entonces se devuelve un resultado
                     
                     #if defined SM_DEBUG
-                        if(msgFromESP32 == "NO-WIFI") // Se ha perdido la conexion WiFi
-                            SerialPC.println(F("Se ha perdido la conexión WiFi al subir una comida en la actualización de SM..."));
-                        else if(msgFromESP32.startsWith("HTTP-ERROR")) // Error HTTP al subir la info al ESP32
-                            SerialPC.println(F("Error HTTP al subir la info a database en la actualización de SM..."));
-                        else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32()
-                            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32 en la actualización de SM"));
-                        else 
-                            SerialPC.println("Error desconocido al subir la comida a database en la actualización de SM...\n");
+                        if(msgFromESP32 == "NO-WIFI")                   SerialPC.println(F("Se ha perdido la conexión WiFi al subir una comida en la actualización de SM..."));
+                        else if(msgFromESP32.startsWith("HTTP-ERROR"))  SerialPC.println(F("Error HTTP al subir la info a database en la actualización de SM..."));
+                        else if(msgFromESP32 == "TIMEOUT")              SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32 en la actualización de SM"));
+                        else                                            SerialPC.println("Error desconocido al subir la comida a database en la actualización de SM...\n");
                     #endif
 
                     
@@ -1055,15 +1059,15 @@ byte sendTXTFileToESP32()
         }
         else  // Si se ha subido todo, se borra el fichero TXT
         {
-            #if defined(SM_DEBUG)
-                SerialPC.println("\nINFO COMPLETA GUARDADA!");
-                SerialPC.println(F("\nPaso a Init tras subir la info y borrar TXT..."));
-            #endif
-
             deleteFileTXT(); // Borrar fichero TXT
             /*#if defined(SM_DEBUG)
                 readFileTXT(); // Debe mostrar que no hay fichero
             #endif*/
+
+            #if defined(SM_DEBUG)
+                SerialPC.println("\nINFO COMPLETA GUARDADA!");
+                SerialPC.println(F("Paso a Init tras subir la info y borrar TXT...\n"));
+            #endif
 
             return ALL_MEALS_UPLOADED; // Se subieron todas las comidas
 

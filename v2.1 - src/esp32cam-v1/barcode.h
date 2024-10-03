@@ -93,7 +93,7 @@ void tryGetBarcode()
     // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferBR();
+    //limpiarBufferBR();
     // ---------------------------------------------------------
 
     // Ya se pregunta si hay conexión antes de enviar el mensaje "GET-BARCODE"

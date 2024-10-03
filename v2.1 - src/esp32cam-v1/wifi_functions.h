@@ -202,7 +202,7 @@ void checkWiFi()
     // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferBR();
+    //limpiarBufferDue();
     // ---------------------------------------------------------
 
     if(hayConexionWiFi())
@@ -211,7 +211,7 @@ void checkWiFi()
             SerialPC.println(F("\nTengo Wifi"));
         #endif
 
-        sendMsgToDue(F("WIFI-OK"));
+        sendMsgToDue("WIFI-OK");
     }
     else 
     { 
@@ -219,7 +219,7 @@ void checkWiFi()
             SerialPC.println(F("\nNo tengo wifi"));
         #endif
 
-        sendMsgToDue(F("NO-WIFI"));
+        sendMsgToDue("NO-WIFI");
     }
 }
 
@@ -239,7 +239,7 @@ bool fetchTokenFromServer(String &bearerToken)
     // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferBR();
+    //limpiarBufferDue();
     // ---------------------------------------------------------
 
     // Pide el token si sigue teniendo conexión
@@ -254,6 +254,7 @@ bool fetchTokenFromServer(String &bearerToken)
         // Configurar la petición HTTP: un POST con la mac para obtener el token
         HTTPClient http;
         http.begin(fetchTokenServerName);
+        http.setTimeout(10000);          // Establecer 10 segundos de espera para la respuesta del servidor de SmartCloth
         http.addHeader("Content-Type", "application/json");
 
         // JSON con MAC del esp32
@@ -357,6 +358,12 @@ bool fetchTokenFromServer(String &bearerToken)
  */
 void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 {
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    //limpiarBufferDue();
+    // ---------------------------------------------------------
+    
     // Sube la comida si sigue teniendo conexión
     if(hayConexionWiFi())
     {
@@ -402,7 +409,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
                 #endif
 
                 // -- RESPUESTA AL DUE ---
-                sendMsgToDue(F("SAVED-OK"));
+                sendMsgToDue("SAVED-OK");
                 // -----------------------
             }
             // --------------------------------------
@@ -476,10 +483,10 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 /*-----------------------------------------------------------------------------*/
 void logoutFromServer(String &bearerToken)
 {
-    // ---- LIMPIAR BUFFER -------------------------------------
+   // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    //limpiarBufferBR();
+    //limpiarBufferDue();
     // ---------------------------------------------------------
 
     // Cierra sesión si sigue teniendo conexión
@@ -538,7 +545,7 @@ void logoutFromServer(String &bearerToken)
             }
             else{
                 #if defined(SM_DEBUG)
-                    SerialPC.print(F("A. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
+                    SerialPC.print("A. Error cerrando sesión: "); SerialPC.println(httpResponseCode);
                 #endif
                 
                 //sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode));
@@ -548,7 +555,7 @@ void logoutFromServer(String &bearerToken)
         }
         else {
             #if defined(SM_DEBUG)
-                SerialPC.print(F("B. Error cerrando sesión: ")); SerialPC.println(httpResponseCode);
+                SerialPC.print("B. Error cerrando sesión: "); SerialPC.println(httpResponseCode);
             #endif
 
             //sendMsgToDue("HTTP-ERROR:" + String(httpResponseCode));
@@ -567,7 +574,7 @@ void logoutFromServer(String &bearerToken)
             SerialPC.println(F("\nNo se puede CERRAR SESION porque ha perdido la conexion a Internet"));
         #endif
 
-        //sendMsgToDue(F("NO-WIFI"));
+        //sendMsgToDue("NO-WIFI");
         // No hace falta avisar al Due. Si no se puede cerrar la sesión, debería cerrarse automáticamente a la media hora.
     }
 }
@@ -605,7 +612,7 @@ void tryGetProduct(String msgFromDue)
         #if defined(SM_DEBUG)
             SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
         #endif
-        sendMsgToDue(F("NO-WIFI"));
+        sendMsgToDue("NO-WIFI");
     }*/
 }
 
@@ -693,7 +700,7 @@ void getFoodData(String barcode)
                 #endif
 
                 // -- RESPUESTA AL DUE ---
-                sendMsgToDue(F("NO-PRODUCT"));
+                sendMsgToDue("NO-PRODUCT");
                 // -----------------------
             }
             else 
@@ -720,7 +727,7 @@ void getFoodData(String barcode)
         #endif
 
         // -- RESPUESTA AL DUE ---
-        sendMsgToDue(F("PRODUCT-TIMEOUT"));
+        sendMsgToDue("PRODUCT-TIMEOUT");
         // -----------------------
     }
     // ---- FIN TIMEOUT DE OPENFOODFACTS --------

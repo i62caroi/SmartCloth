@@ -383,6 +383,7 @@ void setupScreen()
     if (!tft.init()){
         #if defined(SM_DEBUG)
             SerialPC.println(F("Could not initialize RA8876"));
+            SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
         #endif
         while(1);
     }
@@ -394,6 +395,7 @@ void setupScreen()
     //SCREEN_HEIGHT = tft.getHeight(); // Y
     #if defined(SM_DEBUG)
         SerialPC.println(F("Screen initialized"));
+        SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     #endif
     delay(200);
 }
@@ -454,7 +456,9 @@ bool doubleDelayAndCheckInterrupt(unsigned long period){
 void welcome()
 {
     #if defined(SM_DEBUG)
-    SerialPC.println(F("\nWelcome to SmartCloth\n"));
+        SerialPC.println("\n\n**************************************************");
+        SerialPC.println(F("\n      WELCOME TO SMARTCLOTH\n"));
+        SerialPC.println("**************************************************\n\n");
     #endif
     uint8_t i; // Variable i de los bucles for para ir modificando la opacidad de las imágenes y que aparezcan poco a poco
 
@@ -1467,14 +1471,14 @@ void showSavingMeal_connectionState(bool hayConexionInternet)
  */
 /*-----------------------------------------------------------------------------*/
 void showSyncState(byte option)
-{
+{ 
     // ---- COLOR FONDO Y TEXTO -----------------------------------------------------------------------
     uint16_t backgroundColor, lineColor, textColor;
     
     switch(option)
     {
         case UPLOADING_DATA:            backgroundColor = AZUL_PROCESO;                 lineColor = textColor = WHITE;                          break;
-        case ALL_MEALS_UPLOADED:        backgroundColor = VERDE_PEDIR_Y_EXITO;                  lineColor = textColor = WHITE;                          break;
+        case ALL_MEALS_UPLOADED:        backgroundColor = VERDE_PEDIR_Y_EXITO;          lineColor = textColor = WHITE;                          break;
         
         // Error: option en rango [5, 9]
         default:                        backgroundColor = RED_ERROR_Y_CANCEL;           lineColor = textColor = WHITE;                          break;
@@ -1498,11 +1502,9 @@ void showSyncState(byte option)
 
         case ERROR_READING_TXT:         
         case NO_INTERNET_CONNECTION:     
-        case HTTP_ERROR:                tft.setCursor(180,100);         tft.println(convertSpecialCharactersToHEX("¡ERROR DEL SISTEMA!"));            break;
-
-        //case TIMEOUT:                   tft.setCursor(130,158);         tft.println("TIMEOUT");                                 break;
-
-        //case UNKNOWN_ERROR:             tft.setCursor(130,158);         tft.println("ERROR DESCONOCIDO");                       break;
+        case HTTP_ERROR:                
+        case TIMEOUT:   
+        case UNKNOWN_ERROR:             tft.setCursor(180,100);        tft.println(convertSpecialCharactersToHEX("¡ERROR DEL SISTEMA!"));            break;
         
         default:    break;
     }
@@ -1544,24 +1546,26 @@ void showSyncState(byte option)
 
     // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
-
+// NO_INTERNET_CONNECTION, HTTP_ERROR (al autenticarse en web), TIMEOUT, UNKNOWN_ERROR
     switch (option)
     {
         case UPLOADING_DATA:            
             tft.setCursor(70, 338);                                             tft.println("ESPERE MIENTRAS SE FINALIZA LA SUBIDA");
             tft.setCursor(300,tft.getCursorY() + tft.getTextSizeY()-10);        tft.println(convertSpecialCharactersToHEX("DE INFORMACIÓN"));
-            tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY() + 20);     tft.println(convertSpecialCharactersToHEX("No retire el teléfono móvil"));              break; 
+            tft.setCursor(200, tft.getCursorY() + tft.getTextSizeY() + 20);     tft.println(convertSpecialCharactersToHEX("No retire el teléfono móvil"));                                      break; 
 
-        case ALL_MEALS_UPLOADED:        tft.setCursor(215, 388);                                        tft.println("LA WEB SE HA ACTUALIZADO");                        break;
+        case ALL_MEALS_UPLOADED:        tft.setCursor(215, 388);                                        tft.println("LA WEB SE HA ACTUALIZADO");                                                break;
 
-        case ERROR_READING_TXT:         tft.setCursor(60, 420);                                         tft.println(convertSpecialCharactersToHEX("FALLÓ LA LECTURA DEL FICHERO DE COMIDAS"));    break;
+        case ERROR_READING_TXT:         tft.setCursor(40, 420);                                         tft.println(convertSpecialCharactersToHEX("FALLÓ LA LECTURA DEL FICHERO DE COMIDAS"));  break;
 
         case NO_INTERNET_CONNECTION:    tft.setCursor(125, 420);                                        tft.println(convertSpecialCharactersToHEX("SE PERDIÓ LA CONEXIÓN A INTERNET"));
-                                        tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println(convertSpecialCharactersToHEX("NO SE PUEDE SINCRONIZAR LA INFORMACIÓN"));     break;
+                                        tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println(convertSpecialCharactersToHEX("NO SE PUEDE SINCRONIZAR LA INFORMACIÓN"));   break;
               
-        case HTTP_ERROR:                tft.setCursor(80, 358);                                         tft.println(convertSpecialCharactersToHEX("FALLÓ LA SINCRONIZACIÓN CON LA WEB"));    break;
+        case HTTP_ERROR:                tft.setCursor(100, 420);                                         tft.println(convertSpecialCharactersToHEX("FALLÓ LA SINCRONIZACIÓN CON LA WEB"));       break;
 
-        // case TIMEOUT:                   tft.setCursor(100, 358);                                        tft.println(convertSpecialCharactersToHEX("MÓDULO WIFI NO RESPONDE"));    break;
+        case TIMEOUT:                   tft.setCursor(120, 420);                                        tft.println(convertSpecialCharactersToHEX("FALLÓ LA AUTENTICACIÓN EN LA WEB"));         break;
+
+        case UNKNOWN_ERROR:             tft.setCursor(300, 420);                                        tft.println("ERROR DESCONOCIDO");                                                       break;
 
         default:    break;
     }

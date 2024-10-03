@@ -290,7 +290,9 @@ void TimerHandler() { ISR_Timer.run(); }
     // Número del timer utilizado
     uint16_t timerNumber = dueTimerInterrupt.getTimerNumber();
     #if defined(SM_DEBUG)
+        SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
         SerialPC.print(TimerName); SerialPC.print(F(" attached to Timer(")); SerialPC.print(timerNumber); SerialPC.println(F(")"));
+        SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     #endif 
     return timerNumber;
 }

@@ -117,6 +117,7 @@ void setupScale()
 
     #if defined(SM_DEBUG)
         SerialPC.println(F("Scale initialized"));
+        SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     #endif
 }
 

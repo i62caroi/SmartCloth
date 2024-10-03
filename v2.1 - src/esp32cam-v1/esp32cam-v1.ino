@@ -158,12 +158,29 @@
 void setup() 
 {
     // --- COMUNICACIÓN SERIAL ---
-    setupAllSerial();
+    // ESP32 - PC 
+    #if defined(SM_DEBUG)
+        SerialPC.begin(115200);
+        delay(100);
+    #endif 
     // ---------------------------
 
 
     // --- CONEXIÓN WIFI ---------
     setupWiFi();
+    // ---------------------------
+
+
+    // --- COMUNICACIÓN SERIAL ---
+    // ESP32 - Due 
+    SerialDue.begin(115200, SERIAL_8N1, RXD1, TXD1); 
+    delay(100);
+    // ------------
+
+    // ESP32 - CAM 
+    SerialBR.begin(9600); // Debe ser 9600 porque así trabaja el lector
+    delay(100);
+    // ------------
     // ---------------------------
   
 }

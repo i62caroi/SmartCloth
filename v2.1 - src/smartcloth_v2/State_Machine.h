@@ -2915,11 +2915,38 @@ void actStateSaved()
 
 
 
+            // ----- AVISO: COMIDA VACÍA -------------
+            if(comidaActual.isComidaEmpty())
+            { 
+                if(state_prev != STATE_ERROR)   // COMIDA VACÍA ==> NO SE GUARDA
+                {
+                    // Saltaría aviso si se entra a este estado STATE_saved (pulsar dos veces el botón de guardar) y la comida está vacía.
+
+                    // Para evitar marcar un aviso "falso", se chequea no venir de error:
+                    //      Si se ha guardado la comida y, en lugar de retirar el plato, se comete un error (pulsando botón), al regresar a este
+                    //      estado STATE_saved la comidaActual ya estará vacía porque se guardó y reinició anteriormente, por lo que daría aviso y 
+                    //      regresaría al estado desde donde se inició el guardado. Todo eso aún con el plato puesto en la báscula, por lo que se 
+                    //      podrían ir encadenando una serie de errores al retirarlo desde ese estado previo. Por eso solo se marca aviso si es la 
+                    //      primera vez que se entra al estado STATE_saved, pero no si se entró a STATE_saved, se cometió error y se regresó a STATE_saved, 
+                    //      pues ya no podría salir de ahí.
+                
+                    #if defined(SM_DEBUG)
+                        SerialPC.println(F("No se ha guardado la comida porque está vacía. Pasando a STATE_AVISO..."));           
+                    #endif 
+                    
+                    avisoComidaWasEmpty = true;
+                    addEventToBuffer(AVISO_COMIDA_EMPTY_NOT_SAVED);   // Se transiciona al STATE_AVISO, que regresa automáticamente al estado desde donde se inició guardar comida
+                    flagEvent = true;
+                }
+            }
+            // ----- FIN AVISO: COMIDA VACÍA ---------  
+
             /* ----- GUARDAR COMIDA EN DIARIO (Y WEB) ----------------------------- */
-            // ----- GUARDAR COMIDA -----------
             // Guardar comida localmente y enviarla a la base de datos, si hay conexión a internet
-            if(!comidaActual.isComidaEmpty())    // COMIDA CON PLATOS ==> HAY QUE GUARDAR
+            else    // COMIDA CON PLATOS ==> HAY QUE GUARDAR
             {
+                avisoComidaWasEmpty = false;                   // Para mostrar mensaje de comida guardada y no comida vacía
+
                 // -----  INFORMACIÓN INICIAL MOSTRADA  -------------------------
                 // 1. Elementos básicos de pantalla (texto "Guardando comida..." y comentarios)
                 showSavingMeal_baseScreen();   
@@ -2935,7 +2962,6 @@ void actStateSaved()
                 delay(500); // Para que dé tiempo a leer el mensaje de conexión a internet o no
                 // ----- FIN INFORMACIÓN INICIAL MOSTRADA -----------------------
 
-                avisoComidaWasEmpty = false;                   // Para mostrar mensaje de comida guardada y no comida vacía
 
                 // --- COMIDA A DIARIO Y FICHEROS ---
                 // 1. Añadir 'comidaActual' a 'diaActual' para actualizar el "Acumulado Hoy" en el dashboard estilo 1 (Comida Guardada | Acumulado Hoy)
@@ -2977,45 +3003,23 @@ void actStateSaved()
                 flagComidaSaved = true;                     // Se indica que se ha guardado la comida para que el dashboard estilo 1 en STATE_Init se muestre "Comida guardada" en lugar de "Comida actual". 
                                                             // De esta forma se entiende que los valores que se muestran son de la comida que se acaba de guardar. En cuanto se coloque recipiente, se entenderá
                                                             // que se ha comenzado otra comida, pasando ya a "Comida actual".
-            } 
-            // ----- FIN GUARDAR COMIDA -------
-
-            // ----- AVISO: COMIDA VACÍA -------------
-            else if(state_prev != STATE_ERROR)   // COMIDA VACÍA ==> NO SE GUARDA
-            {
-                    // Saltaría aviso si se entra a este estado STATE_saved (pulsar dos veces el botón de guardar) y la comida está vacía.
-
-                    // Para evitar marcar un aviso "falso", se chequea no venir de error:
-                    //      Si se ha guardado la comida y, en lugar de retirar el plato, se comete un error (pulsando botón), al regresar a este
-                    //      estado STATE_saved la comidaActual ya estará vacía porque se guardó y reinició anteriormente, por lo que daría aviso y 
-                    //      regresaría al estado desde donde se inició el guardado. Todo eso aún con el plato puesto en la báscula, por lo que se 
-                    //      podrían ir encadenando una serie de errores al retirarlo desde ese estado previo. Por eso solo se marca aviso si es la 
-                    //      primera vez que se entra al estado STATE_saved, pero no si se entró a STATE_saved, se cometió error y se regresó a STATE_saved, 
-                    //      pues ya no podría salir de ahí.
-                
-                #if defined(SM_DEBUG)
-                    SerialPC.println(F("No se ha guardado la comida porque está vacía. Pasando a STATE_AVISO..."));           
-                #endif 
-                
-                avisoComidaWasEmpty = true;  
-                addEventToBuffer(AVISO_COMIDA_EMPTY_NOT_SAVED);   // Se transiciona al STATE_AVISO, que regresa automáticamente al estado desde donde se inició guardar comida
-                flagEvent = true;
-            }
-            // ----- FIN AVISO: COMIDA VACÍA ---------  
-            /* ----- FIN GUARDAR COMIDA EN DIARIO (Y WEB) ------------------------- */
-
-
-            /* -----  INFORMACIÓN FINAL MOSTRADA  ------------------------------- */             
-            if(!avisoComidaWasEmpty) // Si no hubo aviso, se guardó la comida (en local y en la database si había conexión a internet)
-            {
+            
+            
+                /* -----  INFORMACIÓN FINAL MOSTRADA  ------------------------------- */             
+                // Si no hubo aviso, se guardó la comida (en local y en la database si había conexión a internet)
                 showAccionRealizada(typeOfSavingDone); // Si el guardado fue completo (local y database), se indica "Subido a web" en la esquina inferior izquierda.
-                                                       // Si el guardado no fue completo, se indica por qué en la esquina inferior derecha (sin internet o error).
+                                                    // Si el guardado no fue completo, se indica por qué en la esquina inferior derecha (sin internet o error).
 
                 if(lastValidState == STATE_Init) 
                     previousTimeComidaSaved = millis(); // Si se guardó la comida desde Init, entonces no habrá plato en la báscula, por lo que se obtiene el tiempo
                                                         //   para regresar a Init automáticamente tras unos segundos mostrando el mensaje de confirmación.
-            }
-            /* ----- FIN INFO FINAL MOSTRADA ------------------------------------ */
+                /* ----- FIN INFO FINAL MOSTRADA ------------------------------------ */
+            
+            }             
+            /* ----- FIN GUARDAR COMIDA EN DIARIO (Y WEB) ------------------------- */
+
+
+            
         
 
         } // FIN if(state_prev != STATE_saved)
@@ -3375,9 +3379,8 @@ void actStateERROR()
                 default:   break;  
             }
 
-            flagEvent = true;  // En todos los casos anteriores se marcará evento
-            flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
-                      
+            flagEvent = true;  // En todos los casos anteriores se marcará evento de transición para regresar al estado donde se cometió.  
+            flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer                    
         }
         // ----- FIN TIEMPO DE ESPERA -------------------------------------
 
@@ -3877,6 +3880,7 @@ void actStateERROR()
               // usuario haga algo mientras está la pantalla de error ocurrido durante CANCEL o AVISO.
 
               default:  break;  
+
             }
 
             flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
@@ -3909,7 +3913,7 @@ void actStateERROR()
             if(hasScaleEventOccurred() and (eventoBascula == LIBERAR))
             {
                 addEventToBuffer(GO_TO_INIT);        
-                flagEvent = true;  
+                flagEvent = true;  // Marcar evento
                 flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
             }
             // ------------------------------------------------------------------------------
@@ -3937,9 +3941,9 @@ void actStateERROR()
                 }
                 addEventToBuffer(GO_TO_WEIGHTED);   // Pasar directamente a STATE_weighted para mostrar la info de lo pesado según la cocción (crudo o cocinado)
                                                     // Si se pasara a STATE_raw o STATE_cooked, el sistema esperaría un incremento de peso para pasar a STATE_weighted,
-                                                    // pero ese incremento ya ha ocurrido porque se ha colocado alimento, aunque haya resultado en un error, pero es
+                                                    // pero ese incremento ya ha ocurrido porque se ha colocado alimento antes, aunque haya resultado en un error, pero es
                                                     // un error ya subsanado.
-                flagEvent = true;  
+                flagEvent = true;  // Marcar evento
                 flagError = false; // Reiniciar flag de error hasta que se vuelva a cometer
             }
             // ------------------------------------------------------------------------------
@@ -4534,6 +4538,8 @@ void actState_UPLOAD_DATA()
     {
         // -----  INFORMACIÓN MOSTRADA  ------------------------
         #if defined(SM_DEBUG)
+            SerialPC.println("\n--------------------------------------------------");
+            SerialPC.println("\n++++++++++++++++++++++++++++++++++++++++++++++++++");
             SerialPC.println(F("\nDATA EN EL TXT")); 
         #endif
 
@@ -4728,7 +4734,11 @@ void shiftLeftEventBuffer()
 void addEventToBuffer(event_t evento)
 {
     #if defined SM_DEBUG
+        SerialPC.println("\n\n--------------------------------------------------");
         SerialPC.println("--------------------------------------------------");
+        SerialPC.println("      +++++++++++++++++++++++++++++++++++++++     ");
+        SerialPC.println("      EVENTO --> ACTIVANDO MÁQUINA DE ESTADOS      ");
+        SerialPC.println("      +++++++++++++++++++++++++++++++++++++++     ");
     #endif
 
     byte pos;
@@ -4748,7 +4758,7 @@ void addEventToBuffer(event_t evento)
     lastEvent = evento;
 
     #if defined(SM_DEBUG)
-        SerialPC.print("\nBuffer: "); 
+        SerialPC.print("Buffer: "); 
         for (byte i = 0; i < MAX_EVENTS; i++){
             //SerialPC.print(event_buffer[i]); SerialPC.print(" ");
             printEventName(event_buffer[i]); SerialPC.print(" | ");

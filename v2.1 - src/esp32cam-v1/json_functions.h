@@ -46,6 +46,11 @@ time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaInd
 /*-----------------------------------------------------------------------------*/
 void  processJSON_OnePerMeal()
 {
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    //limpiarBufferDue();
+    // ---------------------------------------------------------
 
     // ---------- DECLARAR DOCUMENTO JSON -------------------------
     // Se reservan 20KB de RAM para el JSON, aunque acabe siendo más pequeño.
@@ -91,19 +96,15 @@ void  processJSON_OnePerMeal()
         #endif
 
         String line = "";
-        
-        //unsigned long startTime = millis();
-        //unsigned long timeout = 15000; // Tiempo de espera máximo de 15 segundos para que el Due responda con líneas de comidas
+        unsigned long timeout_waitLine = 15000; // Tiempo de espera máximo de 15 segundos para que el Due envíe la línea
 
-        //while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
-        while(!line.equals("FIN-TRANSMISION"))
+        while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
+        //while(!line.equals("FIN-TRANSMISION"))
         {
             // Se sale del while después de procesar FIN-TRANSMISION o si no se recibe nada durante 15 segundos
 
             // ---- ESPERAR RESPUESTA DEL DUE ---------------
             // Esperar hasta 15 segundos a que el Due envíe la línea
-            String line;
-            unsigned long timeout_waitLine = 15000; // Tiempo de espera máximo de 15 segundos para que el Due envíe la línea
             waitMsgFromDue(line, timeout_waitLine); // Espera mensaje del Due y lo devuelve en 'line'
             // Cuando se recibe mensaje o se pasa el timeout, entonces se comprueba la respuesta
             

@@ -56,16 +56,16 @@ void           setupAllSerial();                                                
 #endif
 
 // Comunicación Serial ESP32-Due
-inline bool    hayMsgFromDue() { return SerialDue.available() > 0; }                            // Comprobar si hay mensajes del Due disponibles
-inline bool    isDueSerialEmpty(){ return !hayMsgFromDue(); }                                   // Comprobar que el Serial del Due está vacío (no hay mensajes)
-inline void    readMsgFromSerialDue(String &msgFromDue);                                        // Leer mensaje del puerto serie ESP32-Due
-void           waitMsgFromDue(String &msgFromESP32, unsigned long &timeout);                    // Esperar mensaje del Due durante un tiempo determinado
-inline void    limpiarBufferDue(){ while(SerialDue.available() > 0) { SerialDue.read(); } };    // Limpiar buffer con el Due
-inline void    sendMsgToDue(const String &msg){ limpiarBufferDue(); SerialDue.println(msg); };  // Limpiar buffer y enviar 'msg' del ESP32 al Due
+inline bool    hayMsgFromDue() { return SerialDue.available() > 0; }                        // Comprobar si hay mensajes del Due disponibles
+inline bool    isDueSerialEmpty(){ return !hayMsgFromDue(); }                               // Comprobar que el Serial del Due está vacío (no hay mensajes)
+inline void    readMsgFromSerialDue(String &msgFromDue);                                    // Leer mensaje del puerto serie ESP32-Due
+void           waitMsgFromDue(String &msgFromESP32, unsigned long &timeout);                // Esperar mensaje del Due durante un tiempo determinado
+//inline void    limpiarBufferDue();                                                          // Limpiar buffer con el ESP32
+inline void    sendMsgToDue(const String &msg);                                             // Enviar mensaje al ESP32
 
 // Comunicación Serial ESP32-BR
 inline bool     hayMsgFromBR(){ return SerialBR.available() > 0; };                         // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
-inline void     limpiarBufferBR(){ while(SerialBR.available() > 0) { SerialBR.read(); } };  // Limpiar buffer del lector de códigos de barras
+//inline void     limpiarBufferBR(){ while(SerialBR.available() > 0) { SerialBR.read(); } };  // Limpiar buffer del lector de códigos de barras
 inline void     readMsgFromSerialBR(String &msgFromBR);                                     // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
 void            waitForBarcode(String &buffer);                                             // Esperar a que se lea un código de barras
 
@@ -162,16 +162,52 @@ void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
     if (hayMsgFromDue())  // Si el Due ha respondido
     {
         readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
+        #if defined(SM_DEBUG)
+            SerialPC.println("\nRespuesta del Due: " + msgFromDue);  
+        #endif
     } 
     else // No se ha recibido respuesta del Due
     {
-        // Se considera que no hay conexión WiFi
         msgFromDue = "TIMEOUT-DUE";;
     }
 
 }
 
 
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Limpia el buffer de datos del Due.
+ *
+ * Esta función vacía el buffer de entrada del Due leyendo todos los datos disponibles.
+ * Luego, introduce un pequeño retraso para asegurar que el Due tenga tiempo de procesar
+ * y leer cualquier mensaje que se envíe después.
+ */
+/*-----------------------------------------------------------------------------*/
+/*inline void limpiarBufferDue()
+{ 
+  while(SerialDue.available() > 0) { SerialDue.read(); } // Limpiar buffer con el Due
+  delay(100);  // Pequeño retraso para asegurar que el Due tenga tiempo de leer el mensaje que se envíe después    
+}*/
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Envía un mensaje al Due a través del puerto serie.
+ *
+ * Esta función limpia el buffer del Due, envía el mensaje especificado
+ * y añade un pequeño retraso para asegurar que el Due tenga tiempo de leer el mensaje.
+ *
+ * @param msg El mensaje que se enviará al Due.
+ */
+/*-----------------------------------------------------------------------------*/
+inline void sendMsgToDue(const String &msg)
+{ 
+      //limpiarBufferDue();     // Limpiar buffer con Due
+      SerialDue.println(msg); // Enviar 'msg' del ESP32 al Due
+      delay(50);              // Pequeño retraso para asegurar que el Due tenga tiempo de leer el mensaje
+}
 
 
 /*-----------------------------------------------------------------------------*/

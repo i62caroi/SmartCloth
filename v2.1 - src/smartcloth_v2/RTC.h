@@ -136,6 +136,7 @@ void setupRTC()
     char *today = rtc.getDateStr();
     #if defined(SM_DEBUG)
       SerialPC.print(F(" => Hoy es ")); SerialPC.print(today); SerialPC.print(F(" y son las ")); SerialPC.println(rtc.getTimeStr());
+      SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     #endif //SM_DEBUG
 }
 

@@ -119,6 +119,41 @@
 
 */
 
+
+
+/*
+    --------------------------------------------------------
+    Estrategias para asegurar la correcta lectura de datos:
+    --------------------------------------------------------
+
+        1.	Protocolo de comunicación con encabezado y longitud:
+                Una técnica común es enviar un encabezado o marca de inicio junto con la longitud del mensaje. Esto te permite saber cuántos bytes debes esperar antes de leer el mensaje completo.
+                Ejemplo de protocolo simple:
+                    •	El ESP32 envía algo como: LEN:<longitud><mensaje>\n.
+                    •	El Due primero lee la longitud (<longitud>) del mensaje, y entonces sabe cuántos bytes debe esperar para que el mensaje esté completo.
+                Este enfoque permite a tu programa saber cuándo esperar más bytes antes de procesar el mensaje completo.
+
+        2.	Verificar mensajes incompletos:
+                Si recibes mensajes vacíos, podrías intentar implementar un sistema de retransmisión o un mecanismo que verifique si el mensaje recibido es válido (completo o no). Por ejemplo, 
+                podrías enviar un código de confirmación desde el Due al ESP32 cuando se recibe el mensaje completo y correcto, de modo que si el ESP32 no recibe este código, pueda retransmitir el mensaje.
+        
+        3.	Buffer circular o cola de mensajes:
+                Implementar un buffer circular o cola de mensajes en el ESP32 y el Due podría ayudar a manejar de manera más eficiente los datos recibidos, asegurando que se procesen todos los bytes en el 
+                orden correcto, y se eviten problemas de sobresaturación.
+        
+        4.	Reintentos automáticos:
+                Puedes agregar un contador de reintentos en el Due. Si el Due no recibe una respuesta adecuada en un tiempo razonable o recibe un mensaje vacío, podría enviar un comando de reintento al ESP32, 
+                solicitando que reenvíe el último mensaje.
+        
+        5.	Esperar datos adicionales:
+                Si lees un mensaje parcial o vacío, en lugar de descartar la lectura inmediatamente, puedes esperar un poco más (aumentar el tiempo de espera) para asegurarte de que se hayan recibido todos los bytes. 
+                De esta manera, evitas procesar datos antes de que todos hayan llegado.
+        
+        6.	Monitorización de tiempo real (debugging):
+                Como parte del proceso de depuración, asegúrate de que ambos dispositivos (Due y ESP32) están bien sincronizados en términos de tiempos de espera y respuesta. Puedes aumentar los tiempos de espera 
+                temporalmente para ver si se reduce la pérdida de datos.
+*/
+
 #ifndef SERIAL_FUNCTIONS_H
 #define SERIAL_FUNCTIONS_H
 
@@ -175,7 +210,7 @@ void showDataToUpload(byte option);
                           DECLARACIÓN FUNCIONES
 /******************************************************************************/
 /******************************************************************************/
-// Funciones para manejar la comunicación Serial con el ESP32
+// Setup Serial PC
 void            setupSerialPC();                                    // Configurar comunicación Serial con PC
 
 // Comunicación Serial Due-ESP32
@@ -183,9 +218,10 @@ void            setupSerialESP32();                                 // Configura
 inline bool     hayMsgFromESP32() { return SerialESP32.available() > 0; };      // Comprobar si hay mensajes del ESP32 disponibles
 inline bool     isESP32SerialEmpty(){ return !hayMsgFromESP32(); }              // Comprobar si no hay mensajes del ESP32 disponibles
 inline void     readMsgFromSerialESP32(String &msgFromESP32);                   // Leer mensaje del puerto serie Due-ESP32 y guardarlo en msgFromESP32
-inline void     limpiarBufferESP32(){ while(SerialESP32.available() > 0) { SerialESP32.read(); } }; // Limpiar buffer con el ESP32
-inline void     sendMsgToESP32(const String &msg){ limpiarBufferESP32(); SerialESP32.println(msg); }; // Enviar 'msg' del Due al ESP32
+//inline void     limpiarBufferESP32();                                           // Limpiar buffer con el ESP32
+inline void     sendMsgToESP32(const String &msg);                              // Enviar mensaje al ESP32
 
+// Esperar mensaje de ESP32
 void            waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout);            // Espera la respuesta del ESP32, sea cual sea, y la devuelve en msgFromESP32.
 void            waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout);  // Espera la respuesta del ESP32 y la devuelve. Atiende a eventos
 inline bool     isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout);            // Comprobar si se ha excedido el tiempo de espera
@@ -193,7 +229,6 @@ inline bool     isTimeoutExceeded(unsigned long &startTime, unsigned long &timeo
 
 bool    checkWifiConnection();                                      // Comprobar conexion a internet
 byte    prepareSaving();                                            // Indica al ESP32 que se le va a enviar info y espera su respuesta WAITING-FOR-DATA
-//void    getBarcodeAndProductInfo();                                 // Leer código de barras y buscar información del producto
 byte    askForBarcode(String &barcode);                             // Obtener el código de barras
 byte    getProductInfo(String &barcode, String &productInfo);       // Obtener la información del producto a partir de un código de barras
 /******************************************************************************/
@@ -224,7 +259,10 @@ void setupSerialPC()
     // Inicializar comunicación con PC (Serial)
     SerialPC.begin(115200);
     delay(100);
-    SerialPC.println(F("\nIniciando comunicacion Serial con PC..."));
+
+    SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
+    SerialPC.println(F("Iniciando comunicacion Serial con PC..."));
+    SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
 }
 #endif // SM_DEBUG
 
@@ -256,12 +294,45 @@ void setupSerialESP32()
  * @param msgFromESP32 La variable donde se guardará el mensaje leído.
  */
 /*-----------------------------------------------------------------------------*/
-inline void readMsgFromSerialESP32(String &msgFromESP32) { 
+inline void readMsgFromSerialESP32(String &msgFromESP32) 
+{ 
     msgFromESP32 = SerialESP32.readStringUntil('\n'); 
     msgFromESP32.trim();  // Elimina espacios en blanco al principio y al final
 }
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Limpia el buffer de datos del ESP32.
+ *
+ * Esta función vacía el buffer de entrada del ESP32 leyendo todos los datos disponibles.
+ * Luego, introduce un pequeño retraso para asegurar que el ESP32 tenga tiempo de procesar
+ * y leer cualquier mensaje que se envíe después.
+ */
+/*-----------------------------------------------------------------------------*/
+/*inline void limpiarBufferESP32()
+{ 
+    while(SerialESP32.available() > 0) { SerialESP32.read(); } // Limpiar buffer con el ESP32
+    delay(100);  // Pequeño retraso para asegurar que el ESP32 tenga tiempo de leer el mensaje que se envíe después   
+}*/
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Envía un mensaje al ESP32 a través del puerto serie.
+ *
+ * Esta función limpia el buffer del ESP32, envía el mensaje especificado
+ * y añade un pequeño retraso para asegurar que el ESP32 tenga tiempo de leer el mensaje.
+ *
+ * @param msg El mensaje que se enviará al ESP32.
+ */
+/*-----------------------------------------------------------------------------*/
+inline void sendMsgToESP32(const String &msg)
+{ 
+    //limpiarBufferESP32(); // Limpiar buffer con ESP32
+    SerialESP32.println(msg); // Enviar 'msg' del Due al ESP32 
+    delay(50);  // Pequeño retraso para asegurar que el ESP32 tenga tiempo de leer el mensaje
+}
 
 
 /*-----------------------------------------------------------------------------*/
@@ -294,29 +365,48 @@ inline bool isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout)
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
 
-    // Esperar 'timeout' segundos a que el ESP32 responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
-    while(isESP32SerialEmpty() && !isTimeoutExceeded(startTime, timeout));
-
-    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-    if (hayMsgFromESP32())  // Si el esp32 ha respondido
+    // Esperar 'timeout' segundos a que el ESP32 responda. Sale si se recibe mensaje no vacío, si se 
+    // pasa el tiempo de espera, o si ocurre un evento
+    //
+    // A veces se detectaba algo en el buffer y se salía del bucle, pero en realidad era una cadena
+    // vacía, entonces el Due no se quedaba esperando a que el ESP32 buscara y respondiera con la 
+    // información del producto. Por eso, se cambia la condición del bucle para que se quede esperando
+    // hasta que se reciba un mensaje no vacío.
+    while (!isTimeoutExceeded(startTime, timeout)) 
     {
-        readMsgFromSerialESP32(msgFromESP32); // Leer mensaje del puerto serie y guardarlo en msgFromESP32
-        #if defined(SM_DEBUG)
-            SerialPC.println("Respuesta del ESP32: " + msgFromESP32);  
-        #endif
-    } 
-    else // No se ha recibido respuesta del ESP32
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
-        #endif
+        if (hayMsgFromESP32())  // Si el esp32 ha respondido
+        {
+            readMsgFromSerialESP32(msgFromESP32); // Leer mensaje del puerto serie y guardarlo en msgFromESP32
+            #if defined(SM_DEBUG)
+                SerialPC.println("--> Respuesta del ESP32: " + msgFromESP32);  
+            #endif
+            
+            if (msgFromESP32.length() > 0) // Mensaje no vacío
+            {
+                #if defined(SM_DEBUG)
+                    SerialPC.println("Mensaje no vacío del ESP32");  
+                #endif
+                return; // Salir de la función si se recibe un mensaje no vacío
+            }
+        }
 
-        // Se considera que no hay conexión WiFi
-        msgFromESP32 = "TIMEOUT";;
+        delay(50); // Pequeño retraso para evitar una espera activa intensa
     }
 
+    // Si se alcanza el tiempo de espera sin recibir un mensaje no vacío
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("TIMEOUT del ESP32"));
+    #endif
+
+    // Con TIMEOUT se considera que no hay conexión WiFi
+    msgFromESP32 = "TIMEOUT";
+
 }*/
-void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
+// A veces se leen mensajes vacíos del buffer, aunque el ESP32 los haya enviado correctamente. 
+// Por eso se comprobaba que msgFromESP32.length() > 0 para asegurarse de que se había recibido un mensaje no vacío.
+// Pero eso parece que no resuelve nada porque puede ser que el ESP32 envíe un mensaje correcto pero se reciba mal,
+// así que vamos a ir comprobando caracter a caracter hasta recibir "\n" y entonces considerar que se ha recibido un mensaje.
+/*void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
 
@@ -331,15 +421,33 @@ void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
     {
         if (hayMsgFromESP32())  // Si el esp32 ha respondido
         {
-            readMsgFromSerialESP32(msgFromESP32); // Leer mensaje del puerto serie y guardarlo en msgFromESP32
-            
-            if (msgFromESP32.length() > 0) // Mensaje no vacío
+            // Vamos a ir comprobando caracter a caracter hasta recibir "\n" y entonces 
+            // considerar que se ha recibido un mensaje.
+
+            char c = SerialESP32.read(); // Leer un caracter del puerto serie
+            if (c == '\n') // Si se recibe un salto de línea
             {
+                msgFromESP32.trim(); // Eliminar espacios en blanco al principio y al final
                 #if defined(SM_DEBUG)
-                    SerialPC.println("Respuesta del ESP32: " + msgFromESP32);  
+                    SerialPC.println("Mensaje del ESP32: " + msgFromESP32);  
                 #endif
-                return; // Salir de la función si se recibe un mensaje no vacío
+
+                if (msgFromESP32.length() > 0) // Mensaje no vacío
+                {
+                    #if defined(SM_DEBUG)
+                        SerialPC.println("Mensaje no vacío del ESP32");  
+                    #endif
+                    return; // Salir de la función si se recibe un mensaje no vacío
+                }
             }
+            else
+            {
+                msgFromESP32 += c; // Añadir el caracter leído al mensaje
+                #if defined(SM_DEBUG)
+                    SerialPC.println("Msg ESP32: " + msgFromESP32);  
+                #endif
+            }
+            
         }
 
         delay(50); // Pequeño retraso para evitar una espera activa intensa
@@ -347,13 +455,41 @@ void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
 
     // Si se alcanza el tiempo de espera sin recibir un mensaje no vacío
     #if defined(SM_DEBUG)
-        SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
+        SerialPC.println(F("TIMEOUT del ESP32"));
     #endif
 
-    // Con TIMEOUT se considera que no hay conexión WiFi
     msgFromESP32 = "TIMEOUT";
 
+}*/
+// Otra prueba para hacerlo parecido a waitMsgFromDue() del ESP32, porque esa función toma el mensaje del Due
+// perfectamente cada vez.
+void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+
+    // Esperar 'timeout' segundos a que el ESP32 responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    while(!hayMsgFromESP32() && !isTimeoutExceeded(startTime, timeout));
+
+    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
+    if (hayMsgFromESP32())  // Si el Due ha respondido
+    {
+        readMsgFromSerialESP32(msgFromESP32); // Leer mensaje del puerto serie y guardarlo en msgFromESP32
+        #if defined(SM_DEBUG)
+            SerialPC.println("\n---> Respuesta del ESP32: " + msgFromESP32);  
+        #endif
+    } 
+    else // No se ha recibido respuesta del ESP32
+    {
+        // Si se alcanza el tiempo de espera sin recibir un mensaje no vacío
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("TIMEOUT del ESP32"));
+        #endif
+
+        msgFromESP32 = "TIMEOUT";
+    }
 }
+
+
 
 
 
@@ -371,44 +507,6 @@ void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
  */
 /*---------------------------------------------------------------------------------------------------------*/
 /*void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout)
-{
-    unsigned long startTime = millis();  // Obtenemos el tiempo actual
-
-    // Esperar 'timeout' segundos a que el ESP32 responda. Sale si se recibe mensaje, si se pasa el tiempo de espera, o si ocurre un evento
-    while (isESP32SerialEmpty() && !isTimeoutExceeded(startTime, timeout)) {
-        if(eventOccurredReadingBarcode()) 
-        {
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("Interrupcion mientras se leia barcode"));
-            #endif
-            msgFromESP32 = "INTERRUPTION"; // Señalar que se ha interrumpido
-            return;
-        }
-
-        delay(50); // Pequeño retraso para evitar una espera activa intensa
-    }
-
-    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-    if (hayMsgFromESP32())  // Si el esp32 ha respondido
-    {
-        readMsgFromSerialESP32(msgFromESP32); // Leer mensaje del puerto serie y guardarlo en msgFromESP32
-        #if defined(SM_DEBUG)
-            SerialPC.println("\nRespuesta del ESP32: " + msgFromESP32);  
-        #endif
-    } 
-    else // No se ha recibido respuesta del ESP32
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
-        #endif
-
-        // Se considera que no hay conexión WiFi
-        msgFromESP32 = "TIMEOUT";;
-    }
-
-}*/
-
-void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout)
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
 
@@ -436,7 +534,7 @@ void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeou
             
             if (msgFromESP32.length() > 0) {
                 #if defined(SM_DEBUG)
-                    SerialPC.println("\nRespuesta del ESP32: " + msgFromESP32);  
+                    SerialPC.println("\n--> Respuesta del ESP32: " + msgFromESP32);  
                 #endif
                 return; // Salir de la función si se recibe un mensaje no vacío
             }
@@ -455,6 +553,47 @@ void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeou
 
     // Se considera que no hay conexión WiFi
     msgFromESP32 = "TIMEOUT";
+}*/
+
+
+// Prueba para hacerlo parecido a waitMsgFromDue() del ESP32, porque esa función toma el mensaje del Due
+// perfectamente cada vez.
+void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout)
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+
+    // Esperar 'timeout' segundos a que el ESP32 responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    while(!hayMsgFromESP32() && !isTimeoutExceeded(startTime, timeout))
+    {
+        if(eventOccurred()) 
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("Interrupcion mientras se leia barcode"));
+            #endif
+            msgFromESP32 = "INTERRUPTION"; // Señalar que se ha interrumpido
+            return; // Salir de la función si se detecta interrupción (cancelación manual de la lectura)
+        }
+        delay(50); // Pequeño retraso para evitar una espera activa intensa
+    }
+
+    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
+    if (hayMsgFromESP32())  // Si el esp32 ha respondido
+    {
+        readMsgFromSerialESP32(msgFromESP32); // Leer mensaje del puerto serie y guardarlo en msgFromESP32
+        #if defined(SM_DEBUG)
+            SerialPC.println("\n---> Respuesta del ESP32: " + msgFromESP32);  
+        #endif
+    } 
+    else // No se ha recibido respuesta del ESP32
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32 durante lectura de barcode"));
+        #endif
+
+        // Se considera que no se ha detectado barcode
+        msgFromESP32 = "TIMEOUT";;
+    }
+
 }
 
 
@@ -473,7 +612,7 @@ bool checkWifiConnection()
     // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferESP32();
+    //limpiarBufferESP32();
     // ---------------------------------------------------------
 
     // ---- PREGUNTAR POR WIFI ---------------------------------
@@ -512,7 +651,7 @@ bool checkWifiConnection()
     else if (msgFromESP32 == "TIMEOUT") // No se ha recibido respuesta del ESP32
     {
         #if defined(SM_DEBUG)
-            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
+            SerialPC.println(F("TIMEOUT. Sin respuesta del ESP32 al comprobar la conexion WiFi"));
         #endif
         return false; // Se considera que no hay conexión WiFi
     }
@@ -548,7 +687,7 @@ byte prepareSaving()
     // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferESP32();
+    //limpiarBufferESP32();
     // ---------------------------------------------------------
 
     // ---- INDICAR ENVÍO DE DATOS -----------------------------
@@ -561,8 +700,8 @@ byte prepareSaving()
 
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
-    String msgFromESP32;
-    unsigned long timeout = 5000; // Espera máxima de 3 segundos
+    String msgFromESP32 = "";
+    unsigned long timeout = 12000; // Espera máxima de 12 segundos al ESP32 (espera 10 segundos la respuesta del servidor al pedir token)
     waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
     // --------------------------------------
 
@@ -594,7 +733,7 @@ byte prepareSaving()
     else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32()
     {
         #if defined SM_DEBUG
-            SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32\n"));
+            SerialPC.println(F("TIMEOUT. Sin respuesta del ESP32 al indicar guardado\n"));
         #endif
         return TIMEOUT; // No se puede enviar info al ESP32
     }   
@@ -611,40 +750,6 @@ byte prepareSaving()
 
 }
 
-
-
-/*---------------------------------------------------------------------------------------------------------*/
-/**
- * @brief Obtiene el código de barras y la información del producto.
- * 
- * Esta función se utiliza para obtener el código de barras y la información del producto asociada.
- * Si la comunicación con el ESP32 está establecida, se solicita el código de barras y se busca la información del producto en OpenFoodFacts.
- * Si no se ha leído el código de barras, no se buscará información del producto.
- * 
- * @param barcode Referencia a una cadena de caracteres donde se almacenará el código de barras.
- * @param productInfo Referencia a una cadena de caracteres donde se almacenará la información del producto.
- */
-/*---------------------------------------------------------------------------------------------------------*/
-/*void getBarcodeAndProductInfo()
-{
-    String barcode;
-    // 1. Obtener barcode
-    byte resultFromReadingBarcode = askForBarcode(barcode);
-
-    // 2. Si se ha leído el barcode, buscar información del producto
-    if(resultFromReadingBarcode == BARCODE_READ)
-    { 
-        String productInfo;
-        byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts
-        if(resultFromGettingProductInfo == PRODUCT_FOUND); //showProductInfo(productInfo);
-    }
-    else
-    {
-        #ifdef SM_DEBUG
-            SerialPC.println(F("\nNo se va a buscar info del producto porque no se ha leido el barcode"));
-        #endif
-    } 
-}*/
 
 
 
@@ -664,8 +769,8 @@ byte askForBarcode(String &barcode)
     // ---- LIMPIAR BUFFER -------------------------------------
     // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
     // al mensaje que se va a enviar y no otros enviados anteriormente
-    limpiarBufferESP32();
-    delay(100);
+    //limpiarBufferESP32();
+    //delay(100);
     // ---------------------------------------------------------
 
     // ---- PEDIR LEER BARCODE ---------------------------------
@@ -675,22 +780,26 @@ byte askForBarcode(String &barcode)
     sendMsgToESP32("GET-BARCODE"); // Envía la cadena al ESP32
     // ---------------------------------------------------------
 
+
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
-    String msgFromESP32;
-    unsigned long timeout = 30500; // Espera máxima de 30.5 segundos (el ESP32 da 30 segundos para colocar el producto)
-    //waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
+    String msgFromESP32 = "";
+    unsigned long timeout = 32000; // Espera máxima de 32 segundos (el ESP32 da 30 segundos para colocar el producto)
     waitResponseFromESP32WithEvents(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32. Atiende a interrupciones
     // --------------------------------------
 
     // ---- ANALIZAR RESPUESTA DEL ESP32 ----
     // --- CANCELAR LECTURA ---
-    if(msgFromESP32 == "INTERRUPTION") 
+    if(msgFromESP32 == "INTERRUPTION") // Interrupción del usuario (pulsar botón para cancelar lectura)
     {
         #ifdef SM_DEBUG
             SerialPC.println(F("\nIndicando al ESP32 que cancele la lectura..."));
         #endif
+        
+        // --- CANCELAR LECTURA ---
         sendMsgToESP32("CANCEL-BARCODE"); // Cancelar la lectura del barcode
+        // ------------------------
+
         return INTERRUPTION; // Se ha interrumpido la lectura del barcode (evento de interrupción)
     }
     // --- EXITO ------
@@ -700,25 +809,30 @@ byte askForBarcode(String &barcode)
         #ifdef SM_DEBUG
             SerialPC.println("\nCodigo de barras leido: " + barcode);
         #endif
-        return BARCODE_READ;
+        return BARCODE_READ; // Se ha leído el código de barras
     }
     // -----------------
     // --- "ERRORES" ---
     else if(msgFromESP32 == "NO-BARCODE") 
     {
         #ifdef SM_DEBUG
-            SerialPC.println("\nNo se ha podido leer el codigo de barras");
+            SerialPC.println(F("\nNo se ha podido leer el codigo de barras"));
         #endif
-        return BARCODE_NOT_READ;
+        return BARCODE_NOT_READ; // No se ha detectado el código de barras
     }
-    else if(msgFromESP32 == "TIMEOUT") 
-        return TIMEOUT; // No se ha recibido respuesta del ESP32
+    else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32WithEvents()
+    {
+        #if defined SM_DEBUG
+            SerialPC.println(F("TIMEOUT. Sin respuesta del ESP32 al pedir leer barcode\n"));
+        #endif
+        return TIMEOUT; // Se considera que no se ha detectado el código de barras
+    }
     else // Mensaje desconocido
     {
         #ifdef SM_DEBUG
             SerialPC.println(F("\nMensaje o error desconocido al pedir leer barcode..."));
         #endif
-        return UNKNOWN_ERROR;
+        return UNKNOWN_ERROR; // Se considera que no se ha detectado el código de barras
     }
     // -----------------
     // --------------------------------------
@@ -740,10 +854,10 @@ byte askForBarcode(String &barcode)
 /*---------------------------------------------------------------------------------------------------------*/
 byte getProductInfo(String &barcode, String &productInfo)
 {
-    // ---- BUSCAR PRODUCTO ---------------------------------
-    #ifdef SM_DEBUG
-        SerialPC.println("\nBuscando informacion del producto: " + barcode);
-    #endif
+    // ---- LIMPIAR BUFFER -------------------------------------
+    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
+    // al mensaje que se va a enviar y no otros enviados anteriormente
+    //limpiarBufferESP32();
     // ---------------------------------------------------------
 
     // ---- PEDIR BUSCAR PRODUCTO ------------------------------
@@ -758,7 +872,7 @@ byte getProductInfo(String &barcode, String &productInfo)
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
     String msgFromESP32;
-    unsigned long timeout = 10500; // Espera máxima de 10.5 segundos (el ESP32 tiene 10 segundos para buscar el producto)
+    unsigned long timeout = 12000; // Espera máxima de 12 segundos (el ESP32 tiene 10 segundos para buscar el producto)
     waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
     // --------------------------------------
 
@@ -796,8 +910,13 @@ byte getProductInfo(String &barcode, String &productInfo)
         #endif
         return HTTP_ERROR;
     }
-    else if(msgFromESP32 == "TIMEOUT") 
-        return TIMEOUT; // No se ha recibido respuesta del ESP32
+    else if(msgFromESP32 == "TIMEOUT") // No se recibió nada en 'timeout' segundos en waitResponseFromESP32WithEvents()
+    {
+        #if defined SM_DEBUG
+            SerialPC.println(F("TIMEOUT. Sin respuesta del ESP32 al pedir buscar info de producto\n"));
+        #endif
+        return TIMEOUT; // Se considera que no se ha encontrado el producto
+    }
     else // Mensaje desconocido
     {
         #ifdef SM_DEBUG
