@@ -786,7 +786,7 @@ void printGrupo_Barcode()
     // Nombre grupo
     tft.setCursor(tft.getCursorX(),tft.getCursorY());
     tft.print(grupoActual.Nombre_grupo); // Nombre grupo -> 16x32 escale x1
-    SerialPC.print("Grupo escogido (" + grupoActual.ID_grupo); SerialPC.println("): " + grupoActual.Nombre_grupo); 
+    //SerialPC.print("Grupo escogido (" + grupoActual.ID_grupo); SerialPC.println("): " + grupoActual.Nombre_grupo); 
     // -------- FIN TEXTO --------------------
     
 }

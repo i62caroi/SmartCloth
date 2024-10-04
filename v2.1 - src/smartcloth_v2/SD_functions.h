@@ -629,6 +629,8 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
             // Tras enviar las líneas de toda la comida actual, espera hasta 10 segundos a que el ESP32 responda si se ha podido subir la comida a la database
             String msgFromESP32;
             unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (espera hasta 10 segundos a que el servidor responda)
+                                    // No hace falta esperar más tiempo porque el ESP32 espera hasta 10 segundos a que el servidor responda y los mensajes que se pueden 
+                                    // recibir "SAVED-OK", "HTTP-ERROR" o "NO-WIFI" son cortos, por lo que no debería tardar demasiado waitResponseFromESP32() en recibirlos.
             waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
             // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
             // ---- FIN ESPERAR RESPUESTA ESP32 ---------------
@@ -981,6 +983,8 @@ byte sendTXTFileToESP32()
                 // ---- ESPERAR RESPUESTA DEL ESP32 -----
                 String msgFromESP32 = "";
                 unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (tiene 10 segundos para subir info)
+                                    // No hace falta esperar más tiempo porque el ESP32 espera hasta 10 segundos a que el servidor responda y los mensajes que se pueden 
+                                    // recibir "SAVED-OK", "HTTP-ERROR" o "NO-WIFI" son cortos, por lo que no debería tardar demasiado waitResponseFromESP32() en recibirlos.
                 waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
                 // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
                 // --------------------------------------

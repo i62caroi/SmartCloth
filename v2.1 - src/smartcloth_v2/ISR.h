@@ -238,10 +238,15 @@ void ISR_pulsandoButtonsGrande(){
  * @brief ISR de botón de barcode
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_barcode(){ 
+void ISR_barcode()
+{ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
+
+    // Ignorar la primera pulsación (fantasma) era necesario al testear los SMs, pero no creo que sea necesario en
+    // el programa final. De hecho, creo que está haciendo que se ignore la primera pulsación real.
     if (firstInterruptBarcode) { firstInterruptBarcode = false; return; } // Descartar la primera interrupción por fluctuaciones de voltaje
+    
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;
 }

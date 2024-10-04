@@ -28,7 +28,7 @@
  * @def RULES
  * @brief Máximo número de reglas de transición.
  */
-#define RULES 196   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
+#define RULES 197   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
 
 
 #include "SD_functions.h" // Incluye lista_Comida.h y Serial_functions.h
@@ -252,6 +252,7 @@ static transition_rule rules[RULES] =
 {                                       // --- Esperando Recipiente ---
                                         {STATE_Init,STATE_Init,TARAR},                  // Tara inicial
                                         {STATE_Init,STATE_Init,DECREMENTO},             // Por si se inicia SM con un recipiente ya puesto y luego se retira
+                                        {STATE_Init,STATE_Init,LIBERAR},                // Por si se inicia SM con recipiente puesto, se retira y resulta que pesaba menos de 20 gramos (el umbral)
                                         {STATE_Init,STATE_Plato,INCREMENTO},            // Colocar recipiente
                                         {STATE_Init,STATE_save_check,GUARDAR},          // Guardar comida directamente (comidaActual no está vacía)
                                         {STATE_Init,STATE_ERROR,ERROR},                 // Acción incorrecta
@@ -850,10 +851,13 @@ void actStateInit()
     {
 
         // ----- ENCENDER SM CON RECIPIENTE EN BÁSCULA --------------------------------------
-        if ((state_prev == STATE_Init) && (lastEvent == DECREMENTO))    // Es posible que se encienda SM con un recipiente ya puesto, por lo que el sistema establecería ese peso
-        {                                                               // como peso 0 al tarar. Además, se pediría colocar el recipiente y la respuesta más común del usuario
+        if ((state_prev == STATE_Init) && ((lastEvent == DECREMENTO) || (lastEvent == LIBERAR)))    
+        {                                                               // Es posible que se encienda SM con un recipiente ya puesto, por lo que el sistema establecería ese peso
+                                                                        // como peso 0 al tarar. Además, se pediría colocar el recipiente y la respuesta más común del usuario
                                                                         // sería retirar el recipiente y volverlo a poner. Por tanto, se ha incluido una regla para volver a 
-                                                                        // STATE_Init si se decrementa el peso.
+                                                                        // STATE_Init si se decrementa el peso. También se ha añadido una regla para volver a STATE_Init si se
+                                                                        // libera la báscula, evento que se detectaría si el recipiente que hubiera colocado al encender pesara
+                                                                        // menos de 20 gramos (UMBRAL_RECIPIENTE_RETIRADO).
                                                                         // Si esto ocurre, se debe volver a tarar la báscula y reiniciar las variables de peso referentes al 
                                                                         // recipiente, al plato (recipiente + alimentos) y al último alimento.
 
@@ -4758,7 +4762,7 @@ void addEventToBuffer(event_t evento)
     lastEvent = evento;
 
     #if defined(SM_DEBUG)
-        SerialPC.print("Buffer: "); 
+        SerialPC.print("\nBuffer: "); 
         for (byte i = 0; i < MAX_EVENTS; i++){
             //SerialPC.print(event_buffer[i]); SerialPC.print(" ");
             printEventName(event_buffer[i]); SerialPC.print(" | ");
