@@ -64,12 +64,17 @@ const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
 // ------- OPEN FOOD FACTS ----------
 /*  [27/05/24 12:37] 
     El entorno de staging de OpenFoodFacts (https://world.openfoodfacts.net) está fallando, devuelve un error 500.
+
+    [04/10/24 01:08] 
+    El entorno de staging de OpenFoodFacts (https://world.openfoodfacts.net) vuelve a fallar, devuelve un error 502.
+
     En la documentación (https://openfoodfacts.github.io/openfoodfacts-server/api/) dicen que usemos el staging si no
-    estamos en producción, pero como no funciona, vamos a usar el entorno de producción (https://world.openfoodfacts.org).*/
+    estamos en producción, pero como no funciona, vamos a usar el entorno de producción (https://world.openfoodfacts.org).
+*/
 
 // URL de la API de OpenFoodFacts
-const char* openFoodFacts_server = "https://world.openfoodfacts.net/api/v2/product/"; // Staging environment
-//const char* openFoodFacts_server = "https://world.openfoodfacts.org/api/v2/product/";   // Production environment
+//const char* openFoodFacts_server = "https://world.openfoodfacts.net/api/v2/product/"; // Staging environment
+const char* openFoodFacts_server = "https://world.openfoodfacts.org/api/v2/product/";   // Production environment
 const char* openFoodFacts_fields = "?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"; // Campos requeridos
 
 #define JSON_SIZE_LIMIT_BARCODE 512 // El JSON devuelto suele de ser de 200 bytes, pero ponemos 512 por segurarnos
@@ -597,9 +602,9 @@ void tryGetProduct(String msgFromDue)
 
     //if(hayConexionWiFi())
     //{
-        #if defined(SM_DEBUG)
+        /*#if defined(SM_DEBUG)
             SerialPC.println("Leyendo codigo de barras...");
-        #endif
+        #endif*/
 
         String barcode = msgFromDue.substring(12); // Extraer la parte de <barcode> de la cadena "GET-PRODUCT:<barcode>"
         
@@ -642,7 +647,7 @@ void getFoodData(String barcode)
     // Comprobar si hay conexión a Internet ya se hace en Due antes de pedir leer el barcode y también en el ESP32 en la función tryGetProduct()
 
     #if defined(SM_DEBUG)
-        SerialPC.println("\nObteniendo información del producto...");
+        SerialPC.println("\nObteniendo información del producto " + barcode);
     #endif
     
     // --- CONFIGURAR PETICIÓN HTTP ---
@@ -684,6 +689,9 @@ void getFoodData(String barcode)
             // --------------------------------
 
             // --- ENVIAR INFO AL DUE ---------
+            #if defined(SM_DEBUG)
+                SerialPC.print("Enviando info del producto al Due: "); SerialPC.print("\"" + productInfo); SerialPC.println("\"");
+            #endif
             sendMsgToDue(productInfo);
             // --------------------------------
         }

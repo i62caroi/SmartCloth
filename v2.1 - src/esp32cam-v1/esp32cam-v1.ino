@@ -123,7 +123,7 @@
             "SAVED-OK"
 
         5) Error en el guardado de la comida (petición HTTP POST):
-            "ERROR-HTTP:<codigo_error>"
+            "HTTP-ERROR:<codigo_error>"
 
        ----- BARCODE ----------------
             ----- LEER BARCODE -----
@@ -141,7 +141,7 @@
                 "NO-PRODUCT"
 
             10) Error al buscar producto (diferente a no encontrado):
-                "ERROR-HTTP:<codigo_error>"
+                "HTTP-ERROR:<codigo_error>"
 
             11) El servidor de OpenFoodFacts no responde:
                 "PRODUCT-TIMEOUT" 
@@ -196,7 +196,8 @@ void loop()
         readMsgFromSerialDue(msgFromDue); // Leer mensaje del Serial
 
         #if defined(SM_DEBUG)
-            SerialPC.println("\nMensaje recibido: " + msgFromDue); 
+            SerialPC.println("\n-------------------------------------");
+            SerialPC.println("Mensaje recibido: " + msgFromDue); 
         #endif
         // -------------------------------------
 

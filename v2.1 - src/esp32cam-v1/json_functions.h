@@ -120,7 +120,7 @@ void  processJSON_OnePerMeal()
             if(line == "TIMEOUT-DUE")
             { 
                 #if defined(SM_DEBUG)
-                    SerialPC.println(F("TIMEOUT-DUE. No se ha recibido respuesta del Due"));
+                    SerialPC.println(F("TIMEOUT-DUE. Sin respuesta del Due"));
                     SerialPC.println(F("Cerrando sesión..."));
                 #endif
 
