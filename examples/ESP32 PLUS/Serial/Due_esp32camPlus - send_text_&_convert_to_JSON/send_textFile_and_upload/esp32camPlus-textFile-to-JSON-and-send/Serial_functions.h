@@ -57,7 +57,7 @@ void setupAllSerial() {
  * @param msg El mensaje a enviar.
  */
 /*-----------------------------------------------------------------------------*/
-inline void sendMsgToDue(const String &msg) { SerialESP32Due.println(msg); }
+inline void sendMsgToDue(const String &msg) { SerialESP32Due.println(msg); delay(100); }
 
 
 

@@ -18,12 +18,12 @@ void setup()
     delay(100);
      
     // Inicializar SD
-    /*if (!setupSDcard())
+    if (!setupSDcard())
     {
         SerialPC.println(F("Card failed, or not present"));
         return;
     }
-    delay(100);*/
+    delay(100);
 
     SerialPC.println(F("ENVIAME \"go\" PARA COMENZAR"));
 
@@ -45,7 +45,7 @@ void loop()
             {
                 // Indicar inicio de guardado
                 SerialPC.println(F("\nIndicando que se quiere guardar..."));
-                //SerialDueESP32.println(F("SAVE"));
+                //SerialESP32.println(F("SAVE"));
                 sendMsgToESP32("SAVE");
             }
         }
@@ -55,7 +55,7 @@ void loop()
 
 
     // -------------- RECEPCION ----------------------------------
-    //if (SerialDueESP32.available() > 0)  // Si se recibe algo desde el esp32
+    //if (SerialESP32.available() > 0)  // Si se recibe algo desde el esp32
     if(hayMsgFromESP32())
     {
         String msgFromESP32;
@@ -69,12 +69,14 @@ void loop()
 
             // --- Enviar cadena de simulación al ESP32 ------------
             //sendStringSimulationToEsp32(string2);             // Todas las comidas en un JSON
-            sendStringSimulationToEsp32MealByMeal(string1);   // Un JSON por comida
+            //sendStringSimulationToEsp32MealByMeal(string1);   // Un JSON por comida
+            //sendStringSimulationToEsp32MealByMeal(invalidString);   // Un JSON por comida (guardar no subidas en TXT auxiliar)
             // -----------------------------------------------------
 
             // --- Enviar fichero TXT al ESP32 ---------------------
             //sendFileToESP32();            // Todas las cadenas de golpe --> todas las comidas en un JSON
             //sendFileToESP32MealByMeal();  // Enviar comida a comida --> un JSON por comida
+            sendFileToESP32MealByMeal_unsavedTXT();  // Enviar comida a comida --> un JSON por comida (guardar no subidas en TXT auxiliar)
             // -----------------------------------------------------
 
         }
@@ -87,7 +89,9 @@ void loop()
             SerialPC.println(F("Se ha perdido la conexion a Internet"));
         }*/
 
-        //else SerialPC.println("Comando desconocido\n");
+        else {
+            SerialPC.println("Mensaje inesperado desde ESP32: " + msgFromESP32);
+        }
     }
     // -----------------------------------------------------------
     

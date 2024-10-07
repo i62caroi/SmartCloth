@@ -235,7 +235,7 @@ void  processJSON_OnePerMeal()
                 /*line = SerialESP32Due.readStringUntil('\n'); 
                 line.trim();*/
                 readMsgFromSerialDue(line); // Leer mensaje del Due
-                SerialPC.println("Linea recibida: " + line); 
+                //SerialPC.println("Linea recibida: " + line); 
 
                 // Enviar un JSON por comida
                 addLineToJSON_oneJsonPerMeal(JSONdoc, comidas, platos, alimentos, comida, plato, line, bearerToken);           
@@ -330,7 +330,7 @@ void  processJSON_OnePerMeal_testServer()
             startTime = millis();
 
             //readMsgFromSerialDue(line); // Leer mensaje del Due
-            SerialPC.println("Linea recibida: " + line); 
+            //SerialPC.println("Linea recibida: " + line); 
 
             // Enviar un JSON por comida
             addLineToJSON_oneJsonPerMeal_testServer(JSONdoc, comidas, platos, alimentos, comida, plato, line);           
@@ -662,7 +662,8 @@ void addLineToJSON_oneJsonPerMeal_testServer(DynamicJsonDocument& JSONdoc,
         SerialPC.println();
         // -----------------------
 
-        uploadJSONtoServer_testServer(JSONdoc);    // 2. Enviar JSON
+        if(line == "FIN-COMIDA,02.05.2024,10:39:36") sendMsgToDue("INVALIDO"); // Forzado
+        else uploadJSONtoServer_testServer(JSONdoc);    // 2. Enviar JSON
         // Si se devuelve SAVED-OK, da igual que falle el logout
 
     }

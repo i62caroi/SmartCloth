@@ -46,11 +46,27 @@ String string2 = "INICIO-COMIDA\n"
 
 
 
+String invalidString = "INICIO-COMIDA\n"
+                        "INICIO-PLATO\n"
+                        "ALIMENTO,5,53.50\n"
+                        "ALIMENTO,7,23.50\n"
+                        "ALIMENTO,50,120.5,8424621001093\n"  // Línea con barcode (Mini Tostas de Trigo)
+                        "FIN-COMIDA,31.12.2024,10:08:36\n"
+
+                        "INICIO-COMIDA\n"
+                        "INICIO-PLATO\n"
+                        "ALIMENTO,30,24.40\n" // Grupo no válido, toda esta comida debería fallar y guardarse en TXT auxiliar
+                        "FIN-COMIDA,31.12.2024,14:28:36\n";
+
+
+
 #include <vector>
 //#include <string>
 
 #define SerialPC Serial
-#define SerialDueESP32 Serial1
+#define SerialESP32 Serial1
+
+#include "SD_functions.h"
 
 
 /*-----------------------------------------------------------------------------
@@ -82,7 +98,7 @@ void sendStringSimulationToEsp32(String fileContent)
         line.trim();
 
         // Envía la línea al ESP32 a través de Serial
-        SerialDueESP32.println(line);
+        SerialESP32.println(line);
 
         start = end + 1;
         end = fileContent.indexOf('\n', start);
@@ -92,10 +108,10 @@ void sendStringSimulationToEsp32(String fileContent)
     if (start < fileContent.length()) {
         String line = fileContent.substring(start);
         line.trim();
-        SerialDueESP32.println(line);
+        SerialESP32.println(line);
     }
 
-    SerialDueESP32.println(F("FIN-TRANSMISION"));
+    SerialESP32.println(F("FIN-TRANSMISION"));
 }
 
 
@@ -130,7 +146,7 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
 
         // ----- ENVIAR A ESP32 ----------------
         // Envía la línea al ESP32 a través de Serial
-        SerialDueESP32.println(line);
+        SerialESP32.println(line);
         // -------------------------------------
 
         // ----- INDICAR SUBIDA A DATABASE ----------------
@@ -183,13 +199,27 @@ void sendStringSimulationToEsp32MealByMeal(String fileContent)
     }
 
     // Tras enviar todas las comidas, se envía un mensaje de fin de transmisión
-    SerialDueESP32.println(F("FIN-TRANSMISION"));
+    SerialESP32.println(F("FIN-TRANSMISION"));
 
-    if (unsavedMeals.empty())  // Si se ha subido todo, se borraría el fichero TXT
-        SerialPC.println("Info completa guardada"); 
-    // Si no se ha subido todo, se actualiza el fichero TXT (borrar y crear nuevo) con las comidas no subidas
-    else 
-        SerialPC.println("No se ha podido subir todo");
+
+
+    // ------------------------------------------------------
+    // Una vez enviado todo el fichero, se comprueba si ha quedado 
+    // algo en 'unsavedMeals' para actualizar el fichero TXT
+    // ------------------------------------------------------
+    if (hayMealsToUploadLater(unsavedMeals)) // Si no se ha subido todo, se actualiza el fichero TXT (borrar y crear nuevo) 
+    {                                        // con las comidas no subidas
+        SerialPC.println("\nNo se ha podido subir todo");
+        updateFileTXT(unsavedMeals); // Actualizar fichero TXT con comidas sin guardar
+        readFileTXT(); // Debe mostrar las comidas no subidas
+    }
+    else  // Si se ha subido todo, se borra el fichero TXT
+    {
+        //deleteFileTXT(); // Borrar fichero TXT
+        //readFileTXT(); // Debe mostrar que no hay fichero
+        SerialPC.println("\nINFO COMPLETA GUARDADA!");
+    } 
+    // ------------------------------------------------------
 }
 
 
