@@ -222,6 +222,7 @@ inline void     readMsgFromSerialESP32(String &msgFromESP32);                   
 inline void     sendMsgToESP32(const String &msg);                              // Enviar mensaje al ESP32
 
 // Esperar mensaje de ESP32
+bool            processCharacter(String &tempBuffer, String &msgFromDue);                       // Procesar mensaje del ESP32 caracter a caracter
 void            waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout);            // Espera la respuesta del ESP32, sea cual sea, y la devuelve en msgFromESP32.
 void            waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout);  // Espera la respuesta del ESP32 y la devuelve. Atiende a eventos
 inline bool     isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout);            // Comprobar si se ha excedido el tiempo de espera
@@ -349,6 +350,47 @@ inline void sendMsgToESP32(const String &msg)
 inline bool isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout) 
 { 
     return millis() - startTime > timeout; 
+}
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Procesa un carácter recibido del serial del ESP32 y construye un mensaje completo.
+ *
+ * Esta función lee un carácter del serial del ESP32 y lo acumula en un buffer temporal.
+ * Si el carácter leído es un salto de línea ('\n'), se considera que el mensaje está completo.
+ * En ese caso, se elimina cualquier espacio en blanco del buffer temporal, y si no está vacío,
+ * se asigna el contenido del buffer al mensaje desde el ESP32 y se retorna true.
+ *
+ * @param tempBuffer Referencia al buffer temporal donde se acumulan los caracteres.
+ * @param msgFromESP32 Referencia a la cadena donde se almacenará el mensaje completo del ESP32.
+ * @return true Si se ha recibido y procesado un mensaje completo.
+ * @return false Si aún no se ha recibido un mensaje completo.
+ */
+/*-----------------------------------------------------------------------------*/
+bool processCharacter(String &tempBuffer, String &msgFromESP32) 
+{
+    char c = SerialESP32.read();  // Lee un carácter del serial del ESP32
+
+    if (c == '\n') 
+    {
+        tempBuffer.trim();  // Elimina los espacios en blanco del buffer temporal
+
+        if (tempBuffer.length() > 0)   // Solo procesa si no está vacío
+        {
+            msgFromESP32 = tempBuffer;
+            #if defined(SM_DEBUG)
+                SerialPC.print("\n---> Respuesta del ESP32: "); SerialPC.print("\"" + msgFromESP32); SerialPC.println("\"");
+            #endif
+            return true;  // Mensaje completo procesado
+        }
+        tempBuffer = "";  // Si estaba vacío, se resetea el buffer
+    } 
+    else {
+        tempBuffer += c;  // Acumula el carácter en el buffer temporal
+    }
+    return false;  // Aún no se ha recibido un mensaje completo
 }
 
 
@@ -493,7 +535,7 @@ inline bool isTimeoutExceeded(unsigned long &startTime, unsigned long &timeout)
 // Otra modificación para ver si consigo no perder mensajes usando un buffer temporal al que se añadan
 // los caracteres uno a uno en lugar de salirse en cuanto se detecta un solo caracter, pudiendo ser un simple \n,
 // lo que hacía que se creyera haber recibido un mensaje vacío "".
-void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
+/*void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
     String tempBuffer = "";  // Buffer temporal para ensamblar el mensaje
@@ -522,6 +564,33 @@ void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
             {
                 tempBuffer += c;  // Acumula el carácter en el buffer temporal
             }
+        }
+
+        delay(50);  // Evita que el bucle sea demasiado intensivo
+    }
+
+    // Si se alcanza el tiempo de espera sin recibir un mensaje
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
+    #endif
+
+    msgFromESP32 = "TIMEOUT";  // Marca el mensaje como TIMEOUT si no se recibió nada útil
+}*/
+
+
+// Misma versión de antes pero usando processCharacter() para procesar el mensaje completo
+void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+    String tempBuffer = "";  // Buffer temporal para ensamblar el mensaje
+
+    // Espera hasta que se reciba un mensaje o se exceda el tiempo de espera
+    while (!isTimeoutExceeded(startTime, timeout)) 
+    {
+        if (hayMsgFromESP32())  // Si el esp32 ha respondido
+        {
+            if (processCharacter(tempBuffer, msgFromESP32)) 
+                return;  // Sale de la función cuando se ha procesado un mensaje completo del ESP32
         }
 
         delay(50);  // Evita que el bucle sea demasiado intensivo
@@ -645,7 +714,7 @@ void waitResponseFromESP32(String &msgFromESP32, unsigned long &timeout)
 // Otra modificación para ver si consigo no perder mensajes usando un buffer temporal al que se añadan
 // los caracteres uno a uno en lugar de salirse en cuanto se detecta un solo caracter, pudiendo ser un simple \n,
 // lo que hacía que se creyera haber recibido un mensaje vacío "".
-void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout)
+/*void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout)
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
     String tempBuffer = "";  // Buffer temporal para acumular datos
@@ -697,8 +766,45 @@ void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeou
 
     msgFromESP32 = "TIMEOUT";  // Marca el mensaje como TIMEOUT si no se recibió nada útil
 
-}
+}*/
 
+
+// Misma versión de antes pero usando processCharacter() para procesar el mensaje completo
+void waitResponseFromESP32WithEvents(String &msgFromESP32, unsigned long &timeout)
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+    String tempBuffer = "";  // Buffer temporal para acumular datos
+
+    // Espera hasta que se reciba un mensaje o se exceda el tiempo de espera
+    while (!isTimeoutExceeded(startTime, timeout)) 
+    {
+        if (hayMsgFromESP32())  // Si el esp32 ha respondido
+        {
+            if (processCharacter(tempBuffer, msgFromESP32)) 
+                return;  // Sale de la función cuando se ha procesado un mensaje completo del ESP32
+        }
+
+        if(eventOccurred()) 
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("Interrupcion mientras se leia barcode"));
+            #endif
+            msgFromESP32 = "INTERRUPTION"; // Señalar que se ha interrumpido
+            return; // Salir de la función si se detecta interrupción (cancelación manual de la lectura)
+        }
+
+        delay(50);  // Evita que el bucle sea demasiado intensivo
+    }
+
+
+    // Si se alcanza el tiempo de espera sin recibir un mensaje
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32"));
+    #endif
+
+    msgFromESP32 = "TIMEOUT";  // Marca el mensaje como TIMEOUT si no se recibió nada útil
+
+}
 
 
 

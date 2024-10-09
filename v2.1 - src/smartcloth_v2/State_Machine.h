@@ -4562,11 +4562,11 @@ void actState_UPLOAD_DATA()
             {
                 // ----- ENVIAR TXT A ESP32 Y ESPERAR RESPUESTA --
                 // Enviar el fichero TXT línea a línea y esperar respuesta de la subida
-                byte uploadResult = sendTXTFileToESP32(); 
+                byte uploadResult = sendTXTFileToESP32ToUpdateWeb(); 
 
                 // ----- MOSTRAR PANTALLA SEGÚN RESPUESTA --------
                 // Mostrar en pantalla el resultado de la subida de datos
-                if(uploadResult == MEALS_LEFT) showWarning(WARNING_MEALS_LEFT);  // No se han subido todas las comidas
+                if(uploadResult == MEALS_LEFT) showWarning(WARNING_MEALS_LEFT);  // MEALS_LEFT. No se han subido todas las comidas
                 else showSyncState(uploadResult); // ALL_MEALS_UPLOADED, ERROR_READING_TXT
             }
             // ------- FIN ESP32 EN ESPERA ----------------------------
@@ -4579,15 +4579,7 @@ void actState_UPLOAD_DATA()
             }
             // --------------------------------------------------------
     
-            // El delay y el GO_TO_INIT se hace al final para todos los casos
-
-            /*if(prepareSaving() && sendTXTFileToESP32()) // Avisa al ESP32 y le envía el fichero TXT línea a línea       
-                handleResponseFromESP32AfterUpload(SHOW_SCREEN_UPLOAD_DATA); // Actuar según respuesta y mostrar mensaje acorde
-                // En este caso, ignoramos el valor devuelto de handleResponseFromESP32AfterUpload() porque no lo necesitamos
-            else // El ESP32 no respondió en 3 segundos o falló el paso de información. Actuamos como si no hubiera WiFi
-                showSyncState(NO_INTERNET_CONNECTION); // No hay conexión, no se puede sincronizar SM con web
-                // El delay y el GO_TO_INIT se hace al final para todos los casos
-            */
+            // El delay y el GO_TO_INIT se hace al final para todos los casos, ya que se ha mostrado pantalla de sincronización
 
             showingScreen = true; // Se está mostrando pantalla. Esperar 5 segundos antes de pasar a Init
             // ------------------------------------------------------

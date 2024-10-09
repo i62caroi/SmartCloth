@@ -75,8 +75,9 @@ SoftwareSerial mySerial(RXD2, TXD2); // RX, TX
 #define BUFFER_EMPTY "-" // Buffer vacío
 
 
-#define USE_BR_SERIAL 0
-#define USE_DUE_SERIAL 1
+#define SERIAL_DUE 1
+#define SERIAL_BR  2
+
 
 
 /*-----------------------------------------------------------------------------
@@ -108,7 +109,7 @@ inline void     readMsgFromSerialBR(String &msgFromBR);                         
 void            waitForBarcode(String &buffer);                                             // Esperar a que se lea un código de barras
 
 inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout){ return millis() - startTime > timeout; }; // Comprobar si se ha excedido el tiempo de espera
-bool           processCharacter(String &tempBuffer, String &msg, bool serialDue); // Procesa buffer del Serial (Due o BR) caracter a caracter hasta completar mensaje con "\n"
+bool           processCharacter(String &tempBuffer, String &msg, byte serialPort); // Procesa buffer del Serial (Due o BR) caracter a caracter hasta completar mensaje con "\n"
 /*-----------------------------------------------------------------------------*/
 
 
@@ -272,7 +273,7 @@ void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
     {
         if (hayMsgFromDue())  // Si el Due ha respondido
         {
-            if (proccessCharacter(tempBuffer, msgFromDue, USE_DUE_SERIAL)) 
+            if (processCharacter(tempBuffer, msgFromDue, SERIAL_DUE)) 
                 return;  // Sale cuando se ha procesado un mensaje completo
         }
         delay(50);  // Evita que el bucle sea demasiado intensivo
@@ -397,7 +398,7 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
 // y por si en algún momento se complican las comunicaciones o aumenta el tamaño de los mensajes enviados por el Due,
 // vamos a utilizar un buffer temporal al que se añadan los caracteres uno a uno en lugar de salirse en cuanto se detecta un solo caracter, 
 // pudiendo ser un simple \n, lo que hacía que se creyera haber recibido un mensaje vacío "".
-// La funcion proccessCharacter() encapsula la parte de procesar caracter a caracter
+// La funcion processCharacter() encapsula la parte de procesar caracter a caracter
 void waitForBarcode(String &buffer) 
 {
     unsigned long startTime = millis();
@@ -411,7 +412,7 @@ void waitForBarcode(String &buffer)
      {
         // ----- PRODUCTO DETECTADO ------------------------
         if (hayMsgFromBR()) {  // Si se ha recibido un mensaje del lector de códigos de barras
-            if (proccessCharacter(tempBufferBR, buffer, USE_BR_SERIAL)) 
+            if (processCharacter(tempBufferBR, buffer, SERIAL_BR)) 
                 return;  // Sale cuando se ha procesado un mensaje completo
         }
         // --------------------------------------------------
@@ -419,7 +420,7 @@ void waitForBarcode(String &buffer)
         // ----- CANCELAR LECTURA ---------------------------
         if (hayMsgFromDue()) {  // Si se ha recibido un mensaje del Due
             String msgFromDue;
-            if (proccessCharacter(tempBufferDue, msgFromDue, true)) {
+            if (processCharacter(tempBufferDue, msgFromDue, SERIAL_DUE)) {
                 if (msgFromDue == "CANCEL-BARCODE") {
                     buffer = msgFromDue;  // Sale del while y de la función
                     return;
@@ -432,11 +433,23 @@ void waitForBarcode(String &buffer)
 
 
 /*-----------------------------------------------------------------------------*/
+/**
+ * @brief Procesa un carácter recibido por el puerto serial y construye un mensaje completo.
+ *
+ * Esta función lee un carácter del puerto serial especificado y lo acumula en un buffer temporal.
+ * Si se recibe un carácter de nueva línea ('\n'), se considera que el mensaje está completo y se 
+ * procesa el contenido del buffer temporal.
+ *
+ * @param tempBuffer Referencia al buffer temporal donde se acumulan los caracteres recibidos.
+ * @param msg Referencia a la cadena donde se almacenará el mensaje completo procesado.
+ * @param serialPort Puerto serial desde el cual se lee el carácter. Puede ser SERIAL_DUE o SERIAL_BR.
+ * @return true si se ha recibido y procesado un mensaje completo, false en caso contrario.
+ */
 /*-----------------------------------------------------------------------------*/
-bool proccessCharacter(String &tempBuffer, String &msg, bool serialDue) 
+bool processCharacter(String &tempBuffer, String &msg, byte serialPort) 
 {
     char c;
-    if (serialDue) c = SerialDue.read();  // Lee un carácter del serial del Due
+    if (serialPort == SERIAL_DUE) c = SerialDue.read();  // Lee un carácter del serial del Due
     else c = SerialBR.read();  // Lee un carácter del serial del lector BR
 
     if (c == '\n') {
@@ -445,7 +458,7 @@ bool proccessCharacter(String &tempBuffer, String &msg, bool serialDue)
         if (tempBuffer.length() > 0) {  // Solo procesa si no está vacío
             msg = tempBuffer;
             #if defined(SM_DEBUG)
-                if (serialDue) SerialPC.println("\nRespuesta del Due: " + msg);
+                if (serialPort == SERIAL_DUE) SerialPC.println("\nRespuesta del Due: " + msg);
                 else SerialPC.println("\nBuffer BR leido: " + msg);
             #endif
             return true;  // Mensaje completo procesado
