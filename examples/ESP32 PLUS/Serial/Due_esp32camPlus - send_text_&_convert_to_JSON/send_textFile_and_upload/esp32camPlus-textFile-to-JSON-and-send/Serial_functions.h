@@ -11,8 +11,11 @@
 #define TXD1 17
 
 #define SerialPC Serial
-#define SerialESP32Due Serial1
+#define SerialDue Serial1
 
+
+#define SERIAL_DUE 1
+#define SERIAL_BR  2
 
 
 
@@ -28,6 +31,7 @@ inline void     readMsgFromSerialDue(String &msgFromDue);     // Leer mensaje de
 void            waitMsgFromDue(String &msgFromESP32, unsigned long &timeout);   
 
 inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout); // Comprobar si se ha excedido el tiempo de espera
+bool           processCharacter(String &tempBuffer, String &msg, byte serialPort); // Procesa buffer del Serial (Due o BR) caracter a caracter hasta completar mensaje con "\n"
 /*-----------------------------------------------------------------------------*/
 
 
@@ -46,7 +50,7 @@ inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout)
 void setupAllSerial() {
     // Deben tener la misma velocidad de baudios que el PC y Due, respectivamente
     SerialPC.begin(115200);
-    SerialESP32Due.begin(115200, SERIAL_8N1, RXD1, TXD1); 
+    SerialDue.begin(115200, SERIAL_8N1, RXD1, TXD1); 
 }
 
 
@@ -57,7 +61,7 @@ void setupAllSerial() {
  * @param msg El mensaje a enviar.
  */
 /*-----------------------------------------------------------------------------*/
-inline void sendMsgToDue(const String &msg) { SerialESP32Due.println(msg); delay(100); }
+inline void sendMsgToDue(const String &msg) { SerialDue.println(msg); delay(100); }
 
 
 
@@ -67,7 +71,7 @@ inline void sendMsgToDue(const String &msg) { SerialESP32Due.println(msg); delay
  * @return true si hay mensajes disponibles, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
-inline bool hayMsgFromDue() { return SerialESP32Due.available() > 0; }
+inline bool hayMsgFromDue() { return SerialDue.available() > 0; }
 
 
 
@@ -79,7 +83,7 @@ inline bool hayMsgFromDue() { return SerialESP32Due.available() > 0; }
  */
 /*-----------------------------------------------------------------------------*/
 inline void readMsgFromSerialDue(String &msgFromDue) { 
-    msgFromDue = SerialESP32Due.readStringUntil('\n');
+    msgFromDue = SerialDue.readStringUntil('\n');
     msgFromDue.trim(); // Elimina espacios en blanco al principio y al final
 }
 
@@ -92,7 +96,7 @@ inline void readMsgFromSerialDue(String &msgFromDue) {
  * @param timeout Tiempo máximo de espera en milisegundos.
  */
 /*---------------------------------------------------------------------------------------------------------*/
-void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
+/*void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
 
@@ -113,6 +117,30 @@ void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
         msgFromDue = "TIMEOUT";;
     }
 
+}*/
+// Procesando caracter a caracter
+void waitMsgFromDue(String &msgFromDue, unsigned long &timeout) 
+{
+    unsigned long startTime = millis();  // Obtenemos el tiempo actual
+    String tempBuffer = "";  // Buffer temporal para ensamblar el mensaje
+
+    // Esperar 'timeout' segundos a que el Due responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
+    while (!isTimeoutExceeded(startTime, timeout)) 
+    {
+        if (hayMsgFromDue())  // Si el Due ha respondido
+        {
+            if (processCharacter(tempBuffer, msgFromDue, SERIAL_DUE)) 
+                return;  // Sale cuando se ha procesado un mensaje completo
+        }
+        delay(50);  // Evita que el bucle sea demasiado intensivo
+    }
+
+    SerialPC.println("Mensaje recibido del Due: " + msgFromDue);
+
+    // Si se alcanza el tiempo de espera sin recibir un mensaje
+    SerialPC.println(F("TIMEOUT-DUE. No se ha recibido respuesta del Due"));
+
+    msgFromDue = "TIMEOUT-DUE";  // Marca el mensaje como TIMEOUT si no se recibió nada útil
 }
 
 /*-----------------------------------------------------------------------------*/
@@ -130,6 +158,46 @@ inline bool isTimeoutExceeded(unsigned long startTime, unsigned long timeout) {
     return millis() - startTime > timeout;
 }
 
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Procesa un carácter recibido por el puerto serial y construye un mensaje completo.
+ *
+ * Esta función lee un carácter del puerto serial especificado y lo acumula en un buffer temporal.
+ * Si se recibe un carácter de nueva línea ('\n'), se considera que el mensaje está completo y se 
+ * procesa el contenido del buffer temporal.
+ *
+ * @param tempBuffer Referencia al buffer temporal donde se acumulan los caracteres recibidos.
+ * @param msg Referencia a la cadena donde se almacenará el mensaje completo procesado.
+ * @param serialPort Puerto serial desde el cual se lee el carácter. Puede ser SERIAL_DUE o SERIAL_BR.
+ * @return true si se ha recibido y procesado un mensaje completo, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool processCharacter(String &tempBuffer, String &msg, byte serialPort) 
+{
+    char c;
+    if (serialPort == SERIAL_DUE) c = SerialDue.read();  // Lee un carácter del serial del Due
+    //else c = SerialBR.read();  // Lee un carácter del serial del lector BR
+
+    if (c == '\n') {
+        tempBuffer.trim();  // Elimina los espacios en blanco del buffer temporal
+
+        if (tempBuffer.length() > 0) {  // Solo procesa si no está vacío
+            msg = tempBuffer;
+            #if defined(SM_DEBUG)
+                if (serialPort == SERIAL_DUE) SerialPC.println("\nRespuesta del Due: " + msg);
+                else SerialPC.println("\nBuffer BR leido: " + msg);
+            #endif
+            return true;  // Mensaje completo procesado
+        }
+        tempBuffer = "";  // Si estaba vacío, se resetea el buffer
+    } 
+    else {
+        tempBuffer += c;  // Acumula el carácter en el buffer temporal
+    }
+    return false;  // Aún no se ha recibido un mensaje completo
+}
 
 
 #endif

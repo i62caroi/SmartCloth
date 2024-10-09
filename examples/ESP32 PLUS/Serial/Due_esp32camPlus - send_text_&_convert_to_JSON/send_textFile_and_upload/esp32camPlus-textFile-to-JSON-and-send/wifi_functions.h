@@ -159,7 +159,7 @@ void setupWiFi()
         {
             SerialPC.println();
             SerialPC.print(F("Conectado a red WiFi con IP: ")); SerialPC.println(WiFi.localIP());
-            SerialESP32Due.println(F("WIFI"));
+            SerialDue.println(F("WIFI"));
 
             return; // Salir del bucle de reintento
         } 
@@ -167,13 +167,13 @@ void setupWiFi()
         {
             SerialPC.println(F("\nNo se pudo establecer la conexion. Reintentando..."));
             // Eliminar esta linea en el programa final:
-            SerialESP32Due.println("Fallo en conexión WiFi. Reintentando...");
+            SerialDue.println("Fallo en conexión WiFi. Reintentando...");
         }
     }
 
     // Si tras 30 segundos, reintentándolo cada 10s, no se ha establecido la conexión:
     SerialPC.println(F("Unable to establish WiFi connection."));
-    SerialESP32Due.println(F("NO-WIFI"));
+    SerialDue.println(F("NO-WIFI"));
 
     SerialPC.println();
 
@@ -288,7 +288,7 @@ void sendJsonToDatabase_fullProcess(DynamicJsonDocument& JSONdoc)
     {
         SerialPC.println(F("No tengo wifi"));
         
-        //SerialESP32Due.println(F("NO-WIFI"));
+        //SerialDue.println(F("NO-WIFI"));
         sendMsgToDue(F("NO-WIFI"));
     }
 }
@@ -341,7 +341,7 @@ bool fetchTokenFromServer(String &bearerToken)
             else{
                 SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
                 
-                //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+                //SerialDue.print(F("ERROR-HTTP:")); SerialDue.println(httpResponseCode); 
                 //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
                 //sendMsgToDue(errorHttp);
                 sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
@@ -353,7 +353,7 @@ bool fetchTokenFromServer(String &bearerToken)
         {
             SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
             
-            //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+            //SerialDue.print(F("ERROR-HTTP:")); SerialDue.println(httpResponseCode); 
             //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
             //sendMsgToDue(errorHttp);
             sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
@@ -368,7 +368,7 @@ bool fetchTokenFromServer(String &bearerToken)
     else{
         SerialPC.println(F("\nNo se puede PEDIR TOKEN porque ha perdido la conexion a Internet"));
         
-        //SerialESP32Due.println(F("NO-WIFI"));
+        //SerialDue.println(F("NO-WIFI"));
         
         bearerToken = "";
     }
@@ -439,13 +439,13 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
             if((httpResponseCode >= 200) && (httpResponseCode < 300)){
                 SerialPC.println("Comida subida\n");
 
-                //SerialESP32Due.println(F("SAVED-OK"));
+                //SerialDue.println(F("SAVED-OK"));
                 sendMsgToDue(F("SAVED-OK"));
             }
             else{
                 SerialPC.println("Error en subir comida");
 
-                //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+                //SerialDue.print(F("ERROR-HTTP:")); SerialDue.println(httpResponseCode); 
                 //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
                 //sendMsgToDue(errorHttp);
                 sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
@@ -455,7 +455,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
         {
             SerialPC.print(F("\nError en la petición HTTP POST: ")); SerialPC.println(httpResponseCode);
 
-            //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+            //SerialDue.print(F("ERROR-HTTP:")); SerialDue.println(httpResponseCode); 
             //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
             //sendMsgToDue(errorHttp);
             sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
@@ -468,7 +468,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
     else{
         SerialPC.println(F("\nNo se puede SUBIR LA COMIDA porque ha perdido la conexion a Internet"));
         
-        //SerialESP32Due.println(F("NO-WIFI"));
+        //SerialDue.println(F("NO-WIFI"));
         sendMsgToDue(F("NO-WIFI"));
     }
 
@@ -588,7 +588,7 @@ void logoutFromServer(String &bearerToken)
             else{
                 SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
                 
-                //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+                //SerialDue.print(F("ERROR-HTTP:")); SerialDue.println(httpResponseCode); 
                 //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
                 //sendMsgToDue(errorHttp);
                 sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
@@ -598,7 +598,7 @@ void logoutFromServer(String &bearerToken)
         else {
             SerialPC.print(F("\nError en la petición HTTP GET: ")); SerialPC.println(httpResponseCode);
             
-            //SerialESP32Due.print(F("ERROR-HTTP:")); SerialESP32Due.println(httpResponseCode); 
+            //SerialDue.print(F("ERROR-HTTP:")); SerialDue.println(httpResponseCode); 
             //String errorHttp = "ERROR-HTTP:" + httpResponseCode;
             //sendMsgToDue(errorHttp);
             sendMsgToDue("ERROR-HTTP:" + String(httpResponseCode));
@@ -609,7 +609,7 @@ void logoutFromServer(String &bearerToken)
     else{
         SerialPC.println(F("\nNo se puede CERRAR SESION porque ha perdido la conexion a Internet"));
         
-        //SerialESP32Due.println(F("NO-WIFI"));
+        //SerialDue.println(F("NO-WIFI"));
         sendMsgToDue(F("NO-WIFI"));
     }
 

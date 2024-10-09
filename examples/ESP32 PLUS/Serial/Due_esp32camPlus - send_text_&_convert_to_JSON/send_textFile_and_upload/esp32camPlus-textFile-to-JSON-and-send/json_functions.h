@@ -122,8 +122,8 @@ void    addLineToJSON_oneJsonPerMeal_testServer(DynamicJsonDocument& JSONdoc,
     // Serial con Arduino. Si se corta, addLineToJSON() no recibirá "FIN-TRANSMISION" y no subirá el JSON.
     //while ((line != "FIN-TRANSMISION") && (millis() - lastReceivedTime <= timeout)) { 
     while (line != "FIN-TRANSMISION") { // Mientras el Due no indique que ya leyó todo el fichero TXT
-        if (SerialESP32Due.available() > 0) { // Comprobar si hay algún mensaje en el Serial
-            line = SerialESP32Due.readStringUntil('\n'); 
+        if (SerialDue.available() > 0) { // Comprobar si hay algún mensaje en el Serial
+            line = SerialDue.readStringUntil('\n'); 
             line.trim();
             SerialPC.println("Linea recibida: " + line); 
 
@@ -195,7 +195,7 @@ void  processJSON_OnePerMeal()
         // ------- ESPERAR DATA ----------------------
         // El ESP32 se ha autenticado en la database y está listo para subir datos
         SerialPC.println(F("Esperando data..."));
-        //SerialESP32Due.println("WAITING-FOR-DATA");
+        //SerialDue.println("WAITING-FOR-DATA");
         sendMsgToDue("WAITING-FOR-DATA");
         // -------------------------------------------
 
@@ -217,7 +217,7 @@ void  processJSON_OnePerMeal()
             // sin nada en el Serial. Cuando se recibe algo, se reinician los 15 segundos
             // Se hace esta comprobación por si ha habido algún error en la lectura del fichero en el Due o
             // si se ha perdido la comunicación ESP32-Due, para que el ESP32 no se quede esperando indefinidamente.
-            //if (SerialESP32Due.available() == 0 && millis() - startTime > timeout){
+            //if (SerialDue.available() == 0 && millis() - startTime > timeout){
             if (!hayMsgFromDue() && isTimeoutExceeded(startTime, timeout))
             {
                 logoutFromServer(bearerToken); // Cerrar sesión aquí
@@ -226,13 +226,13 @@ void  processJSON_OnePerMeal()
             // --------------------------------------------------
 
             // ------- RECIBIDO MENSAJE -------------------------
-            //else if (SerialESP32Due.available() > 0)  // Comprobar si hay algún mensaje del Due
+            //else if (SerialDue.available() > 0)  // Comprobar si hay algún mensaje del Due
             else if (hayMsgFromDue())  // Comprobar si hay algún mensaje del Due
             {
                 // Restablecer el tiempo de inicio si hay datos disponibles
                 startTime = millis();
 
-                /*line = SerialESP32Due.readStringUntil('\n'); 
+                /*line = SerialDue.readStringUntil('\n'); 
                 line.trim();*/
                 readMsgFromSerialDue(line); // Leer mensaje del Due
                 //SerialPC.println("Linea recibida: " + line); 
@@ -250,7 +250,7 @@ void  processJSON_OnePerMeal()
         // ------- FALLO AUTENTICACIÓN ---------------
         // Ha fallado la autenticación del ESP32 en la database. No puede subir info 
         SerialPC.println(F("Error al pedir token"));
-        //SerialESP32Due.println(F("NO-TOKEN"));
+        //SerialDue.println(F("NO-TOKEN"));
         sendMsgToDue(F("NO-TOKEN"));
         // -------------------------------------------
     }
@@ -286,7 +286,7 @@ void  processJSON_OnePerMeal_testServer()
     // ------- ESPERAR DATA ----------------------
     // El ESP32 se ha autenticado en la database y está listo para subir datos
     SerialPC.println(F("Esperando data..."));
-    //SerialESP32Due.println("WAITING-FOR-DATA");
+    //SerialDue.println("WAITING-FOR-DATA");
     sendMsgToDue("WAITING-FOR-DATA");
     // -------------------------------------------
 
@@ -394,7 +394,7 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
         JSONdoc["mac"] = macAddress;
 
         // Avisar al Due de que ya se tiene el JSON completo
-        //SerialESP32Due.println("JSON-OK");
+        //SerialDue.println("JSON-OK");
         sendMsgToDue("JSON-OK");
 
         // Enviar JSON a database
@@ -410,7 +410,7 @@ void addLineToJSON(DynamicJsonDocument& JSONdoc,
     else
     {
         SerialPC.println("Linea desconocida");
-        //SerialESP32Due.println("Línea desconocida");
+        //SerialDue.println("Línea desconocida");
         sendMsgToDue("No entiendo el comando");
     }
 }
@@ -728,12 +728,12 @@ void addLineToJSON_print(DynamicJsonDocument& JSONdoc,
         serializeJsonPretty(JSONdoc, SerialPC); 
 
         // Avisar al Due de que ya se tiene el JSON completo
-        SerialESP32Due.println("JSON completo");
+        SerialDue.println("JSON completo");
         
     }
     else
     {
-        SerialESP32Due.println("línea desconocida");
+        SerialDue.println("línea desconocida");
     }
 }
 

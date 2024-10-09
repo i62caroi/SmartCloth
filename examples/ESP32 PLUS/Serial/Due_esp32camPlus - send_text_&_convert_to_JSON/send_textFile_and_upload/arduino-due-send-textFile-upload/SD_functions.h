@@ -289,7 +289,7 @@ void sendFileToESP32MealByMeal()
 /*-----------------------------------------------------------------------------*/
 void sendFileToESP32MealByMeal_unsavedTXT()
 {
-    std::vector<String> actualMeal;     // Vector que guarda los datos de la comida actual
+    std::vector<String> actualMeal;     // Vector que guarda los datos de la comida actual leída del TXT
 
     File originalFile = SD.open(fileTXT);   // Fichero original con las comidas a subir a la base de datos
     
@@ -376,9 +376,10 @@ void sendFileToESP32MealByMeal_unsavedTXT()
 
         }
 
-        // Cerrar ficheros
+        // ---- CERRAR FICHEROS ----------        
         originalFile.close();
         if(auxFileCreated) auxFile.close(); // Cerrar el archivo auxiliar si se ha creado
+        // -------------------------------
 
         // Tras enviar todas las comidas, se envía un mensaje de fin de transmisión
         sendMsgToESP32(F("FIN-TRANSMISION"));

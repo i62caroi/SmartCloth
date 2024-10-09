@@ -110,7 +110,7 @@ void setup()
     delay(100);
 
     SerialPC.println("HOLA PC DESDE ESP32");
-    //SerialESP32Due.println("HOLA DUE");
+    //SerialDue.println("HOLA DUE");
     sendMsgToDue("HOLA DUE");
     // ---------------------------
 
@@ -125,10 +125,10 @@ void setup()
 void loop() 
 {
 
-    //if (SerialESP32Due.available() > 0) // Recibido algo del Due
+    //if (SerialDue.available() > 0) // Recibido algo del Due
     if(hayMsgFromDue())
     {
-        /*String msgFromDUE = SerialESP32Due.readStringUntil('\n');
+        /*String msgFromDUE = SerialDue.readStringUntil('\n');
         msgFromDUE.trim();*/
         String msgFromDue;
         readMsgFromSerialDue(msgFromDue);

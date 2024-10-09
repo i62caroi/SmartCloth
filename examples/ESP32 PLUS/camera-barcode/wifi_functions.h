@@ -21,12 +21,12 @@
 //const char* ssid = "UCOTEAM";
 //const char* password = "-polonio210alfileres-";
 // Casa:
-//const char* ssid = "MOVISTAR_FB23_EXT";
-//const char* password = "DP6BUuEtuFvRw3mHmFoG";
+const char* ssid = "MOVISTAR_FB23_EXT";
+const char* password = "DP6BUuEtuFvRw3mHmFoG";
 
 // Testeos:
-const char* ssid = "Irene";
-const char* password = "icradeba5050";
+//const char* ssid = "Irene";
+//const char* password = "icradeba5050";
 
 // Post testeos:
 //const char* ssid = "SmartCloth";
