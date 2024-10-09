@@ -102,83 +102,95 @@ void loop() {
             
             // ---------- AÑADIR PLATO ---------------------------------------------------------------
             case 16:    add_Plato();                                                    break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            
+            case 17:    pedirConfirmacion(ASK_CONFIRMATION_ADD);                        break;  // Pedir confirmación para añadir
+
             // ---------- ELIMINAR PLATO -------------------------------------------------------------
-            case 17:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
-            
+            case 18:    delete_Plato();                                                 break; // Con movimiento de mano y 2º pulsación. Se ha cambiado la mano por un icono nuevo con borde rojo y fondo blanco
+            case 19:    pedirConfirmacion(ASK_CONFIRMATION_DELETE);                     break;  // Pedir confirmación para eliminar
+
             // ---------- GUARDAR COMIDA -------------------------------------------------------------
-            case 18:    save_Comida(SAVING_WIFI);                                       break; // Guardar con WiFi (tb a database)
-            case 19:    save_Comida(SAVING_ONLY_LOCAL);                                 break; // Guardar sin WiFi (solo local)
+            case 20:    save_Comida(SAVING_WIFI);                                       break; // Guardar con WiFi (tb a database)
+            case 21:    save_Comida(SAVING_ONLY_LOCAL);                                 break; // Guardar sin WiFi (solo local)
+            case 22:    pedirConfirmacion(ASK_CONFIRMATION_SAVE);                       break;  // Pedir confirmación para guardar
             
             // ---------- ELIMINAR CSV ----------------------------------------------------------------
-            case 20:    pedirConfirmacion_DELETE_CSV();                                 break;
-            
+            case 23:    pedirConfirmacion_DELETE_CSV();                                 break;
+        
             // ---------- SUGERIR ACCIÓN -------------------------------------------------------------
-            case 21:    suggestAction();                                                break;
+            case 24:    suggestAction();                                                break;
             
             // ---------- FALLO SD -------------------------------------------------------------------
-            case 22:    showCriticFailureSD();                                          break;
+            case 25:    showCriticFailureSD();                                          break;
             
             // ---------- SINCRONIZACION -------------------------------------------------------------
             //case 21:    showSyncState(DATA_TO_UPLOAD);                               break;  // Hay data, comprobando WiFi
             //case 22:    showSyncState(NO_INTERNET_CONNECTION);                        break;  // No hay WiFi
-            case 23:    showSyncState(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
-            case 24:    showSyncState(ALL_MEALS_UPLOADED);                           break;  // Se ha completado la subida
-            case 25:    showWarning(WARNING_MEALS_LEFT);                                   break;  // Se han quedado comidas sin guardar
-            case 26:    showSyncState(ERROR_READING_TXT);                            break;  // Error al enviar la info
-            case 27:    showSyncState(NO_INTERNET_CONNECTION);                       break;  // Error: se puso alimento sin crudo/cocinado
-            case 28:    showSyncState(HTTP_ERROR);                                   break;  // Error al enviar la info
-            case 29:    showSyncState(TIMEOUT);                                      break;  // Error al enviar la info
-            case 30:    showSyncState(UNKNOWN_ERROR);                                break;  // Error al enviar la info
+            case 26:    showSyncState(UPLOADING_DATA);                               break;  // Hay WiFi, subiendo data
+            case 27:    showSyncState(ALL_MEALS_UPLOADED);                           break;  // Se ha completado la subida
+            case 28:    showWarning(WARNING_MEALS_LEFT);                                   break;  // Se han quedado comidas sin guardar
+            case 29:    showSyncState(ERROR_READING_TXT);                            break;  // Error al enviar la info
+            case 30:    showSyncState(NO_INTERNET_CONNECTION);                       break;  // Error: se puso alimento sin crudo/cocinado
+            case 31:    showSyncState(HTTP_ERROR);                                   break;  // Error al enviar la info
+            case 32:    showSyncState(TIMEOUT);                                      break;  // Error al enviar la info
+            case 33:    showSyncState(UNKNOWN_ERROR);                                break;  // Error al enviar la info
 
             // ---------- ERROR: SE PUSO ALIMENTO SIN CRUDO/COCINADO ---------------------------------
-            case 31:    showError(ERROR_STATE_GROUP);                                      break;  // Error: se puso alimento sin crudo/cocinado 
+            case 34:    showError(ERROR_STATE_GROUP);                                      break;  // Error: se puso alimento sin crudo/cocinado 
 
 
             // ---------- BARCODE --------------------------------------------------------------------
             // --- ESCANEANDO ----------
-            case 32:    scanningBarcode();                                                                  break;  // Escaneando código de barras  
+            case 35:    scanningBarcode();                                                                  break;  // Escaneando código de barras  
             // --- BUSCANDO PRODUCTO ---
-            case 33:    showSearchingProductInfo();                                                         break;  // Buscando información del producto
+            case 36:    showSearchingProductInfo();                                                         break;  // Buscando información del producto
+            
             // --- INFO PRODUCTO -------
-            case 34:    showProductInfo_1("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;  // Mostrar info del producto
-            case 35:    showProductInfo_2("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
-            case 36:    showProductInfo_3("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
+            case 37:    showProductInfo_1("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;  // Mostrar info del producto
+            case 38:    showProductInfo_2("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
+            case 39:    showProductInfo_3("8437002353025", "Tortas de aceite", 0.6, 0.058, 0.23, 4.75);     break;
             // --- AVISOS --------------
-            case 37:    showWarning(WARNING_BARCODE_NOT_READ);                                              break;  // Código de barras no detectado
-            case 38:    showWarning(WARNING_PRODUCT_NOT_FOUND, "1234567890123");                            break;  // Producto no encontrado
-            case 39:    showWarning(WARNING_NO_INTERNET_NO_BARCODE);                                        break;  // No hay internet. No se puede buscar por código de barras
-            case 40:    showWarning(WARNING_RAW_COOKED_NOT_NEEDED);                                         break;  // No es necesario indicar si es crudo o cocinado
+            case 40:    showWarning(WARNING_BARCODE_NOT_READ);                                              break;  // Código de barras no detectado
+            case 41:    showWarning(WARNING_PRODUCT_NOT_FOUND, "1234567890123");                            break;  // Producto no encontrado
+            case 42:    showWarning(WARNING_NO_INTERNET_NO_BARCODE);                                        break;  // No hay internet. No se puede buscar por código de barras
+            case 43:    showWarning(WARNING_RAW_COOKED_NOT_NEEDED);                                         break;  // No es necesario indicar si es crudo o cocinado
 
             // ---------- GUARDANDO COMIDA -----------------------------------------------------------
-            case 41:    showSavingMeal(SAVING_WIFI);                                                        break;
-            case 42:    showSavingMeal(SAVING_ONLY_LOCAL);                                                  break;
-            case 43:    showSavingMealBase(); completeSavingMeal(SAVING_ONLY_LOCAL);                        break;
-            case 44:    showSavingMealBase(); completeSavingMeal(SAVING_WIFI);                              break;
+            case 44:    showSavingMeal(SAVING_WIFI);                                                        break;
+            case 45:    showSavingMeal(SAVING_ONLY_LOCAL);                                                  break;
+            case 46:    showSavingMealBase(); completeSavingMeal(SAVING_ONLY_LOCAL);                        break;
+            case 47:    showSavingMealBase(); completeSavingMeal(SAVING_WIFI);                              break;
 
 
             // ---------- NEW GUARDANDO COMIDA --------------------------------------------------------
-            case 45:    showNewSavingMeal(SAVING_WIFI);                                                     break;
-            case 46:    showNewSavingMeal(SAVING_ONLY_LOCAL);                                               break;
+            case 48:    showNewSavingMeal(SAVING_WIFI);                                                     break;
+            case 49:    showNewSavingMeal(SAVING_ONLY_LOCAL);                                               break;
+            case 50:    showNewSavingMeal_Complete(SAVING_WIFI);                                            break; // Primero dibujar la base de la pantalla y luego el mensaje de WiFi
+            case 51:    showNewSavingMeal_Complete(SAVING_ONLY_LOCAL);                                      break; // Primero dibujar la base de la pantalla y luego el mensaje de no WiFi
             
             // ---------- NEW SINCRONIZAR -------------------------------------------------------------
             // --- SINCRONIZANDO -------
-            case 47:    showSincronizandoSM();                                                              break;
-            case 48:    showNewSyncState(UPLOADING_DATA);                                                   break; // Sincronizando SM
+            case 52:    showSincronizandoSM();                                                              break;
+            case 53:    showNewSyncState(UPLOADING_DATA);                                                   break; // Sincronizando SM
             // --- SM SINCRONIZADO -----
-            case 49:    showSMSincronizado();                                                               break;
-            case 50:    showNewSyncState(ALL_MEALS_UPLOADED);                                               break; // SM sincronizado
+            case 54:    showSMSincronizado();                                                               break;
+            case 55:    showNewSyncState(ALL_MEALS_UPLOADED);                                               break; // SM sincronizado
+            // --- ERROR SINCRONIZANDO --
+            case 56:    showNewSyncState(ERROR_READING_TXT);                                                break; // Error al enviar la info
+            case 57:    showNewSyncState(NO_INTERNET_CONNECTION);                                           break; // No hay WiFi
+            case 58:    showNewSyncState(HTTP_ERROR);                                                       break; // Error al enviar la info
+            case 59:    showNewSyncState(TIMEOUT);                                                          break; // Error al enviar la info
+            case 60:    showNewSyncState(UNKNOWN_ERROR);                                                    break; // Error al enviar la info
 
             // ---------- NEW BARCODE -----------------------------------------------------------------
             // --- ESCANEANDO ----------
-            case 51:    showNewScanningBarcode();                                                           break;  // Escaneando código de barras
+            case 61:    showNewScanningBarcode();                                                           break;  // Escaneando código de barras
             // --- BUSCANDO PRODUCTO ---
-            case 52:    showNewSearchingProduct();                                                          break;  // Buscando información del producto
+            case 62:    showNewSearchingProduct();                                                          break;  // Buscando información del producto
             // -- PRODUCTO ENCONTRADO --
-            case 53:    showNewProductFound();                                                              break; // Código de barras y nombre del producto leído
-            case 54:    showNewProductFound("PRODUCT:8437002353025;Tortas de Andalucía;0.0;0.0;0.0;0.0");      break; // Info del producto leído
+            case 63:    showNewProductFound();                                                              break; // Código de barras y nombre del producto leído
+            case 64:    showNewProductFound("PRODUCT:8437002353025;Tortas de Andalucía;0.0;0.0;0.0;0.0");      break; // Info del producto leído
 
-            case 55:    dashboard_barcode(); break;
+            case 65:    dashboard_barcode(); break;
 
 
             // Simulación de iconos con funciones gráficas
@@ -191,6 +203,15 @@ void loop() {
             case 49:    drawThickLineWithAngle_2(200, 300, 150, 0, 10, RED);                                break;
             case 50:    drawThickLineWithAngle_2(200, 300, 150, 90, 10, RED);                               break;
             */
+
+
+
+
+            // --- PRODUCTO CANCELADO --
+            case 66:    showProductoCancelado();                                                            break;  // Producto cancelado
+            
+            //case 67:    dashboard(DASH_GRUPOS);                                                             break;  // Dashboard de grupos y ejemplos
+            //case 68:    dashboard(DASH_BARCODE);                                                            break;  // Dashboard de barcode
 
 
 
