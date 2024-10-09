@@ -88,14 +88,8 @@ const byte countRows = 4; // F1, F2, F3, F4
 const byte countColumns = 5; // C1, C2, C3, C4, C5
 
 /* Buttons */
-#ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
-    const byte rowsPins[countRows] = {26,28,30,32}; // F1, F2, F3, F4
-    const byte columnsPins[countColumns] = {44,46,48,50,52}; // C1, C2, C3, C4, C5
-#endif
-#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
-    const byte rowsPins[countRows] = {44,45,46,47}; // F1, F2, F3, F4
-    const byte columnsPins[countColumns] = {39,40,41,42,43}; // C1, C2, C3, C4, C5
-#endif
+const byte rowsPins[countRows] = {44,45,46,47}; // F1, F2, F3, F4
+const byte columnsPins[countColumns] = {39,40,41,42,43}; // C1, C2, C3, C4, C5
 
 /* Buttons info => IDs de grupo (crudo) */
 const byte buttons[countRows][countColumns] = {{1,2,3,4,5},
@@ -225,49 +219,6 @@ void checkAllButtons()
  *  Reestablece la flag 'pulsandoGrande' a false hasta la próxima pulsación.
  */
 /*-----------------------------------------------------------------------------*/
-/*void checkGrandeButton()
-{
-    if(grandeButtonInterruptOccurred()) // Se está pulsando un grupo de alimentos
-    {
-        //ButtonPosition position = readButtonsGrande(); // Posición del botón pulsado
-        //buttonGrande = buttons[position.row][position.col];
-        readButtonsGrande(); // Qué tecla se está pulsando 
-        buttonGrande = buttons[iRow][iCol];
-
-        #if defined(SM_DEBUG)
-            SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
-        #endif 
-        
-        // ----- EVENTO ------- 
-        // Tipo A: [7, 9] o [16, 18]
-        //if (((buttons[position.row][position.col] >= 7) and (buttons[position.row][position.col] <= 9)) or ((buttons[position.row][position.col] >= 16) and 
-        //    (buttons[position.row][position.col] <= 18))){
-        //            eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
-        //}
-        // Tipo B: [1, 6], [10, 15] o [19, 20]
-        //else if(((buttons[position.row][position.col] >= 1) and (buttons[position.row][position.col] <= 6)) or ((buttons[position.row][position.col] >= 10) and 
-        //        (buttons[position.row][position.col] <= 15)) or (buttons[position.row][position.col] >=19)){
-        //            eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-        //}
-        if (((buttons[iRow][iCol] >= 7) and (buttons[iRow][iCol] <= 9)) or ((buttons[iRow][iCol] >= 16) and 
-            (buttons[iRow][iCol] <= 19))){
-                    eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
-        }
-        else if(((buttons[iRow][iCol] >= 1) and (buttons[iRow][iCol] <= 6)) or ((buttons[iRow][iCol] >= 10) and 
-                (buttons[iRow][iCol] <= 15)) or (buttons[iRow][iCol] == 20)){
-                    eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-        }
-        
-        addEventToBuffer(eventoGrande);
-        flagEvent = true;
-
-        //----- Grupo alimentos ---- 
-        setGrupoAlimentos(buttonGrande);
-        
-        pulsandoGrande = false;
-    }
-        
-}*/
 void checkGrandeButton()
 {
     if(grandeButtonInterruptOccurred()) // Se está pulsando un grupo de alimentos
@@ -374,7 +325,7 @@ void checkBarcodeButton()
         addEventToBuffer(BARCODE);
         flagEvent = true;
 
-        // Se actualiza 'grupoActual' si se ha leído barcode y encontrado el producto. 
+        // Se actualizará 'grupoActual' si se lee barcode, se encuentra el producto y se confirma. 
         // Si se hiciera setGrupoAlimentos(BARCODE_PRODUCT_INDEX) aquí y luego no se encontrara el producto,
         // se mostraría en pantalla "Grupo Actual: " con el nombre vacío porque no se ha obtenido nada. Por eso
         // solo se actualiza si se encuentra producto.

@@ -42,12 +42,11 @@
 // Casa:
 const char* ssid = "MOVISTAR_FB23_EXT";
 const char* password = "DP6BUuEtuFvRw3mHmFoG";
-
 // Testeos:
 //const char* ssid = "Irene";
 //const char* password = "icradeba5050";
 
-// Post testeos:
+// Definitivo:
 //const char* ssid = "SmartCloth";
 //const char* password = "SM-pass24/";
 // -----------------------------------
@@ -77,7 +76,7 @@ const char* logOutServerName = "https://smartclothweb.org/api/logout_mac";
 const char* openFoodFacts_server = "https://world.openfoodfacts.org/api/v2/product/";   // Production environment
 const char* openFoodFacts_fields = "?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"; // Campos requeridos
 
-#define JSON_SIZE_LIMIT_BARCODE 512 // El JSON devuelto suele de ser de 200 bytes, pero ponemos 512 por segurarnos
+#define JSON_SIZE_LIMIT_BARCODE 512 // El JSON devuelto por OpenFoodFacts suele de ser de 200 bytes, pero ponemos 512 por segurarnos
 // ----------------------------------
 
 
@@ -86,18 +85,17 @@ const char* openFoodFacts_fields = "?fields=product_name,product_name_es,carbohy
 /*-----------------------------------------------------------------------------
                            DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
-inline bool    hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); };  // Comprobar si hay conexión a la red WiFi
-
 void    setupWiFi();        // Configurar módulo WiFi y conectar a la red
 void    connectToWiFi();    // Conectar a la red WiFi
 void    checkWiFi();        // Comprobar si hay WiFi e indicarlo al Due
+inline bool    hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); };  // Comprobar si hay conexión a la red WiFi
 
-bool    fetchTokenFromServer(String &bearerToken);                                  // 1. Pedir token
+// Servidor SmartCloth
+bool    fetchTokenFromServer(String &bearerToken);                                  // 1. Pedir token e iniciar sesión
 void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);      // 2. Subir JSON
 void    logoutFromServer(String &bearerToken);                                      // 3. Cerrar sesión
 
 // Barcode
-void    tryGetProduct(String msgFromDue);                               // Comprobar si hay WiFi y leer código de barras
 void    getFoodData(String barcode);                                    // Obtener los datos de un alimento
 void    getProductInfo(const String &payload, String &productInfo);     // Obtener la información del producto a partir de un JSON
 /*-----------------------------------------------------------------------------*/
@@ -138,10 +136,14 @@ void setupWiFi()
 
 
 
+
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Hace un solo intento de conexión a WiFi, con una espera máxima
- *        de 10 segundos.
+ * @brief Conecta el dispositivo a una red WiFi.
+ * 
+ * Esta función intenta conectar el dispositivo a una red WiFi utilizando las credenciales
+ * proporcionadas. La conexión se intentará durante un máximo de 15 segundos. 
+ * 
  */
 /*-----------------------------------------------------------------------------*/
 void connectToWiFi() 
@@ -198,8 +200,8 @@ void connectToWiFi()
  * @brief Verifica si hay conexión WiFi y envía un mensaje al dispositivo ESP32 Due.
  * 
  * Esta función verifica si hay una conexión WiFi disponible. Si hay conexión, 
- * se envía un mensaje al dispositivo ESP32 Due indicando que hay WiFi. Si no 
- * hay conexión, se envía un mensaje indicando que no hay WiFi.
+ * se envía un mensaje al Due indicando que hay WiFi. Si no hay conexión, se
+ * envía un mensaje indicando que no hay WiFi.
  */
 /*-----------------------------------------------------------------------------*/
 void checkWiFi()
@@ -232,11 +234,18 @@ void checkWiFi()
 
 
 
+
 /*-----------------------------------------------------------------------------*/
 /**
- * Realiza una petición HTTP POST al servidor para obtener un token de autenticación.
- * 
- * @param bearerToken Referencia a una cadena de caracteres donde se almacenará el token obtenido.
+ * @brief Solicita un token de autenticación desde el servidor y lo almacena en la variable proporcionada.
+ *
+ * Esta función realiza una petición HTTP POST al servidor para obtener un token de autenticación.
+ * Si la conexión WiFi está disponible, se configura y envía la petición HTTP con la dirección MAC del dispositivo.
+ * Luego, procesa la respuesta del servidor para extraer el token y lo almacena en la variable `bearerToken`.
+ * En caso de error, se envía un mensaje de error y se retorna `false`.
+ *
+ * @param bearerToken Referencia a una cadena donde se almacenará el token obtenido del servidor.
+ * @return `true` si el token se obtuvo exitosamente, `false` en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
 bool fetchTokenFromServer(String &bearerToken)
@@ -356,11 +365,17 @@ bool fetchTokenFromServer(String &bearerToken)
 
 /*-----------------------------------------------------------------------------*/
 /**
- * Sube un documento JSON al servidor mediante una petición HTTP POST.
+ * @brief Sube un documento JSON al servidor.
  * 
- * @param JSONdoc El documento JSON a subir.
- * @param bearerToken El token de autenticación para la petición HTTP.
+ * Esta función envía un documento JSON al servidor SmartCloth utilizando una 
+ * petición HTTP POST. Incluye un token de autenticación en el encabezado de la 
+ * petición y maneja diferentes respuestas del servidor.
+ * 
+ * @param JSONdoc Referencia al documento JSON que se va a enviar.
+ * @param bearerToken Referencia al token de autenticación Bearer.
+ * 
  */
+ /*-----------------------------------------------------------------------------*/
 void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
 {
     // ---- LIMPIAR BUFFER -------------------------------------
@@ -587,40 +602,6 @@ void logoutFromServer(String &bearerToken)
 
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Intenta obtener la información nutricional de un producto en OpenFoodFacts.
- * @param msgFromDue El mensaje del Due que incluye el código de barras del producto --> "GET-PRODUCT:<barcode>"
- * 
- * Si hay una conexión WiFi disponible, se intentará obtener su información de OpenFoodFacts.
- * Si no hay conexión WiFi, se mostrará un mensaje de error y se enviará un mensaje al dispositivo Due indicando la falta de conexión.
- */
-/*-----------------------------------------------------------------------------*/
-void tryGetProduct(String msgFromDue)
-{
-    // Ya se pregunta si hay conexión antes de enviar el mensaje "GET-PRODUCT:<barcode>"
-
-    //if(hayConexionWiFi())
-    //{
-        /*#if defined(SM_DEBUG)
-            SerialPC.println("Leyendo codigo de barras...");
-        #endif*/
-
-        String barcode = msgFromDue.substring(12); // Extraer la parte de <barcode> de la cadena "GET-PRODUCT:<barcode>"
-        
-        // ---- BUSCAR PRODUCTO ---------
-        getFoodData(barcode); // Obtener información del 'barcode' en OpenFoodFacts
-        // ------------------------------
-    /*}
-    else  
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println("No hay conexión a Internet. No se puede buscar la info del producto.");
-        #endif
-        sendMsgToDue("NO-WIFI");
-    }*/
-}
-
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -638,14 +619,12 @@ void tryGetProduct(String msgFromDue)
  *  Ejemplo: https://world.openfoodfacts.org/api/v2/product/3017624010701?fields=product_name,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g
  * 
  * @param barcode El código de barras del alimento.
+ * 
+ * @note No comprueba conexión a Internet porque se supone que se ha comprobado antes de llamar a esta función.
  */
 /*-----------------------------------------------------------------------------*/
 void getFoodData(String barcode) 
 {
-    // He borrado lo de limpiar buffer del lector porque no tenía sentido hacerlo aquí si no se usa el Serial
-
-    // Comprobar si hay conexión a Internet ya se hace en Due antes de pedir leer el barcode y también en el ESP32 en la función tryGetProduct()
-
     #if defined(SM_DEBUG)
         SerialPC.println("\nObteniendo información del producto " + barcode);
     #endif
@@ -654,7 +633,6 @@ void getFoodData(String barcode)
     // Configurar la petición HTTP: un GET a la URL de la API de OpenFoodFacts con el código de barras y los campos que se quieren obtener
     HTTPClient http;  
     String serverPath = openFoodFacts_server + barcode + openFoodFacts_fields; // Conformar URL de la API
-
     // Por ejemplo, para tostas de trigo:
     // "https://world.openfoodfacts.org/api/v2/product/5601560111905?fields=product_name,product_name_es,carbohydrates_100g,energy-kcal_100g,fat_100g,proteins_100g"
 
@@ -762,12 +740,19 @@ void getFoodData(String barcode)
 
 
 
+
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Obtiene la información del producto a partir de un JSON y la almacena en una cadena de texto.
+ * @brief Obtiene la información del producto a partir de un JSON recibido de OpenFoodFacts y la construye en una cadena de texto.
  * 
- * @param payload El JSON que contiene la información del producto.
- * @param productInfo La cadena de texto donde se almacenará la información del producto.
+ * Esta función analiza un JSON proporcionado en el payload para extraer información del producto,
+ * incluyendo el código de barras, nombre del producto, y macronutrientes (carbohidratos, lípidos, proteínas y kilocalorías).
+ * La información extraída se almacena en la referencia de cadena de texto productInfo.
+ * 
+ * @param payload El JSON en formato de cadena de texto que contiene la información del producto.
+ * @param productInfo Referencia a una cadena de texto donde se almacenará la información del producto construida.
+ * 
+ * @note No comprueba conexión a Internet porque se supone que se ha comprobado antes de llamar a esta función.
  */
 /*-----------------------------------------------------------------------------*/
 void getProductInfo(const String &payload, String &productInfo)

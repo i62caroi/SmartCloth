@@ -173,9 +173,7 @@
 
 #include "debug.h" // SM_DEBUG --> SerialPC
 
-bool    eventOccurred();
-//void    checkBascula();           // Está en Scale.h, pero hay que declararla aquí también para que esté en este ámbito
-//bool    interruptionOccurred();   // Está en ISR.h, pero hay que declararla aquí también para que esté en este ámbito
+bool    eventOccurred(); // Comprobar si ha habido interrupciones de botoneras o eventos de báscula
 
 #include "ISR.h" 
 #include "RA8876_v2.h" // COLORS.h
@@ -406,16 +404,6 @@ void setupScreen()
 /***************************************************************************************************/
 /*---------------------------- INTERRUPCIONES   ---------------------------------------------------*/
 /***************************************************************************************************/
-
-/*---------------------------------------------------------------------------------------------------------
-   eventOccurred(): Comprobar si ha habido eventos en botoneras o báscula
-----------------------------------------------------------------------------------------------------------*/
-/*bool eventOccurred(){
-    checkBascula();     // Comprueba interrupción de báscula. Lo necesito para ver si hace falta marcar evento
-    if(interruptionOccurred()) return true; // Si ha habido interrupción en botoneras (pulsación) o evento en báscula (cambio de peso, no solo interrupción)
-    return false;
-}*/
-
 
 /*---------------------------------------------------------------------------------------------------------
    doubleDelayAndCheckInterrupt(): Divide a la mitad el tiempo especificado y hace dos (double) delays según
@@ -1148,7 +1136,8 @@ void showValores(ValoresNutricionales &valores, byte zona){
 
 // Esta versión de la función muestra los valores para la nueva forma de calcular las raciones, que
 // redondeaba al decimal más cercano y siempre mantiene 1 decimal, aunque sea .0
-void showRaciones(ValoresNutricionales &valores, byte zona){
+void showRaciones(ValoresNutricionales &valores, byte zona)
+{
     float raciones;
 
     // Texto "Raciones"
@@ -1314,67 +1303,6 @@ bool showSemiDashboard_PedirProcesamiento(){
 /*---------------------------- SINCRONIZACIÓN CON WEB   -------------------------------------------*/
 /***************************************************************************************************/
 
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * Muestra la pantalla de guardado de comida.
- * 
- * @param conexion Indica si hay conexión a Internet o no.
- */
-/*-----------------------------------------------------------------------------*/
-/*void showSavingMeal(bool conexion)
-{
-    // ---- COLOR FONDO -----------------------------------------------------------------------------------
-    // Aplicar color al fondo
-    tft.clearScreen(AZUL_PROCESO); // 0x037F en RGB565 (#006CFF en HEX) es el color que dio Guillermo, pero por el ángulo se ve celeste
-    // ----------------------------------------------------------------------------------------------------
-
-    // ----- TEXTO (INFORMACIÓN) --------------------------------------------------------------------------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3);
-    tft.setTextForegroundColor(WHITE);
-
-    tft.setCursor(200, 30);    tft.println("GUARDANDO COMIDA...");
-    // ----------------------------------------------------------------------------------------------------
-
-    // ------ ICONO (GUARDANDO) ---------------------------------------------------------------------------
-    tft.bteMemoryCopy(PAGE4_START_ADDR,SCREEN_WIDTH,554,0,PAGE1_START_ADDR,SCREEN_WIDTH,450,150,91,98); // Mostrar disquete (91x98) en PAGE1
-    // ----------------------------------------------------------------------------------------------------
-
-    // ------------ LINEA ---------------------------------------------------------------------------------
-    tft.fillRoundRect(210,280,814,288,3,WHITE);
-    // ----------------------------------------------------------------------------------------------------
-
-    // ------ TEXTO (COMENTARIO) --------------------------------------------------------------------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2);
-    tft.setCursor(70, 338);    tft.println("ESPERE MIENTRAS SE GUARDA LA COMIDA");
-    if(!conexion)
-    {
-        tft.setCursor(220, tft.getCursorY() + tft.getTextSizeY()); tft.print(convertSpecialCharactersToHEX("Se guardará en SMARTCLOTH"));
-        tft.setCursor(280, tft.getCursorY() + tft.getTextSizeY() + 10); tft.println("pero no en la web");
-    }
-    // ----------------------------------------------------------------------------------------------------
-
-    // ----- ICONO CONEXION A INTERNET O NO ---------------------------------------------------------------
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
-    if(conexion) // Mostrar icono de conexión a internet y texto
-    {
-        // Toma desde y=1 para quitar linea de basura y, para evitar la linea de debajo, hacemos como que es de 66 píxeles de alto
-        tft.bteMemoryCopy(PAGE4_START_ADDR, SCREEN_WIDTH, 646, 1, PAGE1_START_ADDR, SCREEN_WIDTH, 30, 500, 43, 66); // Mostrar conexión (43x67) en PAGE1. 
-        tft.setCursor(85,520);    tft.println(convertSpecialCharactersToHEX("CON CONEXIÓN A INTERNET"));
-    }
-    else // Mostrar icono de sin conexión a internet y texto
-    {   
-        tft.bteMemoryCopy(PAGE4_START_ADDR, SCREEN_WIDTH, 689, 0, PAGE1_START_ADDR, SCREEN_WIDTH, 30, 480, 54, 85); // Mostrar no conexión (54x85) en PAGE1
-        tft.setCursor(90,520);    tft.println(convertSpecialCharactersToHEX("SIN CONEXIÓN A INTERNET"));
-    
-    }
-    // ----------------------------------------------------------------------------------------------------
-
-    
-
-}*/
 
 
 /*-----------------------------------------------------------------------------*/
@@ -1595,7 +1523,8 @@ void showSyncState(byte option)
 /*---------------------------------------------------------------------------------------------------------
    pedirRecipiente(): Pide colocar un recipiente (STATE_Init)
 ----------------------------------------------------------------------------------------------------------*/
-void pedirRecipiente(){
+void pedirRecipiente()
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ************ TEXTO ********************************************************************************
@@ -1684,7 +1613,8 @@ void pedirRecipiente(){
 /*---------------------------------------------------------------------------------------------------------
    recipienteColocado(): Muestra mensaje de recipiente colocado
 ----------------------------------------------------------------------------------------------------------*/
-void recipienteColocado(){
+void recipienteColocado()
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (RECIPIENTE COLOCADO) -------------------------------------------------------------------
@@ -1704,7 +1634,8 @@ void recipienteColocado(){
 /*---------------------------------------------------------------------------------------------------------
    recipienteRetirado(): Muestra mensaje de recipiente retirado
 ----------------------------------------------------------------------------------------------------------*/
-void recipienteRetirado(){
+void recipienteRetirado()
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ----- TEXTO (PLATO RETIRADO) -----------------------------------------------------------------------
@@ -1737,7 +1668,8 @@ void recipienteRetirado(){
    TODO: DIBUJAR BORDE DE RECTANGULO REDONDEADO (VARIAS VECES POR GROSOR) DEL COLOR DEL FONDO Y PONERLO 
           ENCIMA DE LAS IMÁGENES DE GRUPOS PARA TAPAR LAS SOMBRAS EN LAS ESQUINAS.
 ----------------------------------------------------------------------------------------------------------*/
-void pedirGrupoAlimentos(){
+void pedirGrupoAlimentos()
+{
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
     bool pulsacion = true;
 
@@ -1842,7 +1774,8 @@ void pedirGrupoAlimentos(){
         Return:   true: ha habido interrupción    false: no ha habido interrupción
             Devuelve bool para salir de la función que llamó de desplazar_mano() si hubo interrupción.  
 ----------------------------------------------------------------------------------------------------------*/
-bool desplazar_mano(byte option){
+bool desplazar_mano(byte option)
+{
     int alto, posY;
 
     switch(option){
@@ -1941,8 +1874,8 @@ bool desplazar_mano(byte option){
 /*---------------------------------------------------------------------------------------------------------
    sin_pulsacion(): Mostrar la "mano" sobre el botón sin pulsación
 ----------------------------------------------------------------------------------------------------------*/
-
-void sin_pulsacion(byte option){
+void sin_pulsacion(byte option)
+{
     switch(option){
         case MANO_Y_PULSACION_ANADIR: // Añadir
         case MANO_Y_PULSACION_ELIMINAR: // Eliminar
@@ -1993,7 +1926,8 @@ void sin_pulsacion(byte option){
 /*---------------------------------------------------------------------------------------------------------
    con_pulsacion(): Simular pulsación causada por la "mano" sobre botón.
 ----------------------------------------------------------------------------------------------------------*/
-void con_pulsacion(byte option){
+void con_pulsacion(byte option)
+{
     int x1, y1, x2, y2;
 
     switch(option){
@@ -2241,14 +2175,6 @@ void showSearchingProductInfo()
    pedirConfirmacionProducto(): Mostrar el código de barras y el nombre del producto leído. Indicar que se vuelva
                       a pulsar el botón de lectura (barcode) para confirmar el producto.
 ----------------------------------------------------------------------------------------------------------*/
-/**
- * Muestra la información de un producto encontrado en la pantalla.
- * 
- * @param productInfo La información del producto en formato de cadena.
- *                    Debe tener el prefijo "PRODUCT:" seguido del código de barras y el nombre del producto separados por punto y coma (;).
- *                    Los caracteres especiales en el nombre del producto deben estar codificados en formato HEX.
- *                    Ejemplo: "PRODUCT:1234567890;Nombre%20del%20Producto"
- */
 void pedirConfirmacionProducto(String &productInfo)
 {
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
@@ -2330,7 +2256,8 @@ void pedirConfirmacionProducto(String &productInfo)
    formGraphicsPedirProcesamiento(): Compone la pantalla (forma, colores, texto y 1º botón de cocinado) de
                                      pedir procesamiento sobre las zonas 3 y 4 del dashboard.
 ----------------------------------------------------------------------------------------------------------*/
-bool formGraphicsPedirProcesamiento(){
+bool formGraphicsPedirProcesamiento()
+{
     // ******* ZONAS 3 Y 4 **************************************************************************
     // ------- GRÁFICOS -------------------------------------
         // Recuadro tapando zonas 3 y 4 del dashboard
@@ -2410,7 +2337,8 @@ bool alternateButtonsProcesamiento()
                                   Esto se hace en STATE_groupA y STATE_groupB, donde aún no se ha escogido
                                   crudo o cocinado.
 ----------------------------------------------------------------------------------------------------------*/
-bool pedirProcesamientoZonas3y4(){
+bool pedirProcesamientoZonas3y4()
+{
     if(formGraphicsPedirProcesamiento()) return true;    // Zonas 3 y 4 - Base (formas, colores, texto y 1º botón cocinado) de la pantalla de pedir procesamiento
     if(alternateButtonsProcesamiento()) return true;     // Zonas 3 y 4 - Alternar botones de crudo o cocinado en pantalla de pedir procesamiento
 
@@ -2432,7 +2360,8 @@ bool pedirProcesamientoZonas3y4(){
 /*---------------------------------------------------------------------------------------------------------
    pedirAlimento(): Pide colocar alimento sobre la báscula, tras haber seleccionado crudo o cocinado.
 ----------------------------------------------------------------------------------------------------------*/
-void pedirAlimento(){ 
+void pedirAlimento()
+{ 
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // ************ TEXTO ********************************************************************************
@@ -2760,6 +2689,8 @@ void sugerirAccion()
 
 
 }*/
+
+// En esta versión no se indica por pantalla si hay conexión a Internet al pedir confirmar acción, sino que se informa al guardar.
 void pedirConfirmacion(byte option)
 {
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
@@ -3046,56 +2977,6 @@ void showAccionRealizada(byte option)
 /*-------------------------------------------------------------------------------------------------------*/
 
 /*---------------------------------------------------------------------------------------------------------
-   showAccionCancelada(): Indica que se ha cancelado la acción de añadir, eliminar o guardar.
-                          Puede ser indicado por el usuario o por time-out de 10 segundos.
-----------------------------------------------------------------------------------------------------------*/
-/*void showAccionCancelada()
-{
-    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
-
-    // ----- TEXTO (ACCION CANCELADA) -----------------------------------
-    tft.clearScreen(RED_ERROR_Y_CANCEL);
-    // ------ LINEA ---------
-    tft.fillRoundRect(252,200,764,208,3,WHITE);
-    // ------ TEXTO ---------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(220, 258);  
-    tft.println(convertSpecialCharactersToHEX("ACCIÓN CANCELADA")); 
-    // ------ LINEA ---------
-    tft.fillRoundRect(252,380,764,388,3,WHITE);
-    // -------------------------------------------------------------------
-}*/
-
-
-
-/*---------------------------------------------------------------------------------------------------------
-   showProductoCancelado(): Indica que se ha cancelado el producto buscado.
-                          Puede ser indicado por el usuario o por time-out de 20 segundos.
-----------------------------------------------------------------------------------------------------------*/
-/*void showProductoCancelado()
-{
-    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
-
-    // ----- TEXTO (PRODUCTO CANCELADO) ---------------------------------
-    tft.clearScreen(RED_ERROR_Y_CANCEL);
-    // ------ LINEA ---------
-    tft.fillRoundRect(252,200,764,208,3,WHITE);
-    // ------ TEXTO ---------
-    tft.selectInternalFont(RA8876_FONT_SIZE_24);
-    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
-    tft.setTextForegroundColor(WHITE); 
-    tft.setCursor(200, 258);  
-    tft.println("PRODUCTO CANCELADO"); 
-    // ------ LINEA ---------
-    tft.fillRoundRect(252,380,764,388,3,WHITE);
-    // -------------------------------------------------------------------
-}*/
-
-
-
-/*---------------------------------------------------------------------------------------------------------
    showCancel(): Indica que se ha cancelado la acción de añadir, eliminar o guardar, o el producto buscado.
                           Puede ser indicado por el usuario o por time-out de inactividad.
 ----------------------------------------------------------------------------------------------------------*/
@@ -3238,8 +3119,8 @@ void showWarning(byte option)
    showCriticFailureSD(): Indica que se ha cancelado la acción de añadir, eliminar o guardar.
                           Puede ser indicado por el usuario o por time-out de 10 segundos.
 ----------------------------------------------------------------------------------------------------------*/
-void showCriticFailureSD(){
-
+void showCriticFailureSD()
+{
     // ----- TEXTO (FALLO EN MEMORIA INTERNA DE SM - SD) ---------------------
     tft.clearScreen(RED_ERROR_Y_CANCEL);
     // ------ LINEA ---------
@@ -3283,7 +3164,8 @@ void showCriticFailureSD(){
                          6: Cocinado     7: Pesado         8: add_check    9: Added    10: delete_check     
                          11: Deleted     12: save_check    13: Saved
 ----------------------------------------------------------------------------------------------------------*/
-void showError(byte option){ 
+void showError(byte option)
+{ 
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
 
     // cruz
@@ -3615,47 +3497,7 @@ bool slowAppearanceImage(byte option)
 bool slowAppearanceAndDisappareanceProcesamiento(byte option)
 {
     uint8_t i,j;
-    /*
-    // PANTALLA COMPLETA:
-    switch(option){
-        case SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO: // Desaparecer CRUDO y aparecer COCINADO 
-            for (i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
-                // Mostrar crudoGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,i);
-                // Mostrar cociGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,j);
-                delay(10);
-                // ----- INT -------------------
-                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
-            }
-            tft.clearArea(500,280,724,480,VERDE_PEDIR_Y_EXITO); // Borrar crudoGra
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160); // Mostrar cociGra (177x160) en PAGE1
-            // ----- INT -------------------
-            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
-            break;
 
-        case SLOW_DISAPPEAR_COCINADO_APPEAR_CRUDO: // Desaparecer COCINADO y aparecer CRUDO
-            for (i = 4, j = 30; i <= 30 && j >= 4; i++, j--) {  // i|j = 16  --> RA8876_ALPHA_OPACITY_16
-                // Mostrar cociGra desapareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,173,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,300,300,177,160,i);
-                // Mostrar crudoGra apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
-                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,1,320,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160,j);
-                delay(10);
-                // ----- INT -------------------
-                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
-            }
-            tft.clearArea(280,280,497,470,VERDE_PEDIR_Y_EXITO); // Borrar cociGra
-            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,351,131,PAGE1_START_ADDR,SCREEN_WIDTH,527,300,177,160); // Mostrar crudoGra (177x160) en PAGE1
-            // ----- INT -------------------
-            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
-            break;
-
-        default: break;
-    }
-    */
-
-
-    // SOBRE DASHBOARD
      switch(option)
      {
         case SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO: // Desaparecer CRUDO y aparecer COCINADO 
@@ -3709,7 +3551,8 @@ bool slowAppearanceAndDisappareanceProcesamiento(byte option)
 /*---------------------------------------------------------------------------------------------------------
    pedirConfirmacion_DELETE_CSV(): Pantalla de confirmación de borrado del csv
 ----------------------------------------------------------------------------------------------------------*/
-void pedirConfirmacion_DELETE_CSV(){
+void pedirConfirmacion_DELETE_CSV()
+{
     // ----- TEXTO (CONFIRMAR BORRADO CSV) -----------------------------------
     tft.clearScreen(BLACK);
     // ------ TEXTO ---------
@@ -3731,7 +3574,8 @@ void pedirConfirmacion_DELETE_CSV(){
         Parámetros: 
             - exito -> true: éxito borrando csv    false: error en el borrado
 ----------------------------------------------------------------------------------------------------------*/
-void showAcumuladoBorrado(bool exito){
+void showAcumuladoBorrado(bool exito)
+{
     // ----- TEXTO (CONFIRMAR BORRADO CSV) -----------------------------------
     tft.clearScreen(BLACK);
     // ------ TEXTO ---------
@@ -3771,7 +3615,8 @@ void showAcumuladoBorrado(bool exito){
    específica para lograr el efecto de giro del reloj.
    La carga de las imágenes se hace por orden de peso para dar la sensación de una carga cada vez más rápida.
 ----------------------------------------------------------------------------------------------------------*/
-void loadPicturesShowHourglass(){
+void loadPicturesShowHourglass()
+{
   /*
     ------------------ POSICIONES DE IMAGENES EN LAS PAGINAS ----------------------------------------------------------------------------------------------------
     PAGE 2:
@@ -4152,7 +3997,8 @@ void loadPicturesShowHourglass(){
 /*---------------------------------------------------------------------------------------------------------
    putReloj1(): Borrar PAGE1 en blanco y mostrar reloj1
 ----------------------------------------------------------------------------------------------------------*/
-void putReloj1(){ 
+void putReloj1()
+{ 
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE); 
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,0,279,PAGE1_START_ADDR,SCREEN_WIDTH,480,249,65,103); // Mostrar reloj1 (260x410) en PAGE1 -> x = 512 +/- 32 = 480     y = 300 +/- 51 = 249
@@ -4161,7 +4007,8 @@ void putReloj1(){
 /*---------------------------------------------------------------------------------------------------------
    putReloj2(): Mostrar reloj2 en PAGE1. No hace falta borrar porque se coloca encima de reloj1
 ----------------------------------------------------------------------------------------------------------*/
-void putReloj2(){ 
+void putReloj2()
+{ 
   // No necesita limpiar porque ocupa el mismo espacio que reloj1
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,66,279,PAGE1_START_ADDR,SCREEN_WIDTH,480,249,65,103); // Mostrar reloj2 en PAGE1 --> x = 512 +/- 32 = 480     y = 300 +/- 51 = 249
 }
@@ -4169,7 +4016,8 @@ void putReloj2(){
 /*---------------------------------------------------------------------------------------------------------
    putReloj3(): Mostrar reloj3 en PAGE1. No hace falta borrar porque se coloca encima de reloj2
 ----------------------------------------------------------------------------------------------------------*/
-void putReloj3(){
+void putReloj3()
+{
   // No necesita limpiar porque ocupa el mismo espacio que reloj2
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,132,279,PAGE1_START_ADDR,SCREEN_WIDTH,480,249,65,103); // Mostrar reloj3 en PAGE1 --> x = 512 +/- 32 = 480     y = 300 +/- 51 = 249
 }
@@ -4177,7 +4025,8 @@ void putReloj3(){
 /*---------------------------------------------------------------------------------------------------------
    putReloj4(): Mostrar reloj4 en PAGE1. No hace falta borrar porque se coloca encima de reloj3
 ----------------------------------------------------------------------------------------------------------*/
-void putReloj4(){
+void putReloj4()
+{
   // No necesita limpiar porque ocupa el mismo espacio que reloj3
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,198,279,PAGE1_START_ADDR,SCREEN_WIDTH,480,249,65,103); // Mostrar reloj4 en PAGE1 --> x = 512 +/- 32 = 480     y = 300 +/- 51 = 249
 }
@@ -4185,7 +4034,8 @@ void putReloj4(){
 /*---------------------------------------------------------------------------------------------------------
    putRelojGirado1(): Mostrar relGir1 en PAGE1. No hace falta borrar porque se coloca encima de reloj4
 ----------------------------------------------------------------------------------------------------------*/
-void putRelojGirado1(){
+void putRelojGirado1()
+{
   // No necesita limpiar porque ocupa más espacio que reloj4
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,264,279,PAGE1_START_ADDR,SCREEN_WIDTH,465,243,95,115); // Mostrar relGir1 en PAGE1 --> x = 512 +/- 47 = 465     y = 300 +/- 57 = 243
 }
@@ -4193,7 +4043,8 @@ void putRelojGirado1(){
 /*---------------------------------------------------------------------------------------------------------
    putRelojGirado2(): Borrar PAGE1 y mostrar relGir2
 ----------------------------------------------------------------------------------------------------------*/
-void putRelojGirado2(){
+void putRelojGirado2()
+{
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE);
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,360,279,PAGE1_START_ADDR,SCREEN_WIDTH,456,244,112,112); // Mostrar relGir2 --> x = 512 +/- 56 = 456     y = 300 +/- 56 = 244
@@ -4202,7 +4053,8 @@ void putRelojGirado2(){
 /*---------------------------------------------------------------------------------------------------------
    putRelojGirado3(): Borrar PAGE1 y mostrar relGir3
 ----------------------------------------------------------------------------------------------------------*/
-void putRelojGirado3(){
+void putRelojGirado3()
+{
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE);
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,473,279,PAGE1_START_ADDR,SCREEN_WIDTH,456,253,113,94); // Mostrar relGir3 en PAGE1 --> x = 512 +/- 56 = 456     y = 300 +/- 47 = 253
@@ -4211,7 +4063,8 @@ void putRelojGirado3(){
 /*---------------------------------------------------------------------------------------------------------
    putRelojGirado4(): Borrar PAGE1 y mostrar relGir4
 ----------------------------------------------------------------------------------------------------------*/
-void putRelojGirado4(){
+void putRelojGirado4()
+{
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE);
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,587,279,PAGE1_START_ADDR,SCREEN_WIDTH,462,268,100,65); // Mostrar relGir4 en PAGE1 --> x = 512 +/- 50 = 462     y = 300 +/- 32 = 268
@@ -4220,7 +4073,8 @@ void putRelojGirado4(){
 /*---------------------------------------------------------------------------------------------------------
    putRelojGirado5(): Borrar PAGE1 y mostrar relGir5
 ----------------------------------------------------------------------------------------------------------*/
-void putRelojGirado5(){
+void putRelojGirado5()
+{
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE);
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,688,279,PAGE1_START_ADDR,SCREEN_WIDTH,456,253,113,94); // Mostrar relGir5 en PAGE1 --> x = 512 +/- 56 = 456   ->  y = 300 +/- 47 = 253
@@ -4229,7 +4083,8 @@ void putRelojGirado5(){
 /*---------------------------------------------------------------------------------------------------------
    putRelojGirado6(): Borrar PAGE1 y mostrar relGir6
 ----------------------------------------------------------------------------------------------------------*/
-void putRelojGirado6(){
+void putRelojGirado6()
+{
   tft.canvasImageStartAddress(PAGE1_START_ADDR); 
   tft.clearScreen(WHITE);
   tft.bteMemoryCopy(PAGE2_START_ADDR,SCREEN_WIDTH,802,279,PAGE1_START_ADDR,SCREEN_WIDTH,463,244,99,113); // Mostrar relGir6 en PAGE1 --> x = 512 +/- 49 = 463  ->  y = 300 +/- 56 = 244

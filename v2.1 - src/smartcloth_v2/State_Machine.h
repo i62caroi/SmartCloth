@@ -344,31 +344,6 @@ static transition_rule rules[RULES] =
                                         {STATE_Barcode,STATE_ERROR,ERROR},                  // Acción incorrecta ????? Parece que todas las posibles acciones del usuario están contempladas en las reglas de transición
                                         // --------------------------
 
-                                        // --- Grupo Barcode --------
-                                        /*{STATE_Barcode,STATE_Init,LIBERAR},              // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
-                                        {STATE_Barcode,STATE_Barcode,DECREMENTO},         // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
-                                        {STATE_Barcode,STATE_Barcode,TARAR},              // Tarar tras colocar recipiente o alimento            
-                                        {STATE_Barcode,STATE_Barcode,BARCODE},            // Leer barcode (vuelve a comenzar, pero para que no salte error si se pulsa dos veces)
-                                        {STATE_Barcode,STATE_Plato,GO_TO_PLATO},          // Regresar a STATE_Plato si fue lastState y no se ha podido leer el barcode. También si el ESP32 está desconectado
-                                        {STATE_Barcode,STATE_Grupo,GO_TO_GRUPO},          // Regresar a STATE_Grupo si fue lastState y no se ha podido leer el barcode
-                                        {STATE_Barcode,STATE_weighted,INCREMENTO},          // Se ha colocado alimento.
-                                        //{STATE_Barcode,STATE_add_check,ADD_PLATO},          // Nuevo plato, aunque no se haya colocado alimento.
-                                        //{STATE_Barcode,STATE_delete_check,DELETE_PLATO},    // Borrar plato actual. 
-                                        //{STATE_Barcode,STATE_save_check,GUARDAR},           // Guardar comida, aunque no se haya colocado alimento.
-                                        {STATE_Barcode,STATE_CANCEL,TIPO_A},               
-                                        {STATE_Barcode,STATE_CANCEL,TIPO_B},        
-                                        {STATE_Barcode,STATE_CANCEL,CRUDO},                  
-                                        {STATE_Barcode,STATE_CANCEL,COCINADO},            
-                                        {STATE_Barcode,STATE_CANCEL,ADD_PLATO},         
-                                        {STATE_Barcode,STATE_CANCEL,DELETE_PLATO},     
-                                        {STATE_Barcode,STATE_CANCEL,GUARDAR},          
-                                        {STATE_Barcode,STATE_CANCEL,CANCELAR},        
-                                        {STATE_Barcode,STATE_AVISO,AVISO},
-                                        {STATE_Barcode,STATE_ERROR,ERROR},               // Acción incorrecta
-                                        */
-                                        // --------------------------
-
-
                                         // --- Alimento crudo ---
                                         {STATE_raw,STATE_Init,LIBERAR},                 // Se ha retirado el plato completo (+ recipiente) ==> ¿Habría que borrar y empezar de nuevo?
                                         {STATE_raw,STATE_raw,DECREMENTO},               // Para evitar error de evento cuando pase por condiciones que habilitan DECREMENTO (previo a LIBERAR)
@@ -603,12 +578,6 @@ typedef enum
 
 procesado_t procesamiento; // Solo se utiliza para saber qué icono (crudo o cocinado) mostrar en la zona 2 del dashboard 
 // ------ FIN PROCESAMIENTO -----------------------------------------------------------
-
-
-// ------ CONEXION INTERNET -----------------------------------------------------------
-//bool hayConexionInternet;  // Flag para saber si hay conexión a internet. Se pregunta una vez en save_check y se guarda para STATE_saved
-// ------ FIN CONEXION INTERNET -------------------------------------------------------
-
 
 // ------ CODIGO DE BARRAS -------------------------------------------------------------
 // Global para que puedan acceder STATE_Grupo, STATE_Barcode, STATE_added y STATE_saved
@@ -1263,12 +1232,6 @@ void actGruposAlimentos()
 ----------------------------------------------------------------------------------------------------------*/
 void actStateBarcodeRead()
 {
-    //static unsigned long previousTimeBarcode;      // Tiempo usado para mostrar pantalla de "Sin Wifi" durante 3 segundos
-
-    //const unsigned long sinWifiInterval = 3000; // Intervalo de tiempo para mostrar "Sin Wifi" (3 segundos). Se considera sin conexión si el ESP32 no ha respondido a la consulta de conexión.
-    //static bool showing_sin_wifi;               // Flag para saber si se está mostrando "Sin Wifi"
-
-
     if(!doneState)
     {
         if(state_prev != STATE_Barcode_read)    // ==> Si no se viene del propio STATE_Barcode_read, para evitar que se vuelva a iniciar el proceso de lectura.
@@ -1341,91 +1304,53 @@ void actStateBarcodeRead()
 
 
             // ----- ACCIONES PRINCIPALES Y PANTALLAS -----------------
-            // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
-            // Si no hay conexión a Internet, no merece la pena escanear el código de barras porque no se podrá buscar su información
-            // --- HAY INTERNET ---
-            //if(checkWifiConnection()) // Hay WiFi
-            //{
-                // ----- INFO DE PANTALLA -------------------------
-                showScanningBarcode();                                   // Mostrar "Escaneando código de barras..."
-                // ----- FIN INFO DE PANTALLA ---------------------
+            // ----- INFO DE PANTALLA -------------------------
+            showScanningBarcode();                                   // Mostrar "Escaneando código de barras..."
+            // ----- FIN INFO DE PANTALLA ---------------------
 
-                // ----- LEER BARCODE -----------------------------
-                byte resultFromReadingBarcode = askForBarcode(barcode);  // Pedir código de barras. Se va a quedar aquí hasta 10.5 segundos esperando respuesta del ESP32.
+            // ----- LEER BARCODE -----------------------------
+            byte resultFromReadingBarcode = askForBarcode(barcode);  // Pedir código de barras. Se va a quedar aquí hasta 10.5 segundos esperando respuesta del ESP32.
 
-                switch(resultFromReadingBarcode)
-                {
-                    // --- BARCODE LEÍDO -----------
-                    case BARCODE_READ: // Si se ha leído el barcode, pasar a STATE_Barcode_search (evento BARCODE_R) para buscar su información
-                                        #if defined(SM_DEBUG)
-                                            SerialPC.println(F("\nBarcode leido. Pasando a STATE_Barcode_search..."));
-                                        #endif
-                                        addEventToBuffer(BARCODE_R);    break; 
-                    // -----------------------------
+            switch(resultFromReadingBarcode)
+            {
+                // --- BARCODE LEÍDO -----------
+                case BARCODE_READ: // Si se ha leído el barcode, pasar a STATE_Barcode_search (evento BARCODE_R) para buscar su información
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nBarcode leido. Pasando a STATE_Barcode_search..."));
+                                    #endif
+                                    addEventToBuffer(BARCODE_R);    break; 
+                // -----------------------------
 
-                    // -- AVISO: BARCODE NO LEÍDO --
-                    case BARCODE_NOT_READ: // Si no se ha leído el barcode, STATE_AVISO para mostrar el mensaje "Código de barras no detectado"
-                                        #if defined(SM_DEBUG)
-                                            SerialPC.println(F("\nNo se ha detectado un barcode. Pasando a STATE_AVISO..."));
-                                        #endif
-                                        addEventToBuffer(AVISO_NO_BARCODE);        break;
-                    // -----------------------------
+                // -- AVISO: BARCODE NO LEÍDO --
+                case BARCODE_NOT_READ: // Si no se ha leído el barcode, STATE_AVISO para mostrar el mensaje "Código de barras no detectado"
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nNo se ha detectado un barcode. Pasando a STATE_AVISO..."));
+                                    #endif
+                                    addEventToBuffer(AVISO_NO_BARCODE);        break;
+                // -----------------------------
 
-                    // -- INTERRUPCIÓN (CANCELAR) --
-                    case INTERRUPTION: // Cancelación de la lectura del barcode por parte del usuario
-                                        #if defined(SM_DEBUG)
-                                            SerialPC.println(F("\nInterrupción. Cancelando lectura de barcode..."));
-                                        #endif
-                                        // En las reglas de transición ya se pasa a STATE_CANCEL al detectar algún evento de usuario (botoneras) en este estado
-                                        // No hace falta marcar aquí el evento manualmente.
-                                                                        break;
-                    // ----------------------------
+                // -- INTERRUPCIÓN (CANCELAR) --
+                case INTERRUPTION: // Cancelación de la lectura del barcode por parte del usuario
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nInterrupción. Cancelando lectura de barcode..."));
+                                    #endif
+                                    // En las reglas de transición ya se pasa a STATE_CANCEL al detectar algún evento de usuario (botoneras) en este estado
+                                    // No hace falta marcar aquí el evento manualmente.
+                                                                    break;
+                // ----------------------------
 
-                    // -- TIMEOUT O DESCONOCIDO ---
-                    default: // TIMEOUT o UNKNOWN_ERROR
-                                        #if defined(SM_DEBUG)
-                                            SerialPC.println(F("\nTimeout o Desconocido, asumimos barcode no leido. Pasando a STATE_AVISO..."));
-                                        #endif
-                                        addEventToBuffer(AVISO_NO_BARCODE);        break;
-                    // ----------------------------
-                }
+                // -- TIMEOUT O DESCONOCIDO ---
+                default: // TIMEOUT o UNKNOWN_ERROR
+                                    #if defined(SM_DEBUG)
+                                        SerialPC.println(F("\nTimeout o Desconocido, asumimos barcode no leido. Pasando a STATE_AVISO..."));
+                                    #endif
+                                    addEventToBuffer(AVISO_NO_BARCODE);        break;
+                // ----------------------------
+            }
 
-                flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
-                
-                // ----- FIN LEER BARCODE -------------------------
-
-            //}
-            // --- FIN HAY INTERNET --
-
-            // --- NO HAY INTERNET ---
-            //else // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, se vuelve a STATE_Plato, STATE_Grupo o STATE_Barcode
-            //{   // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, STATE_AVISO para mostrar el mensaje "Sin conexión. No se puede leer el código de barras"
-                /*#ifdef SM_DEBUG
-                    SerialPC.println(F("No se procede a leer codigo de barras porque ESP32 esta desconectado o no tiene WiFi"));
-                    SerialPC.println(F("Mostrar mensaje y volver a STATE_Plato, STATE_Grupo o STATE_Barcode en 3 segundos..."));
-                #endif
-
-                // ----- INFO DE PANTALLA -------------------------
-                // Se muestra pantalla de aviso en lugar de pasar a STATE_AVISO. Si no se detectara un barcode en 10 segundos, se pasaría a STATE_AVISO,
-                // pero ese estado no podría distinguir qué hizo saltar el aviso en STATE_Barcode_read (a no ser que creáramos otro evento para ello).
-                // Así que si no hay conexión a internet (no se podrá buscar en database), mostramos aviso en pantalla aun estando en STATE_Barcode_read.
-                // Si hubiera conexión pero no se detectara el barcode en 10 segundos, entonces sí se pasaría a STATE_AVISO para que muestre la pantalla correspondiente.
-                previousTimeBarcode = millis();               // Inicializar 'previousTimeBarcode' para mostrar "Sin Wifi" durante 3 segundos
-                showWarning(WARNING_NO_INTERNET_NO_BARCODE);  // Mostrar "Sin conexión. No se puede leer el código de barras"
-                showing_sin_wifi = true;                      // Se está mostrando "Sin Wifi"
-                // ----- FIN INFO DE PANTALLA ---------------------
-                */
-
-           /*     #if defined(SM_DEBUG)
-                    SerialPC.println(F("No se procede a leer codigo de barras porque ESP32 esta desconectado o no tiene WiFi. Pasando a STATE_AVISO..."));
-                #endif
-                addEventToBuffer(AVISO_NO_WIFI_BARCODE);   
-                flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición    
-            }*/
-            // --- FIN NO HAY INTERNET ---
-            // ---- FIN CHEQUEO INTERNET --------------------
-
-
+            flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
+            
+            // ----- FIN LEER BARCODE -------------------------
             // --------------------------------------------------------
 
 
@@ -1438,45 +1363,6 @@ void actStateBarcodeRead()
     }
 
 
-
-    // --- REGRESO TRAS PANTALLA "SIN WIFI" ---
-    /*if(showing_sin_wifi) // Si se está mostrando la pantalla "Sin Wifi", se regresa al estado desde donde se inició la lectura del barcode
-    {
-        if ((millis() - previousTimeBarcode) > sinWifiInterval)     // Tras 3 segundos de inactividad, se regresa automáticamente al estado desde donde se inició la lectura del barcode
-        {
-            // Regresar al último estado válido desde donde se inició la lectura: Plato, Grupo, Barcode, raw, cooked, weighted
-            switch (lastValidState)
-            {
-                case STATE_Plato: 
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nGO_TO_PLATO forzado. Regreso a State_Plato tras AVISO de \"Sin WiFi\" al pasar a STATE_Barcode_read desde STATE_Plato..."));
-                                    #endif
-                                    addEventToBuffer(GO_TO_PLATO);  break;
-
-                case STATE_Grupo: case STATE_raw: case STATE_cooked: case STATE_weighted: 
-                                    // Se mantiene peso del recipiente.
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nGO_TO_GRUPO forzado. Regreso a State_Grupo tras AVISO de \"Sin WiFi\" al pasar a STATE_Barcode_read desde State_Grupo, STATE_raw, STATE_cooked o STATE_weighted..."));
-                                    #endif
-                                    addEventToBuffer(GO_TO_GRUPO);  break;
-
-                case STATE_Barcode: // Si se llegó a STATE_Barcode (producto leído, buscado y confirmado), no debería saltar "Sin WiFi", 
-                                    // pero incluimos el regreso por si acaso
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nGO_TO_BARCODE forzado. Regreso a State_Barcode tras AVISO de \"Sin WiFi\" en nueva llamada a State_Barcode_read desde STATE_Barcode..."));
-                                    #endif
-                                    addEventToBuffer(GO_TO_BARCODE);    break;
-
-
-                default: break;
-            }
-
-            flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
-        }
-    }*/
-    // --- FIN REGRESO AUTOMÁTICO -------------
-
-
 }
 
 
@@ -1485,11 +1371,6 @@ void actStateBarcodeRead()
 ----------------------------------------------------------------------------------------------------------*/
 void actStateBarcodeSearch()
 {
-    //static unsigned long previousTimeBarcode;      // Tiempo usado para mostrar pantalla de "Sin Wifi" durante 3 segundos
-
-    //const unsigned long sinWifiInterval = 3000; // Intervalo de tiempo para mostrar "Sin Wifi" (3 segundos). Se considera sin conexión si el ESP32 no ha respondido a la consulta de conexión.
-    //static bool showing_sin_wifi;               // Flag para saber si se está mostrando "Sin Wifi"
-
     if(!doneState)
     {
         #if defined(SM_DEBUG)
@@ -1550,17 +1431,6 @@ void actStateBarcodeSearch()
         // --- NO HAY INTERNET ---
         else // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, se vuelve a STATE_Plato, STATE_Grupo o STATE_Barcode
         {
-            /*#ifdef SM_DEBUG
-                SerialPC.println(F("No se procede a buscar producto porque ESP32 esta desconectado o no tiene WiFi"));
-                SerialPC.println(F("Mostrar mensaje y volver a STATE_Plato, STATE_Grupo o STATE_Barcode en 3 segundos..."));
-            #endif
-
-            // ----- INFO DE PANTALLA -------------------------
-            previousTimeBarcode = millis();               // Inicializar 'previousTimeBarcode' para mostrar "Sin Wifi" durante 3 segundos
-            showWarning(WARNING_NO_INTERNET_NO_BARCODE);  // Mostrar "Sin conexión. No se puede buscar el producto"
-            showing_sin_wifi = true;                      // Se está mostrando "Sin Wifi"
-            // ----- FIN INFO DE PANTALLA ---------------------
-            */
 
             #if defined(SM_DEBUG)
                 SerialPC.println(F("No se procede a buscar producto porque ESP32 esta desconectado o no tiene WiFi. Pasando a STATE_AVISO..."));
@@ -1580,43 +1450,6 @@ void actStateBarcodeSearch()
                                                                             // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
     }
 
-
-    // --- REGRESO TRAS PANTALLA "SIN WIFI" ---
-    /*if(showing_sin_wifi) // Si se está mostrando la pantalla "Sin Wifi", se regresa al estado desde donde se inició la lectura del barcode
-    {
-        if ((millis() - previousTimeBarcode) > sinWifiInterval)     // Tras 3 segundos de inactividad, se regresa automáticamente al estado desde donde se inició la lectura del barcode
-        {
-            // Regresar al último estado válido desde donde se inició la lectura: Plato, Grupo, Barcode, raw, cooked, weighted
-            switch (lastValidState)
-            {
-                case STATE_Plato: 
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nGO_TO_PLATO forzado. Regreso a State_Plato tras AVISO de \"Sin WiFi\" en STATE_Barcode_search al pasar a STATE_Barcode_read desde STATE_Plato..."));
-                                    #endif
-                                    addEventToBuffer(GO_TO_PLATO);  break;
-
-                case STATE_Grupo: case STATE_raw: case STATE_cooked: case STATE_weighted: 
-                                    // Se mantiene peso del recipiente.
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nGO_TO_GRUPO forzado. Regreso a State_Grupo tras AVISO de \"Sin WiFi\" en STATE_Barcode_search al pasar a STATE_Barcode_read desde State_Grupo, STATE_raw, STATE_cooked o STATE_weighted..."));
-                                    #endif
-                                    addEventToBuffer(GO_TO_GRUPO);  break;
-
-                case STATE_Barcode: // Si se llegó a STATE_Barcode (producto leído, buscado y confirmado), no debería saltar "Sin WiFi", 
-                                    // pero incluimos el regreso por si acaso
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nGO_TO_BARCODE forzado. Regreso a State_Barcode tras AVISO de \"Sin WiFi\" en STATE_Barcode_search en nueva llamada a State_Barcode_read desde STATE_Barcode..."));
-                                    #endif
-                                    addEventToBuffer(GO_TO_BARCODE);    break;
-
-
-                default: break;
-            }
-
-            flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
-        }
-    }*/
-    // --- FIN REGRESO AUTOMÁTICO -------------
 }
 
 
@@ -1729,364 +1562,6 @@ void actStateBarcode()
     }
     // ----- FIN ALTERNANCIA PANTALLAS ---------------------
 }
-
-
-/*---------------------------------------------------------------------------------------------------------
-   actStateBarcode(): Acciones del STATE_Barcode
-----------------------------------------------------------------------------------------------------------*/
-/*void actStateBarcode()
-{ 
-    static unsigned long previousTimeBarcode;                   // Tiempo usado para cancelar la lectura tras 10 segundos de inactividad
-
-    const unsigned long ESP32Desconectado_SinWiFi_Interval = 3000;  // Intervalo de tiempo para mostrar "Error del sistema. Lector desconectado" (3 segundo)
-    //const unsigned long scanningBarcodeInterval = 10500;            // Intervalo de tiempo para mostrar "Escaneando código de barras..." (10.5 segundos)
-    const unsigned long barcodeNotReadInterval = 3000;             // Intervalo de tiempo para mostrar "Código de barras no detectado" (3 segundos)
-    const unsigned long productNotFoundInterval = 3000;            // Intervalo de tiempo para mostrar "Producto no encontrado" (3 segundos)
-    const unsigned long productFound = 3000;                       // Intervalo de tiempo para mostrar la información del producto (3 segundos)
-
-    static bool showing_esp32_sin_wifi;  
-    static bool showing_scanning_barcode;
-    static bool showing_product_info;
-    static bool showing_barcode_not_read;
-    static bool showing_product_notFound;
-    static bool errorBarcode;
-
-    static bool groupChanged = false;
-
-    //static bool interruptionDuringReading = false;
-
-
-    if(!doneState)
-    {        
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("\nLeer codigo de barras..."));
-        #endif
-        
-        // ----- ACCIONES PREVIAS --------------------------------------
-        if((lastValidState == STATE_Plato) && (pesoBascula != 0.0)) // Si se acaba de colocar el recipiente. Comprobamos que no sea 0.0 el pesoBascula por si acaso
-        {
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("\nGuardando peso recipiente..."));
-            #endif
-            pesoRecipiente = pesoBascula;    // Se guarda 'pesoRecipiente' para sumarlo a 'pesoPlato' y saber el 'pesoARetirar'.
-            tareScale();                     // Se tara la báscula, preparándola para el primer alimento
-        }
-        //else if((state_prev != STATE_ERROR) and (state_prev != STATE_Barcode) and (pesoBascula != 0.0))
-        //{ 
-        // ¿Podría cambiarlo por esto? Entiendo que si pesoBascula no es 0, es que aún no se ha guardado el alimento y tarado:
-        else if (pesoBascula != 0.0)
-        {
-            // A DIFERENCIA DE STATE_GROUP, AÚN NO SE HA ACTUALIZADO grupoActual, ASÍ QUE EL ALIMENTO QUE SE COLOCÓ ANTES DE PULSAR BARCODE SE GUARDA CON EL grupoActual
-                // ----- AÑADIR ALIMENTO A LISTA -----------------------------
-                // Usamos 'grupoActual' porque aún no se ha actualizado
-                if(grupoActual.ID_grupo != BARCODE_PRODUCT_INDEX) // Si el grupo anterior del alimento pesado es de los nuestros, se escribe ALIMENTO,<grupo>,<peso> en la lista, 
-                {                                                 // siendo <grupo> el ID de 'grupoActual' y <peso> el valor de 'pesoBascula'.
-                    listaComidaESP32.addAlimento(grupoActual.ID_grupo, pesoBascula);
-                }
-                else  // Si el grupo anterior es un barcode (grupo 50), se escribe ALIMENTO,<grupo>,<peso>,<ean>
-                {
-                    listaComidaESP32.addAlimentoBarcode(grupoActual.ID_grupo, pesoBascula, barcode);
-                }
-
-                #if defined(SM_DEBUG)
-                    listaComidaESP32.leerLista();
-                #endif 
-                // -----------------------------------------------------------
-                
-                // ----- AÑADIR ALIMENTO A PLATO -----------------------------
-                #if defined(SM_DEBUG)
-                    SerialPC.println(F("Añadiendo alimento al plato..."));
-                #endif
-
-                Alimento alimento(grupoActual, pesoBascula);              // Cálculo automático de valores nutricionales.
-                                                                          // Usamos 'grupoActual' porque aún no se ha actualizado
-                                                                            // En el caso de STATE_group, al escoger nuevo grupo se actualiza automáticamente grupoActual con el
-                                                                            // nuevo grupo, por eso el alimento pesado antes se guarda con grupoAnterior. Sin embargo, en el
-                                                                            // caso de STATE_Barcode, hasta que no se compruebe el producto no se actualiza el grupoActual,
-                                                                            // por lo que el alimento pesado antes se puede guardar con grupoActual, pues sigue siendo válido.
-                                                             
-                platoActual.addAlimentoPlato(alimento);                     // Alimento ==> Plato
-                comidaActual.addAlimentoComida(alimento);                   // Alimento ==> Comida
-
-                pesoPlato = platoActual.getPesoPlato();                     // Se actualiza el 'pesoPlato' para sumarlo a 'pesoRecipiente' y saber el 'pesoARetirar'.
-
-                tareScale();                                                // Tras guardar la información del último alimento colocado, se tara la báscula
-                                                                            // para pesar el siguiente alimento
-                // -----------------------------------------------------------
-        }
-        // ----- FIN ACCIONES PREVIAS -----------------------------
-
-
-
-        // ----- ACCIONES PRINCIPALES Y PANTALLAS -----------------
-        // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
-        // Si no hay conexión a Internet, no merece la pena escanear el código de barras porque no se podrá buscar su información
-        // --- HAY INTERNET ---
-        if(checkWifiConnection()) // Hay WiFi
-        {
-            // ----- INFO DE PANTALLA -------------------------
-            showScanningBarcode();                                   // Mostrar "Escaneando código de barras..."
-            // ----- FIN INFO DE PANTALLA ---------------------
-
-            // 1. Obtener barcode
-            byte resultFromReadingBarcode = askForBarcode(barcode);  // Pedir código de barras. Se va a quedar aquí hasta 10.5 segundos
-
-            showing_scanning_barcode = true;                         // Se está mostrando "Escaneando código de barras..."
-            showing_product_info = false;
-            showing_esp32_sin_wifi = false;
-            showing_barcode_not_read = false;
-            errorBarcode = false;
-
-            // 2. Si se ha leído el barcode, buscar información del producto
-            if(resultFromReadingBarcode == BARCODE_READ)
-            { 
-                // ----- INFO DE PANTALLA -------------------------
-                showSearchingProductInfo(); // Mostrar "Buscando información del producto..."
-                // ----- FIN INFO DE PANTALLA ---------------------
-                
-                //String productInfo;
-                byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts
-
-                switch(resultFromGettingProductInfo)
-                {
-                    case PRODUCT_FOUND: 
-                        // ----- ACTUALIZAR grupoActual -------------------
-                        updateGrupoActualFromBarcode(productInfo); // Actualizar información del grupoActual con la info del producto
-                        // ------------------------------------------------
-
-                        // ----- INFO DE PANTALLA -------------------------
-                        //pedirConfirmacionProducto(barcode); // Mostrar información del producto (grupoActual)
-                        pedirConfirmacionProducto(productInfo); // Mostrar información del producto 
-                        // ----- FIN INFO DE PANTALLA ---------------------
-
-                        groupChanged = true;
-
-                        showing_product_info = true;
-                        showing_scanning_barcode = false;
-                        showing_esp32_sin_wifi = false;
-                        showing_barcode_not_read = false;
-                        errorBarcode = false;
-                        // La información del producto se quedará en pantalla hasta que se coloque el producto en la báscula
-                        break;
-
-                    case PRODUCT_NOT_FOUND:  
-                        #ifdef SM_DEBUG
-                            SerialPC.println(F("Producto no encontrado"));
-                        #endif
-                        // ----- INFO DE PANTALLA -------------------------
-                        //showProductNotFound(barcode); // Mostrar "Producto no encontrado"
-                        showWarning(WARNING_PRODUCT_NOT_FOUND); // Mostrar "Producto no encontrado"
-                        // ----- FIN INFO DE PANTALLA ---------------------
-                        groupChanged = false;
-
-                        showing_product_notFound = true;
-                        showing_esp32_sin_wifi = false;
-                        showing_product_info = false;
-                        showing_barcode_not_read = false;
-                        showing_scanning_barcode = false;
-                        errorBarcode = false;
-                        break;
-
-                    case PRODUCT_TIMEOUT: //showProductTimeout();
-                        break;
-
-                    case NO_INTERNET_CONNECTION: //showNoInternetConnection();
-                        break;
-
-                    case HTTP_ERROR: //showHttpError();
-                        break;
-
-                    case UNKNOWN_ERROR: //showUnknownError();
-                        break;
-
-                    default: break;
-
-                }
-                
-            }
-            else if (resultFromReadingBarcode == BARCODE_NOT_READ)
-            { 
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("No se va a buscar informacion del producto porque no se ha leido el barcode"));
-                #endif
-
-                //showBarcodeNotRead(); // Mostrar "Código de barras no leído"
-                showWarning(WARNING_BARCODE_NOT_READ); // Mostrar "Código de barras no leído"
-                groupChanged = false;
-                showing_barcode_not_read = true;                           // Se está mostrando "Código de barras no detectado"
-                showing_scanning_barcode = false;     
-                showing_product_info = false; 
-                showing_product_notFound = false;                      
-                showing_esp32_sin_wifi = false;
-                errorBarcode = false;
-            }
-            else if(resultFromReadingBarcode == INTERRUPTION) // Cancelar
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Interrupción durante lectura de barcode..."));
-                #endif
-                //interruptionDuringReading = true;
-            }
-            else // TIMEOUT o UNKNOWN_ERROR
-            { 
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Error al leer codigo de barras."));
-                #endif
-                //showBarcodeError(); // Mostrar "Error al leer codigo de barras"
-                errorBarcode = true;
-                showing_barcode_not_read = false;
-                showing_scanning_barcode = false;
-                showing_product_info = false;
-                showing_esp32_sin_wifi = false;
-                showing_product_notFound = false;
-            }
-
-        }
-        // --- FIN HAY INTERNET --
-
-        // --- NO HAY INTERNET ---
-        else // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, se vuelve a STATE_Plato
-        {
-            #ifdef SM_DEBUG
-                SerialPC.println(F("No se procede a leer codigo de barras porque ESP32 esta desconectado o no tiene WiFi"));
-                SerialPC.println(F("Mostrar mensaje y volver a STATE_Plato en 3 segundos..."));
-            #endif
-
-            // ----- INFO DE PANTALLA -------------------------
-            showWarning(WARNING_NO_INTERNET_NO_BARCODE); // Mostrar "Sin conexión. No se puede leer el código de barras"
-            // ----- FIN INFO DE PANTALLA ---------------------
-
-            groupChanged = false;
-            showing_esp32_sin_wifi = true;   // Se está mostrando "Sin conexión. No se puede leer el código de barras" 
-            showing_barcode_not_read = false;
-            showing_scanning_barcode = false;
-            showing_product_info = false;
-            showing_product_notFound = false;
-            errorBarcode = false;
-        }
-        // --- FIN NO HAY INTERNET ---
-        // ---- FIN CHEQUEO INTERNET --------------------
-
-        // ----- FIN ACCIONES PRINCIPALES Y PANTALLAS -------------
-
-
-        previousTimeBarcode = millis();            // Inicializar 'previousTimeBarcode' 
-        
-        doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
-                                                                            // cada vez que se entre a esta función debido al loop de Arduino.
-                                                                            // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
-
-    }
-
-
-    // --- SALIDA AUTOMÁTICA -------
-    // Si el ESP32 está desconectado, se vuelve automáticamente a STATE_Plato en 3 segundos
-    if(showing_esp32_sin_wifi) // Mostrando "Error del sistema. Lector desconectado"
-    {
-        if (millis() - previousTimeBarcode >= ESP32Desconectado_SinWiFi_Interval)  // Si el "Error del sistema. Lector desconectado" ha estado 3 segundos, se vuelve a STATE_Plato o STATE_Grupo
-        {
-            if(lastValidState == STATE_Plato || lastValidState == STATE_weighted)
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Volver a STATE_Plato o STATE_weighted porque no hay Wifi para leer barcode o el ESP32 no responde..."));
-                #endif
-                previousTimeBarcode = millis();
-                addEventToBuffer(GO_TO_PLATO);
-                flagEvent = true;
-            }
-            else if(lastValidState == STATE_Grupo || lastValidState == STATE_raw || lastValidState == STATE_cooked)
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Volver a STATE_Grupo porque no hay Wifi para leer barcode o el ESP32 no responde..."));
-                #endif
-                previousTimeBarcode = millis();
-                addEventToBuffer(GO_TO_GRUPO);
-                flagEvent = true;
-            }
-            
-        }
-    }
-    // --- FIN SALIDA AUTOMÁTICA ---
-    // --- ESCANEANDO CÓDIGO -------
-    //else if(showing_scanning_barcode) // Mostrando "Escaneando código de barras..."
-    else if(showing_barcode_not_read) // Mostrando "Código de barras no detectado"
-    {
-        if (millis() - previousTimeBarcode >= barcodeNotReadInterval)  // Si el "Código de barras no detectado" ha estado 3 segundos, se vuelve a STATE_Plato o STATE_Grupo
-        {
-            if(lastValidState == STATE_Plato || lastValidState == STATE_weighted)
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Volver a STATE_Plato o STATE_weighted porque no se ha detectado codigo de barras..."));
-                #endif
-                previousTimeBarcode = millis();
-                addEventToBuffer(GO_TO_PLATO);
-                flagEvent = true;
-            }
-            else if(lastValidState == STATE_Grupo)
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Volver a STATE_Grupo porque no se ha detectado codigo de barras..."));
-                #endif
-                previousTimeBarcode = millis();
-                addEventToBuffer(GO_TO_GRUPO);
-                flagEvent = true;
-            }
-        }   
-    }
-    // --- FIN ESCANEANDO CÓDIGO ---
-    // --- BUSCANDO PRODUCTO -------
-    else if(showing_product_notFound)
-    {
-        if (millis() - previousTimeBarcode >= productNotFoundInterval)  // Si el "Producto no encontrado" ha estado 3 segundos, se vuelve a STATE_Plato
-        {
-            if(lastValidState == STATE_Plato || lastValidState == STATE_weighted)
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Volver a STATE_Plato o STATE_weighted porque no se ha encontrado el producto en OpenFoodFacts..."));
-                #endif
-                previousTimeBarcode = millis();
-                addEventToBuffer(GO_TO_PLATO);
-                flagEvent = true;
-            }
-            else if(lastValidState == STATE_Grupo)
-            {
-                #ifdef SM_DEBUG
-                    SerialPC.println(F("Volver a STATE_Grupo porque no se ha encontrado el producto en OpenFoodFacts..."));
-                #endif
-                previousTimeBarcode = millis();
-                addEventToBuffer(GO_TO_GRUPO);
-                flagEvent = true;
-            }
-        }
-    }
-    // --- FIN BUSCANDO PRODUCTO ---
-    else if(errorBarcode)
-    {
-        //if (millis() - previousTimeBarcode >= 3)  
-        //{
-            previousTimeBarcode = millis();
-            addEventToBuffer(GO_TO_PLATO);
-            flagEvent = true;
-        //}
-    }
-    else if(showing_scanning_barcode) // Si no se ha llegado a cambiar la pantalla, se habrá esperado 30 segundos máximo
-    {
-        previousTimeBarcode = millis();
-        addEventToBuffer(GO_TO_PLATO);
-        flagEvent = true;
-    }
-    else if(showing_product_info) // Si regreso a STATE_Plato sale como que no se ha escogido grupo
-    {
-        if (millis() - previousTimeBarcode >= productFound)  // Si "Producto encontrado" ha estado 3 segundos, se vuelve a STATE_Grupo
-        {
-            previousTimeBarcode = millis();
-            addEventToBuffer(GO_TO_GRUPO);
-            flagEvent = true;
-        }
-    }
-
-}*/
-
 
 
 
@@ -2415,7 +1890,6 @@ void actStateWeighted()
         if (currentTime - previousTime >= sugerenciasInterval)  // Si el sugerir acciones ha estado 10 segundos, se cambia a dashboard estilo 2
         {
             previousTime = currentTime;
-            //showDashboardStyle2();
             if(grupoActual.ID_grupo == BARCODE_PRODUCT_INDEX) showDashboardStyle2_Barcode(); // Mostrar dashboard estilo 2 para el grupo barcode
             else showDashboardStyle2(); // Mostrar dashboard estilo 2 para los grupos normales
             showing_dash = true;  // Mostrando dashboard estilo 2 (Alimento | Comida)
@@ -2747,47 +2221,10 @@ void actStateDeleted()
 /*---------------------------------------------------------------------------------------------------------
    actStateSaveCheck(): Acciones del STATE_save_check
 ----------------------------------------------------------------------------------------------------------*/
-// Lo primero que hace es preguntar al ESP32 por WiFi, antes siquiera de poner la pantalla de confirmar. Entonces, si el ESP32 no contesta (se esperan 3 segundos),
-// da la sensación de que no se ha detectado la primera pulsación de GUARDAR, lo que provoca que el usuario vuelva a pulsar y, sin saberlo, directamente confirme
+// Lo primero que hacía era preguntar al ESP32 por WiFi, antes siquiera de poner la pantalla de confirmar. Entonces, si el ESP32 no contestaba (se esperan 3 segundos),
+// daba la sensación de que no se había detectado la primera pulsación de GUARDAR, lo que provoca que el usuario volviera a pulsar y, sin saberlo, directamente confirmara
 // la subida. Por eso, creo que es mejor preguntar por WiFi después de confirmar la acción de guardar comida y, entonces, informar de si se guardará en la web o 
 // solo en el SmartCloth. La pantalla de confirmar guardado ya no mostrará "Conectado a Internet" ni "Sin Internet", pero bueno, al guardarlo se le informará.
-/*void actStateSaveCheck()
-{ 
-    static unsigned long previousTimeCancel;      // Tiempo usado para cancelar la acción tras 10 segundos de inactividad
-
-    if(!doneState)
-    {
-        previousTimeCancel = millis(); 
-
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("\n¿Seguro que quiere guardar la comida?")); 
-        #endif
-
-        // ----- CONEXION A INTERNET O NO (GUARDAR COMIDA -----------------------------------------------------
-        hayConexionInternet = checkWifiConnection();
-        // ----------------------------------------------------------------------------------------------------
-        
-        // Mostrar pregunta de confirmación para guardar comida
-        if(hayConexionInternet) pedirConfirmacion(ASK_CONFIRMATION_SAVE_CON_INTERNET);  // Si hay conexión a internet, se muestra un mensaje   
-        else pedirConfirmacion(ASK_CONFIRMATION_SAVE_SIN_INTERNET);     // Si no hay conexión a internet, se muestra otro mensaje  
-        
-        doneState = true;                               // Solo realizar una vez las actividades del estado por cada vez que se active y no
-                                                        // cada vez que se entre a esta función debido al loop de Arduino.
-                                                        // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
-    }
-
-
-    // --- CANCELACIÓN AUTOMÁTICA ---
-    if ((millis() - previousTimeCancel) > 15000)       // Tras 15 segundos de inactividad, se cancela automáticamente la acción guardar comida
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.print(F("\nTIME-OUT. Cancelando guardar comida..."));
-        #endif
-        addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició guardar comida
-        flagEvent = true;
-    }
-    // --- FIN CANCELACIÓN AUTOMÁTICA ---
-}*/
 void actStateSaveCheck()
 { 
     static unsigned long previousTimeCancel;      // Tiempo usado para cancelar la acción tras 10 segundos de inactividad
@@ -4094,6 +3531,7 @@ void actStateCANCEL()
 /*---------------------------------------------------------------------------------------------------------
    actStateAVISO(): Acciones del STATE_AVISO
 ----------------------------------------------------------------------------------------------------------*/
+// Versión mirando el evento anterior
 /*void actStateAVISO()
 { 
     static unsigned long previousTimeWarning;  // Para regresar al estado necesario
@@ -4217,6 +3655,7 @@ void actStateCANCEL()
     // ----- FIN TIEMPO DE ESPERA ---------------------------
 
 }*/
+
 // En lugar de mirar el estado anterior en el que se marcó el evento AVISO, se comprueba el último evento,
 // que ahora se ha dividido en:
 // AVISO_PLATO_EMPTY_NOT_ADDED      --> STATE_added
@@ -4228,7 +3667,6 @@ void actStateCANCEL()
 
 // Si el aviso ha sido escoger crudo o cocinado para un producto barcode, no se marca un evento especial de aviso, sino que se
 // utiliza el propio evento CRUDO o COCINADO para pasar de STATE_Barcode a STATE_AVISO.
-
 void actStateAVISO()
 { 
     static unsigned long previousTimeWarning;  // Para regresar al estado necesario

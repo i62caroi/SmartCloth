@@ -7,38 +7,6 @@
  */
 
 
- /*
-    --------------------------------------------------------
-    Estrategias para asegurar la correcta lectura de datos:
-    --------------------------------------------------------
-
-        1.	Protocolo de comunicación con encabezado y longitud:
-                Una técnica común es enviar un encabezado o marca de inicio junto con la longitud del mensaje. Esto te permite saber cuántos bytes debes esperar antes de leer el mensaje completo.
-                Ejemplo de protocolo simple:
-                    •	El ESP32 envía algo como: LEN:<longitud><mensaje>\n.
-                    •	El Due primero lee la longitud (<longitud>) del mensaje, y entonces sabe cuántos bytes debe esperar para que el mensaje esté completo.
-                Este enfoque permite a tu programa saber cuándo esperar más bytes antes de procesar el mensaje completo.
-
-        2.	Verificar mensajes incompletos:
-                Si recibes mensajes vacíos, podrías intentar implementar un sistema de retransmisión o un mecanismo que verifique si el mensaje recibido es válido (completo o no). Por ejemplo, 
-                podrías enviar un código de confirmación desde el Due al ESP32 cuando se recibe el mensaje completo y correcto, de modo que si el ESP32 no recibe este código, pueda retransmitir el mensaje.
-        
-        3.	Buffer circular o cola de mensajes:
-                Implementar un buffer circular o cola de mensajes en el ESP32 y el Due podría ayudar a manejar de manera más eficiente los datos recibidos, asegurando que se procesen todos los bytes en el 
-                orden correcto, y se eviten problemas de sobresaturación.
-        
-        4.	Reintentos automáticos:
-                Puedes agregar un contador de reintentos en el Due. Si el Due no recibe una respuesta adecuada en un tiempo razonable o recibe un mensaje vacío, podría enviar un comando de reintento al ESP32, 
-                solicitando que reenvíe el último mensaje.
-        
-        5.	Esperar datos adicionales:
-                Si lees un mensaje parcial o vacío, en lugar de descartar la lectura inmediatamente, puedes esperar un poco más (aumentar el tiempo de espera) para asegurarte de que se hayan recibido todos los bytes. 
-                De esta manera, evitas procesar datos antes de que todos hayan llegado.
-        
-        6.	Monitorización de tiempo real (debugging):
-                Como parte del proceso de depuración, asegúrate de que ambos dispositivos (Due y ESP32) están bien sincronizados en términos de tiempos de espera y respuesta. Puedes aumentar los tiempos de espera 
-                temporalmente para ver si se reduce la pérdida de datos.
-*/
 
 #ifndef SERIAL_FUNCTIONS_H
 #define SERIAL_FUNCTIONS_H
@@ -99,12 +67,10 @@ inline bool    hayMsgFromDue() { return SerialDue.available() > 0; }            
 inline bool    isDueSerialEmpty(){ return !hayMsgFromDue(); }                               // Comprobar que el Serial del Due está vacío (no hay mensajes)
 inline void    readMsgFromSerialDue(String &msgFromDue);                                    // Leer mensaje del puerto serie ESP32-Due
 void           waitMsgFromDue(String &msgFromESP32, unsigned long &timeout);                // Esperar mensaje del Due durante un tiempo determinado
-//inline void    limpiarBufferDue();                                                          // Limpiar buffer con el ESP32
 inline void    sendMsgToDue(const String &msg);                                             // Enviar mensaje al ESP32
 
 // Comunicación Serial ESP32-BR
 inline bool     hayMsgFromBR(){ return SerialBR.available() > 0; };                         // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
-//inline void     limpiarBufferBR(){ while(SerialBR.available() > 0) { SerialBR.read(); } };  // Limpiar buffer del lector de códigos de barras
 inline void     readMsgFromSerialBR(String &msgFromBR);                                     // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
 void            waitForBarcode(String &buffer);                                             // Esperar a que se lea un código de barras
 
@@ -183,86 +149,28 @@ inline void readMsgFromSerialDue(String &msgFromDue) {
 
 
 
+
 /*---------------------------------------------------------------------------------------------------------*/
 /**
- * Espera un mensaje del Due durante un tiempo determinado.
+ * @brief Espera un mensaje desde el Due dentro de un tiempo de espera especificado.
+ *
+ * Esta función espera a recibir un mensaje desde el Due durante un tiempo máximo
+ * especificado por el parámetro `timeout`. Si se recibe un mensaje completo antes
+ * de que se agote el tiempo, se almacena en `msgFromDue` y la función retorna.
+ * Si el tiempo de espera se agota sin recibir un mensaje completo, se asigna
+ * "TIMEOUT-DUE" a `msgFromDue`.
+ *
+ * @param msgFromDue Referencia a una cadena donde se almacenará el mensaje recibido.
+ * @param timeout Referencia a un valor que especifica el tiempo máximo de espera en milisegundos.
  * 
- * @param msgFromESP32 Referencia a un objeto String donde se almacenará el mensaje recibido del Due.
- * @param timeout Tiempo máximo de espera en milisegundos.
+ * @note Procesa el mensaje recibido caracter a caracter para asegurar que se recibe un mensaje completo.
+ * @note Hasta ahora esta función ha leído perfectamente los mensajes del Due sin procesar caracter a caracter,
+ *       pero por seguir la lógica de waitResponseFromESP32() y por si en algún momento se complican las comunicaciones
+ *       o aumenta el tamaño de los mensajes enviados por el Due, se va a utilizar un buffer temporal al que se añadan
+ *       los caracteres uno a uno en lugar de salirse en cuanto se detecta un solo caracter, pudiendo ser un simple \n,
+ *       lo que hacía que se creyera haber recibido un mensaje vacío "".
  */
 /*---------------------------------------------------------------------------------------------------------*/
-/*void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
-{
-    unsigned long startTime = millis();  // Obtenemos el tiempo actual
-
-    // Esperar 'timeout' segundos a que el Due responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
-    while(!hayMsgFromDue() && !isTimeoutExceeded(startTime, timeout));
-
-    // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-    if (hayMsgFromDue())  // Si el Due ha respondido
-    {
-        readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
-        #if defined(SM_DEBUG)
-            SerialPC.println("\nRespuesta del Due: " + msgFromDue);  
-        #endif
-    } 
-    else // No se ha recibido respuesta del Due
-    {
-        msgFromDue = "TIMEOUT-DUE";;
-    }
-
-}*/
-
-// Hasta ahora esta función ha leído perfectamente los mensajes del Due, pero por seguir la lógica de waitResponseFromESP32()
-// y por si en algún momento se complican las comunicaciones o aumenta el tamaño de los mensajes enviados por el Due,
-// vamos a utilizar un buffer temporal al que se añadan los caracteres uno a uno en lugar de salirse en cuanto se detecta un solo caracter, 
-// pudiendo ser un simple \n, lo que hacía que se creyera haber recibido un mensaje vacío "".
-/*void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
-{
-    unsigned long startTime = millis();  // Obtenemos el tiempo actual
-    String tempBuffer = "";  // Buffer temporal para ensamblar el mensaje
-
-    // Esperar 'timeout' segundos a que el Due responda. Sale si se recibe mensaje o si se pasa el tiempo de espera
-    while (!isTimeoutExceeded(startTime, timeout)) 
-    {
-        if (hayMsgFromDue())  // Si el Due ha respondido
-        {
-            char c = SerialDue.read();  // Lee un carácter del serial
-            if (c == '\n') 
-            {
-                tempBuffer.trim();  // Elimina los espacios en blanco del buffer temporal
-
-                if (tempBuffer.length() > 0)  // Solo procesa si no está vacío
-                {
-                    msgFromDue = tempBuffer;
-                    #if defined(SM_DEBUG)
-                        SerialPC.println("\nRespuesta del Due: " + msgFromDue);  
-                    #endif
-                    return;  // Sale de la función con un mensaje válido
-                }
-                tempBuffer = "";  // Si estaba vacío, se resetea el buffer
-            }
-            else 
-            {
-                tempBuffer += c;  // Acumula el carácter en el buffer temporal
-            }
-        }
-
-        delay(50);  // Evita que el bucle sea demasiado intensivo
-
-    }
-
-    // Si se alcanza el tiempo de espera sin recibir un mensaje
-    #if defined(SM_DEBUG)
-        SerialPC.println(F("TIMEOUT-DUE. No se ha recibido respuesta del ESP32"));
-    #endif
-
-    msgFromESP32 = "TIMEOUT-DUE";  // Marca el mensaje como TIMEOUT si no se recibió nada útil
-
-}*/
-
-
-// Misma versión que la anterior pero encapsulando la parte de procesar caracter a caracter
 void waitMsgFromDue(String &msgFromDue, unsigned long &timeout) 
 {
     unsigned long startTime = millis();  // Obtenemos el tiempo actual
@@ -288,22 +196,6 @@ void waitMsgFromDue(String &msgFromDue, unsigned long &timeout)
 }
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Limpia el buffer de datos del Due.
- *
- * Esta función vacía el buffer de entrada del Due leyendo todos los datos disponibles.
- * Luego, introduce un pequeño retraso para asegurar que el Due tenga tiempo de procesar
- * y leer cualquier mensaje que se envíe después.
- */
-/*-----------------------------------------------------------------------------*/
-/*inline void limpiarBufferDue()
-{ 
-  while(SerialDue.available() > 0) { SerialDue.read(); } // Limpiar buffer con el Due
-  delay(100);  // Pequeño retraso para asegurar que el Due tenga tiempo de leer el mensaje que se envíe después    
-}*/
-
-
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -323,6 +215,7 @@ inline void sendMsgToDue(const String &msg)
 }
 
 
+
 /*-----------------------------------------------------------------------------*/
 /**
  * Lee un mensaje desde el puerto serie con el BR y lo guarda en la variable proporcionada.
@@ -338,67 +231,23 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
 
 
 
+
+
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Espera a que se lea un código de barras.
- *        Mientras espera el código, comprueba si el Due le indica que el usuario ha cancelado
- *        la lectura recibiendo el mensaje "CANCEL-BARCODE".
+ * @brief Espera a que se lea un código de barras o se cancele la lectura.
  * 
- * @param barcode Referencia a una cadena de caracteres donde se guardará el código de barras leído.
+ * Esta función espera hasta 30 segundos para recibir un código de barras. Si no se recibe
+ * ningún código de barras en ese tiempo, se considera que no se ha leído ningún código de barras
+ * y el buffer se establece en "-". La función también puede salir si se recibe un mensaje de
+ * cancelación de la lectura desde el Due.
  * 
- * @note Esta función espera un máximo de 30 segundos para recibir un código de barras. Si no se recibe ningún código
- *       de barras en ese tiempo, se considera que no se ha leído ningún código y se asigna el valor "-" a la variable barcode.
+ * Utiliza un buffer temporal para procesar al completo el mensaje recibido del lector (processCharacter()), 
+ * aunque esto no solía fallar, pero por seguir la lógica de waitResponseFromESP32().
+ * 
+ * @param buffer Referencia a un String donde se almacenará el código de barras leído o el mensaje de cancelación.
  */
 /*-----------------------------------------------------------------------------*/
-/*void waitForBarcode(String &buffer)
-{
-    unsigned long startTime = millis();  
-
-    // Esperar 30 segundos a que se lea un código de barras. Sale si se recibe mensaje o si se pasa el tiempo de espera
-    //      Si no se ha recibido un código de barras en el tiempo de espera, 
-    //      se considera que no se ha leído ningún código de barras (buffer = "-")
-    while((buffer == BUFFER_EMPTY) && !isTimeoutExceeded(startTime, TIME_TO_READ_BARCODE))
-    {
-        // ----- PRODUCTO DETECTADO ------------------------
-        if (hayMsgFromBR())  // Si se ha recibido un mensaje del lector de códigos de barras
-        {
-            // Leer buffer, todo su contenido. Luego se procesará el mensaje para obtener el código de barras
-            // por si tiene basura o mensajes anteriores
-            readMsgFromSerialBR(buffer); // Leer mensaje del puerto serie y guardarlo en 'buffer'
-            #if defined(SM_DEBUG)
-                SerialPC.print("\nBuffer BR leido: "); SerialPC.println(buffer);
-            #endif
-        }
-        // --------------------------------------------------
-
-        // ----- CANCELAR LECTURA ---------------------------
-        // Si el usuario pulsa cualquier botón, se cancela la lectura del código de barras
-        if (hayMsgFromDue())  // Si se ha recibido un mensaje del Due
-        {
-            String msgFromDue;
-            readMsgFromSerialDue(msgFromDue); // Leer mensaje del puerto serie y guardarlo en msgFromDue
-            #if defined(SM_DEBUG)
-                SerialPC.print("\nMensaje del Due leido: "); SerialPC.println(msgFromDue);
-            #endif
-
-            // Si el mensaje es "CANCEL-BARCODE", se cancela la lectura del código de barras
-            //      Si se recibe algo del Due, no debería ser nada distinto a "CANCEL-BARCODE", pero hacemos
-            //      una comprobación por si acaso
-            if(msgFromDue == "CANCEL-BARCODE")  buffer = msgFromDue; // Sale del while y de la función
-        }
-        // --------------------------------------------------
-
-        delay(50);
-    }
-
-}*/
-
-
-// Hasta ahora esta función ha leído perfectamente los mensajes del Due, pero por seguir la lógica de waitResponseFromESP32()
-// y por si en algún momento se complican las comunicaciones o aumenta el tamaño de los mensajes enviados por el Due,
-// vamos a utilizar un buffer temporal al que se añadan los caracteres uno a uno en lugar de salirse en cuanto se detecta un solo caracter, 
-// pudiendo ser un simple \n, lo que hacía que se creyera haber recibido un mensaje vacío "".
-// La funcion processCharacter() encapsula la parte de procesar caracter a caracter
 void waitForBarcode(String &buffer) 
 {
     unsigned long startTime = millis();

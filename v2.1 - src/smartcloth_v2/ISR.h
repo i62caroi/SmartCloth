@@ -26,34 +26,16 @@
 #define DEBOUNCE_TIME 300 // Tiempo de debouncing en ms
 
 // ------------ PINES DE INTERRUPCIÓN ------------
-#ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
-    // ---- MAIN ----
-    const byte intPinCocinado     = 33;   
-    const byte intPinCrudo        = 31;    
-    const byte intPinAddPlato     = 29;   
-    const byte intPinDeletePlato  = 27;   
-    const byte intPinGuardar      = 25;   
-
-    // ---- GRANDE ----
-    const byte intPinGrande = 37;     // Pin de interrupcion RISING para Grande (botonera A)
-
-    // ---- BARCODE ----
-    const byte intPinBarcode = 53;          // Pin de interrupción para el botón de barcode
-#endif
-// ---------------------------------
-
-#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
-    // ---- MAIN ----
-    const byte intPinCocinado     = 26;   
-    const byte intPinCrudo        = 27;    
-    const byte intPinAddPlato     = 28; 
-    const byte intPinGuardar      = 29;  
-    const byte intPinDeletePlato  = 30;
-    // ---- GRANDE ----
-    const byte intPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
-    // ---- BARCODE ----
-    const byte intPinBarcode = 53;
-#endif
+// ---- MAIN ----
+const byte intPinCocinado     = 26;   
+const byte intPinCrudo        = 27;    
+const byte intPinAddPlato     = 28; 
+const byte intPinGuardar      = 29;  
+const byte intPinDeletePlato  = 30;
+// ---- GRANDE ----
+const byte intPinGrande = 38;       // Pin de interrupcion RISING para Grande (botonera A)
+// ---- BARCODE ----
+const byte intPinBarcode = 53;
 // -----------------------------------------------
 
 

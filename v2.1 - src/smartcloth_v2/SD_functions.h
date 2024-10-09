@@ -70,11 +70,7 @@
 #include "debug.h" // SM_DEBUG --> SerialPC
 #include "Serial_functions.h" // SerialESP32 y resultados de subir a database (WAITING_FOR_DATA, UPLOADING_DATA, MEAL_UPLOADED, MEALS_LEFT, ERROR_READING_TXT, NO_INTERNET_CONECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR)
 
-/*bool    checkWifiConnection();
-bool    prepareSaving();
-String  waitResponseFromESP32(byte phase);
-byte    handleResponseFromESP32AfterUpload(byte option);
-void    showDataToUpload(byte option);*/
+
 
 // --- Mostrar en pantalla que se ha subido (o no) info ---
 // Usados en handleResponseFromESP32AfterUpload()
@@ -94,16 +90,8 @@ void    showDataToUpload(byte option);*/
 
 
 
-
-
-
 // ------- ChipSelect de SD --------------
-#ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
-    #define SD_CARD_SCS  4 
-#endif
-#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
-    #define SD_CARD_SCS  13 
-#endif
+#define SD_CARD_SCS  13 
 // ---------------------------------------
 
 
@@ -147,12 +135,7 @@ byte            sendTXTFileToESP32ToUpdateWeb();           // Enviar fichero TXT
 inline void     addLineToActualMeal(std::vector<String> &actualMeal, String &line){ actualMeal.push_back(line); }; // Añadir línea a 'actualMeal'
 inline void     clearActualMeal(std::vector<String> &actualMeal){ actualMeal.clear(); }; // Limpiar 'actualMeal'
 
-// Opción 1: Vector de comidas no subidas
-//void    updateFileTXT(std::vector<String> &unsavedMeals);   // Actualizar fichero TXT con vector de comidas sin guardar
-//inline void     saveMealForLater(std::vector<String> &actualMeal, std::vector<String> &unsavedMeals){ for (const auto& meal : actualMeal) unsavedMeals.push_back(meal); }; // Guardar 'actualMeal' no subida en vector 'unsavedMeals' para intentar subirla más tarde
-//inline bool     hayMealsToUploadLater(std::vector<String> &unsavedMeals){ return !unsavedMeals.empty(); }; // Comprobar si hay comidas no subidas en 'unsavedMeals'
-
-// Opción 2: Fichero auxiliar de comidas no subidas
+// Fichero auxiliar de comidas no subidas
 inline void     saveMealToAuxFile(std::vector<String> &actualMeal, File& auxFile){ // Guardar comida actual no subida en fichero auxiliar
                 for (const auto& line : actualMeal) 
                     auxFile.println(line); 
@@ -507,96 +490,6 @@ bool deleteFileCSV()
 
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Guarda la comida en la base de datos o en el fichero TXT
- * 
- * Si hay conexión WiFi, la comida se guarda directamente en la base de datos. Si no, la lista de la
- * comida se guarda en el fichero TXT hasta que haya conexión a Internet y se pueda subir la información.
- * 
- * Si hubiera algo en el TXT al encender el SM y hubiera habido WiFi, ya se habría subido su contenido y borrado.
- * Si no hubiera habido WiFi pero ahora sí, la lista de la comida actual se subiría directamente a base de datos.
- * Si ahora tampoco hubiera WiFi, la lista se añadiría a lo que ya hubiera en el TXT.
- * 
- * @return El tipo de guardado realizado: 
- *         - SAVE_EXECUTED_FULL: La comida se ha guardado localmente y en la base de datos.
- *         - SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP: La comida solo se ha guardado localmente por un error HTTP.
- *         - SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI: La comida solo se ha guardado localmente porque no hay WiFi. 
- *         - SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT: La comida solo se ha guardado localmente por TIMEOUT de respuesta del ESP32. 
- *         - SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR: La comida solo se ha guardado localmente por error desconocido. 
- */
-/*-----------------------------------------------------------------------------*/
-/*byte saveComidaInDatabase_or_TXT()
-{
-
-    // Escribir FIN-COMIDA,<fecha>,<hora> en la lista
-    listaComidaESP32.finishComida();
-
-    if(checkWifiConnection() && prepareSaving()) // Si hay WiFi, se sube directamente a database
-    {
-        // La función prepareSaving() indica al ESP32 que se le va a enviar info (SAVE) y espera su respuesta (WAITING-FOR-DATA)
-
-        // Llega aquí porque ha recibido "WAITING-FOR-DATA"
-        if(listaComidaESP32.sendListToESP32()) // Envia al ESP32 la lista de la comida y la limpia 
-        {
-            // INDICAR EN PANTALLA QUE SE ESTÁ SUBIENDO LA INFORMACIÓN A LA WEB
-            showDataToUpload(UPLOADING_DATA); // Sincronizando data del SM con web
-            // ¿¿¿¿¿¿¿¿POR QUÉ SÍ MOSTRAR LA PANTALLA DE "SINCRONIZANDO..." PERO NO LAS OTRAS DE "SMARTCLOTH SINCRONIZADO"??????????????
-            //delay(2000); // Esperar 2 segundos
-
-            byte typeOfSavingDone = handleResponseFromESP32AfterUpload(NOT_SHOW_SCREEN_UPLOAD_DATA); 
-            // Actuar según respuesta, pero no mostrar proceso en pantalla. 
-            // Si la respuesta es alguna de error (NO-WIFI, HTTP-ERROR o TIMEOUT), se hace saveMealListInTXT()
-            // Esta función ya borra el fichero TXT si se ha subido correctamente
-
-            #if defined SM_DEBUG
-                SerialPC.println("--------------------------------------------------");
-            #endif
-            
-            return typeOfSavingDone; // Puede ser SAVE_EXECUTED_FULL, SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP, SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI, 
-                                 // SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT o SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR
-        }
-        else // El ESP32 no respondió en 3 segundos o falló el paso de información. Actuamos como si no hubiera WiFi
-        {
-            #if defined SM_DEBUG
-                SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
-            #endif
-
-            // Copiar lista en TXT y limpiarla
-            saveMealListInTXT();
-
-            #if defined SM_DEBUG
-                SerialPC.println("--------------------------------------------------");
-            #endif
-
-            //return SAVE_EXECUTED_ONLY_LOCAL; // Solo local porque falló el envío de la lista
-            return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI; //hasta que tengamos mensaje para SAVE_EXECUTED_ONLY_LOCAL
-        }
-
-
-    }
-    else // Si no hay WiFi o si TIMEOUT, se guarda la lista en el TXT y se limpia la lista para la próxima comida
-    {
-        #if defined SM_DEBUG
-            SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
-        #endif
-
-        // Copiar lista en TXT y limpiarla
-        saveMealListInTXT(); 
-
-        #if defined SM_DEBUG
-            SerialPC.println("--------------------------------------------------");
-        #endif
-
-        return SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI;
-    }
-
-
-    // Si por lo que fuera no entrara en ninguna de las condiciones anteriores, 
-    // solo se habría guardado localmente y por error desconocido, aunque esto
-    // no debería ocurrir.
-    return SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR; // No debería llegar a este return
-}*/
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -939,222 +832,11 @@ bool deleteFileTXT()
 
 
 
-// **********************************************************************************************************
-// ************************ OPCIÓN 1: VECTOR DE STRINGS DE COMIDAS NO GUARDADAS *****************************
-// **********************************************************************************************************
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Envía el fichero TXT al esp32 comida a comida y va actualizando la
- *        cadena de comidas que NO se han podido subir.
- * 
- *      El problema de esta opción es que si falla la subida de muchas comidas, el vector 'unsavedMeals'
- *      puede llegar a ser muy grande y ocupar mucha memoria. Otra posible solución sería guardar en un 
- *      fichero TXT auxiliar las comidas no subidas y, al final, borrar el TXT original y crear uno nuevo
- *      donde se copien todas las líneas del auxiliar. Con esa solución se elimina el problema de saturar 
- *      la RAM, pero se añade latencia por la escritura en el auxiliar y por la copia de todas las líneas
- *      al nuevo.
- */
-/*-----------------------------------------------------------------------------*/
-/*byte sendTXTFileToESP32ToUpdateWeb()
-{
-    #if defined SM_DEBUG
-        SerialPC.println(F("\nEnviando TXT al esp32..."));
-    #endif
-
-    std::vector<String> actualMeal;   // Vector que guarda los datos de la comida actual leída del fichero TXT
-    std::vector<String> unsavedMeals; // Vector que guarda las comidas que no se han podido subir
-
-    File dataFile = SD.open(fileTXT);
-
-    if (dataFile) 
-    {
-        // Lee el archivo línea por línea y envía cada línea al ESP32
-        while (dataFile.available()) 
-        {
-            // ----- LEER LÍNEA DEL TXT -------------
-            String line = dataFile.readStringUntil('\n');
-            line.trim();
-            //#if defined(SM_DEBUG)
-            //    SerialPC.print("Linea del TXT: "); SerialPC.println(line);
-            //#endif
-            // -------------------------------------
-
-            // ----- AÑADIR A actualMeal -----------
-            // Añade la línea al vector de la comida actual 
-            // (si la línea es INICIO-COMIDA, el vector debe estar vacío antes de insertarla)
-            addLineToActualMeal(actualMeal, line);
-            // -------------------------------------
-
-            // ----- ENVIAR A ESP32 ----------------
-            // Envía la línea al ESP32 a través de Serial
-            sendMsgToESP32(line);
-            // -------------------------------------
-
-            // ----- SUBIDA A DATABASE ------------------------
-            // Si se ha llegado al final de la comida, se espera si se ha subido correctamente
-            if (line.startsWith("FIN-COMIDA")) 
-            {
-                // ---- ESPERAR RESPUESTA DEL ESP32 -----
-                String msgFromESP32 = "";
-                unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (tiene 10 segundos para subir info)
-                                    // No hace falta esperar más tiempo porque el ESP32 espera hasta 10 segundos a que el servidor responda y los mensajes que se pueden 
-                                    // recibir "SAVED-OK", "HTTP-ERROR" o "NO-WIFI" son cortos, por lo que no debería tardar demasiado waitResponseFromESP32() en recibirlos.
-                waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
-                // Cuando se recibe mensaje o se pasa el timout, entonces se comprueba la respuesta
-                // --------------------------------------
-
-                // ---- ANALIZAR RESPUESTA DEL ESP32 ----
-                // --- EXITO: COMIDA SUBIDA ------
-                if(msgFromESP32 == "SAVED-OK")
-                {
-                    // Si se recibió SAVED-OK, no se añade a unsavedMeals 
-                    #if defined(SM_DEBUG)
-                        SerialPC.println("Comida guardada correctamente\n");
-                    #endif
-
-                    // Se resetea la comida actual (final del if)
-                    // No se hace return porque se sigue con el bucle de lectura de otras comidas del fichero TXT
-                    // Al terminar el fichero, se comprueba si se han podido subir las comidas y entonces se devuelve un resultado
-                }
-                // -------------------------------
-                // --- ERRORES -------------------
-                else
-                {
-                    // -- AÑADIR a unsavedMeals --
-                    // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al vector de comidas no subidas
-                    saveMealForLater(actualMeal, unsavedMeals);
-                    // ---------------------------
-
-                    // No se hace return porque se sigue con el bucle de lectura de otras comidas del fichero TXT
-                    // Al terminar el fichero, se comprueba si se han podido subir las comidas y entonces se devuelve un resultado
-                    
-                    #if defined SM_DEBUG
-                        if(msgFromESP32 == "NO-WIFI")                   SerialPC.println(F("Se ha perdido la conexión WiFi al subir una comida en la actualización de SM..."));
-                        else if(msgFromESP32.startsWith("HTTP-ERROR"))  SerialPC.println(F("Error HTTP al subir la info a database en la actualización de SM..."));
-                        else if(msgFromESP32 == "TIMEOUT")              SerialPC.println(F("TIMEOUT. No se ha recibido respuesta del ESP32 en la actualización de SM"));
-                        else                                            SerialPC.println("Error desconocido al subir la comida a database en la actualización de SM...\n");
-                    #endif
-
-                    
-                }
-                // -------------------------------
-
-
-                // ---- REINICIAR actualMeal -----------------------
-                clearActualMeal(actualMeal); // Reseta el vector de la comida actual
-                // ------------------------------------------------
-
-            }
-            // ------------------------------------------------
-
-        } // Fichero completo
-
-        // Cerrar fichero
-        dataFile.close();
-
-        // --- TERMINAR ENVIO DE INFO ----
-        // Tras enviar todas las comidas, se envía un mensaje de fin de transmisión
-        sendMsgToESP32(F("FIN-TRANSMISION"));
-        // -------------------------------
-
-
-        // ------------------------------------------------------
-        // Una vez enviado todo el fichero, se comprueba si ha quedado 
-        // algo en 'unsavedMeals' para actualizar el fichero TXT
-        // ------------------------------------------------------
-        if (hayMealsToUploadLater(unsavedMeals)) // Si no se ha subido todo, se actualiza el fichero TXT (borrar y crear nuevo) 
-        {                                        // con las comidas no subidas
-            #if defined(SM_DEBUG) 
-                SerialPC.println("\nNo se ha podido subir todo");
-            #endif
-
-            updateFileTXT(unsavedMeals); // Actualizar fichero TXT con comidas sin guardar
-            //#if defined(SM_DEBUG)
-            //    readFileTXT(); // Debe mostrar las comidas no subidas
-            //#endif
-
-            return MEALS_LEFT; // Quedan comidas para subir más tarde
-        }
-        else  // Si se ha subido todo, se borra el fichero TXT
-        {
-            deleteFileTXT(); // Borrar fichero TXT
-            //#if defined(SM_DEBUG)
-            //    readFileTXT(); // Debe mostrar que no hay fichero
-            //#endif
-
-            #if defined(SM_DEBUG)
-                SerialPC.println("\nINFO COMPLETA GUARDADA!");
-                SerialPC.println(F("Paso a Init tras subir la info y borrar TXT...\n"));
-            #endif
-
-            return ALL_MEALS_UPLOADED; // Se subieron todas las comidas
-
-        } 
-        // ------------------------------------------------------
-
-    }
-    else 
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("\nError al abrir el archivo data-ESP.txt\n"));
-        #endif
-
-        return ERROR_READING_TXT; // Error al abrir el archivo data-ESP.txt
-    }
-
-}*/
-
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * Actualiza el archivo TXT con las comidas no guardadas.
- * 
- * @param unsavedMeals Vector que contiene las comidas no guardadas.
- */
-/*-----------------------------------------------------------------------------*/
-/*void updateFileTXT(std::vector<String> &unsavedMeals)
-{
-    // Borrar fichero
-    deleteFileTXT(); // Comprueba si existe antes de borrarlo
-
-    #if defined(SM_DEBUG)
-        SerialPC.println(F("\nActualizando fichero TXT (ESP32)..."));
-    #endif
-
-    // Crear nuevo fichero
-    File dataFile = SD.open(fileTXT, FILE_WRITE);
-
-    if (dataFile) 
-    {
-        // Escribir en el fichero las comidas no subidas
-        for (const auto& meal : unsavedMeals) {
-            dataFile.println(meal);
-        }
-        dataFile.close();
-
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("Fichero actualizado!"));
-        #endif
-    }
-    else 
-    {   
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("Error al actualizar el archivo data-ESP.txt"));
-        #endif
-    }
-}*/
-
-
-
-
-
 
 
 
 // **********************************************************************************************************
-// ************************ OPCIÓN 2: FICHERO TXT AUXILIAR PARA COMIDAS NO GUARDADAS ************************
+// ************************ FICHERO TXT AUXILIAR PARA COMIDAS NO GUARDADAS **********************************
 // **********************************************************************************************************
 
 /*-----------------------------------------------------------------------------*/

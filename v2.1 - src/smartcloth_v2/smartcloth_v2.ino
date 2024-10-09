@@ -178,17 +178,6 @@ void setup()
     if (!falloCriticoSD) welcome();  // Cargar imágenes y mostrar logo de SmartCloth
     // -----------------------------------------
 
-    //delay(2000);
-    
-    // ------- COMPROBAR COMUNICACIÓN ESP32 ----
-    // Si no falla la SD, se comprueba la comunicación con el ESP32-CAM
-    // Se comprueba después de la pantalla de bienvenida para que, si el ESP32 tarda en responder, al menos haya algo
-    // en pantalla que indique que el sistema está encendido. Si se comprobara la conexión con ESP32 en setupSerial(),
-    // como la pantalla está apagada en ese momento, podrían pensar que hay algún error.
-    //if (!falloCriticoSD) pingESP32(); // Comprobar comunicación con ESP32-CAM
-    // -----------------------------------------
-
-
     // ------ COMUNICACIÓN SERIAL --------------
     // Establecer el Serial del ESP32 al final para que le dé tiempo al ESP32 a encenderse, porque tarda más que el Due.
     // Si se hace al principio, el Due no puede configurar correctamente la comunicación Serial.
@@ -196,12 +185,6 @@ void setup()
     delay(100);
     // -----------------------------------------
 
-
-
-   /*#if defined SM_DEBUG
-      SerialPC.println("\n-----------------------------------------");
-      SerialPC.println("-----------------------------------------\n\n");
-    #endif*/
 
 }
 
@@ -211,15 +194,17 @@ void setup()
 /*---------------------------------------------------------------------------------------------------------
    loop(): Función principal ejecutada continuamente
 ----------------------------------------------------------------------------------------------------------*/
-void loop() {
-    
-    if (millis() - prevMillis > period){
+void loop() 
+{    
+    if (millis() - prevMillis > period)
+    {
         prevMillis = millis();
                 
         doStateActions();   // Actividades del estado actual. Comienza en STATE_Init (o en STATE_CRITIC_FAILURE_SD si ha fallado la SD)
 
         // Si no ha ocurrido un fallo al inicializar la SD, se chequean cambios en la Máquina de Estados
-        if (!falloCriticoSD){
+        if (!falloCriticoSD)
+        {
 
             /*--------------------------------------------------------------*/
             /* ---------------    CHECK INTERRUPCIONES   ------------------ */

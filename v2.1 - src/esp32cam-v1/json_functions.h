@@ -22,7 +22,7 @@
 /*-----------------------------------------------------------------------------
                            DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
-void    processJSON_OnePerMeal();                                                                            // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar 
+void    processJSON_OnePerMeal();    // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar 
 
 void    addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,                                  
                                     JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
@@ -37,21 +37,25 @@ time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaInd
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Crea el documento JSON en un ámbito cerrado para poder liberar la memoria 
- *        RAM que ocupe al salir del mismo (al salir de la función)
- *        En lugar de pedir token cuando vaya a subir la data, lo pide antes de procesar todas las líneas.
- *        Así solo se pide una vez, luego se suben tantos JSON como haga falta y por último se cierra sesión.
- *        De esta forma, no hay que pedir token, subir data y cerrar sesión con cada comida.
+ * @brief Procesa y sube datos JSON de comidas, uno por comida.
+ * 
+ * Esta función realiza las siguientes tareas:
+ * 
+ * 1. Limpia el buffer de recepción (Rx) para asegurar que se procesa la respuesta al mensaje que se va a enviar y no otros enviados anteriormente.
+ * 2. Declara un documento JSON reservando 20KB de RAM para el JSON.
+ * 3. Pide un token de autenticación al servidor para poder subir información.
+ * 4. Espera la data del Due y genera el JSON correspondiente.
+ * 5. Sube los JSON generados, uno por comida.
+ * 6. Cierra la sesión con el servidor.
+ * 
+ * La función maneja posibles errores de comunicación y autenticación, asegurando que no se quede esperando indefinidamente si hay problemas en la 
+ * lectura del fichero o en la comunicación ESP32-Due.
+ * 
+ * @note La memoria reservada para el documento JSON se libera al salir de la función.
  */
 /*-----------------------------------------------------------------------------*/
 void  processJSON_OnePerMeal()
 {
-    // ---- LIMPIAR BUFFER -------------------------------------
-    // Se limpia el buffer de recepción (Rx) antes de enviar para asegurar que se procesa la respuesta 
-    // al mensaje que se va a enviar y no otros enviados anteriormente
-    //limpiarBufferDue();
-    // ---------------------------------------------------------
-
     // ---------- DECLARAR DOCUMENTO JSON -------------------------
     // Se reservan 20KB de RAM para el JSON, aunque acabe siendo más pequeño.
     //
@@ -171,12 +175,29 @@ void  processJSON_OnePerMeal()
 
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Crea un JSON para cada comida, añade su información y lo envía.
- *        De esta forma divide la información en varios paquetes, para no
- *        tener que crear un JSON extremadamente grande para guardar todo
- *        el fichero txt.
+ * @brief Procesa una línea y añade su información al documento JSON, creando un JSON por cada comida nueva.
  * 
- *        ¿PODRÍA SATURAR EL SERVIDOR?
+ * Esta función procesa una línea de texto y añade la info a un documento JSON. Dependiendo del contenido de la línea,
+ * la función puede iniciar una nueva comida, iniciar un nuevo plato, añadir un alimento al plato actual, finalizar
+ * la comida actual y enviar el JSON al servidor, o finalizar la transmisión (posterior a enviar el JSON).
+ * 
+ * @param JSONdoc Referencia al documento JSON dinámico que se está construyendo.
+ * @param comidas Referencia al array JSON de comidas.
+ * @param platos Referencia al array JSON de platos dentro de una comida.
+ * @param alimentos Referencia al array JSON de alimentos dentro de un plato.
+ * @param comida Referencia al objeto JSON de la comida actual.
+ * @param plato Referencia al objeto JSON del plato actual.
+ * @param line Referencia a la línea de texto que se está procesando.
+ * @param bearerToken Referencia al token de autenticación para el servidor.
+ * 
+ * @note La función maneja las siguientes líneas de texto:
+ * - "INICIO-COMIDA": Inicia una nueva comida.
+ * - "INICIO-PLATO": Inicia un nuevo plato dentro de la comida actual.
+ * - "ALIMENTO,grupo,peso" o "ALIMENTO,grupo,peso,ean": Añade un alimento (tipo grupo o barcode) al plato actual.
+ * - "FIN-COMIDA,fecha,hora": Finaliza la comida actual y envía el JSON al servidor.
+ * - "FIN-TRANSMISION": Finaliza la transmisión y cierra la sesión en el servidor.
+ * 
+ * @note Si la línea no coincide con ninguno de los formatos anteriores, se imprime un mensaje de error en modo debug.
  */
 /*-----------------------------------------------------------------------------*/
 void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc, 
@@ -281,13 +302,18 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
 
 
 
+
 /*-----------------------------------------------------------------------------*/
 /**
- * @brief Convierte una fecha y hora en formato de cadena a un valor de tiempo Unix.
- * 
- * @param firstCommaIndex Índice de la primera coma en la cadena.
- * @param secondCommaIndex Índice de la segunda coma en la cadena.
- * @return time_t Valor de tiempo Unix correspondiente a la fecha y hora especificadas.
+ * @brief Convierte una cadena de fecha y hora en formato específico a un timestamp Unix.
+ *
+ * Esta función toma una línea de texto que contiene una fecha y una hora separadas por comas,
+ * extrae y convierte estos valores a un timestamp Unix.
+ *
+ * @param line Una referencia a la cadena que contiene la fecha y la hora.
+ * @param firstCommaIndex Una referencia al índice de la primera coma en la cadena.
+ * @param secondCommaIndex Una referencia al índice de la segunda coma en la cadena.
+ * @return time_t El timestamp Unix correspondiente a la fecha y hora proporcionadas.
  */
 /*-----------------------------------------------------------------------------*/
 time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaIndex)

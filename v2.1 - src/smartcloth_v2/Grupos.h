@@ -239,24 +239,9 @@ void updateGrupoActualFromBarcode(String &productInfo)
 
 
     // ----- ACTUALIZAR GRUPO ACTUAL CON INFO DEL BARCODE -----
-    // Obtener posición del grupo de barcode en el array por automatizarlo, pero podríamos poner directamente 27 porque es el último
-    /*byte posGrupo = 0;
-    for(byte i = 0; i < NUM_GRUPOS; i++){
-        if(gruposAlimentos[i].ID_grupo == BARCODE_PRODUCT_INDEX){ 
-            posGrupo = i; 
-            break;
-        }
-    }
-
-    // Actualizar grupoActual con la info por defecto del grupo barcode (nombre y ejemplos vacíos, y valores nutricionales a 0)
-    grupoActual = gruposAlimentos[posGrupo]; // Grupo de barcode. Toma el ID (50) y el color, pero los datos los modificamos
-    */
-
-    //grupoActual = gruposAlimentos[gruposAlimentos.length() - 1];
-    //grupoActual = gruposAlimentos[27];
 
     // Modificar datos con info del producto:
-    grupoActual.ID_grupo = BARCODE_PRODUCT_INDEX; // 50
+    grupoActual.ID_grupo = BARCODE_PRODUCT_INDEX; // ID = 50
     grupoActual.color_grupo = COLOR_G50;
     grupoActual.Nombre_grupo = convertSpecialCharactersToHEX(nombre_producto); // Convertir caracteres especiales en el nombre a HEX
     grupoActual.Ejemplos_grupo = ""; // No hay ejemplos para el producto barcode

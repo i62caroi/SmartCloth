@@ -69,14 +69,14 @@ DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la libre
 /******************************************************************************/
 void      setupRTC();          // Inicializar RTC
 
-bool      isSummerTime();   // Comprobar si hay que cambiar al horario de verano
-bool      isWinterTime();   // Comprobar si hay que cambiar al horario de invierno
+//bool      isSummerTime();   // Comprobar si hay que cambiar al horario de verano
+//bool      isWinterTime();   // Comprobar si hay que cambiar al horario de invierno
 
-void      adjustSummerTime();  // Ajustar horario de verano 
-void      adjustWinterTime();  // Ajustar horario de invierno
+//void      adjustSummerTime();  // Ajustar horario de verano 
+//void      adjustWinterTime();  // Ajustar horario de invierno
 
-uint8_t   getLastSunday(uint8_t month, uint16_t year);       // Último domingo del mes
-uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día específico
+//uint8_t   getLastSunday(uint8_t month, uint16_t year);       // Último domingo del mes
+//uint8_t   getDOW(uint8_t day, uint8_t month, uint16_t year); // DOW de día específico
 
 /******************************************************************************/
 /******************************************************************************/
@@ -109,6 +109,10 @@ void setupRTC()
     rtc.begin();
 
     // ----- AJUSTAR HORA, SI ES NECESARIO ---------
+
+    // SE HA COMENTADO PORQUE NO CREO QUE SEA UN PROBLEMA CRITICO NO CAMBIAR LA HORA
+    // Y ERA COMPLICADO COMPROBAR LOS CAMBIOS PREVIAMENTE
+
     // Comprobar si es momento de cambiar la hora
     /*uint8_t isRTCinSummerTime = dueFlashStorage.read(SUMMER_TIME_FLAG_ADDRESS); // Leer la bandera de la flash
     if (isSummerTime() && isRTCinSummerTime == IS_SUMMER) // Estamos en fechas de horario de verano, pero el RTC sigue en horario de invierno
@@ -153,7 +157,7 @@ void setupRTC()
  * @return true si es horario de verano, false en caso contrario
  */
 /*-----------------------------------------------------------------------------*/
-bool isSummerTime()
+/*bool isSummerTime()
 {
     // Fecha de hoy
     Time t = rtc.getTime();
@@ -169,8 +173,8 @@ bool isSummerTime()
     // Si estamos después del último domingo de marzo y antes del último domingo de octubre, es horario de verano
     if ((month > 3 || (month == 3 && day >= lastSundayMarch)) && (month < 10 || (month == 10 && day < lastSundayOctober))) return true;
     else return false;
-    /*if (month == 3 && day == lastSundayMarch) return true; // Solo comprueba si hoy es el último domingo de marzo
-    else return false;*/
+    //if (month == 3 && day == lastSundayMarch) return true; // Solo comprueba si hoy es el último domingo de marzo
+    else return false;
 }
 
 
@@ -185,7 +189,7 @@ bool isSummerTime()
  * @return true si es horario de invierno, false en caso contrario
  */
 /*-----------------------------------------------------------------------------*/
-bool isWinterTime() 
+/*bool isWinterTime() 
 {
     // Fecha de hoy
     Time t = rtc.getTime();
@@ -202,9 +206,9 @@ bool isWinterTime()
     // Si estamos después del último domingo de octubre o antes del último domingo de marzo, es horario de invierno
     if ((month > 10 || (month == 10 && day >= lastSundayOctober)) || (month < 3 || (month == 3 && day < lastSundayMarch))) return true;
     else return false;
-    /*if (month == 10 && day == lastSundayOctober) return true; // Solo comprueba si hoy es el último domingo de octubre
-    else return false;*/
-}
+    //if (month == 10 && day == lastSundayOctober) return true; // Solo comprueba si hoy es el último domingo de octubre
+    //else return false;
+}*/
 
 
 
@@ -215,11 +219,11 @@ bool isWinterTime()
  * Esta función ajusta la hora sumando 1 hora.
  */
 /*-----------------------------------------------------------------------------*/
-void adjustSummerTime() 
+/*void adjustSummerTime() 
 {
     Time t = rtc.getTime();
     rtc.setTime(t.hour + 1, t.min, t.sec);
-}
+}*/
 
 
 
@@ -230,11 +234,11 @@ void adjustSummerTime()
  * Esta función ajusta la hora restando 1 hora.
  */
 /*-----------------------------------------------------------------------------*/
-void adjustWinterTime() 
+/*void adjustWinterTime() 
 {
     Time t = rtc.getTime();
     rtc.setTime(t.hour - 1, t.min, t.sec);
-}
+}*/
 
 
 
@@ -255,7 +259,7 @@ void adjustWinterTime()
  * @return El último domingo del mes
  */
 /*-----------------------------------------------------------------------------*/
-uint8_t getLastSunday(uint8_t month, uint16_t year) 
+/*uint8_t getLastSunday(uint8_t month, uint16_t year) 
 {
   // Obtener el día máximo del mes
   uint8_t lastDay = 31;
@@ -280,7 +284,7 @@ uint8_t getLastSunday(uint8_t month, uint16_t year)
   if (lastDOW == 7) return lastDay;
   else return lastDay - lastDOW;
 
-}
+}*/
 
 
 
@@ -300,7 +304,7 @@ uint8_t getLastSunday(uint8_t month, uint16_t year)
  * @return El día de la semana (DOW)
  */
 /*-----------------------------------------------------------------------------*/
-uint8_t getDOW(uint8_t day, uint8_t month, uint16_t year) 
+/*uint8_t getDOW(uint8_t day, uint8_t month, uint16_t year) 
 {
   // Ajustar Enero y Febrero como meses 13 y 14 del año anterior. Necesario para el algoritmo.
   if (month < 3) {
@@ -317,7 +321,7 @@ uint8_t getDOW(uint8_t day, uint8_t month, uint16_t year)
   uint8_t dow = (day + ((13 * (month + 1))/5) + yearOfCentury + (yearOfCentury/4) + (century/4) - (2*century)) % 7;
 
   return dow + 1; // Pasar de Lunes(0) - Domingo(6) a Lunes(1) - Domingo(7)
-}
+}*/
 
 
 

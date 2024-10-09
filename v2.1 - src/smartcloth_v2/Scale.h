@@ -37,14 +37,8 @@ HX711 scale;
 
 
 // ------ HX711 circuit wiring -----------
-#ifdef SM_V2_1 // SmartCloth v2.1 (cartón)
-    const byte LOADCELL_DOUT_PIN = 3;
-    const byte LOADCELL_SCK_PIN = 2;
-#endif
-#ifdef SM_V2_2 // SmartCloth v2.2 (3D)
-    const byte LOADCELL_DOUT_PIN = 2;
-    const byte LOADCELL_SCK_PIN = 3;
-#endif
+const byte LOADCELL_DOUT_PIN = 2;
+const byte LOADCELL_SCK_PIN = 3;
 // ---------------------------------------
 
 
@@ -73,11 +67,11 @@ float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
                           DECLARACIÓN FUNCIONES
 /******************************************************************************/
 /******************************************************************************/
-void    setupScale();       // Inicializar báscula
-float   weighScale();       // Pesar báscula
-void    tareScale();        // Tarar báscula
-void    reiniciarPesos();   // Reiniciar pesos de recipiente, plato y alimento
-void    checkBascula();     // Comprobar si ha habido algún evento en la báscula y determinar el tipo de evento
+void            setupScale();                                   // Inicializar báscula
+inline float    weighScale(){ return  scale.get_units(3); };    // Pesar báscula
+void            tareScale();                                    // Tarar báscula
+void            reiniciarPesos();                               // Reiniciar pesos de recipiente, plato y alimento
+void            checkBascula();                                 // Comprobar si ha habido algún evento en la báscula y determinar el tipo de evento
 /******************************************************************************/
 /******************************************************************************/
 
@@ -122,23 +116,14 @@ void setupScale()
 }
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Función para pesar la báscula.
- * @return El peso medido por la báscula.
- */
-/*-----------------------------------------------------------------------------*/
-float weighScale(){
-    return  scale.get_units(3);
-}
-
 
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Realiza la tara de la báscula y actualiza el peso base.
  */
  /*-----------------------------------------------------------------------------*/
-void  tareScale(){ 
+void  tareScale()
+{ 
     scale.tare(1);  // 1 toma de valor
     pesoBascula = weighScale();;
     if(pesoBascula < 1.0) pesoBascula = 0.0; // Saturar a 0.0 el peso mostrado y utilizado (pesoBascula)
@@ -152,7 +137,8 @@ void  tareScale(){
  * @brief Reinicia los pesos de recipiente, plato y alimento.
  */
  /*-----------------------------------------------------------------------------*/
-void reiniciarPesos(){
+void reiniciarPesos()
+{
     pesoRecipiente = 0.0;           // Se reinicia 'pesoRecipiente', que se sumará a 'pesoPlato' para saber el 'pesoARetirar'.
     pesoPlato = 0.0;                // Se reinicia 'pesoPlato', que se sumará a 'pesoRecipiente' para saber el 'pesoARetirar'.
     pesoLastAlimento = 0.0;         // Se reinicia 'pesoLastAlimento', que, si hubiera un último alimento que añadir en delete,
@@ -166,13 +152,14 @@ void reiniciarPesos(){
  * @brief Función para comprobar si ha habido algún evento en la báscula y determinar el tipo de evento.
  */
 /*-----------------------------------------------------------------------------*/
-void checkBascula(){
+void checkBascula()
+{
     static float newWeight = 0.0;
     static float lastWeight = 0.0;
     static float diffWeight = 0.0; 
     
-    if (pesado){
-
+    if (pesado)
+    {
         pesoARetirar = pesoRecipiente + pesoPlato;
 
         lastWeight = newWeight;
@@ -184,14 +171,17 @@ void checkBascula(){
         // ------- COMPROBAR SI HA HABIDO EVENTO --------------
         // ----------------------------------------------------
 
-        if(tarado){
+        if(tarado)
+        {
             #if defined(SM_DEBUG)
                 SerialPC.println(F("\nTARANDO"));
             #endif
             eventoBascula = TARAR;
         }
-        else{
-            if(diffWeight > UMBRAL_MIN_CAMBIO_PESO){ // Si ha habido una variación de peso de más de 2 gramos y no ha sido causada por una tara --> evento
+        else
+        {
+            if(diffWeight > UMBRAL_MIN_CAMBIO_PESO) // Si ha habido una variación de peso de más de 2 gramos y no ha sido causada por una tara --> evento
+            {
                 scaleEventOccurred = true;
                 
                 // 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
@@ -205,22 +195,25 @@ void checkBascula(){
                 // --------- RECONOCER EVENTO OCURRIDO ----------------
                 // ----------------------------------------------------
 
-                if(lastWeight < newWeight){ // Incremento de peso   
+                if(lastWeight < newWeight) // Incremento de peso   
+                {
                     #if defined(SM_DEBUG)              
                         SerialPC.print(F("\nINCREMENTO"));
                     #endif
                     eventoBascula = INCREMENTO;
                 }
-                else { // Decremento de peso 
-                    if(abs(abs(newWeight) - pesoARetirar) < UMBRAL_RECIPIENTE_RETIRADO){ //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
-                        // Se ha puesto un umbral de 10 gr para saber si se ha retirado todo, pero podría reducirse a 1 gr
+                else  // Decremento de peso 
+                {
+                    if(abs(abs(newWeight) - pesoARetirar) < UMBRAL_RECIPIENTE_RETIRADO) //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
+                    {
                         #if defined(SM_DEBUG)
                             SerialPC.print(F("\nLIBERADA"));
                         #endif
                         eventoBascula = LIBERAR;
                         flagRecipienteRetirado = true; // Se ha retirado el plato completo --> pantalla recipienteRetirado()
                     }
-                    else{ // Se están retirando elementos de la báscula pero aún no se ha liberado
+                    else // Se están retirando elementos de la báscula pero aún no se ha liberado
+                    {
                         #if defined(SM_DEBUG)
                             SerialPC.print(F("\nDECREMENTO"));
                         #endif
