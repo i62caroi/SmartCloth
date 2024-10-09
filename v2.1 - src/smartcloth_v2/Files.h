@@ -17,13 +17,12 @@
 // Los 8 caracteres no incluyen el path hasta el fichero
 
 // --- FICHERO GUARDAR INFO LOCAL ---
-char    fileCSV[30] = "data/data-sc.csv"; ///< Nombre del archivo para guardar las comidas realizadas
-//char    fileCSV[30] = "data/daTest.csv"; // Probando el borrado del csv
+char    fileCSV[30] = "data/data-sc.csv";       // Archivo CSV para guardar las comidas realizadas (el acumulado se obtiene de aquí)
 
 
 // --- FICHERO GUARDAR INFO ESP32 ---
-char    fileTXT[30] = "data/data-esp.txt"; ///< Nombre del archivo para guardar las comidas realizadas con pares <grupo>,<peso>
-
+char    fileTXT[30] = "data/data-esp.txt";      // Fichero TXT para guardar las comidas realizadas y que están pendientes de subir a la database
+char    auxFileTXT[20] = "data/aux_file.txt";    // Fichero TXT auxiliar para guardar las comidas no subidas a la database durante la sincronización
 
 // --- IMAGENES RELOJ ARENA ---
 char    fileReloj1[30]    = "bin/carga/reloj1.bin";             // 65x103
