@@ -2180,6 +2180,8 @@ void pedirConfirmacionProducto(String &productInfo)
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
     // En este caso es temporal en el sentido de que si no se lee barcode en 30 segundos, se regresa a lastValidState
 
+    // La información viene como "PRODUCT:<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+
     // ---- PARSEAR INFORMACIÓN PRODUCTO ------------------------------------------------------------------
     String cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
     int idx_nombre = cad.indexOf(';');

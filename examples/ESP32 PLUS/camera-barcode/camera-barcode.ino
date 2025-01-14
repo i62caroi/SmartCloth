@@ -161,7 +161,7 @@ void loop()
         if(extractAndValidateBarcode(barcode)) // Comprobar si en la parte final de lo leído en el buffer hay un código válido (EAN-13, UPC-A o EAN-8)
         {
             // ---- BUSCAR PRODUCTO EN OPENFOODFACTS ---
-            getFoodData(barcode); // Obtener información del 'barcode' en OpenFoodFacts
+            searchBarcode(barcode); // Obtener información del 'barcode' en OpenFoodFacts
             // -----------------------------------------
         }
         else

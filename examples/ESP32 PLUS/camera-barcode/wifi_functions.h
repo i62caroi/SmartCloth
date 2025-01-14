@@ -18,11 +18,11 @@
 // ------- CREDENCIALES -------------
 // Credenciales conexión red WiFi
 // Laboratorio:
-//const char* ssid = "UCOTEAM";
-//const char* password = "-polonio210alfileres-";
+const char* ssid = "UCOTEAM";
+const char* password = "-polonio210alfileres-";
 // Casa:
-const char* ssid = "MOVISTAR_FB23_EXT";
-const char* password = "DP6BUuEtuFvRw3mHmFoG";
+//const char* ssid = "MOVISTAR_FB23_EXT";
+//const char* password = "DP6BUuEtuFvRw3mHmFoG";
 
 // Testeos:
 //const char* ssid = "Irene";
@@ -56,7 +56,7 @@ inline bool    hayConexionWiFi(){ return (WiFi.status()== WL_CONNECTED); };  // 
 
 void    setupWiFi();                    // Configurar modo del WiFi y conectar a la red, si se puede
 void    connectToWiFi();                // Conectar a la red WiFi
-void    getFoodData(String barcode);    // Obtener los datos de un alimento
+void    searchBarcode(String barcode);    // Obtener los datos de un alimento
 void    getProductInfo(const String &payload, String &productInfo); // Obtener la información del producto a partir de un JSON
 /*-----------------------------------------------------------------------------*/
 
@@ -158,7 +158,7 @@ void connectToWiFi()
  * @param barcode El código de barras del alimento.
  */
 /*-----------------------------------------------------------------------------*/
-void getFoodData(String barcode) 
+void searchBarcode(String barcode) 
 {
   
   // Comprobamos si hay conexión a internet antes de leer el código. No nos sirve de nada el código
@@ -179,7 +179,7 @@ void getFoodData(String barcode)
         // En las operaciones de lectura (obtener info de un producto) solo hace falta el User-Agent customizado
         // En las operaciones de escritura hace falta más autenticación (credenciales), pero no nos afecta porque 
         // no vamos a modificar productos.
-        http.setUserAgent("SmartCloth/1.0 (irene.casares@imibic.org)"); // Establece el User-Agent personalizado
+        http.setUserAgent("SmartCloth/1.0 (i62caroi@uco.es)"); // Establece el User-Agent personalizado
         // --------------------------------
 
         // --- ENVIAR PETICIÓN HTTP -------
