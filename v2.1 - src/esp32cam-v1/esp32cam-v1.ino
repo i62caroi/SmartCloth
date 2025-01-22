@@ -94,7 +94,7 @@
             2.1. Indicar guardado:
                 "SAVE"
             2.2. Mandar datos a guardar, línea a línea:
-                "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,9,54.35" ... --> sendFileToEsp32MealByMeal()
+                "INICIO-COMIDA" "INICIO-PLATO" "ALIMENTO,<grupo>,<peso>[,<ean>]" "FIN-COMIDA,<fecha>,<hora>"..."FIN-TRANSMISION"
 
         ----- BARCODE ----------------
             3) Leer código de barras:
@@ -154,7 +154,25 @@
 #include "barcode.h"
 
 
-
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Configuración inicial del ESP32.
+ * 
+ * Esta función se ejecuta una vez al inicio y realiza las siguientes tareas:
+ * 
+ * 1. Configuración de la comunicación serial entre el ESP32 y la PC.
+ *    - Si está definido `SM_DEBUG`, se inicia la comunicación serial a 115200 baudios.
+ * 
+ * 2. Configuración de la conexión WiFi.
+ *    - Llama a la función `setupWiFi()` para establecer la conexión WiFi.
+ * 
+ * 3. Configuración de la comunicación serial entre el ESP32 y el Arduino Due.
+ *    - Inicia la comunicación serial a 115200 baudios con los parámetros `SERIAL_8N1`, `RXD1` y `TXD1`.
+ * 
+ * 4. Configuración de la comunicación serial entre el ESP32 y el lector de códigos de barras.
+ *    - Inicia la comunicación serial a 9600 baudios, que es la velocidad de trabajo del lector.
+ */
+/*-----------------------------------------------------------------------------*/
 void setup() 
 {
     // --- COMUNICACIÓN SERIAL ---
@@ -177,7 +195,7 @@ void setup()
     delay(100);
     // ------------
 
-    // ESP32 - CAM 
+    // ESP32 - Barcode Reader 
     SerialBR.begin(9600); // Debe ser 9600 porque así trabaja el lector
     delay(100);
     // ------------
@@ -187,53 +205,92 @@ void setup()
 
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Función principal del bucle de la ESP32.
+ * 
+ * Este bucle se ejecuta continuamente y realiza las siguientes acciones:
+ * 
+ * 1. Comprueba si hay un mensaje recibido desde el Due.
+ * 2. Si hay un mensaje, lo lee y lo procesa según el contenido del mensaje.
+ * 
+ * Procesamiento de mensajes:
+ * - "CHECK-WIFI": Comprueba la conexión WiFi y responde al Due con "WIFI-OK" o "NO-WIFI".
+ * - "SAVE": Guarda las comidas en la web autenticando el ESP32 (el SmartCloth) en la web y enviando un JSON por comida.
+ * - "GET-BARCODE": Lee un código de barras y lo devuelve al Due.
+ * - "GET-PRODUCT:<barcode>": Busca un producto en OpenFoodFacts utilizando el código de barras proporcionado.
+ * - Otros comandos no reconocidos generan un mensaje de "Comando desconocido" si está habilitado el modo de depuración (SM_DEBUG).
+ * 
+ * El bucle incluye un retraso de 50 ms para evitar que sea demasiado intensivo.
+ */
+/*-----------------------------------------------------------------------------*/
 void loop() 
 {  
     if(hayMsgFromDue()) // Recibido algo del Due
     {
-        // ------ Leer mensaje del Due ---------
+
+        // ----- LEER MENSAJE DEL DUE -------------------------------------- 
         String msgFromDue;
-        readMsgFromSerialDue(msgFromDue); // Leer mensaje del Serial
+        readMsgFromSerialDue(msgFromDue); // Leer directamente mensaje del Serial
+
+        // Aunque nunca ha fallado la lectura directa del mensaje con readMsgFromSerialDue(), se va a leer carácter a carácter 
+        // para asegurar que no se pierde nada. Además, damos un tiempo límite (1s) para que el ESP32 no se quede esperando 
+        // el '\n' de forma infinita.
+        //String msgFromDue;
+        //processMsgFromDue(msgFromDue);  // Procesar mensaje completo del Due caracter a caracter
+        //waitMsgFromDue(msgFromDue, TIMEOUT_MSG_DUE); // Esperar mensaje del Due y lo devuelve en 'msgFromDue'
 
         #if defined(SM_DEBUG)
             SerialPC.println("\n-------------------------------------");
             SerialPC.println("Mensaje recibido: " + msgFromDue); 
         #endif
-        // -------------------------------------
+        // ------ FIN LEER MENSAJE DEL DUE --------------------------------
 
-        // ------ Comprobar Wifi y avisar al Due ---------
+
+        // ------ PROCESAR MENSAJE DEL DUE --------------------------------
+
+        // ------ OPCIÓN 1: COMPROBAR CONEXIÓN WIFI ------
         if (msgFromDue == "CHECK-WIFI") checkWiFi(); // Comprobar si hay WiFi y responder al Due (WIFI-OK o NO-WIFI)
         // -----------------------------------------------
 
-        // ------ Procesar líneas y generar JSON ---------
-        else if (msgFromDue == "SAVE") processJSON_OnePerMeal(); // Autentica esp32, recibe líneas y genera JSON por comida
+        // ------ OPCIÓN 2: GUARDAR COMIDAS EN WEB -------
+        else if (msgFromDue == "SAVE") saveMeals(); // Autentica esp32, recibe líneas y genera JSON por comida
         // -----------------------------------------------
 
-        // Se ha dividido en dos partes para que no se mezclen los mensajes:
+        // BARCODE: se ha dividido en dos partes para que no se mezclen los mensajes:
         //      1) Leer código de barras cuando se reciba "GET-BARCODE"
         //      2) Buscar producto en OpenFoodFacts cuando se reciba "GET-PRODUCT:<barcode>"
-        // Así no hay problemas de que al Due le llegue "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>" sin antes 
-        // haber recibido "BARCODE:<barcode>", como ocurría a veces.
+        //  Así no hay problemas de que al Due le llegue "PRODUCT:<barcode>;<nombre_producto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>" sin antes 
+        //  haber recibido "BARCODE:<barcode>", como ocurría a veces.
 
-        // ------ Intentar obtener Barcode ---------------
+        // ------ OPCIÓN 3: LEER BARCODE -----------------
         else if (msgFromDue == "GET-BARCODE") getBarcode(); // Leer barcode
         // -----------------------------------------------
 
-        // ------ Intentar buscar producto ---------------
+        // ------ OPCIÓN 4: BUSCAR PRODUCTO --------------
         else if (msgFromDue.startsWith("GET-PRODUCT:"))
         { 
-            String barcode = msgFromDue.substring(12);  // Extraer la parte de <barcode> de la cadena "GET-PRODUCT:<barcode>"
-            getFoodData(barcode);                       // Buscar producto en OpenFoodFacts
+            String barcode = getBarcodeFromMsg(msgFromDue);// Extraer la parte de <barcode> de la cadena "GET-PRODUCT:<barcode>"
+            getProductData(barcode);                       // Buscar producto en OpenFoodFacts
         }
         // -----------------------------------------------
 
-        else{ 
+        // ------ OTROS ----------------------------------
+        else
+        { 
             // Otras (p.ej. BARCODE)
             #if defined(SM_DEBUG)
                 SerialPC.println(F("Comando desconocido"));
             #endif
         }
+        // -----------------------------------------------
+        // ------ FIN PROCESAR MENSAJE DEL DUE ----------------------------
+
+        
     }
+
+
+    delay(50); // Evitar que el bucle sea demasiado intensivo
 
 }
 

@@ -346,8 +346,10 @@ void    sin_pulsacion(byte option);    // Mano sobre botón sin pulsación
 void    con_pulsacion(byte option);    // Pulsación de mano en botón
 
 // --- PANTALLAS CHECK Y CONFIRMADO DEL BORRADO CSV ---
-void    pedirConfirmacion_DELETE_CSV();   // Pantalla de confirmación de borrado del csv
-void    showAcumuladoBorrado(bool exito); // Pantalla con mensaje de "Fichero borrado" (exito = true) o "Error en el borrado" (exito = false)
+#ifdef BORRADO_INFO_USUARIO
+void    pedirConfirmacion_DELETE_FILES();             // Pantalla de confirmación de borrado del csv
+void    showAcumuladoBorrado(const bool &exito);    // Pantalla con mensaje de "Fichero borrado" (exito = true) o "Error en el borrado" (exito = false)
+#endif
 /******************************************************************************/
 /******************************************************************************/
 
@@ -817,8 +819,6 @@ void printProcesamiento(){
 ----------------------------------------------------------------------------------------------------------*/
 void printZona3(byte show_objeto)
 { 
-    float pesoMostrado = 0.0;
-
     // ---------- GRÁFICOS ---------------------------------------------------------------------------------------- 
     // Recuadro "Comida actual" o "Alimento actual" 
     tft.fillRoundRect(30,145,504,580,20,GRIS_CUADROS); // 474 x 425
@@ -842,6 +842,7 @@ void printZona3(byte show_objeto)
 
     // ------ VALORES Y PESO A MOSTRAR ----------------------------------------------------------------------------
     ValoresNutricionales valores; // Valores a mostrar
+    float pesoMostrado = 0.0;
 
     if(show_objeto == SHOW_COMIDA_ACTUAL_ZONA3) // Valores de la comida copiada tras guardar. Al inicio están a 0.
     {
@@ -850,13 +851,23 @@ void printZona3(byte show_objeto)
     }
     else if(show_objeto == SHOW_ALIMENTO_ACTUAL_ZONA3) // Valores temporales calculados a partir del peso del alimento, que puede variar
     {   
-        Alimento AlimentoAux(grupoActual, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
-        float carb = AlimentoAux.getValoresAlimento().getCarbValores();
-        float lip = AlimentoAux.getValoresAlimento().getLipValores();
-        float prot = AlimentoAux.getValoresAlimento().getProtValores();
-        float kcal = AlimentoAux.getValoresAlimento().getKcalValores();
-        valores.setValores(carb, lip, prot, kcal); // Calcula raciones automáticamente a partir de los valores
-        pesoMostrado = AlimentoAux.getPesoAlimento();
+        if(pesoBascula == 0.0) // Es posible que se muestre este dashboard con el 'pesoBascula' a 0.0 (p.ej. en STATE_raw)
+        {
+            // Para evitar la creación innecesaria de un objeto Alimento cuando el peso es 0,
+            // se asignan directamente los valores a 0.
+            valores.setValores(0.0, 0.0, 0.0, 0.0); 
+            pesoMostrado = 0.0;
+        }
+        else // Si se ha pesado un alimento, se muestran los valores temporales con los valores no definitivos del alimento pesado (STATE_weighted)
+        {
+            Alimento AlimentoAux(grupoActual, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
+            float carb = AlimentoAux.getValoresAlimento().getCarbValores();
+            float lip = AlimentoAux.getValoresAlimento().getLipValores();
+            float prot = AlimentoAux.getValoresAlimento().getProtValores();
+            float kcal = AlimentoAux.getValoresAlimento().getKcalValores();
+            valores.setValores(carb, lip, prot, kcal); // Calcula raciones automáticamente a partir de los valores
+            pesoMostrado = AlimentoAux.getPesoAlimento();
+        }
     }
     // ------- FIN VALORES Y PESO A MOSTRAR -----------------------------------------------------------------------
 
@@ -931,14 +942,24 @@ void printZona4(byte show_objeto)
 
     if(show_objeto == SHOW_COMIDA_ACTUAL_ZONA4) // Valores temporales de la comida actual
     {
-        Alimento AlimentoAux(grupoActual, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
-        float carb = AlimentoAux.getValoresAlimento().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
-        float lip = AlimentoAux.getValoresAlimento().getLipValores() + comidaActual.getValoresComida().getLipValores();
-        float prot = AlimentoAux.getValoresAlimento().getProtValores() + comidaActual.getValoresComida().getProtValores();
-        float kcal = AlimentoAux.getValoresAlimento().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
-        valores.setValores(carb, lip, prot, kcal); // Calcula raciones automáticamente a partir de los valores
+        if(pesoBascula == 0.0) // Es posible que se muestre este dashboard con el 'pesoBascula' a 0.0 (p.ej. en STATE_raw)
+        {
+            // Para evitar la creación innecesaria de un objeto Alimento cuando el peso es 0,
+            // se asignan directamente los valores a 0.
+            valores.setValores(0.0, 0.0, 0.0, 0.0);
+            pesoMostrado = 0.0;
+        }
+        else // El resto de estados, para que se muestren los valores del peso del alimento pesado
+        {
+            Alimento AlimentoAux(grupoActual, pesoBascula);         // Alimento auxiliar usado para mostrar información variable de lo pesado
+            float carb = AlimentoAux.getValoresAlimento().getCarbValores() + comidaActual.getValoresComida().getCarbValores();
+            float lip = AlimentoAux.getValoresAlimento().getLipValores() + comidaActual.getValoresComida().getLipValores();
+            float prot = AlimentoAux.getValoresAlimento().getProtValores() + comidaActual.getValoresComida().getProtValores();
+            float kcal = AlimentoAux.getValoresAlimento().getKcalValores() + comidaActual.getValoresComida().getKcalValores();
+            valores.setValores(carb, lip, prot, kcal); // Calcula raciones automáticamente a partir de los valores
 
-        pesoMostrado = AlimentoAux.getPesoAlimento() + comidaActual.getPesoComida();
+            pesoMostrado = AlimentoAux.getPesoAlimento() + comidaActual.getPesoComida();
+        }
     }
     else if(show_objeto == SHOW_ACUMULADO_HOY_ZONA4) // Valores del acumulado hoy
     {
@@ -1219,7 +1240,7 @@ void showRaciones(ValoresNutricionales &valores, byte zona)
    showDashboardStyle1(): Muestra el dashboard de estilo 1 con Zona 1 (grupo), Zona 2 (procesamiento), 
                           Zona 3 (Comida Actual copiada) y Zona 4 (Acumulado Hoy).
 
-                          Este dashboard solo se muestra en STATE_Init y STATE_Plato.
+                          Este dashboard solo se muestra en STATE_Init y STATE_Plato (si se acaba de guardar la comida).
           Parámetros:
                     msg_option - byte   -->   0: sin mensaje   1: "no hay recipiente"    2: "no hay grupo"
 ----------------------------------------------------------------------------------------------------------*/
@@ -1232,7 +1253,6 @@ void showDashboardStyle1(byte msg_option){
     printZona3(SHOW_COMIDA_ACTUAL_ZONA3);     // Zona 3 - Valores comida copiada tras guardar. Al inicio están a 0.
     printZona4(SHOW_ACUMULADO_HOY_ZONA4);     // Zona 4 - Valores Acumulado hoy
 }
-
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -1252,6 +1272,7 @@ void showDashboardStyle2()
     printZona3(SHOW_ALIMENTO_ACTUAL_ZONA3); // Zona 3 - Valores alimento actual pesado
     printZona4(SHOW_COMIDA_ACTUAL_ZONA4);   // Zona 4 - Valores Comida actual actualizada en tiempo real según el peso del alimento
 }
+
 
 
 
@@ -1395,7 +1416,7 @@ void showSavingMeal_connectionState(bool hayConexionInternet)
  * 
  *               - ALL_MEALS_UPLOADED: "¡SmartCloth sincronizado!" con fondo verde indicando al usuario que se ha subido toda la info
  * 
- *               - ERROR_READING_TXT, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR: "¡Error del sistema!" con comentario
+ *               - ERROR_READING_MEALS_FILE, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR: "¡Error del sistema!" con comentario
  */
 /*-----------------------------------------------------------------------------*/
 void showSyncState(byte option)
@@ -1428,7 +1449,7 @@ void showSyncState(byte option)
 
         case ALL_MEALS_UPLOADED:        tft.setCursor(70, 30);         tft.println(convertSpecialCharactersToHEX("¡SMARTCLOTH SINCRONIZADO!"));     break;
 
-        case ERROR_READING_TXT:         
+        case ERROR_READING_MEALS_FILE:         
         case NO_INTERNET_CONNECTION:     
         case HTTP_ERROR:                
         case TIMEOUT:   
@@ -1453,7 +1474,7 @@ void showSyncState(byte option)
             tft.fillRoundRect(210,300,814,308,3,lineColor); // Línea bajo el icono
             break;
 
-        case ERROR_READING_TXT:
+        case ERROR_READING_MEALS_FILE:
         case NO_INTERNET_CONNECTION:
         case HTTP_ERROR:
         case TIMEOUT:
@@ -1484,7 +1505,7 @@ void showSyncState(byte option)
 
         case ALL_MEALS_UPLOADED:        tft.setCursor(215, 388);                                        tft.println("LA WEB SE HA ACTUALIZADO");                                                break;
 
-        case ERROR_READING_TXT:         tft.setCursor(40, 420);                                         tft.println(convertSpecialCharactersToHEX("FALLÓ LA LECTURA DEL FICHERO DE COMIDAS"));  break;
+        case ERROR_READING_MEALS_FILE:         tft.setCursor(40, 420);                                         tft.println(convertSpecialCharactersToHEX("FALLÓ LA LECTURA DEL FICHERO DE COMIDAS"));  break;
 
         case NO_INTERNET_CONNECTION:    tft.setCursor(125, 420);                                        tft.println(convertSpecialCharactersToHEX("SE PERDIÓ LA CONEXIÓN A INTERNET"));
                                         tft.setCursor(50, tft.getCursorY() + tft.getTextSizeY()+20);    tft.println(convertSpecialCharactersToHEX("NO SE PUEDE SINCRONIZAR LA INFORMACIÓN"));   break;
@@ -2180,10 +2201,15 @@ void pedirConfirmacionProducto(String &productInfo)
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
     // En este caso es temporal en el sentido de que si no se lee barcode en 30 segundos, se regresa a lastValidState
 
-    // La información viene como "PRODUCT:<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+    // Si viene de OpenFoodFacts, la información viene como "PRODUCT:<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+    // Si viene del CSV (productos barcode), no tendrá el prefijo "PRODUCT:" 
 
     // ---- PARSEAR INFORMACIÓN PRODUCTO ------------------------------------------------------------------
-    String cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
+    String cad;
+
+    if(productInfo.startsWith("PRODUCT:")) cad = productInfo.substring(8); // Elimina el prefijo "PRODUCT:"
+    else cad = productInfo;
+
     int idx_nombre = cad.indexOf(';');
     int idx_carb = cad.indexOf(';', idx_nombre + 1);
     String barcode = cad.substring(0, idx_nombre);                      // Extraer <barcode>
@@ -3550,10 +3576,12 @@ bool slowAppearanceAndDisappareanceProcesamiento(byte option)
 /*------------------------------ BORRADO FICHERO CSV ----------------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
 
+#ifdef BORRADO_INFO_USUARIO
+
 /*---------------------------------------------------------------------------------------------------------
-   pedirConfirmacion_DELETE_CSV(): Pantalla de confirmación de borrado del csv
+   pedirConfirmacion_DELETE_FILES(): Pantalla de confirmación de borrado del csv
 ----------------------------------------------------------------------------------------------------------*/
-void pedirConfirmacion_DELETE_CSV()
+void pedirConfirmacion_DELETE_FILES()
 {
     // ----- TEXTO (CONFIRMAR BORRADO CSV) -----------------------------------
     tft.clearScreen(BLACK);
@@ -3563,7 +3591,7 @@ void pedirConfirmacion_DELETE_CSV()
     tft.setTextForegroundColor(WHITE); 
     tft.setCursor(220, 200);  
     //tft.println("\xBF""BORRAR FICHERO CSV\x3F"""); // 12x24 escalado x3
-    tft.println(convertSpecialCharactersToHEX("¿BORRAR FICHERO CSV?")); // 12x24 escalado x3
+    tft.println(convertSpecialCharactersToHEX("¿BORRAR FICHEROS USUARIO?")); // 12x24 escalado x3
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
     tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()+50); tft.println("GRUPO 20 PARA CONFIRMAR");
@@ -3576,7 +3604,7 @@ void pedirConfirmacion_DELETE_CSV()
         Parámetros: 
             - exito -> true: éxito borrando csv    false: error en el borrado
 ----------------------------------------------------------------------------------------------------------*/
-void showAcumuladoBorrado(bool exito)
+void showAcumuladoBorrado(const bool &exito)
 {
     // ----- TEXTO (CONFIRMAR BORRADO CSV) -----------------------------------
     tft.clearScreen(BLACK);
@@ -3596,7 +3624,7 @@ void showAcumuladoBorrado(bool exito)
 }
 
 
-
+#endif // BORRADO_INFO_USUARIO
 
 
 

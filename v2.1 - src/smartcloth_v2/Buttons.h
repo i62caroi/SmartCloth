@@ -217,6 +217,9 @@ void checkAllButtons()
  *      Si el grupo está entre [1, 6], [10, 15] o [20], se considera TIPO_B.
  * 
  *  Reestablece la flag 'pulsandoGrande' a false hasta la próxima pulsación.
+ * 
+ *  @note Para la funcionalidad de borrar los ficheros del usuario, en determinados casos se marcará el evento DELETE_FILES
+ *        en lugar del TIPO_B correspondiente a los botones de grupo 1 y 20 (usados en la combinación de borrado).
  */
 /*-----------------------------------------------------------------------------*/
 void checkGrandeButton()
@@ -230,19 +233,31 @@ void checkGrandeButton()
             SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
         #endif 
         
-        // ----- EVENTO ------- 
-        // Tipo A (necesita crudo/cocinado): [7, 9] o [16, 19] 
-        // Tipo B (no necesita crudo/cocinado): [1, 6], [10, 15] o [20] 
-        if (isButtonGrandeTipoA()) eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
-        else eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
-        
-        addEventToBuffer(eventoGrande);
-        flagEvent = true;
+        // ----- ANALIZAR EVENTO --------------
+        // TIPO_A (necesita crudo/cocinado): [7, 9] o [16, 19] 
+        // TIPO_B (no necesita crudo/cocinado): [1, 6], [10, 15] o [20] 
+        // DELETE_FILES (borrar ficheros del usuario):  1 y 20, pero solo en determinados casos
 
-        // ----- Grupo alimentos ----
-        setGrupoAlimentos(buttonGrande);
+        if(((state_actual == STATE_CANCEL) && (buttonGrande == 1)) || ((state_actual == STATE_DELETE_CSV_CHECK) && (buttonGrande == 20)))
+        {
+            addEventToBuffer(DELETE_FILES); // Evento de borrar ficheros del usuario
+        }
+        else // Si estamos en STATE_CANCEL y se pulsa otra cosa, saltará error porque no hay regla para eso, pero externamente no se verá, solo en debug
+        {    // Si estamos en STATE_DELETE_CSV_CHECK y se pulsa grupo distinto de 20, se marcará TIPO_A o TIPO_B y se cancelará el borrado, como marcan las reglas de transición
+            if (isButtonGrandeTipoA()) eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
+            else eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
+            
+            addEventToBuffer(eventoGrande); // Evento de grupo de alimentos
+
+            // ----- Actualizar grupo alimentos ----
+            setGrupoAlimentos(buttonGrande);
+        }
+
+        flagEvent = true; // Activar flag de evento
+        // ------------------------------------
         
-        pulsandoGrande = false;
+        pulsandoGrande = false; // Reiniciar la flag de pulsación en la botonera
+
     }
         
 }
@@ -301,7 +316,7 @@ void checkMainButton()
         addEventToBuffer(eventoMain);
         flagEvent = true;
 
-        buttonMain = 0;
+        buttonMain = 0; // "Desactivar" el botón pulsado. Si usáramos 5 variables booleanas, pondríamos a false la correspondiente.
     }
 
 }

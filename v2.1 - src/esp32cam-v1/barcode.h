@@ -49,10 +49,16 @@ inline bool   hayConexionWiFi();
 /*-----------------------------------------------------------------------------
                            DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
-// Leer barcode
+// --- Leer barcode con BR ---------
 void            getBarcode();                                    // Leer código de barras 
+// ---------------------------------
 
-// Validar códigos de barras
+// --- Obtener barcode de msg ------
+inline String   getBarcodeFromMsg(const String &msgFromDue) { return msgFromDue.substring(12); };   // Extraer la parte de <barcode> de la cadena "GET-PRODUCT:<barcode>" enviada por el Due
+// ---------------------------------
+
+// --- Validar códigos de barras ---
+// ---------------------------------
 bool            hasMin13Chars(const String &input){ return input.length() >= EAN13_LENGTH; }; // Comprobar si la cadena tiene al menos 13 caracteres
 bool            hasMin12Chars(const String &input){ return input.length() >= UPC_A_LENGTH; }; // Comprobar si la cadena tiene al menos 12 caracteres
 bool            hasMin8Chars(const String &input){ return input.length() >= EAN8_LENGTH; };   // Comprobar si la cadena tiene al menos 8 caracteres
@@ -97,8 +103,8 @@ void getBarcode()
         SerialPC.println("Leyendo codigo de barras...");
     #endif
 
-    String buffer = BUFFER_EMPTY; // Cadena inicialmente vacía con "-"
-    String barcode = BUFFER_EMPTY; // Código de barras por leer
+    String buffer = BR_BUFFER_EMPTY; // Cadena inicialmente vacía con "-"
+    String barcode = BR_BUFFER_EMPTY; // Código de barras por leer
 
 
     // --- ESPERAR LECTURA DE CÓDIGO DE BARRAS -----------
@@ -109,7 +115,7 @@ void getBarcode()
     
 
     // ---- BARCODE DETECTADO ----------------------------
-    if(buffer != BUFFER_EMPTY)  // Si había algo en el buffer, se ha guardado en 'buffer'
+    if(buffer != BR_BUFFER_EMPTY)  // Si había algo en el buffer, se ha guardado en 'buffer'
     {   
         // ----- LECTURA CANCELADA ------------------------
         if(buffer == "CANCEL-BARCODE")  // Mientras se esperaba barcode, el usuario ha cancelado la lectura pulsando un botón

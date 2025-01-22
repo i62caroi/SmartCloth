@@ -67,8 +67,8 @@
 #include "Diario.h" // incluye Comida.h
 #include "Files.h"
 #include "lista_Comida.h"
-#include "debug.h" // SM_DEBUG --> SerialPC
-#include "Serial_functions.h" // SerialESP32 y resultados de subir a database (WAITING_FOR_DATA, UPLOADING_DATA, MEAL_UPLOADED, MEALS_LEFT, ERROR_READING_TXT, NO_INTERNET_CONECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR)
+#include "debug.h" // SM_DEBUG --> SerialPC; BORRADO_INFO_USUARIO --> Activar borrado de fichero CSV/TXT
+#include "Serial_functions.h" // SerialESP32 y resultados de subir a database (WAITING_FOR_DATA, UPLOADING_DATA, MEAL_UPLOADED, MEALS_LEFT, ERROR_READING_MEALS_FILE, NO_INTERNET_CONECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR)
 
 
 
@@ -110,41 +110,61 @@ byte    saveComida(bool &hayConexionWifi);               // Guardar valores de l
 
 
 // -- CSV: crear con header, leer, sumar comidas del día y guardar comida --
-bool    writeHeaderFileCSV();       // Crear fichero CSV y escribir header 
-void    getAcumuladoHoyFromSD();    // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
-bool    saveComidaInCSV();          // Guardar comida en el fichero CSV
-bool    deleteFileCSV();            // Borrar contenido del fichero CSV
+bool    historyFileExists();                    // Comprobar si existe el fichero CSV (historial de comidas)
+bool    writeHeaderToHistoryFile();             // Crear fichero CSV y escribir header para el historial de comidas
+void    updateAcumuladoHoyFromHistoryFile();    // Sumar comidas del día desde CSV y mostrar en "Acumulado Hoy"
+bool    saveComidaInHistoryFile();              // Guardar comida en el fichero CSV (historial de comidas)
 // -------------------------------------------------------------------------
 
 
 // -- TXT: guardar (TXT o database), leer, enviar al ESP32, borrar ---------
 // --- Guardar comida actual (database o TXT) ---
-byte    saveComidaInDatabase_or_TXT(bool &hayConexionWifi);  // Guardar lista en base de datos o en el fichero TXT, según valor de 'hayConexionWifi'
-void    saveMealListInTXT();                                    // Guardar lista de la comida en el fichero TXT
-bool    isFileTXTEmpty();                                   // Comprobar si el fichero TXT del ESP32 está vacío
+byte    saveComidaInDatabase_or_MealsFile(bool &hayConexionWifi);   // Guardar lista en base de datos o en el fichero TXT, según valor de 'hayConexionWifi'
+void    saveMealListInMealsFile();                                  // Guardar lista de la comida en el fichero TXT
+bool    isMealsFileEmpty();                                         // Comprobar si el fichero TXT del ESP32 está vacío
 #if defined(SM_DEBUG)
-void    readFileTXT();                  // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
+void    readMealsFile();                  // Leer contenido del fichero TXT del ESP32 y mostrarlo por terminal
 #endif 
-bool    deleteFileTXT();                // Borrar contenido del fichero TXT del ESP32
 // ----------------------------------------------
 
 // --- Actualizar SmartCloth --------------
-byte            sendTXTFileToESP32ToUpdateWeb();           // Enviar fichero TXT al ESP32 línea a línea     
+byte            sendMealsFileToESP32ToUpdateWeb();           // Enviar fichero TXT al ESP32 línea a línea     
 
 // Vector de comida actual leída del TXT
 inline void     addLineToActualMeal(std::vector<String> &actualMeal, String &line){ actualMeal.push_back(line); }; // Añadir línea a 'actualMeal'
 inline void     clearActualMeal(std::vector<String> &actualMeal){ actualMeal.clear(); }; // Limpiar 'actualMeal'
 
 // Fichero auxiliar de comidas no subidas
-inline void     saveMealToAuxFile(std::vector<String> &actualMeal, File& auxFile){ // Guardar comida actual no subida en fichero auxiliar
+inline void     saveMealToAuxMealsFile(std::vector<String> &actualMeal, File& auxFile){ // Guardar comida actual no subida en fichero auxiliar
                 for (const auto& line : actualMeal) 
                     auxFile.println(line); 
                 }; 
-inline bool     hayMealsToUploadLaterTXT(){ return SD.exists(auxFileTXT); };        // Comprobar si se ha escrito algo en el fichero auxiliar de comidas no subidas
-void            updateFileTXTFromAuxFile();                                         // Actualizar fichero TXT con comidas no subidas y que se han guardado en un fichero auxiliar
-bool            deleteAuxFileTXT();                                                 // Borrar fichero auxiliar TXT
-void            readAuxFileTXT();                                                   // Leer contenido del fichero auxiliar TXT y mostrarlo por terminal
+inline bool     hayMealsToUploadLater(){ return SD.exists(auxMealsFileTXT); };             // Comprobar si se ha escrito algo en el fichero auxiliar de comidas no subidas
+void            updateMealsFileFromAuxMealsFile();                                    // Actualizar fichero con comidas no subidas y que se han guardado en un fichero auxiliar
+bool            deleteAuxMealsFile();                                                 // Borrar fichero TXT auxiliar de comidas
+#if defined(SM_DEBUG)
+void            readAuxMealsFile();                                                   // Leer contenido del fichero TXT auxiliar de comidas y mostrarlo por terminal
+#endif
 // ---- Fin actualizar SM -----------------
+// -------------------------------------------------------------------------
+
+
+// -- CSV: información de productos barcode --------------------------------
+bool    productsFileExists();                                               // Comprobar si existe el fichero CSV (productos barcode)
+bool    writeHeaderToProductsFile();                                        // Escribir encabezado del archivo CSV (productos barcode)
+bool    searchBarcodeInProductsFile(String &barcode, String &productInfo);  // Buscar barcode en el fichero CSV (productos barcode)
+void    saveProductInfoInProductsFile(String &productInfo);                 // Escribir información de un producto en el fichero CSV (productos barcode)
+// -------------------------------------------------------------------------
+
+
+// -------------------------------------------------------------------------
+// ---- BORRAR INFORMACIÓN DE USO DEL USUARIO ------------------------------
+// -------------------------------------------------------------------------
+#ifdef BORRADO_INFO_USUARIO
+bool    deleteHistoryFile();        // Borrar contenido del fichero CSV con el historial de comidas
+bool    deleteMealsFile();          // Borrar contenido del fichero TXT del ESP32
+bool    deleteProductsFile();       // Borrar contenido del fichero CSV con productos barcode ya leídos  
+#endif
 // -------------------------------------------------------------------------
 /******************************************************************************/
 /******************************************************************************/
@@ -190,16 +210,28 @@ bool setupSDcard()
         #endif
     }
 
-    if(!SD.exists(fileCSV)) //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
-    {
-        if(writeHeaderFileCSV()){
-            getAcumuladoHoyFromSD();   // Leer fichero csv de la SD y sumar los valores nutricionales y el peso de las 
-                               // comidas guardadas en el día de hoy
-        }
-        else return false;
-    }
 
-    
+    // --- PREPARAR FICHERO DE PRODUCTOS BARCODE ------
+    if(!productsFileExists()) //Si no existe ya, se incorpora el encabezado. 
+        writeHeaderToProductsFile();
+    // ------------------------------------------------
+
+    // Si falla la preparación del fichero CSV (historial comidas), se considera un fallo crítico de la SD y no se
+    // permite continuar con el uso de SmartCloth ya que es necesario para mostrar la información del "Acumulado Hoy".
+
+    // --- PREPARAR FICHERO DE HISTORIAL DE COMIDAS ---
+    if(!historyFileExists()) //Si no existe ya, se incorpora el encabezado. Todo se va a ir guardando en el mismo fichero.
+    {
+        if(!writeHeaderToHistoryFile()) 
+            return false;
+    }
+    // ------------------------------------------------
+
+    // --- OBTENER ACUMULADO DEL DÍA ------------------
+    updateAcumuladoHoyFromHistoryFile();   // Leer fichero csv de la SD y sumar los valores nutricionales y el peso de las 
+                                            // comidas guardadas en el día de hoy
+    // ------------------------------------------------
+
     
     return true;
 }
@@ -220,20 +252,20 @@ byte saveComida(bool &hayConexionWifi)
     SerialPC.println(F("Guardando info...\n"));
     #endif
 
-    // ---- 1. GUARDADO LOCAL ------------------------
-    bool savedCSV = saveComidaInCSV(); // TRUE o FALSE. Si fallara el guardado local, habría que arreglar SmartCloth
+    // ---- 1. GUARDADO LOCAL HISTORIAL COMIDAS ------
+    bool savedHistoryFile = saveComidaInHistoryFile(); // TRUE o FALSE. Si fallara el guardado local, habría que arreglar SmartCloth
     // -----------------------------------------------
 
-    // ---- 2. GUARDADO EN DATABASE O FICHERO TXT ----
-    byte saveDatabaseOrTXT = saveComidaInDatabase_or_TXT(hayConexionWifi); // MEAL_UPLOADED, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
-    // -----------------------------------------------
+    // ---- 2. GUARDADO EN DATABASE O FICHERO TXT (comidas no subidas) ----
+    byte saveInDatabase_Or_MealsFile = saveComidaInDatabase_or_MealsFile(hayConexionWifi); // MEAL_UPLOADED, NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT, UNKNOWN_ERROR
+    // --------------------------------------------------------------------
 
-    // ---- 3. RESULTADO DEL GUARDADO ----------------
+    // ---- 3. RESULTADO FINAL DEL GUARDADO ----------
     // Según si se ha guardado solo en local, solo en database o si no se ha guardado nada.
 
-    if(savedCSV) // Se ha guardado en el CSV (acumulado actualizado)
+    if(savedHistoryFile) // Se ha guardado en el CSV (acumulado actualizado)
     {
-        switch(saveDatabaseOrTXT)
+        switch(saveInDatabase_Or_MealsFile)
         {
             // A) Se ha guardado en el CSV (acumulado actualizado) y en la database. PERFECTO!!
             case MEAL_UPLOADED:             return SAVE_EXECUTED_FULL;                          
@@ -248,7 +280,7 @@ byte saveComida(bool &hayConexionWifi)
     }
     else // No se ha guardado en el CSV (el acumulado no se ha actualizado). FALLO ENORME!!!
     {    // Si no se guarda en el CSV, habría que arreglar el SM porque el usuario no puede ver su acumulado
-        switch(saveDatabaseOrTXT)
+        switch(saveInDatabase_Or_MealsFile)
         {
             // A) No se ha guardado en el CSV (el acumulado no se ha actualizado), pero si en la database
             case MEAL_UPLOADED:             return SAVE_EXECUTED_ONLY_DATABASE;         
@@ -266,24 +298,51 @@ byte saveComida(bool &hayConexionWifi)
 
 
 
+
+// ----------------------------------------------------------------------------------------------------------
+// ------------------------------ FICHERO HISTORIAL DE COMIDAS ----------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Verifica si el fichero CSV (historial de comidas) existe en la tarjeta SD.
+ * 
+ * @return true si el fichero existe, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool historyFileExists()
+{
+    File file = SD.open(historyFileCSV, FILE_READ);
+    if (file)
+    {
+        file.close();
+        return true;
+    }
+    return false;
+}
+
+
+
+
 /*-----------------------------------------------------------------------------*/
 /**
  * @brief Escribe el encabezado del archivo en la tarjeta SD.
  * El encabezado contiene los nombres de las columnas separados por ';'.
  */
 /*-----------------------------------------------------------------------------*/
-bool writeHeaderFileCSV() 
+bool writeHeaderToHistoryFile() 
 {
-    #if defined(SM_DEBUG)
-        SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileCSV); SerialPC.println(F(" ...\n"));
-    #endif
+    /*#if defined(SM_DEBUG)
+        SerialPC.print(F("\n Creando fichero ")); SerialPC.print(historyFileCSV); SerialPC.println(F(" ...\n"));
+    #endif*/
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
     // columnas directamente:
 
     String header = "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso";
 
-    File myFile = SD.open(fileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
+    File myFile = SD.open(historyFileCSV, FILE_WRITE);    // Todo se va a ir guardando en el mismo fichero ==> 'historyFileCSV' en Files.h
     if (myFile)
     {
         myFile.println(header);
@@ -310,7 +369,7 @@ bool writeHeaderFileCSV()
  * @note Esta función asume que el archivo CSV tiene un formato específico y que la tarjeta SD está correctamente configurada.
  */
 /*-----------------------------------------------------------------------------*/
-void getAcumuladoHoyFromSD()
+void updateAcumuladoHoyFromHistoryFile()
 {
 
     char *today = rtc.getDateStr(); // Es posible que se cambie de día durante el cocinado?? Si no, hacer en setupRTC(). 
@@ -328,7 +387,7 @@ void getAcumuladoHoyFromSD()
     bool msg = true;
 
 
-    File myFile = SD.open(fileCSV, FILE_READ);
+    File myFile = SD.open(historyFileCSV, FILE_READ);
     if (myFile)
     {
         while (myFile.available()) 
@@ -346,7 +405,7 @@ void getAcumuladoHoyFromSD()
                 if(msg)
                 {
                     #if defined SM_DEBUG
-                        //SerialPC.println(F("Obteniendo Acumulado Hoy..."));
+                        SerialPC.println(F("Obteniendo Acumulado Hoy..."));
                     #endif
                     msg = false; // Solo imprimir una vez y si hay algo que sumar
                 }
@@ -391,7 +450,7 @@ void getAcumuladoHoyFromSD()
     else
     {
         #if defined SM_DEBUG
-            //SerialPC.println(F("Error abriendo archivo CSV!"));
+            SerialPC.println(F("Error abriendo archivo CSV!"));
         #endif
     }
 
@@ -406,7 +465,7 @@ void getAcumuladoHoyFromSD()
  * @note Guarda la información de forma "fecha;hora;carb;carb_R;lip;lip_R;prot;prot_R;kcal;peso"
  */
 /*-----------------------------------------------------------------------------*/
-bool saveComidaInCSV()
+bool saveComidaInHistoryFile()
 {
     // Se ha utilizado un RTC para conocer la fecha a la que se guarda la comida
 
@@ -420,7 +479,7 @@ bool saveComidaInCSV()
     String dataString = String(rtc.getDateStr()) + ";" + String(rtc.getTimeStr()) + ";" + comidaValues + ";" + peso; 
 
 
-    File myFile = SD.open(fileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'fileCSV' en Files.h
+    File myFile = SD.open(historyFileCSV, FILE_WRITE); // Todo se va a ir guardando en el mismo fichero ==> 'historyFileCSV' en Files.h
     if (myFile)
     {
         myFile.println(dataString);
@@ -441,54 +500,10 @@ bool saveComidaInCSV()
 
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Borra el fichero CSV existente y crea uno nuevo con el mismo nombre.
- * 
- * @return true si se borra y crea el fichero correctamente, false en caso contrario.
- */
-/*-----------------------------------------------------------------------------*/
-bool deleteFileCSV()
-{
-    // Borrar contenido borrando fichero y creándolo de nuevo no se debe hacer, 
-    // especialmente si se va a repetir muchas veces, pero creo que para las 
-    // pruebas no habrá problema.
 
-    // -------- BORRAR FICHERO CSV --------------------------
-    #if defined(SM_DEBUG)
-        SerialPC.println(F("Borrando fichero csv..."));
-    #endif
-    SD.remove(fileCSV);
-
-    if (!SD.exists(fileCSV)) 
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("Fichero CSV borrado"));
-        #endif
-    }
-    else  
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("Error borrando fichero CSV!"));
-        #endif
-        return false;
-    }
-    // -------- FIN BORRAR FICHERO CSV ----------------------
-
-
-    // -------- CREAR NUEVO FICHERO CSV ---------------------
-    // Creo uno nuevo con el mismo nombre (writeHeader())
-    #if defined(SM_DEBUG)
-        SerialPC.println(F("\nCreando fichero de nuevo.."));
-    #endif
-    writeHeaderFileCSV();      // Crear fichero de nuevo e incluir el header
-    getAcumuladoHoyFromSD();  // Actualizar acumulado (ahora debe ser 0)
-    return true;
-    // -------- FIN CREAR NUEVO FICHERO CSV -----------------
-}
-
-
-
+// ----------------------------------------------------------------------------------------------------------
+// ----------------------- FICHERO DE COMIDAS NO GUARDADAS EN DATABASE --------------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
 
 /*-----------------------------------------------------------------------------*/
@@ -509,7 +524,7 @@ bool deleteFileCSV()
  *         - UNKNOWN_ERROR: Error desconocido, comida guardada en TXT.
  */
 /*-----------------------------------------------------------------------------*/
-byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
+byte saveComidaInDatabase_or_MealsFile(bool &hayConexionWifi)
 {
 
     // --- CERRAR LISTA DE COMIDA -------
@@ -519,7 +534,7 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
     // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
     // --- HAY INTERNET ---
     if(hayConexionWifi) // Se pregunta por WiFi en actStateSaved() para saber qué mensaje poner en pantalla y se pasa a saveComida(), 
-    {                   // que lo pasa a esta función saveComidaInDatabase_or_TXT(), así que no hace falta preguntar de nuevo.
+    {                   // que lo pasa a esta función saveComidaInDatabase_or_MealsFile(), así que no hace falta preguntar de nuevo.
 
         // -----  ENVIAR INFORMACION AL ESP32  ------------------        
         // Avisar al ESP32 de que le va a enviar info. El ESP32 debe autenticarse en database y responder
@@ -537,7 +552,7 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
             // ---- ESPERAR RESPUESTA DEL ESP32 ---------------
             // Tras enviar las líneas de toda la comida actual, espera hasta 10 segundos a que el ESP32 responda si se ha podido subir la comida a la database
             String msgFromESP32;
-            unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (espera hasta 10 segundos a que el servidor responda)
+            unsigned long timeout = 15000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (espera hasta 10 segundos a que el servidor responda)
                                     // No hace falta esperar más tiempo porque el ESP32 espera hasta 10 segundos a que el servidor responda y los mensajes que se pueden 
                                     // recibir "SAVED-OK", "HTTP-ERROR" o "NO-WIFI" son cortos, por lo que no debería tardar demasiado waitResponseFromESP32() en recibirlos.
             waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
@@ -573,11 +588,11 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
 
                 // --- GUARDAR LISTA EN TXT -------
                 #if defined SM_DEBUG
-                    SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+                    SerialPC.println("\nGuardando la lista en el TXT (comidas no guardadas en database) hasta que el ESP32 pueda subir la info...");
                 #endif
 
                 // Copiar lista en TXT y limpiarla
-                saveMealListInTXT();
+                saveMealListInMealsFile();
 
                 #if defined SM_DEBUG
                     SerialPC.println("--------------------------------------------------");
@@ -643,11 +658,11 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
             //      UNKNOWN_ERROR
             #if defined SM_DEBUG
                 SerialPC.println("\nEl ESP32 no respondio WAITING-FOR-DATA cuando se quiso subir lista comida actual!");
-                SerialPC.println("Guardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+                SerialPC.println("Guardando la lista en el TXT (comidas no guardadas en database) hasta que el ESP32 pueda subir la info...");
             #endif
 
             // --- GUARDAR LISTA EN TXT -------
-            saveMealListInTXT(); // Copiar lista en TXT y limpiarla
+            saveMealListInMealsFile(); // Copiar lista en TXT y limpiarla
             // --------------------------------
             
             // Se devuelve el mismo valor de 'responseFromESP32ToSavePrompt', que será valor de error (NO_INTERNET_CONNECTION, HTTP_ERROR, TIMEOUT o UNKNOWN_ERROR)
@@ -661,11 +676,11 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
     else // Si no hay WiFi, se guarda la lista en el TXT y se limpia la lista para la próxima comida
     {
         #if defined SM_DEBUG
-            SerialPC.println("\nGuardando la lista en el TXT hasta que el ESP32 pueda subir la info...");
+            SerialPC.println("\nGuardando la lista en el TXT (comidas no guardadas en database) hasta que el ESP32 pueda subir la info...");
         #endif
 
         // --- GUARDAR LISTA EN TXT -------
-        saveMealListInTXT(); // Copiar lista en TXT y limpiarla
+        saveMealListInMealsFile(); // Copiar lista en TXT y limpiarla
         // --------------------------------
 
         #if defined SM_DEBUG
@@ -688,9 +703,9 @@ byte saveComidaInDatabase_or_TXT(bool &hayConexionWifi)
  * @brief Guarda la lista de comida en el archivo TXT que se enviará al ESP32
  */
 /*-----------------------------------------------------------------------------*/
-void saveMealListInTXT()
+void saveMealListInMealsFile()
 {
-    File myFile = SD.open(fileTXT, FILE_WRITE);
+    File myFile = SD.open(mealsFileTXT, FILE_WRITE);
 
     if (myFile) 
     {
@@ -705,14 +720,14 @@ void saveMealListInTXT()
         listaComidaESP32.clearList();       
 
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Comida guardada correctamente en fichero TXT"));
+        SerialPC.println(F("Comida guardada correctamente en fichero TXT (comidas no guardadas en database)"));
         #endif
     } 
     else 
     {
         // Si el archivo no se abre, imprime un error:
         #if defined(SM_DEBUG)
-        SerialPC.println(F("Error abriendo archivo TXT!"));
+        SerialPC.println(F("Error abriendo archivo TXT (comidas no guardadas en database)!"));
         #endif
     }
 }
@@ -725,24 +740,24 @@ void saveMealListInTXT()
  * @return true si el archivo está vacío, false si tiene contenido.
  */
 /*-----------------------------------------------------------------------------*/
-bool isFileTXTEmpty() 
+bool isMealsFileEmpty() 
 {
     #if defined(SM_DEBUG)
         SerialPC.println("\n\n++++++++++++++++++++++++++++++++++++++++++++++++++");
-        SerialPC.println(F("Comprobando contenido del fichero TXT del ESP32..."));
+        SerialPC.println(F("Comprobando contenido del fichero TXT (comidas no guardadas en database)..."));
     #endif
 
-    File myFile = SD.open(fileTXT, FILE_READ);
-    if (myFile && myFile.size() > 0)  // Si el archivo se puede abrir y su tamaño es mayor que 0, tiene contenido (isFileTXTEmpty() devuelve false)
+    File myFile = SD.open(mealsFileTXT, FILE_READ);
+    if (myFile && myFile.size() > 0)  // Si el archivo se puede abrir y su tamaño es mayor que 0, tiene contenido (isMealsFileEmpty() devuelve false)
     {
         myFile.close();
         return false;
     } 
-    else  // Si no se puede abrir el archivo o su tamaño es 0, está vacío (isFileTXTEmpty() devuelve true)
+    else  // Si no se puede abrir el archivo o su tamaño es 0, está vacío (isMealsFileEmpty() devuelve true)
     {
         #if defined(SM_DEBUG)
             if (!myFile) {
-                SerialPC.println(F("Error abriendo fichero TXT! Puede que se borrara, asumimos vacio"));
+                SerialPC.println(F("No hay comidas por subir a database"));
                 SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
             }
         #endif
@@ -760,10 +775,10 @@ bool isFileTXTEmpty()
  */
 /*-----------------------------------------------------------------------------*/
 #if defined(SM_DEBUG)
-void readFileTXT()
+void readMealsFile()
 {
-    SerialPC.println(F("\n\nLeyendo fichero TXT del ESP32...\n"));
-    File myFile = SD.open(fileTXT, FILE_READ);
+    SerialPC.println(F("\n\nLeyendo fichero TXT (comidas no guardadas en database)...\n"));
+    File myFile = SD.open(mealsFileTXT, FILE_READ);
     if (myFile)
     {
         while (myFile.available()) 
@@ -774,70 +789,20 @@ void readFileTXT()
     }
     else
     {
-        SerialPC.println(F("Error abriendo fichero TXT!"));
+        SerialPC.println(F("Error abriendo fichero TXT (comidas no guardadas en database)!"));
     }
 }
 #endif
 
 
 
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Borra un fichero en el ESP32.
- * 
- * Esta función borra un fichero en el ESP32 utilizando la tarjeta SD.
- * 
- * @return true si el fichero se borra correctamente, false en caso contrario.
- */
-/*-----------------------------------------------------------------------------*/
-bool deleteFileTXT()
-{
-    // -------- BORRAR FICHERO ESP32 ------------------------
-    if (SD.exists(fileTXT))
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("Borrando fichero TXT (ESP32)..."));
-        #endif
-        SD.remove(fileTXT);
-
-        if (!SD.exists(fileTXT)) 
-        {
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("Fichero TXT (ESP32) borrado"));
-            #endif
-            return true;
-        }
-        else  
-        {
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("Error borrando fichero ESP32!"));
-            #endif
-            return false;
-        }
-    }
-    else
-    {
-        #if defined(SM_DEBUG)
-            SerialPC.println(F("\nNo existe el fichero TXT (ESP32)"));
-        #endif
-        return true;
-    }
-    // ------------------------------------------------------
-
-    // En este caso no hace falta crearlo aquí, como sí ocurría con el CSV, porque
-    // cuando se vaya a escribir algo al guardar comida, ya se creará.
-}
 
 
 
 
-
-
-
-
-// **********************************************************************************************************
-// ************************ FICHERO TXT AUXILIAR PARA COMIDAS NO GUARDADAS **********************************
-// **********************************************************************************************************
+// ----------------------------------------------------------------------------------------------------------
+// -------------------- FICHERO TXT AUXILIAR PARA COMIDAS NO GUARDADAS EN WEB -------------------------------
+// ----------------------------------------------------------------------------------------------------------
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -849,15 +814,15 @@ bool deleteFileTXT()
  *          desbordamiento de la memoria RAM, aunque el uso inteso de la SD aumente la latencia del programa.
  */
 /*-----------------------------------------------------------------------------*/
-byte sendTXTFileToESP32ToUpdateWeb()
+byte sendMealsFileToESP32ToUpdateWeb()
 {
     #if defined SM_DEBUG
-        SerialPC.println(F("\nEnviando TXT al esp32..."));
+        SerialPC.println(F("\nEnviando TXT (comidas no guardadas en database) al ESP32..."));
     #endif
 
     std::vector<String> actualMeal;   // Vector que guarda los datos de la comida actual leída del fichero TXT
 
-    File originalFile = SD.open(fileTXT);   // Fichero original con las comidas a subir a la base de datos
+    File originalFile = SD.open(mealsFileTXT);   // Fichero original con las comidas a subir a la base de datos
 
     File auxFile;                       // Fichero TXT auxiliar donde guardar las comidas que no se han podido subir a la base de datos
     bool auxFileCreated = false;        // Flag para saber si se ha creado el fichero TXT auxiliar de comidas sin guardar
@@ -892,7 +857,7 @@ byte sendTXTFileToESP32ToUpdateWeb()
             {
                 // ---- ESPERAR RESPUESTA DEL ESP32 -----
                 String msgFromESP32 = "";
-                unsigned long timeout = 12000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (tiene 10 segundos para subir info)
+                unsigned long timeout = 15000; // Tiempo de espera máximo de 12 segundos para que el esp32 responda (tiene 10 segundos para subir info)
                                     // No hace falta esperar más tiempo porque el ESP32 espera hasta 10 segundos a que el servidor responda y los mensajes que se pueden 
                                     // recibir "SAVED-OK", "HTTP-ERROR" o "NO-WIFI" son cortos, por lo que no debería tardar demasiado waitResponseFromESP32() en recibirlos.
                 waitResponseFromESP32(msgFromESP32, timeout); // Espera la respuesta del ESP32 y la devuelve en msgFromESP32
@@ -920,10 +885,10 @@ byte sendTXTFileToESP32ToUpdateWeb()
                     // Si no hay conexión WiFi o ha habido un error en la petición HTTP, se añade la comida actual al TXT auxiliar de comidas no subidas
                     if(!auxFileCreated) // Crear fichero TXT auxiliar la primera vez que falla una subida de comida
                     {
-                        auxFile = SD.open(auxFileTXT, FILE_WRITE);  // Crear fichero TXT auxiliar
+                        auxFile = SD.open(auxMealsFileTXT, FILE_WRITE);  // Crear fichero TXT auxiliar
                         auxFileCreated = true;                      // Fichero auxiliar creado
                     }
-                    saveMealToAuxFile(actualMeal, auxFile); // Escribir líneas de la comida no subida (actualMeal) en el TXT auxiliar
+                    saveMealToAuxMealsFile(actualMeal, auxFile); // Escribir líneas de la comida no subida (actualMeal) en el TXT auxiliar
                     // ---------------------------
 
                     // No se hace return porque se sigue con el bucle de lectura de otras comidas del fichero TXT
@@ -972,34 +937,34 @@ byte sendTXTFileToESP32ToUpdateWeb()
             #endif
 
             // ---- BORRAR FICHERO TXT --------
-            deleteFileTXT(); // Borrar fichero TXT
+            deleteMealsFile(); // Borrar fichero TXT
             // --------------------------------
 
-            #if defined(SM_DEBUG)
-                readFileTXT();   // Debe mostrar que no hay fichero
-            #endif
+            /*#if defined(SM_DEBUG)
+                readMealsFile();   // Debe mostrar que no hay fichero
+            #endif*/
 
             return ALL_MEALS_UPLOADED; // Se subieron todas las comidas
         }
         // Si no se ha subido todo (se ha creado el fichero auxiliar), se actualiza el fichero TXT (borrar y crear nuevo) con las comidas 
         // no subidas, escritas en el TXT auxiliar
-        else if(hayMealsToUploadLaterTXT()) // Comprobar que realmente existe, por si fallara su creación
+        else if(hayMealsToUploadLater()) // Comprobar que realmente existe, por si fallara su creación
         {                    
             #if defined(SM_DEBUG) 
                 SerialPC.println("\nNo se ha podido subir todo");
             #endif
 
             // ---- ACTUALIZAR FICHERO TXT ----
-            updateFileTXTFromAuxFile();     // Actualizar fichero TXT con comidas sin guardar
+            updateMealsFileFromAuxMealsFile();     // Actualizar fichero TXT con comidas sin guardar
             // --------------------------------
             
             #if defined(SM_DEBUG) 
-                readAuxFileTXT();           // Mostrar el contenido del archivo auxiliar
-                readFileTXT();              // Debe mostrar las comidas no subidas tras actualizarse
+                readAuxMealsFile();           // Mostrar el contenido del archivo auxiliar
+                readMealsFile();              // Debe mostrar las comidas no subidas tras actualizarse
             #endif
 
             // ---- BORRAR FICHERO AUX --------
-            deleteAuxFileTXT();             // Eliminar archivo auxiliar
+            deleteAuxMealsFile();             // Eliminar archivo auxiliar
             // --------------------------------
 
             return MEALS_LEFT; // Quedan comidas para subir más tarde
@@ -1010,10 +975,10 @@ byte sendTXTFileToESP32ToUpdateWeb()
     else 
     {
         #if defined(SM_DEBUG)
-            SerialPC.println(F("\nError al abrir el archivo data-ESP.txt\n"));
+            SerialPC.println(F("\nError al abrir el archivo data-ESP.txt (comidas no guardadas en database)\n"));
         #endif
 
-        return ERROR_READING_TXT; // Error al abrir el archivo data-ESP.txt
+        return ERROR_READING_MEALS_FILE; // Error al abrir el archivo data-ESP.txt
     }
 
 }
@@ -1029,24 +994,24 @@ byte sendTXTFileToESP32ToUpdateWeb()
  * 
  */
 /*-----------------------------------------------------------------------------*/
-void updateFileTXTFromAuxFile() 
+void updateMealsFileFromAuxMealsFile() 
 {
-    SerialPC.println(F("\nActualizando fichero TXT (ESP32)..."));
+    SerialPC.println(F("\nActualizando fichero TXT (comidas no guardadas en database) con el auxiliar..."));
 
     // Borrar fichero
-    deleteFileTXT(); // Ya comprueba si existe el TXT original antes de borrarlo
+    deleteMealsFile(); // Ya comprueba si existe el TXT original antes de borrarlo
 
     // Abrir el archivo auxiliar en modo lectura
-    File auxFile = SD.open(auxFileTXT, FILE_READ);
+    File auxFile = SD.open(auxMealsFileTXT, FILE_READ);
     if (!auxFile) {
-        SerialPC.println(F("Error al abrir el archivo auxiliar para lectura"));
+        SerialPC.println(F("Error al abrir el archivo auxiliar (comidas no guardadas en database) para lectura"));
         return;
     }
 
     // Crear un nuevo archivo para el archivo original actualizado
-    File originalFile = SD.open(fileTXT, FILE_WRITE);
+    File originalFile = SD.open(mealsFileTXT, FILE_WRITE);
     if (!originalFile) {
-        SerialPC.println(F("Error al crear de nuevo el archivo TXT"));
+        SerialPC.println(F("Error al crear de nuevo el archivo TXT (comidas no guardadas en database)"));
         auxFile.close();
         return;
     }
@@ -1062,7 +1027,7 @@ void updateFileTXTFromAuxFile()
     auxFile.close();
     originalFile.close();
 
-    SerialPC.println(F("Archivo TXT actualizado con comidas no subidas"));
+    SerialPC.println(F("Archivo TXT actualizado (comidas no guardadas en database)"));
 }
 
 
@@ -1078,26 +1043,35 @@ void updateFileTXTFromAuxFile()
  * @return true si el fichero se borra correctamente, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
-bool deleteAuxFileTXT()
+bool deleteAuxMealsFile()
 {
-    if (SD.exists(auxFileTXT))
+    if (SD.exists(auxMealsFileTXT))
     {
-        SerialPC.println(F("\nBorrando fichero auxiliar TXT (comidas no guardadas)..."));
-        SD.remove(auxFileTXT);
+        #ifdef SM_DEBUG
+        SerialPC.println(F("\nBorrando fichero auxiliar TXT (comidas no guardadas en database)..."));
+        #endif
+        SD.remove(auxMealsFileTXT);
 
-        if (!SD.exists(auxFileTXT)) 
+        if (!SD.exists(auxMealsFileTXT)) 
         {
-            SerialPC.println(F("Fichero auxiliar TXT (comidas no guardadas) borrado"));
+            #ifdef SM_DEBUG
+            SerialPC.println(F("Fichero auxiliar TXT (comidas no guardadas en database) borrado"));
+            #endif
             return true;
         }
         else  
         {
-            SerialPC.println(F("Error borrando fichero auxiliar TXT (comidas no guardadas)!"));
+            #ifdef SM_DEBUG
+            SerialPC.println(F("Error borrando fichero auxiliar TXT (comidas no guardadas en database)!"));
+            #endif
             return false;
         }
     }
-    else{
-        SerialPC.println(F("\nNo existe el auxiliar TXT (comidas no guardadas)"));
+    else
+    {
+        #ifdef SM_DEBUG
+        SerialPC.println(F("\nNo existe el auxiliar TXT (comidas no guardadas en database)"));
+        #endif
         return true;
     }
 
@@ -1116,12 +1090,13 @@ bool deleteAuxFileTXT()
  * Si el archivo no existe, también se imprime un mensaje de error en el puerto serie.
  */
 /*-----------------------------------------------------------------------------*/
-void readAuxFileTXT()
+#ifdef SM_DEBUG
+void readAuxMealsFile()
 {
-    if (SD.exists(fileTXT)){
-        Serial.println(F("\n\nLeyendo fichero auxiliar...\n"));
+    if (SD.exists(mealsFileTXT)){
+        Serial.println(F("\n\nLeyendo fichero auxiliar TXT (comidas no guardadas en database)...\n"));
 
-        File myFile = SD.open(auxFileTXT, FILE_READ);
+        File myFile = SD.open(auxMealsFileTXT, FILE_READ);
         
         if (myFile){
             while (myFile.available()) {
@@ -1130,11 +1105,161 @@ void readAuxFileTXT()
             myFile.close();
         }
         else{
-            Serial.println("\nError abriendo el fichero auxiliar TXT para lectura!");
+            Serial.println("\nError abriendo el fichero auxiliar TXT (comidas no guardadas en database) para lectura!");
         }
     }
     else{
-        Serial.println("\nNo se encuentra el fichero auxiliar TXT!\n");
+        Serial.println("\nNo se encuentra el fichero auxiliar TXT (comidas no guardadas en database)!\n");
+    }
+}
+#endif
+
+
+
+
+
+
+// ----------------------------------------------------------------------------------------------------------
+// ------------------------- FICHERO DE INFO DE PRODUCTOS BARCODE LEÍDOS ------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Verifica si el fichero CSV (productos barcode) existe en la tarjeta SD.
+ * 
+ * @return true si el fichero existe, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool productsFileExists()
+{
+    File file = SD.open(productsFileCSV, FILE_READ);
+    if (file)
+    {
+        file.close();
+        return true;
+    }
+    return false;
+}
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Escribe el encabezado del archivo de barcodes en la tarjeta SD.
+ * El encabezado contiene los nombres de las columnas separados por ';':
+ *      | barcode | nombre_producto | carb_1g | lip_1g | prot_1g | kcal_1g |
+ */
+/*-----------------------------------------------------------------------------*/
+bool writeHeaderToProductsFile()
+{
+    /*#if defined(SM_DEBUG)
+    SerialPC.print(F("\n Creando fichero ")); SerialPC.print(productsFileCSV); SerialPC.println(F(" ...\n"));
+    #endif*/
+
+    // Debe separarse por ';' para que Excel abra el fichero csv separando las
+    // columnas directamente:
+
+    // La información de los productos viene como "<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+    String header = "barcode;nombre_producto;carb_1g;lip_1g;prot_1g;kcal_1g";
+
+    File myFile = SD.open(productsFileCSV, FILE_WRITE); 
+    if (myFile)
+    {
+        myFile.println(header);
+        myFile.close(); 
+        return true;
+    }
+    else
+    {
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("Error abriendo archivo CSV (productos barcode)!"));
+        #endif
+        return false;
+    }
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Busca el barcode en el fichero barcodes.csv de la tarjeta SD.
+ * 
+ * @param barcode El código de barras a buscar.
+ * @param productInfo La información del producto encontrada.
+ * @return true si el código de barras se encuentra en el fichero, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool searchBarcodeInProductsFile(String &barcode, String &productInfo)
+{
+    File file = SD.open(productsFileCSV, FILE_READ);
+
+    // --- ERROR: NO SE PUDO ABRIR FICHERO -----
+    // Asumimos producto no encontrado
+    if(!file)
+    {
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("Error al abrir el fichero CSV (productos barcode), puede que no exista"));
+        #endif
+        productInfo = "";
+        return false;
+    }
+    // -----------------------------------------
+
+    String line;
+    while(file.available())
+    {
+        line = file.readStringUntil('\n'); // Leer línea completa, eliminando el salto de línea
+
+        // --- PRODUCTO ENCONTRADO ---
+        if(line.startsWith(barcode + ";")) // Si la línea empieza con el barcode. 
+        {                                  // Se incluye el ';' para que no se confunda con una cadena parcial de otro barcode, en caso de que coincidan
+            productInfo = line; // "<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+            file.close();
+            return true; // Producto encontrado en SD (ya se ha leído antes)
+        }
+        // ----------------------------
+    }
+
+    // --- PRODUCTO NO ENCONTRADO ---
+    productInfo = "";
+    file.close();
+    return false;
+    // ------------------------------
+
+}
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Escribe la información de un producto en el fichero barcodes.csv de la tarjeta SD.
+ * 
+ * @param productInfo La información del producto a escribir: "<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+ */
+/*-----------------------------------------------------------------------------*/
+void saveProductInfoInProductsFile(String &productInfo)
+{
+    // La información del producto viene como "PRODUCT:<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
+    
+    // Eliminar la parte de "PRODUCT:"
+    String productData = productInfo.substring(8);
+
+    // Escribir información en el fichero
+    File myFile = SD.open(productsFileCSV, FILE_WRITE); 
+    if (myFile)
+    {
+        // ---- PRODUCTO GUARDADO ------
+        myFile.println(productData); // "<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>\n"
+        myFile.close(); 
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("Nuevo producto guardado en CSV (productos barcode)!"));
+        #endif
+        // ------------------------------
+    }
+    else
+    {
+        #if defined(SM_DEBUG)
+        SerialPC.println(F("Error abriendo archivo CSV (productos barcode)!"));
+        #endif
     }
 }
 
@@ -1143,9 +1268,157 @@ void readAuxFileTXT()
 
 
 
-/******************************************************************************/
-/******************************************************************************/
+// ----------------------------------------------------------------------------------------------------------
+// ------------------------- BORRAR INFORMACIÓN DE USO DEL USUARIO ------------------------------------------
+// ----------------------------------------------------------------------------------------------------------
+
+#ifdef BORRADO_INFO_USUARIO
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Borra el fichero CSV existente y crea uno nuevo con el mismo nombre.
+ * 
+ * @return true si se borra y crea el fichero correctamente, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool deleteHistoryFile()
+{
+    // -------- BORRAR FICHERO CSV --------------------------
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\n1.Borrando fichero CSV (historial de comidas)..."));
+    #endif
+    SD.remove(historyFileCSV);
+
+    if (!SD.exists(historyFileCSV)) 
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("    Fichero CSV (historial de comidas) borrado"));
+        #endif
+    }
+    else  
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("    Error borrando fichero CSV (historial de comidas)!"));
+        #endif
+        return false;
+    }
+    // -------- FIN BORRAR FICHERO CSV ----------------------
 
 
+    // -------- CREAR NUEVO FICHERO CSV ---------------------
+    // Creo uno nuevo con el mismo nombre (writeHeader())
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("    --> Creando fichero CSV de nuevo (historial de comidas).."));
+    #endif
+    writeHeaderToHistoryFile();      // Crear fichero de nuevo e incluir el header
+    updateAcumuladoHoyFromHistoryFile();  // Actualizar acumulado (ahora debe ser 0)
+    return true;
+    // -------- FIN CREAR NUEVO FICHERO CSV -----------------
+}
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Borra un fichero en el ESP32.
+ * 
+ * Esta función borra un fichero en el ESP32 utilizando la tarjeta SD.
+ * 
+ * @return true si el fichero se borra correctamente, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool deleteMealsFile()
+{
+    // -------- BORRAR FICHERO ESP32 ------------------------
+    if (SD.exists(mealsFileTXT))
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("\n2.Borrando fichero TXT (comidas no guardadas en database)..."));
+        #endif
+        SD.remove(mealsFileTXT);
+
+        if (!SD.exists(mealsFileTXT)) 
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("    Fichero TXT (comidas no guardadas en database) borrado"));
+            #endif
+            return true;
+        }
+        else  
+        {
+            #if defined(SM_DEBUG)
+                SerialPC.println(F("    Error borrando fichero TXT (comidas no guardadas en database)!"));
+            #endif
+            return false;
+        }
+    }
+    else
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("    No existe el fichero TXT (comidas no guardadas en database)"));
+        #endif
+        return true;
+    }
+    // ------------------------------------------------------
+
+    // En este caso no hace falta crearlo aquí, como sí ocurría con el CSV, porque
+    // cuando se vaya a escribir algo al guardar comida, ya se creará.
+}
+
+
+
+
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Borra el fichero CSV con los productos barcode ya leídos y crea uno nuevo con el mismo nombre.
+ * 
+ * @return true si se borra y crea el fichero correctamente, false en caso contrario.
+ */
+/*-----------------------------------------------------------------------------*/
+bool deleteProductsFile()
+{
+    // -------- BORRAR FICHERO CSV --------------------------
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\n3. Borrando fichero CSV (productos barcode)..."));
+    #endif
+    SD.remove(productsFileCSV);
+
+    if (!SD.exists(productsFileCSV)) 
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("    Fichero CSV (productos barcode) borrado"));
+        #endif
+    }
+    else  
+    {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("    Error borrando fichero CSV (productos barcode)!"));
+        #endif
+        return false;
+    }
+    // -------- FIN BORRAR FICHERO CSV ----------------------
+
+
+    // -------- CREAR NUEVO FICHERO CSV ---------------------
+    // Creo uno nuevo con el mismo nombre (writeHeader())
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("    --> Creando fichero CSV (productos barcode) de nuevo.."));
+    #endif
+    writeHeaderToProductsFile();      // Crear fichero de nuevo e incluir el header
+    return true;
+    // -------- FIN CREAR NUEVO FICHERO CSV -----------------
+}
+
+
+
+#endif // BORRADO_INFO_USUARIO
+
+
+
+
+
+/******************************************************************************/
+/******************************************************************************/
 
 #endif

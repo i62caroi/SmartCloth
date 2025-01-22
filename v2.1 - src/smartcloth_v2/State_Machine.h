@@ -27,8 +27,14 @@
 /**
  * @def RULES
  * @brief Máximo número de reglas de transición.
+ * 
+ * @note Si este valor pasa de 255, hay que cambiar el tipo de dato de 'byte' a 'int' en la función checkStateConditions().
  */
-#define RULES 197   // 7 SON DE BORRAR CSV EN PRUEBAS. SI PASA DE 255, HAY QUE CAMBIAR EL BUCLE EN checkStateConditions() byte --> int
+#ifdef BORRADO_INFO_USUARIO
+#define RULES 199
+#else
+#define RULES 187 
+#endif
 
 
 #include "SD_functions.h" // Incluye lista_Comida.h y Serial_functions.h
@@ -93,6 +99,11 @@
 #define  ERROR_STATE_AVISO           14
 
 
+// --- BORRADO DE FICHEROS ---
+#define  FILES_NOT_DELETED  0
+#define  FILES_DELETED      1
+
+
 
 
 
@@ -130,35 +141,37 @@ bool doneState;       // Flag para que solo se realicen una vez las actividades 
  */
 typedef enum 
 {
-                STATE_Init              =   (1),    // Estado inicial para colocar plato
-                STATE_Plato             =   (2),    // Estado para escoger grupo
-                STATE_Grupo             =   (3),    // Grupo alimentos
-                STATE_Barcode_read      =   (4),    // Estado para leer barcode 
-                STATE_Barcode_search    =   (5),    // Estado para buscar información del producto
-                STATE_Barcode_check     =   (6),    // Estado para confirmar el producto encontrado
-                STATE_Barcode           =   (7),    // Estado para utilizar el producto encontrado como grupo de alimentos
-                STATE_raw               =   (8),    // crudo
-                STATE_cooked            =   (9),    // cocinado
-                STATE_weighted          =   (10),    // alimento pesado
-                STATE_add_check         =   (11),    // Comprobar que se quiere añadir plato
-                STATE_added             =   (12),    // plato añadido
-                STATE_delete_check      =   (13),   // Comprobar que se quiere eliminar plato
-                STATE_deleted           =   (14),   // plato eliminado
-                STATE_save_check        =   (15),   // Comprobar que se quiere guardar comida
-                STATE_saved             =   (16),   // comida guardada
-                STATE_ERROR             =   (17),   // Estado ficticio de error (acción incorrecta)
-                STATE_CANCEL            =   (18),   // Estado ficticio de Cancelación
-                STATE_AVISO             =   (19),   // Estado ficticio de Aviso
+                STATE_Init              =   (1),    // Estado inicial para colocar plato                                        -->     Estado válido 
+                STATE_Plato             =   (2),    // Estado para escoger grupo                                                -->     Estado válido 
+                STATE_Grupo             =   (3),    // Grupo alimentos                                                          -->     Estado válido 
+                STATE_Barcode_read      =   (4),    // Estado para leer barcode                                                 -->     Estado transitorio
+                STATE_Barcode_search    =   (5),    // Estado para buscar información del producto                              -->     Estado transitorio
+                STATE_Barcode_check     =   (6),    // Estado para confirmar el producto encontrado                             -->     Estado transitorio
+                STATE_Barcode           =   (7),    // Estado para utilizar el producto encontrado como grupo de alimentos      -->     Estado válido 
+                STATE_raw               =   (8),    // Estado que indica alimento crudo                                         -->     Estado válido 
+                STATE_cooked            =   (9),    // Estado que indica alimento cocinado                                      -->     Estado válido 
+                STATE_weighted          =   (10),   // Estado para pesar alimento                                               -->     Estado válido 
+                STATE_add_check         =   (11),   // Estado para comprobar que se quiere añadir plato                         -->     Estado transitorio
+                STATE_added             =   (12),   // Estado para añadir plato                                                 -->     Estado transitorio
+                STATE_delete_check      =   (13),   // Estado para comprobar que se quiere eliminar plato                       -->     Estado transitorio
+                STATE_deleted           =   (14),   // Estado para eliminar plato                                               -->     Estado transitorio
+                STATE_save_check        =   (15),   // Estado para comprobar que se quiere guardar la comida                    -->     Estado transitorio
+                STATE_saved             =   (16),   // Estado para guardar la comida                                            -->     Estado transitorio
+                STATE_ERROR             =   (17),   // Estado ficticio de error (acción incorrecta)                             -->     Estado transitorio
+                STATE_CANCEL            =   (18),   // Estado ficticio de Cancelación                                           -->     Estado transitorio
+                STATE_AVISO             =   (19),   // Estado ficticio de Aviso                                                 -->     Estado transitorio
 
-                STATE_DELETE_CSV_CHECK    =   (20),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.
-                STATE_DELETED_CSV         =   (21),   // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.
+                #ifdef BORRADO_INFO_USUARIO
+                STATE_DELETE_CSV_CHECK    =   (20),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.       -->     Estado transitorio
+                STATE_DELETED_CSV         =   (21),   // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.                          -->     Estado transitorio
                                                       //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
+                #endif
 
-                STATE_CRITIC_FAILURE_SD   =   (22),     // La SD ha fallado en el setup o no se encuentra --> no se permite usar SM
+                STATE_CRITIC_FAILURE_SD   =   (22),     // La SD ha fallado en el setup o no se encuentra --> no se permite usar SM                         -->     Estado transitorio
                                                         // Este estado no tiene transiciones de entrada ni de salida. Solo sirve para mostrar
                                                         // la pantalla de fallo crítico. Se entra manualmente por código, no por acciones del usuario.
 
-                STATE_UPLOAD_DATA = (23)        // Hay datos en el fichero data-esp.txt y hay que subirlos a la base de datos.
+                STATE_UPLOAD_DATA = (23)        // Hay datos en el fichero data-esp.txt y hay que subirlos a la base de datos.                              -->     Estado transitorio
                                                 // Solo se pasaría a este estado al iniciar el dispositivo para guardar la info acumulada en el fichero.
                                                 // Se entra manualmente por código, no por acciones del usuario, por eso no tiene transiciones de entrada.
                                                 // Sí tiene una transición de salida a Init cuando se suben o no los datos.
@@ -213,7 +226,10 @@ typedef enum
               GO_TO_SAVE_CHECK                  =   (35),   // Evento ficticio para volver a STATE_save_check porque saltó un error 
               GO_TO_SAVED                       =   (36),   // Evento ficticio para volver a STATE_saved porque saltó un error 
               GO_TO_CANCEL                      =   (37),   // Evento ficticio para ir a STATE_CANCEL si se cancela una acción iniciada durante un error
-              DELETE_CSV                        =   (38),   // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
+
+              #ifdef BORRADO_INFO_USUARIO
+              DELETE_FILES                        =   (38)   // EVENTO PARA BORRAR EL FICHERO CSV. EL USUARIO NO DEBERÍA LLEGAR A ACTIVARLO. SOLO PARA LAS PRUEBAS.
+              #endif
 } event_t;
 
 
@@ -488,8 +504,9 @@ static transition_rule rules[RULES] =
                                         {STATE_CANCEL,STATE_weighted,GO_TO_WEIGHTED},   // Regresar a STATE_weighted tras cancelar add/delete/save o leer barcode iniciada desde STATE_weighted
                                         {STATE_CANCEL,STATE_ERROR,ERROR},               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría 
                                                                                         // en bucle marcando error.    
-
-                                        {STATE_CANCEL,STATE_DELETE_CSV_CHECK,DELETE_CSV},  // INICIAR BORRADO DE FICHERO CSV. EL USUARIO NO DEBERÍA ACTIVAR EL EVENTO. SOLO PARA LAS PRUEBAS.
+                                        #ifdef BORRADO_INFO_USUARIO
+                                        {STATE_CANCEL,STATE_DELETE_CSV_CHECK,DELETE_FILES},  // INICIAR BORRADO DE FICHEROS USUARIO (se marca DELETE_FILES pulsando botón grupo 1 durante cancelación)
+                                        #endif
                                         // -----------------------
 
 
@@ -503,18 +520,22 @@ static transition_rule rules[RULES] =
 
 
                                          // --- CHECK DELETE CSV ---
-                                        {STATE_DELETE_CSV_CHECK,STATE_DELETE_CSV_CHECK,TIPO_A},   // Entrar de nuevo a DELETE_CSV_CHECK y entonces confirmar o no el borrado según el grupo pulsado
-                                        {STATE_DELETE_CSV_CHECK,STATE_DELETE_CSV_CHECK,TIPO_B},
-                                        {STATE_DELETE_CSV_CHECK,STATE_DELETED_CSV,DELETE_CSV},    // CONFIRMAR BORRAR CSV
-                                        {STATE_DELETE_CSV_CHECK,STATE_Init,GO_TO_INIT},           // Regresar a STATE_Init tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_Init
-                                        {STATE_DELETE_CSV_CHECK,STATE_raw,GO_TO_RAW},             // Regresar a STATE_raw tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_raw   
-                                        {STATE_DELETE_CSV_CHECK,STATE_cooked,GO_TO_COOKED},       // Regresar a STATE_cooked tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_cooked
-                                        {STATE_DELETE_CSV_CHECK,STATE_weighted,GO_TO_WEIGHTED},   // Regresar a STATE_weighted tras cancelar (5 seg) el BORRAR CSV iniciado desde STATE_weighted
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,CANCELAR},           // Cancelar manualmente el BORRAR CSV pulsando cualquier botón distinto del grupo 20
+                                         #ifdef BORRADO_INFO_USUARIO
+                                        {STATE_DELETE_CSV_CHECK,STATE_DELETED_CSV,DELETE_FILES},    // CONFIRMAR BORRAR FICHEROS DEL USUARIO (se marca DELETE_FILES pulsando botón grupo 20)
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,TIPO_A},               // Cancelar borrar ficheros del usuario pulsando botón de grupo tipoA.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,TIPO_B},               // Cancelar borrar ficheros del usuario pulsando botón de grupo tipoB (excepto grupo 20).
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,BARCODE},              // Cancelar borrar ficheros del usuario pulsando botón de BARCODE.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,CRUDO},                // Cancelar borrar ficheros del usuario pulsando botón de CRUDO.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,COCINADO},             // Cancelar borrar ficheros del usuario pulsando botón de COCINADO.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,ADD_PLATO},            // Cancelar borrar ficheros del usuario pulsando botón de AÑADIR PLATO.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,DELETE_PLATO},         // Cancelar borrar ficheros del usuario pulsando botón de BORRAR PLATO.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,GUARDAR},              // Cancelar borrar ficheros del usuario pulsando botón de GUARDAR.
+                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,CANCELAR},             // Cancelar automáticamente el borrar ficheros del usuario tras 5 segundos de inactividad.
                                         // --------------------------
 
                                         // --- FICHERO CSV BORRADO ---
-                                        {STATE_DELETED_CSV,STATE_Init,GO_TO_INIT},         // Regresar a STATE_Init tras BORRAR CSV (siempre iniciado desde STATE_Init)
+                                        {STATE_DELETED_CSV,STATE_Init,GO_TO_INIT},         // Regresar a STATE_Init tras BORRAR FICHEROS USUARIO (siempre iniciado desde STATE_Init)
+                                        #endif // BORRADO_INFO_USUARIO
                                         // ---------------------
 
                                         // --- UPLOAD DATA TO DATABASE ---
@@ -534,7 +555,7 @@ static transition_rule rules[RULES] =
 state_t state_actual;          // Estado actual
 state_t state_new;             // Nuevo estado al que se va a pasar
 state_t state_prev;            // Estado anterior
-state_t lastValidState;        // Último estado válido (Init, Plato, Grupo, raw, cooked, weighted)
+state_t lastValidState;        // Último estado válido (Init, Plato, Grupo, Barcode, raw, cooked, weighted). Como puntos de retorno (checkpoint) tras error o aviso.
 // ------ FIN VARIABLES DE ESTADOS ----------------------------------------------------
 
 
@@ -560,7 +581,9 @@ bool    keepErrorScreen         = false;    // Mantener pantalla de error cometi
 bool    showingTemporalScreen   = false;    // Flag para saber que se está mostrando una pantalla temporal o auxiliar
 
 bool    flagComidaSaved         = false;    // Flag para saber que se ha guardado la comida
+#ifdef BORRADO_INFO_USUARIO
 bool    flagFicheroCSVBorrado   = false;    // Flag para saber que se ha borrado el fichero csv
+#endif
 bool    flagRecipienteRetirado  = false;    // Flag para saber que se ha retirado el plato completo
 // ------ FIN VARIABLES DE EVENTOS ----------------------------------------------------
 
@@ -628,8 +651,10 @@ void    actStateERROR();                                // Actividades STATE_ERR
 void    actStateCANCEL();                               // Actividades STATE_CANCEL
 void    actStateAVISO();                                // Actividades STATE_AVISO
 
+#ifdef BORRADO_INFO_USUARIO
 void    actState_DELETE_CSV_CHECK();                    // Actividades STATE_DELETE_CSV_CHECK
 void    actState_DELETED_CSV();                         // Actividades STATE_DELETED_CSV
+#endif
 
 void    actState_CRITIC_FAILURE_SD();                   // Actividades STATE_CRITIC_FAILURE_SD
 void    actState_UPLOAD_DATA();                         // Actividades STATE_UPLOAD_DATA
@@ -678,6 +703,8 @@ void printEventName(event_t event)
         case TIPO_A:                            SerialPC.print(F("TIPO_A"));                            break;
         case TIPO_B:                            SerialPC.print(F("TIPO_B"));                            break;
         case BARCODE:                           SerialPC.print(F("BARCODE"));                           break;
+        case BARCODE_R:                         SerialPC.print(F("BARCODE_R"));                         break;
+        case BARCODE_F:                         SerialPC.print(F("BARCODE_F"));                         break;
         case CRUDO:                             SerialPC.print(F("CRUDO"));                             break;
         case COCINADO:                          SerialPC.print(F("COCINADO"));                          break;
         case ADD_PLATO:                         SerialPC.print(F("ADD_PLATO"));                         break;
@@ -710,7 +737,10 @@ void printEventName(event_t event)
         case GO_TO_SAVE_CHECK:                  SerialPC.print(F("GO_TO_SAVE_CHECK"));                  break;
         case GO_TO_SAVED:                       SerialPC.print(F("GO_TO_SAVED"));                       break;
         case GO_TO_CANCEL:                      SerialPC.print(F("GO_TO_CANCEL"));                      break;
-        case DELETE_CSV:                        SerialPC.print(F("DELETE_CSV"));                        break;
+
+        #ifdef BORRADO_INFO_USUARIO
+        case DELETE_FILES:                        SerialPC.print(F("DELETE_FILES"));                        break;
+        #endif
         
         default:                                SerialPC.print(F("Evento desconocido"));                break;
     }
@@ -746,8 +776,12 @@ void printStateName(state_t state)
         case STATE_ERROR:               SerialPC.print(F("STATE_ERROR"));                break;
         case STATE_CANCEL:              SerialPC.print(F("STATE_CANCEL"));               break;
         case STATE_AVISO:               SerialPC.print(F("STATE_AVISO"));                break;
+
+        #ifdef BORRADO_INFO_USUARIO
         case STATE_DELETE_CSV_CHECK:    SerialPC.print(F("STATE_DELETE_CSV_CHECK"));     break;
         case STATE_DELETED_CSV:         SerialPC.print(F("STATE_DELETED_CSV"));          break;
+        #endif
+
         case STATE_CRITIC_FAILURE_SD:   SerialPC.print(F("STATE_CRITIC_FAILURE_SD"));    break;
         case STATE_UPLOAD_DATA:         SerialPC.print(F("STATE_UPLOAD_DATA"));          break;
         
@@ -851,12 +885,14 @@ void actStateInit()
             // -----------------------------------------------------------
 
             // ----- RESETEAR COPIA SI SE HA BORRADO CSV -----------------
+            #ifdef BORRADO_INFO_USUARIO
             if(flagFicheroCSVBorrado)
             {
                 comidaActualCopia.restoreComida();   
                 flagFicheroCSVBorrado = false;
                 flagComidaSaved = false; // Por si he hecho el borrado justo tras guardar
             } 
+            #endif
             // -----------------------------------------------------------
 
 
@@ -1025,6 +1061,11 @@ void actStatePlato()
                 // De esta forma, si se retira el plato y se regresa a Init, ya no vuelve a aparecer la info de la comida guardada antes, 
                 // sino que ya se está haciendo la nueva comida, que aún está a 0.
                 // 
+                // Si se regresa a STATE_Plato tras aviso pero la comida no está vacía, entonces no hace falta restaurar la copia. En el
+                // dashboard se mostrará la info de la comida actual, aún vigente. Por ejemplo, puede ser que se haya escogido y colocado
+                // un alimento de grupo y luego se haya querido leer barcode pero finalmente no se ha podido. Entonces, tras saltar aviso
+                // de barcode no detectado se regresa a STATE_Plato y se sigue con la comida actual indicando que se escoja grupo, pero aún 
+                // se tiene "guardado" el alimento del grupo escogido antes.
                 if((comidaActual.isComidaEmpty() == true) and (comidaActualCopia.isComidaEmpty() == false)) comidaActualCopia.restoreComida();   
 
                 if(flagComidaSaved) flagComidaSaved = false;  // Si se había guardado comida, se muestra "Comida guardada" en lugar de "Comida actual" en printZona3()
@@ -1039,9 +1080,22 @@ void actStatePlato()
             }
             else // Una vez colocado el recipiente, mostrar dashboard completo
             {
-                showDashboardStyle1(MSG_SIN_GRUPO);   // Mostrar dashboard con mensaje de sin grupo
+                // En dahsboard estilo 1 se muestra la info de comida actual en zona 3, pero lo que realmente muestra es la copia de la comida para cuando
+                // se guarde la comida y se limpie, que se pueda mostrar la info de la comida guardada (ahora vacía), por eso se hace una copia antes de borrarla.
+                // En este STATE_Plato, si se acaba de colocar plato y la comidaActual está vacía porque se ha finalizado (guardado), se reinicia a 0 la copia de esa comida 
+                // para comenzar otra comida, por lo que se va a mostrar a 0 la info de la comida en el dashboard.
+                // El problema que tiene esto es que si se ha colocado ya un alimento y al colocar el siguiente salta aviso, como que no se haya podido
+                // leer el barcode, al venir a STATE_Plato tras el aviso se va a mostrar la info de la comida actual a 0, pero en realidad se tiene "guardado"
+                // el alimento puesto anteriormente. Por eso, si no se acaba de colocar el recipiente (ergo no se viene de STATE_Init), debemos trasladar la comida actual
+                // a la copia para que se muestre la info correcta en el dashboard (el estilo 1 muestra la info de comidaActualCopia a posta).
+
+                // Lo siguiente solo lo hacemos para que se muestre la info correcta en el dashboard. Internamente, la comida actual tiene toda la información,
+                // pero con el dashboard estilo 1 no se muestra si no se copia a la comida copia, lo cual puede llevar a confusión pensando que está vacía
+                //if(comidaActual.isComidaEmpty() == false) comidaActualCopia.copyComida(comidaActual); // Copiar comida actual en la copia
+                
+                showDashboardStyle1(MSG_SIN_GRUPO);   // Mostrar dashboard estilo 1 (Comida | Acumulado) con mensaje de sin grupo
                 showing_recipiente_colocado = false;                
-                showing_dash = true;                  // Se está mostrando dashboard estilo 1 (Comida | Acumulado)
+                showing_dash = true;                  // Mostrando dashboard estilo 1 (Comida | Acumulado)
                 showing_escoger_grupo = false;
             }
             // ----- FIN INFO INICIAL DE PANTALLA ---------------------
@@ -1088,7 +1142,7 @@ void actStatePlato()
             if (currentTime - previousTime >= grupoInterval)  // Si el escoger grupo ha estado 5 segundos, se cambia a dashboard estilo 1
             {
                 previousTime = currentTime;
-                showDashboardStyle1(MSG_SIN_GRUPO);
+                showDashboardStyle1(MSG_SIN_GRUPO); // Mostrar dashboard estilo 1 (Comida | Acumulado) con mensaje de sin grupo
                 showing_dash = true;  // Mostrando dashboard estilo 1 (Comida | Acumulado)
                 showing_escoger_grupo = false;
             }
@@ -1239,7 +1293,7 @@ void actStateBarcodeRead()
                                                 // que ya llevaría a STATE_Init
 
             #if defined(SM_DEBUG)
-                SerialPC.println(F("\nLeyendo barcode...")); 
+                SerialPC.println(F("\nPidiendo leer barcode...")); 
             #endif
 
             // ----- ACCIONES PREVIAS --------------------------------------
@@ -1374,73 +1428,99 @@ void actStateBarcodeSearch()
     if(!doneState)
     {
         #if defined(SM_DEBUG)
-            SerialPC.println(F("\nBuscando producto...")); 
+            SerialPC.println(F("\nBarcode leido, buscando producto...")); 
         #endif
 
 
         // ----- ACCIONES PRINCIPALES Y PANTALLAS -----------------
-        // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
-        // Se vuelve a comprobar la conexión, aunque se haya hecho en STATE_Barcode_read, por si se ha perdido, para que no
-        // se intente buscar el producto en la base de datos de OpenFoodFacts si no se tiene conexión a Internet.
 
-        // --- HAY INTERNET ---
-        if(checkWifiConnection()) // Hay WiFi
+        // ----- INFO DE PANTALLA -------------------------
+        showSearchingProductInfo();                              // Mostrar "Buscando información del producto..."
+        delay(500);                                             // Esperar 0.5 segundos para que se muestre el mensaje
+        // ----- FIN INFO DE PANTALLA ---------------------
+        
+        // --- COMPROBAR SI ES UN PRODUCTO RECURRENTE -----
+        // Primero miramos en el CSV (productos barcode) por si el producto leído es recurrente (si se ha leído antes).
+        // Si no lo es, entonces se indicará al ESP32 que lo busque en OpenFoodFacts.
+
+        // ----- PRODUCTO RECURRENTE --------
+        if(searchBarcodeInProductsFile(barcode, productInfo)) // Buscar en CSV (producto barcode) si el barcode ya se ha leído antes
         {
-            // ----- INFO DE PANTALLA -------------------------
-            showSearchingProductInfo();                              // Mostrar "Buscando información del producto..."
-            delay(500);                                             // Esperar 0.5 segundos para que se muestre el mensaje
-            // ----- FIN INFO DE PANTALLA ---------------------
-
-            // ----- LEER BARCODE -----------------------------
-            byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts en guardarla en 'productInfo'. 
-                                                                                      // Se va a quedar aquí hasta 10.5 segundos esperando respuesta del ESP32.
-            switch(resultFromGettingProductInfo)
-            {
-                // --- PRODUCTO ENCONTRADO --------------
-                case PRODUCT_FOUND: // Si se ha encontrado el producto, pasar a STATE_Barcode_check (evento BARCODE_F) para confirmar el producto
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.print(F("\nProducto encontrado. Pasando a STATE_Barcode_check..."));
-                                    #endif
-                                    addEventToBuffer(BARCODE_F);    break; 
-                // --------------------------------------
-
-                // --- AVISO: PRODUCTO NO ENCONTRADO ----
-                case PRODUCT_NOT_FOUND: // Si no se ha encontrado el producto, pasar a STATE_AVISO para mostrar el mensaje "Producto no encontrado"
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.print(F("\nProducto no encontrado. Pasando a STATE_AVISO..."));
-                                    #endif
-                                    addEventToBuffer(AVISO_PRODUCT_NOT_FOUND);        break;
-                // --------------------------------------
-
-                // -- AVISO: TIMEOUT O DESCONOCIDO ------
-                default: // TIMEOUT, PRODUCT_TIMEOUT, HTTP_ERROR o UNKNOWN_ERROR
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.print(F("\nTimeout o Desconocido, asumimos producto no encontrado. Pasando a STATE_AVISO..."));
-                                    #endif
-                                    addEventToBuffer(AVISO_PRODUCT_NOT_FOUND);        break;
-                // -------------------------------------
-            }
-
-            flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
-            
-            // ----- FIN LEER BARCODE -------------------------
-
-        }
-        // --- FIN HAY INTERNET --
-
-        // --- NO HAY INTERNET ---
-        else // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, se vuelve a STATE_Plato, STATE_Grupo o STATE_Barcode
-        {
-
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("No se procede a buscar producto porque ESP32 esta desconectado o no tiene WiFi. Pasando a STATE_AVISO..."));
+            #if defined (SM_DEBUG)
+                SerialPC.println(F("\nPRODUCTO RECURRENTE"));
+                SerialPC.println("\nInformacion del producto: " + productInfo);
+                SerialPC.print(F("\nProducto encontrado. Pasando a STATE_Barcode_check..."));
             #endif
-            addEventToBuffer(AVISO_NO_WIFI_BARCODE);   
-            flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición    
-        }
-        // --- FIN NO HAY INTERNET ---
-        // ---- FIN CHEQUEO INTERNET --------------------
+            addEventToBuffer(BARCODE_F);
+            flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
 
+        }
+        // ----- FIN PRODUCTO RECURRENTE ----
+
+        // ----- PRODUCTO NUEVO -------------
+        else // Si no se ha encontrado el producto en SD, buscarlo en OpenFoodFacts
+        {
+            #if defined (SM_DEBUG)
+                SerialPC.println(F("\nPRODUCTO NUEVO"));
+                SerialPC.println(F("\nBuscando info del producto en OpenFoodFacts...\n"));
+            #endif
+
+            // --- COMPROBAR SI HAY CONEXIÓN A INTERNET -----
+            // --- HAY INTERNET ---
+            if(checkWifiConnection()) // Hay WiFi
+            {
+                // ----- LEER BARCODE -----------------------------
+                byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts en guardarla en 'productInfo'. 
+                                                                                        // Se va a quedar aquí hasta 10.5 segundos esperando respuesta del ESP32.
+                switch(resultFromGettingProductInfo)
+                {
+                    // --- PRODUCTO ENCONTRADO --------------
+                    case PRODUCT_FOUND: // Si se ha encontrado el producto, pasar a STATE_Barcode_check (evento BARCODE_F) para confirmar el producto
+                                        #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nProducto encontrado. Pasando a STATE_Barcode_check..."));
+                                        #endif
+                                        addEventToBuffer(BARCODE_F);    break; 
+                    // --------------------------------------
+
+                    // --- AVISO: PRODUCTO NO ENCONTRADO ----
+                    case PRODUCT_NOT_FOUND: // Si no se ha encontrado el producto, pasar a STATE_AVISO para mostrar el mensaje "Producto no encontrado"
+                                        #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nProducto no encontrado. Pasando a STATE_AVISO..."));
+                                        #endif
+                                        addEventToBuffer(AVISO_PRODUCT_NOT_FOUND);        break;
+                    // --------------------------------------
+
+                    // -- AVISO: TIMEOUT O DESCONOCIDO ------
+                    default: // TIMEOUT, PRODUCT_TIMEOUT, HTTP_ERROR o UNKNOWN_ERROR
+                                        #if defined(SM_DEBUG)
+                                            SerialPC.print(F("\nTimeout o Desconocido, asumimos producto no encontrado. Pasando a STATE_AVISO..."));
+                                        #endif
+                                        addEventToBuffer(AVISO_PRODUCT_NOT_FOUND);        break;
+                    // -------------------------------------
+                }
+
+                flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición
+                
+                // ----- FIN LEER BARCODE -------------------------
+
+            }
+            // --- FIN HAY INTERNET --
+
+            // --- NO HAY INTERNET ---
+            else // Si el ESP32 está desconectado, no hay WiFi o TIMEOUT, se vuelve a STATE_Plato, STATE_Grupo o STATE_Barcode
+            {
+
+                #if defined(SM_DEBUG)
+                    SerialPC.println(F("No se procede a buscar producto porque ESP32 esta desconectado o no tiene WiFi. Pasando a STATE_AVISO..."));
+                #endif
+                addEventToBuffer(AVISO_NO_WIFI_BARCODE);   
+                flagEvent = true; // Marcar flag de evento para que se compruebe en loop() y se realice la transición    
+            }
+            // --- FIN NO HAY INTERNET ---
+            // ---- FIN CHEQUEO INTERNET --------------------
+        }
+        // ----- FIN PRODUCTO NUEVO ---------
+        // --- FIN CHEQUEO PRODUCTO RECURRENTE ------------
 
         // --------------------------------------------------------
 
@@ -1511,20 +1591,26 @@ void actStateBarcode()
         #endif
 
         // ----- ACCIONES --------------------------------
-        // ----- ACTUALIZAR grupoActual ----------
-        // Solo se actualiza 'grupoActual' si se viene directo de STATE_Barcode_check, para evitar que se modifique 'grupoActual' si en realidad se ha cancelado el producto pero al querer
-        // regresar al último estado válido se llegó a STATE_Barcode porque se había iniciado una segunda lectura (la del producto cancelado) tras previamente haber confirmado un producto.
+        // Solo se actualiza 'grupoActual' y se guarda el producto si se viene directo de STATE_Barcode_check, para evitar que se modifique 'grupoActual' si en realidad se ha cancelado el 
+        // producto pero al querer regresar al último estado válido se llegó a STATE_Barcode porque se había iniciado una segunda lectura (la del producto cancelado) tras previamente 
+        // haber confirmado un producto.
         if(state_prev == STATE_Barcode_check) 
+        {
+            // ----- ACTUALIZAR grupoActual ----------
             updateGrupoActualFromBarcode(productInfo); // Actualizar información del grupoActual con la info del úlimo producto leído si se acaba de confirmar
-        // ---------------------------------------
+            // ---------------------------------------
+
+            // ---- GUARDAR PRODUCTO NUEVO -----------
+            // Guardamos el producto nuevo en la SD para agilizar futuras lecturas evitando la búsqueda en OpenFoodFacts
+            saveProductInfoInProductsFile(productInfo); // Guardar info del producto en CSV (productos barcode)
+            // ---------------------------------------
+        }
         // ----- FIN ACCIONES ----------------------------
 
 
         // ----- INFO DE PANTALLA -------------------------
-        // Solo se modifica la pantalla completa si se estaba mostrando una pantalla temporal/transitoria. 
-        // En realidad, todas las pantallas que se puedan mostrar antes de entrar a STATE_Barcode serán transitorias, osea que no haría falta comprobarlo.
-        //if(showingTemporalScreen) 
-            showDashboardStyle2_Barcode(); // Mostrar dashboard estilo 2 (Alimento | Comida) con Zona 1 (nombre producto) cubriendo la Zona 2 (no necesita procesamiento) para el grupo barcode
+        // Todas las pantallas que se puedan mostrar antes de entrar a STATE_Barcode serán transitorias, osea que no haría falta comprobarlo. 
+        showDashboardStyle2_Barcode(); // Mostrar dashboard estilo 2 (Alimento | Comida) con Zona 1 (nombre producto) cubriendo la Zona 2 (no necesita procesamiento) para el grupo barcode
 
         showing_dash = true;                // Se está mostrando dashboard estilo 2 (Alimento | Comida)
         showing_colocar_alimento = false;   
@@ -2384,7 +2470,7 @@ void actStateSaved()
 
             /* ----- GUARDAR COMIDA EN DIARIO (Y WEB) ----------------------------- */
             // Guardar comida localmente y enviarla a la base de datos, si hay conexión a internet
-            else    // COMIDA CON PLATOS ==> HAY QUE GUARDAR
+            else    // COMIDA CON ALIMENTOS ==> HAY QUE GUARDAR
             {
                 avisoComidaWasEmpty = false;                   // Para mostrar mensaje de comida guardada y no comida vacía
 
@@ -2427,7 +2513,7 @@ void actStateSaved()
                                                             
                 #if defined(SM_DEBUG)
                     if(typeOfSavingDone != SAVE_EXECUTED_FULL) // Si no se ha guardado en la database, mostrar por terminal el fichero con la comida por guardar
-                        readFileTXT();                          
+                        readMealsFile();                          
                 #endif
                 // -----------------------------------
 
@@ -3440,66 +3526,53 @@ void actStateCANCEL()
     {
         // Regreso al estado desde donde se inició la acción ahora cancelada.
 
-        // En lugar de mirar el último estado válido se comprueba el última estado por si se viene de STATE_DELETE_CSV_CHECK,
-        // que no es válido, pero para regresar a Init si se cancela el borrado del CSV
-        if(state_prev == STATE_DELETE_CSV_CHECK)
+        // Ultimo estado válido puede ser Init, Grupos, Barcode, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
+        // cancelable (add/delete/save, leer barcode o borrar CSV/TXT).
+        switch (lastValidState)
         {
-            #if defined(SM_DEBUG)
-                SerialPC.println(F("\nRegreso a STATE_Init tras CANCELACION de BORRAR CSV..."));      
-            #endif 
-            addEventToBuffer(GO_TO_INIT);
-        }
-        else
-        {
-            // Ultimo estado válido puede ser Init, Grupos, Barcode, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
-            // cancelable (add/delete/save o leer barcode).
-            switch (lastValidState)
-            {
-                case STATE_Init: // La única acción cancelable que se puede iniciar en STATE_Init es guardar la comida     
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a Init tras CANCELACION de guardar comida..."));       
-                                    #endif 
-                                    addEventToBuffer(GO_TO_INIT);       break;  // Init
+            case STATE_Init: // Las acciones cancelables que se pueden iniciar en STATE_Init son guardar la comida o borrar el CSV/TXT de comidas     
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a Init tras CANCELACION de guardar comida o borrar CSV..."));       
+                                #endif 
+                                addEventToBuffer(GO_TO_INIT);       break;  // Init
 
-                case STATE_Plato: // La única acción cancelable que se puede iniciar en STATE_Plato es leer barcode     
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a Plato tras CANCELACION de leer barcode..."));       
-                                    #endif 
-                                    addEventToBuffer(GO_TO_PLATO);       break;  // Plato
+            case STATE_Plato: // La única acción cancelable que se puede iniciar en STATE_Plato es leer barcode     
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a Plato tras CANCELACION de leer barcode..."));       
+                                #endif 
+                                addEventToBuffer(GO_TO_PLATO);       break;  // Plato
 
-                case STATE_Grupo:  // Las acciones cancelables que se pueden iniciar en STATE_Grupo son add/delete/save o leer barcode
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a Grupos tras CANCELACION de add/delete/save o lectura de barcode..."));       
-                                    #endif 
-                                    addEventToBuffer(GO_TO_GRUPO);       break;  // Grupo
+            case STATE_Grupo:  // Las acciones cancelables que se pueden iniciar en STATE_Grupo son add/delete/save o leer barcode
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a Grupos tras CANCELACION de add/delete/save o lectura de barcode..."));       
+                                #endif 
+                                addEventToBuffer(GO_TO_GRUPO);       break;  // Grupo
 
-                case STATE_Barcode:  // Las acciones cancelables que se pueden iniciar en STATE_Barcode son add/delete/save o leer otro barcode
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a Barcode tras CANCELACION de add/delete/save o lectura de otro barcode..."));       
-                                    #endif 
-                                    addEventToBuffer(GO_TO_BARCODE);       break;  // Grupo
+            case STATE_Barcode:  // Las acciones cancelables que se pueden iniciar en STATE_Barcode son add/delete/save o leer otro barcode
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a Barcode tras CANCELACION de add/delete/save o lectura de otro barcode..."));       
+                                #endif 
+                                addEventToBuffer(GO_TO_BARCODE);       break;  // Grupo
 
-                case STATE_raw:   // Las acciones cancelables que se pueden iniciar en STATE_raw son add/delete/save o leer barcode    
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a raw tras CANCELACION de add/delete/save o lectura de barcode..."));         
-                                    #endif 
-                                    addEventToBuffer(GO_TO_RAW);         break;  // Crudo
+            case STATE_raw:   // Las acciones cancelables que se pueden iniciar en STATE_raw son add/delete/save, leer barcode o borrar el CSV/TXT de comidas     
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a raw tras CANCELACION de add/delete/save, lectura de barcode o borrar CSV..."));         
+                                #endif 
+                                addEventToBuffer(GO_TO_RAW);         break;  // Crudo
 
-                case STATE_cooked: // Las acciones cancelables que se pueden iniciar en STATE_cooked son add/delete/save o leer barcode   
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a cooked tras CANCELACION de add/delete/save o lectura de barcode..."));      
-                                    #endif 
-                                    addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
+            case STATE_cooked: // Las acciones cancelables que se pueden iniciar en STATE_cooked son add/delete/save, leer barcode o borrar el CSV/TXT de comidas   
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a cooked tras CANCELACION de add/delete/save, lectura de barcode o borrar CSV..."));      
+                                #endif 
+                                addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
 
-                case STATE_weighted: // Las acciones cancelables que se pueden iniciar en STATE_weighted son add/delete/save o leer barcode 
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a weighted tras CANCELACION de add/delete/save o lectura de barcode..."));    
-                                    #endif 
-                                    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
+            case STATE_weighted: // Las acciones cancelables que se pueden iniciar en STATE_weighted son add/delete/save, leer barcode o borrar el CSV/TXT de comidas
+                                #if defined(SM_DEBUG)
+                                    SerialPC.println(F("\nRegreso a weighted tras CANCELACION de add/delete/save, lectura de barcode o borrar CSV..."));    
+                                #endif 
+                                addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
 
-                default:  break;  
-            }
-            
+            default:  break;  
         }
 
         flagEvent = true; 
@@ -3512,18 +3585,21 @@ void actStateCANCEL()
     // La pantalla solo dura 1 segundo, no debería darle tiempo a los usuarios hacer nada. Además, no deben hacer nada.
     // Solo se va a gestionar el pulsar grupo1 para acceder al menú escondido de borrar el fichero csv.
 
+    // NO HACE FALTA, YA SE MARCA DELETE_FILES AL COMPROBAR LAS INTERRUPCIONES EN EL LOOP
+    /*#ifdef BORRADO_INFO_USUARIO
     else if(grandeButtonInterruptOccurred()) // Evento de interrupción por botonera Grande durante pantalla de cancelación. 
     {
         checkGrandeButton(); // Qué botón de Grande se ha pulsado
         if(buttonGrande == 1) // Se ha pulsado grupo1
         {
             #if defined(SM_DEBUG)
-                SerialPC.println(F("\ngrupo1 pulsado durante CANCELAR. Entrando a menú de BORRAR CSV..."));   
+                SerialPC.println(F("\ngrupo1 pulsado durante CANCELAR. Entrando a menú de BORRAR FICHEROS USUARIO..."));   
             #endif
-            addEventToBuffer(DELETE_CSV);      
+            addEventToBuffer(DELETE_FILES);      
             flagEvent = true;  
         }
     }
+    #endif*/
     // ----- FIN EVENTOS OCURRIDOS DURANTE CANCELACIÓN ------
 }
 
@@ -3531,142 +3607,17 @@ void actStateCANCEL()
 /*---------------------------------------------------------------------------------------------------------
    actStateAVISO(): Acciones del STATE_AVISO
 ----------------------------------------------------------------------------------------------------------*/
-// Versión mirando el evento anterior
-/*void actStateAVISO()
-{ 
-    static unsigned long previousTimeWarning;  // Para regresar al estado necesario
-    unsigned long currentTime;                 // Tiempo actual  
-
-    // -----  INFORMACIÓN MOSTRADA  ------------------------
-    if(!doneState)
-    { 
-        previousTimeWarning = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de aviso, regresar al estado anterior.
-
-        // Mostrar información según el estado en el que se realizó la acción que ha generado aviso (added/deleted/saved o barcode_not_read o product_not_found)
-        switch(state_prev)
-        { 
-            case STATE_Barcode_read:
-                                    showWarning(WARNING_BARCODE_NOT_READ);
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("No se ha detectado un barcode"));  
-                                    #endif 
-                                    break;  // Barcode_read
-
-            case STATE_Barcode_search:
-                                    showWarning(WARNING_PRODUCT_NOT_FOUND);
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("No se ha encontrado el producto"));  
-                                    #endif 
-                                    break;  // Barcode_search
-
-            case STATE_Barcode:
-                                    showWarning(WARNING_RAW_COOKED_NOT_NEEDED);
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("No hace falta escoger crudo o cocinado para el producto barcode"));  
-                                    #endif 
-                                    break;  // Barcode
-
-            case STATE_added:       showWarning(WARNING_NOT_ADDED);    
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("No se ha creado otro plato porque el actual está vacío"));  
-                                    #endif 
-                                    break;  // added     
-
-            case STATE_deleted:     showWarning(WARNING_NOT_DELETED);  
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("No se ha borrado el plato porque está vacío"));             
-                                    #endif 
-                                    break;  // deleted
-
-            case STATE_saved:       showWarning(WARNING_NOT_SAVED);    
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("No se ha guardado la comida porque está vacía"));           
-                                    #endif 
-                                    break;  // saved
-
-            default:  break;  
-        }
-
-        doneState = true;             // Solo realizar una vez las actividades del estado por cada vez que se active y no
-                                      // cada vez que se entre a esta función debido al loop de Arduino.
-                                      // Así, debe ocurrir un nuevo evento que lleve a este estado para que se "repitan" las acciones.
-
-    }
-    // ----- FIN INFORMACIÓN MOSTRADA -----------------------
-
-
-    // ----- TIEMPO DE ESPERA -------------------------------
-    currentTime = millis();
-    if ((currentTime - previousTimeWarning) > 3000) // Tras 3 segundos mostrando warning...
-    {
-        // Ultimo estado válido puede ser Init, Plato, Grupos, Barcode, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde 
-        // se puede intentar un acción que pueda marcar aviso (add/delete/save o leer barcode).
-        switch (lastValidState)
-        {
-            case STATE_Init:    
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nGO_TO_INIT forzada. Regreso a STATE_Init tras AVISO de save en STATE_Init..."));    
-                                #endif 
-                                addEventToBuffer(GO_TO_INIT);       break;  // Init
-
-            case STATE_Plato:
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nGO_TO_PLATO forzado. Regreso a State_Plato tras AVISO de \"Barcode no leido\" o \"Producto no encontrado\" en State_Plato..."));
-                                #endif
-                                addEventToBuffer(GO_TO_PLATO);      break;  // Plato
-
-            case STATE_Grupo: case STATE_raw: case STATE_cooked:  
-                // Si el aviso ha sido de plato o comida vacía, se regresa a STATE_Grupo para escoger crudo/cocinado y conformar el plato.
-                // Si el aviso ha sido de no leer barcode, se regresa a STATE_Grupo con el 'grupoActual' del último grupo que se escogió. 
-                //      También se podría separar esta opción y que regrese a STATE_Plato para indicar que no se tiene grupo ni barcode escogido.
-                                // Se mantiene peso del recipiente.
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nGO_TO_GRUPO forzado. Regreso a State_Grupo tras AVISO de add/delete/save o \"Barcode no leido\" o \"Producto no encontrado\" en State_Grupo, STATE_raw o STATE_cooked..."));
-                                #endif
-                                addEventToBuffer(GO_TO_GRUPO);      break;  // Grupo
-
-            case STATE_weighted:  
-                // Si el aviso ha sido de plato o comida vacía, se regresa a STATE_Plato para escoger grupo o barcode y formar el plato.
-                // Si el aviso ha sido de no leer barcode, se regresa a STATE_Plato para indicar que no se tiene escogido un grupo ni barcode.
-                //      Si hubiera algo en la báscula al intentar leer barcode, se habría guardado el alimento en el plato y la comida al entrar
-                //      en STATE_Barcode_read para intentar leer el barcode, por lo que no se perdería nada.   
-                                // Se mantiene peso del recipiente.
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nGO_TO_PLATO forzado. Regreso a State_Plato tras AVISO de add/delete/save o \"Barcode no leido\" o \"Producto no encontrado\" en STATE_weighted..."));
-                                #endif
-                                addEventToBuffer(GO_TO_PLATO);      break;  // Plato
-
-            case STATE_Barcode:
-                // Si el aviso ha sido de plato o comida vacía, se regresa a STATE_Barcode y se mantiene el 'grupoActual' con el barcode leído antes de intentar add/delete/save.
-                // Si el aviso ha sido que no se pudo leer otro barcode (tras ya haber confirmado uno al entrar a STATE_Barcode), se regresa a STATE_Barcode y se mantiene el
-                //      'grupoActual' con el barcode leído antes de intentar leer otro barcode.
-                // Si el aviso ha sido de no encontrar el producto, se regresa a STATE_Barcode y se mantiene el 'grupoActual' con el barcode leído antes de intentar leer otro barcode.
-                // Si el aviso ha sido de no necesitar crudo/cocinado, se regresa a STATE_Barcode y se mantiene el 'grupoActual' con el barcode leído antes de intentar raw/cooked.
-                                // Se mantiene peso del recipiente.
-                                #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nBARCODE forzado. Regreso a State_Barcode tras AVISO de add/delete/save o \"Barcode no leido\" o \"Producto no encontrado\"  o \"No hace falta crudo/cocinado\" en State_Barcode..."));
-                                #endif
-                                addEventToBuffer(GO_TO_BARCODE);      break;  // Barcode
-            
-            default:  break;  
-        }
-        flagEvent = true;
-    }
-    // ----- FIN TIEMPO DE ESPERA ---------------------------
-
-}*/
-
 // En lugar de mirar el estado anterior en el que se marcó el evento AVISO, se comprueba el último evento,
 // que ahora se ha dividido en:
-// AVISO_PLATO_EMPTY_NOT_ADDED      --> STATE_added
-// AVISO_PLATO_EMPTY_NOT_DELETED    --> STATE_deleted
-// AVISO_COMIDA_EMPTY               --> STATE_saved
-// AVISO_NO_WIFI_BARCODE            --> STATE_Barcode_read
-// AVISO_NO_BARCODE                 --> STATE_Barcode_read
-// AVISO_PRODUCT_NOT_FOUND          --> STATE_Barcode_search
+// STATE_added              -->     AVISO_PLATO_EMPTY_NOT_ADDED   
+// STATE_deleted            -->     AVISO_PLATO_EMPTY_NOT_DELETED    
+// STATE_saved              -->     AVISO_COMIDA_EMPTY             
+// STATE_Barcode_read       -->     AVISO_NO_WIFI_BARCODE           
+// STATE_Barcode_read       -->     AVISO_NO_BARCODE               
+// STATE_Barcode_search     -->     AVISO_PRODUCT_NOT_FOUND         
 
 // Si el aviso ha sido escoger crudo o cocinado para un producto barcode, no se marca un evento especial de aviso, sino que se
-// utiliza el propio evento CRUDO o COCINADO para pasar de STATE_Barcode a STATE_AVISO.
+// utiliza el propio evento CRUDO o COCINADO aprovechando la pulsación para pasar de STATE_Barcode a STATE_AVISO. 
 void actStateAVISO()
 { 
     static unsigned long previousTimeWarning;  // Para regresar al estado necesario
@@ -3733,7 +3684,7 @@ void actStateAVISO()
                 // - Si el aviso ha sido de plato o comida vacía, se regresa a STATE_Plato para escoger grupo o barcode y formar el plato.
                 // - Si el aviso ha sido de no leer barcode o no encontrar producto, se regresa a STATE_Plato para indicar que no se tiene escogido un grupo ni barcode.
                 //      Si hubiera algo en la báscula al intentar leer barcode, si hubiera sido el caso, se habría guardado el alimento en el plato 
-                //      y la comida al entrar en STATE_Barcode_read para intentar leer el barcode, por lo que no se perdería nada.   
+                //      y en la comida al entrar en STATE_Barcode_read para intentar leer el barcode, por lo que no se perdería nada.   
                                 // Se mantiene peso del recipiente.
                                 #if defined(SM_DEBUG)
                                     SerialPC.println(F("\nGO_TO_PLATO forzado. Regreso a State_Plato tras AVISO de add/delete/save o \"Sin Internet para barcode\" o \"Barcode no leido\" o \"Producto no encontrado\" en STATE_Grupo, STATE_raw, STATE_cooked o STATE_weighted..."));
@@ -3766,10 +3717,10 @@ void actStateAVISO()
 /*---------------------------------------------------------------------------------------------------------
    actState_DELETE_CSV_CHECK(): Acciones del STATE_DELETE_CSV_CHECK
 ----------------------------------------------------------------------------------------------------------*/
+#ifdef BORRADO_INFO_USUARIO
 void actState_DELETE_CSV_CHECK()
 { 
-
-    // ------------ FUNCIONAMIENTO BORRADO FICHERO CSV ----------------------------------------------------
+    // ------------ FUNCIONAMIENTO BORRADO FICHEROS DEL USUARIO --------------------------------------------
     //
     // Durante la pantalla de "Acción cancelada", que solo se muestra durante 1 segundo, los usuarios no deberían hacer nada.
     // Aprovechando esto, se va a introducir una función escondida para borrar el contenido del fichero csv que guarda la info
@@ -3781,25 +3732,25 @@ void actState_DELETE_CSV_CHECK()
     // pide confirmar la acción pulsando grupo20. Si no se confirma en 5 segundos, se regresa a donde se estuviera.
     // De esta forma, si algún usuario entrara sin querer a este menú, solo tendría que dejar pasar esos 5 seg para continuar.
     //
-    // No se incluye el CANCELAR la acción pulsando cualquier otro botón por simplificar.
+    // En la comprobación de interrupciones en el loop() se marca CANCELAR si se pulsa algo que no sea el grupo 20, que confirma. 
     //
     // -----------------------------------------------------------------------------------------------------
 
 
-    static unsigned long previousTimeCancelDeleteCSV;      // Tiempo usado para cancelar la acción tras 5 segundos de inactividad
+    static unsigned long previousTimeCancelDeleteFiles;      // Tiempo usado para cancelar la acción tras 5 segundos de inactividad
     unsigned long currentTime;                             // Tiempo actual  
 
     if(!doneState)
     {
-        previousTimeCancelDeleteCSV = millis(); 
+        previousTimeCancelDeleteFiles = millis(); 
 
         #if defined(SM_DEBUG)
-            SerialPC.println(F("\n¿SEGURO QUE QUIERE BORRAR EL FICHERO CSV?")); 
+            SerialPC.println(F("\n¿SEGURO QUE QUIERE BORRAR LOS FICHEROS DEL USUARIO? PULSE GRUPO 20 PARA CONFIRMAR")); 
         #endif
         
-        pedirConfirmacion_DELETE_CSV();       // Mostrar pregunta de confirmación para BORRAR CSV
+        pedirConfirmacion_DELETE_FILES();       // Mostrar pregunta de confirmación para BORRAR FICHEROS
                                               //    No se ha incluido esta pantalla en pedirConfirmacion(option) porque interesa
-                                              //    tenerlo separado para eliminarlo tras las pruebas
+                                              //    tenerlo separado para ocutarlo a los usuarios
 
 
         doneState = true;               // Solo realizar una vez las actividades del estado por cada vez que se active y no
@@ -3811,26 +3762,35 @@ void actState_DELETE_CSV_CHECK()
   
 
     // ----- CONFIRMACIÓN DE ACCIÓN ----------
-    if(buttonInterruptOccurred()) // Pulsación de botón
+
+    // NO HACE FALTA, YA SE MARCA 'DELETE_FILES' O 'CANCELAR' AL COMPROBAR LAS INTERRUPCIONES EN EL LOOP
+
+    /*if(buttonInterruptOccurred()) // Pulsación de botón
     {
-        checkAllButtons(); // Qué botón se ha pulsado
-        //if(grandeButtonInterruptOccurred() && (buttonGrande == 20)) // Si se pulsa el grupo 20, se confirma el borrado.
+         checkAllButtons(); // Qué botón se ha pulsado
+
+        // ----- CONFIRMAR BORRADO CSV -----
         if(buttonGrande == 20)
         {                                                       
             #if defined(SM_DEBUG)
                 SerialPC.println(F("\ngrupo20 pulsado durante DELETE_CSV_CHECK. Iniciando borrado..."));   
             #endif
-            addEventToBuffer(DELETE_CSV);      
+            addEventToBuffer(DELETE_FILES);      
             flagEvent = true; 
         }
-        /*else // Cualquier otro botón (grupo o acción), cancela el borrado
+        // --------------------------------
+        // ----- CANCELAR BORRADO CSV -----
+        // Aunque no se verifique explícitamente si el botón pulsado es de grupo, acción o barcode, 
+        // el hecho de que se haya pulsado un botón distinto al grupo20 ya provoca que se cancele la acción.
+        else 
         {
             #if defined(SM_DEBUG)
                 SerialPC.println(F("\nCANCELAR borrado de fichero CSV."));   
             #endif
             addEventToBuffer(CANCELAR);      
             flagEvent = true; 
-        }*/
+        }
+        // --------------------------------
     }
     // ----- FIN CONFIRMACIÓN DE ACCIÓN ------
 
@@ -3839,46 +3799,32 @@ void actState_DELETE_CSV_CHECK()
     else
     {
         currentTime = millis(); // Tomar tiempo para saber si han pasado los 5 seg para cancelar la acción
-        if ((currentTime - previousTimeCancelDeleteCSV) > 5000)     // Tras 5 segundos de inactividad, se cancela automáticamente la acción BORRAR CSV
+        if ((currentTime - previousTimeCancelDeleteFiles) > 5000)     // Tras 5 segundos de inactividad, se cancela automáticamente la acción BORRAR FICHEROS USUARIO
         {
-            // Regreso al estado desde donde se inició la acción cancelada previo a entrar a este menú.
+            // Pasamos a STATE_CANCEL automáticamente y allí se comprobará el último estado válido al que volver. 
 
-            // Ultimo estado válido puede ser Init, raw, cooked o weighted. Es decir, cualquiera de los cuales desde donde se puede intentar un acción
-            // cancelable (add/delete/save), tras cuya cancelación se habría entrado a este menú.
-            switch (lastValidState)
-            {
-              case STATE_Init:     
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a Init tras cancelar automáticamente BORRAR CSV..."));       
-                                    #endif 
-                                    addEventToBuffer(GO_TO_INIT);       break;  // Init
-
-              case STATE_raw:       
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a raw tras cancelar automáticamente BORRAR CSV..."));         
-                                    #endif 
-                                    addEventToBuffer(GO_TO_RAW);         break;  // Crudo
-
-              case STATE_cooked:        
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a cooked tras cancelar automáticamente BORRAR CSV..."));      
-                                    #endif 
-                                    addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
-
-              case STATE_weighted:  
-                                    #if defined(SM_DEBUG)
-                                        SerialPC.println(F("\nRegreso a weighted tras cancelar automáticamente BORRAR CSV..."));    
-                                    #endif 
-                                    addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
-
-              default:  break;  
-            }
-
-            flagEvent = true; 
-        }
-                  
-    }
+            #if defined(SM_DEBUG)
+                SerialPC.print(F("\nTIME-OUT. Cancelando borrar ficheros del usuario..."));
+            #endif
+            addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició la acción que se ha cancelado para acceder a este menú.
+            flagEvent = true;
+        }  
+    }*/
     // ----- FIN CANCELACIÓN AUTOMÁTICA ---------------------------
+
+
+    // --- CANCELACIÓN AUTOMÁTICA ---
+    if ((millis() - previousTimeCancelDeleteFiles) > 5000)       // Tras 5 segundos de inactividad, se cancela automáticamente la acción BORRAR FICHEROS USUARIO
+    {
+        // Pasamos a STATE_CANCEL automáticamente y allí se comprobará el último estado válido al que volver. 
+
+        #if defined(SM_DEBUG)
+                SerialPC.print(F("\nTIME-OUT. Cancelando borrar ficheros del usuario..."));
+            #endif
+            addEventToBuffer(CANCELAR);   // Se transiciona al STATE_CANCEL, que regresa automáticamente al estado desde donde se inició la acción que se ha cancelado para acceder a este menú.
+            flagEvent = true;
+    }
+    // --- FIN CANCELACIÓN AUTOMÁTICA ---
 
     
 
@@ -3899,7 +3845,7 @@ void actState_DELETED_CSV()
     //
     // -----------------------------------------------------------------------------------------------------
 
-    static unsigned long previousTimeDeleted;  // Para regresar a Init tras borrado (o no)
+    static unsigned long previousTimeDeleted;  // Para regresar a Init tras borrado (o no por fallo de la SD)
     unsigned long currentTime;                 // Tiempo actual  
 
     if(!doneState)
@@ -3907,13 +3853,19 @@ void actState_DELETED_CSV()
         previousTimeDeleted = millis();   // Reiniciar "temporizador" de 3 segundos para, tras mostrar pantalla de borrado, regresar a Init
 
         #if defined(SM_DEBUG)
-            SerialPC.println(F("\nBORRANDO CONTENIDO DEL FICHERO CSV Y FICHERO ESP32. LIMPIANDO ACUMULADO...")); 
+            SerialPC.println(F("\n----- BORRAR CONTENIDO DEL FICHEROS DEL USUARIO (HISTORIAL COMIDAS, COMIDAS SIN SUBIR Y PRODUCTOS BARCODE) -----")); 
         #endif
 
-        if(deleteFileCSV() && deleteFileTXT()) showAcumuladoBorrado(true); // true = éxito en el borrado
-        else showAcumuladoBorrado(false); // false = error en el borrado
+        // ---- BORRAR FICHEROS CSV Y TXT ----
+        if(deleteHistoryFile() && deleteMealsFile() && deleteProductsFile()) 
+            showAcumuladoBorrado(FILES_DELETED); 
+        // -----------------------------------
+        // --- ERROR BORRANDO FICHEROS -------
+        else 
+            showAcumuladoBorrado(FILES_NOT_DELETED); 
+        // -----------------------------------
 
-        flagFicheroCSVBorrado = true;
+        flagFicheroCSVBorrado = true;  // Da igual que falle el borrado, esta flag solo sirve para en STATE_Init reiniciar la copia de la comida
 
         doneState = true;               // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                         // cada vez que se entre a esta función debido al loop de Arduino.
@@ -3925,19 +3877,20 @@ void actState_DELETED_CSV()
     // iniciar una acción cancelable (add/delete/save), pero no deberían llevar a cabo el borrado del csv, sino dejar
     // pasar los 5 seg para su cancelación.
     //
-    // En las pruebas, nosotros (yo) iniciaremos el borrado únicamente desde STATE_Init (nada en la báscula), por lo que
+    // En las pruebas, nosotros iniciaremos el borrado únicamente desde STATE_Init (nada en la báscula), por lo que
     // hacemos el regreso directamente a Init.
     currentTime = millis();
     if ((currentTime - previousTimeDeleted) > 2000)     // Tras 3 segundos mostrando warning...
     {
         #if defined(SM_DEBUG)
-            SerialPC.println(F("\nRegreso a Init tras BORRAR CSV..."));     
+            SerialPC.println(F("\nRegreso a Init tras BORRAR FICHEROS DEL USUARIO..."));     
         #endif  
         addEventToBuffer(GO_TO_INIT);
         flagEvent = true; 
     }
     // ----- FIN REGRESO A INIT TRAS BORRADO --
 }
+#endif //BORRADO_INFO_USUARIO
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -4000,7 +3953,7 @@ void actState_UPLOAD_DATA()
             {
                 // ----- ENVIAR TXT A ESP32 Y ESPERAR RESPUESTA --
                 // Enviar el fichero TXT línea a línea y esperar respuesta de la subida
-                byte uploadResult = sendTXTFileToESP32ToUpdateWeb(); 
+                byte uploadResult = sendMealsFileToESP32ToUpdateWeb(); 
 
                 // ----- MOSTRAR PANTALLA SEGÚN RESPUESTA --------
                 // Mostrar en pantalla el resultado de la subida de datos
@@ -4068,8 +4021,10 @@ void doStateActions()
         case STATE_CANCEL:              actStateCANCEL();           break;  // CANCEL
         case STATE_AVISO:               actStateAVISO();            break;  // AVISO
 
+        #ifdef BORRADO_INFO_USUARIO
         case STATE_DELETE_CSV_CHECK:  actState_DELETE_CSV_CHECK();   break; // delete_csv_check
         case STATE_DELETED_CSV:       actState_DELETED_CSV();        break; // deleted_csv
+        #endif
 
         case STATE_CRITIC_FAILURE_SD: actState_CRITIC_FAILURE_SD();  break; // Fallo crítico en SD
 

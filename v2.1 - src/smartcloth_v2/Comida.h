@@ -37,8 +37,8 @@ class Comida{
 
   private:
   
-    byte                  _nPlatos;                 /**< Número de platos en la comida. */
-    float                 _peso;                    /**< Peso total de la comida. */
+    byte                  _nPlatos;                 /**< Número de platos en la comida (mínimo 1). */
+    float                 _peso;                    /**< Peso total de la comida (todos los alimentos, sin incluir recipiente). */
     ValoresNutricionales  _valoresComida;           /**< Valores nutricionales totales de la comida. */
 
     
@@ -84,7 +84,10 @@ class Comida{
      * 
      * @return True si la comida está vacía, False en caso contrario.
      */
-    inline bool isComidaEmpty(){ return _getNumPlatos() == 0; }; 
+    //inline bool isComidaEmpty(){ return _getNumPlatos() == 0; }; 
+    // Creo que la mejor forma de comprobar si la comida está vacía es comprobando si el peso es 0.0
+    // ya que la comida como mínimo tendrá 1 plato (he modificado para que el número de platos al inicio sea 1 por defecto)
+    inline bool isComidaEmpty(){ return getPesoComida() == 0.0; };
 
 
 
@@ -227,7 +230,7 @@ class Comida{
              la comida a 0.0
 ----------------------------------------------------------------------------------------------------------*/
 Comida::Comida(){
-  _setNumPlatos(0);
+  _setNumPlatos(1);
   setPesoComida(0.0);
 }
 

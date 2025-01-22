@@ -16,13 +16,14 @@
 #include "wifi_functions.h" // Obtener la MAC, pedir token, enviar JSON y cerrar sesión
 
 #define JSON_SIZE_LIMIT 20480 // 20k
+#define TIMEOUT_WAITLINE 15000L // 15 segundos
 
 
 
 /*-----------------------------------------------------------------------------
                            DECLARACIÓN FUNCIONES
 -----------------------------------------------------------------------------*/
-void    processJSON_OnePerMeal();    // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar 
+void    saveMeals();    // Crear el documento JSON en un ámbito cerado para liberar su memoria al terminar 
 
 void    addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,                                  
                                     JsonArray& comidas, JsonArray& platos, JsonArray& alimentos, 
@@ -54,7 +55,7 @@ time_t convertTimeToUnix(String &line, int &firstCommaIndex, int &secondCommaInd
  * @note La memoria reservada para el documento JSON se libera al salir de la función.
  */
 /*-----------------------------------------------------------------------------*/
-void  processJSON_OnePerMeal()
+void  saveMeals()
 {
     // ---------- DECLARAR DOCUMENTO JSON -------------------------
     // Se reservan 20KB de RAM para el JSON, aunque acabe siendo más pequeño.
@@ -100,7 +101,6 @@ void  processJSON_OnePerMeal()
         #endif
 
         String line = "";
-        unsigned long timeout_waitLine = 15000; // Tiempo de espera máximo de 15 segundos para que el Due envíe la línea
 
         while (line != "FIN-TRANSMISION")  // Mientras el Due no indique que ya leyó todo el fichero TXT
         //while(!line.equals("FIN-TRANSMISION"))
@@ -109,7 +109,7 @@ void  processJSON_OnePerMeal()
 
             // ---- ESPERAR RESPUESTA DEL DUE ---------------
             // Esperar hasta 15 segundos a que el Due envíe la línea
-            waitMsgFromDue(line, timeout_waitLine); // Espera mensaje del Due y lo devuelve en 'line'
+            waitMsgFromDue(line, TIMEOUT_WAITLINE); // Espera mensaje del Due y lo devuelve en 'line'
             // Cuando se recibe mensaje o se pasa el timeout, entonces se comprueba la respuesta
             
             // Se comprueba si no hay nada en el Serial y si han pasado más de 'timeout' segundos
@@ -163,7 +163,7 @@ void  processJSON_OnePerMeal()
             SerialPC.println(F("Error al pedir token"));
         #endif
 
-        // En fetchTokenFromServer() se muestra el error (NO-WIFI, HTTP-ERROR, etc.)
+        // En fetchTokenFromServer() se devuelve al Due el error (NO-WIFI, HTTP-ERROR, etc.)
         // -------------------------------------------
     }
     // ------------------------------------------------------------
@@ -269,7 +269,7 @@ void addLineToJSON_oneJsonPerMeal(DynamicJsonDocument& JSONdoc,
             // -----------------------
 
             // -------- MEMORIA RAM USADA POR EL JSON ---------------------
-            SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
+            //SerialPC.print(F("\n\nMemoria RAM usada: ")); SerialPC.println(JSONdoc.memoryUsage()); SerialPC.println("\n");
             // ------------------------------------------------------------
         #endif
 

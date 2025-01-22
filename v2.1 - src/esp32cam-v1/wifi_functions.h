@@ -37,11 +37,11 @@
 // ------- CREDENCIALES -------------
 // Credenciales conexión red WiFi
 // Laboratorio:
-//const char* ssid = "UCOTEAM";
-//const char* password = "-polonio210alfileres-";
+const char* ssid = "UCOTEAM";
+const char* password = "-polonio210alfileres-";
 // Casa:
-const char* ssid = "MOVISTAR_FB23_EXT";
-const char* password = "DP6BUuEtuFvRw3mHmFoG";
+//const char* ssid = "MOVISTAR_FB23_EXT";
+//const char* password = "DP6BUuEtuFvRw3mHmFoG";
 // Testeos:
 //const char* ssid = "Irene";
 //const char* password = "icradeba5050";
@@ -96,7 +96,7 @@ void    uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken);  
 void    logoutFromServer(String &bearerToken);                                      // 3. Cerrar sesión
 
 // Barcode
-void    getFoodData(String barcode);                                    // Obtener los datos de un alimento
+void    getProductData(String barcode);                                    // Obtener los datos de un alimento
 void    getProductInfo(const String &payload, String &productInfo);     // Obtener la información del producto a partir de un JSON
 /*-----------------------------------------------------------------------------*/
 
@@ -425,7 +425,7 @@ void uploadJSONtoServer(DynamicJsonDocument& JSONdoc, String &bearerToken)
             if((httpResponseCode >= HTTP_CODE_OK) && (httpResponseCode < HTTP_CODE_MULTIPLE_CHOICES)) // Petición exitosa [200,300)
             {
                 #if defined(SM_DEBUG)
-                    SerialPC.print(F("Comida subida")); 
+                    SerialPC.println(F("Comida subida. Indicando SAVED-OK...\n")); 
                 #endif
 
                 // -- RESPUESTA AL DUE ---
@@ -623,7 +623,7 @@ void logoutFromServer(String &bearerToken)
  * @note No comprueba conexión a Internet porque se supone que se ha comprobado antes de llamar a esta función.
  */
 /*-----------------------------------------------------------------------------*/
-void getFoodData(String barcode) 
+void getProductData(String barcode) 
 {
     #if defined(SM_DEBUG)
         SerialPC.println("\nObteniendo información del producto " + barcode);

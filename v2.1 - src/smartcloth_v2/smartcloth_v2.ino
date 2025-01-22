@@ -106,7 +106,7 @@ void setup()
     // ------ FICHERO TXT ----------------------
     bool dataToUpload;
     if(!falloCriticoSD){ // Si falló la SD, no se puede chequear el fichero txt
-        dataToUpload = !isFileTXTEmpty(); // Si el fichero no está vacío, hay data para subir
+        dataToUpload = !isMealsFileEmpty(); // Si el fichero no está vacío, hay data para subir
         if(dataToUpload) {
             #if defined(SM_DEBUG)
                 SerialPC.println(F("Hay data para subir"));
@@ -239,7 +239,7 @@ void loop()
                     state_actual = state_new;
                     
                     if(state_prev != lastValidState){
-                        switch(state_prev){ // Último estado válido 
+                        switch(state_prev){ // Último estado válido --> Como puntos de retorno (checkpoint) tras error o aviso.
                             case STATE_Init: case STATE_Plato: case STATE_Grupo: case STATE_Barcode: case STATE_raw: case STATE_cooked: case STATE_weighted:
                                 lastValidState = state_prev;
                                 break;

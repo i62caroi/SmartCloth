@@ -1,5 +1,5 @@
 {
     "board": "arduino:sam:arduino_due_x_dbg",
     "sketch": "RTC_set_time.ino",
-    "port": "/dev/tty.usbmodem1122201"
+    "port": "/dev/tty.usbmodem1122101"
 }

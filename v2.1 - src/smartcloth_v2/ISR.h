@@ -42,6 +42,10 @@ const byte intPinBarcode = 53;
 // ------------ FLAGS DE INTERRUPCIÓN ------------
 // Flag de botón pulsado en Main (botonera B)
 volatile byte buttonMain = 0; // Variable que almacena el botón pulsado
+// En lugar de una sola variable cuyo valor indique el botón pulsado, podríamos tener 5 variables booleanas
+// que indiquen si se ha pulsado cada botón. Pero como no deberían pulsar varios a la vez, no es necesario.
+// Es más rápido usar una sola variable tipo byte que almacenar 5 booleanas. Para "desactivar" el botón pulsado
+// se pone a 0 y ya está.
 
 // Flag de botón pulsado en Grande (botonera A)
 volatile bool pulsandoGrande  = false;    
@@ -127,7 +131,8 @@ bool eventOccurred();
  * @brief ISR de botón de 'cocinado'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_cocinado(){ 
+void ISR_cocinado()
+{ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 1;
@@ -140,7 +145,8 @@ void ISR_cocinado(){
  * @brief ISR de botón de 'crudo'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_crudo(){ 
+void ISR_crudo()
+{ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 2;
@@ -154,7 +160,8 @@ void ISR_crudo(){
  * @brief ISR de botón de 'añadir plato'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_addPlato(){ 
+void ISR_addPlato()
+{ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 3;
@@ -168,7 +175,8 @@ void ISR_addPlato(){
  * @brief ISR de botón de 'eliminar plato'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_deletePlato(){ 
+void ISR_deletePlato()
+{ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 4;
@@ -182,7 +190,8 @@ void ISR_deletePlato(){
  * @brief ISR de botón de 'guardar comida'
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_guardar(){ 
+void ISR_guardar()
+{ 
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) buttonMain = 5;
@@ -203,7 +212,8 @@ void ISR_guardar(){
  * se detecta pulsación en otro botón debido al rebote.
  */
 /*-----------------------------------------------------------------------------*/
-void ISR_pulsandoButtonsGrande(){
+void ISR_pulsandoButtonsGrande()
+{
     static unsigned long last_interrupt_time = 0;
     unsigned long interrupt_time = millis();
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoGrande = true;
@@ -252,7 +262,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @brief Activar báscula para pesar cuando salte timer de interrupción
  */
  /*-----------------------------------------------------------------------------*/
- void ISR_pesarBascula(){  
+ void ISR_pesarBascula()
+ {  
     weight = weighScale();
     pesado = true; 
 }
@@ -267,7 +278,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return Número del temporizador utilizado
  */
  /*-----------------------------------------------------------------------------*/
- uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName){
+ uint16_t attachDueInterrupt(double microseconds, timerCallback callback, const char* TimerName)
+ {
     // Primer timer libre 
     DueTimerInterrupt dueTimerInterrupt = DueTimer.getAvailable(); 
     
@@ -295,7 +307,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return 'true' si ha ocurrido alguna interrupción en botoneras o evento en báscula
  */
  /*-----------------------------------------------------------------------------*/
- bool interruptionOccurred(){
+ bool interruptionOccurred()
+ {
     if((buttonMain != 0) or (pulsandoGrande)  or (pulsandoBarcode) or (scaleEventOccurred)) return true;
     else return false;
  }
@@ -307,7 +320,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return 'true' si ha ocurrido alguna interrupción en botoneras 
  */
  /*-----------------------------------------------------------------------------*/
- bool buttonInterruptOccurred(){
+ bool buttonInterruptOccurred()
+ {
     if((buttonMain != 0) or (pulsandoGrande) or (pulsandoBarcode)) return true;
     else return false;
  }
@@ -319,7 +333,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return 'true' si ha ocurrido alguna interrupción en botonera Main 
  */
  /*-----------------------------------------------------------------------------*/
- bool mainButtonInterruptOccurred(){
+ bool mainButtonInterruptOccurred()
+ {
     if(buttonMain != 0) return true;
     else return false;
  }
@@ -330,7 +345,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return 'true' si ha ocurrido alguna interrupción en botonera Grande 
  */
  /*-----------------------------------------------------------------------------*/
- bool grandeButtonInterruptOccurred(){
+ bool grandeButtonInterruptOccurred()
+ {
     if(pulsandoGrande) return true;
     else return false;
  }
@@ -341,7 +357,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return 'true' si ha ocurrido alguna interrupción en botón Barcode
  */
  /*-----------------------------------------------------------------------------*/
- bool barcodeButtonInterruptOccurred(){
+ bool barcodeButtonInterruptOccurred()
+ {
     if(pulsandoBarcode) return true;
     else return false;
  }
@@ -353,7 +370,8 @@ void TimerHandler() { ISR_Timer.run(); }
  * @return 'true' si ha ocurrido algún evento en báscula
  */
  /*-----------------------------------------------------------------------------*/
- bool hasScaleEventOccurred(){
+ bool hasScaleEventOccurred()
+ {
     if(scaleEventOccurred) return true;
     else return false;
  }
