@@ -231,14 +231,12 @@ void loop()
 
         // ----- LEER MENSAJE DEL DUE -------------------------------------- 
         String msgFromDue;
-        readMsgFromSerialDue(msgFromDue); // Leer directamente mensaje del Serial
+        //readMsgFromSerialDue(msgFromDue); // Leer directamente mensaje del Serial
 
         // Aunque nunca ha fallado la lectura directa del mensaje con readMsgFromSerialDue(), se va a leer carácter a carácter 
         // para asegurar que no se pierde nada. Además, damos un tiempo límite (1s) para que el ESP32 no se quede esperando 
         // el '\n' de forma infinita.
-        //String msgFromDue;
-        //processMsgFromDue(msgFromDue);  // Procesar mensaje completo del Due caracter a caracter
-        //waitMsgFromDue(msgFromDue, TIMEOUT_MSG_DUE); // Esperar mensaje del Due y lo devuelve en 'msgFromDue'
+        waitMsgFromDue(msgFromDue, TIMEOUT_MSG_DUE); // Esperar mensaje del Due y lo devuelve en 'msgFromDue'
 
         #if defined(SM_DEBUG)
             SerialPC.println("\n-------------------------------------");

@@ -3022,7 +3022,7 @@ void showCancel(byte option)
     tft.setTextForegroundColor(WHITE); 
     
     if(option == ACTION_CANCELLED){ tft.setCursor(220, 258);  tft.println(convertSpecialCharactersToHEX("ACCIÓN CANCELADA")); }
-    else if(option == PRODUCT_CANCELLED){ tft.setCursor(200, 258);  tft.println("PRODUCTO CANCELADO"); }
+    else if(option == PRODUCT_CANCELLED){ tft.setCursor(190, 258);  tft.println("PRODUCTO CANCELADO"); }
     
     // ------ LINEA ---------
     tft.fillRoundRect(252,380,764,388,3,WHITE);

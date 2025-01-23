@@ -206,10 +206,13 @@ const char* PREFIX_ESP32_MESSAGES[] =
 void            setupSerialPC();                                    // Configurar comunicación Serial con PC
 
 // Comunicación Serial Due-ESP32
-void            setupSerialESP32();                                 // Configurar comunicación Serial con ESP32
+void            setupSerialESP32();                                             // Configurar comunicación Serial con ESP32
+// Recepción ESP32-->Due:
 inline bool     hayMsgFromESP32() { return SerialESP32.available() > 0; };      // Comprobar si hay mensajes del ESP32 disponibles
 inline bool     isESP32SerialEmpty(){ return !hayMsgFromESP32(); }              // Comprobar si no hay mensajes del ESP32 disponibles
-//inline void     readMsgFromSerialESP32(String &msgFromESP32);                   // Leer mensaje del puerto serie Due-ESP32 y guardarlo en msgFromESP32
+//inline void     readMsgFromSerialESP32(String &msgFromESP32);                 // Leer mensaje del puerto serie Due-ESP32 y guardarlo en msgFromESP32
+// Envío Due-->ESP32:
+inline void     clearReceptionBuffer();                                         // Limpiar buffer de recepción del Due, por si quedan mensajes sin leer del ESP32
 inline void     sendMsgToESP32(const String &msg);                              // Enviar mensaje al ESP32
 
 // Esperar mensaje de ESP32
@@ -295,6 +298,21 @@ void setupSerialESP32()
 
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Limpiar buffer de recepción del Due
+ *
+ * Esta función limpia el buffer de recepción por si quedaron mensajes del ESP32 sin leer.
+ *
+ */
+/*-----------------------------------------------------------------------------*/
+inline void clearReceptionBuffer()
+{ 
+    while(SerialESP32.available() > 0) 
+        SerialESP32.read(); 
+} 
+
+
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -308,8 +326,9 @@ void setupSerialESP32()
 /*-----------------------------------------------------------------------------*/
 inline void sendMsgToESP32(const String &msg)
 { 
-    SerialESP32.println(msg); // Enviar 'msg' del Due al ESP32 
-    delay(50);  // Pequeño retraso para asegurar que el ESP32 tenga tiempo de leer el mensaje
+    clearReceptionBuffer();     // Limpiar solo buffer RX antes de enviar nuevo mensaje
+    SerialESP32.println(msg);   // Enviar 'msg' del Due al ESP32 
+    delay(50);                  // Pequeño retraso para asegurar que el ESP32 tenga tiempo de leer el mensaje
 }
 
 
@@ -373,11 +392,11 @@ bool processCharacter(String &tempBuffer, String &msgFromESP32)
 {
     char c = SerialESP32.read();  // Lee un carácter del serial del ESP32
 
-    #if defined(SM_DEBUG)
+    /*#if defined(SM_DEBUG)
         SerialPC.print("Caracter leido: "); 
         if(c == '\n') SerialPC.println("'\\n'");
         else SerialPC.println(String(c));
-    #endif
+    #endif*/
 
     if (c == '\n') 
     {
@@ -402,9 +421,9 @@ bool processCharacter(String &tempBuffer, String &msgFromESP32)
     else 
     {
         tempBuffer += c;  // Acumula el carácter en el buffer temporal
-        #if defined(SM_DEBUG)
+        /*#if defined(SM_DEBUG)
             SerialPC.println("Buffer actual: " + tempBuffer);
-        #endif
+        #endif*/
     }
     return false;  // Aún no se ha recibido un mensaje completo válido
 }
@@ -560,7 +579,7 @@ bool checkWifiConnection()
     // ---- RESPUESTA DEL ESP32 --------------------------------
     // ---- ESPERAR RESPUESTA DEL ESP32 -----
     String msgFromESP32;
-    unsigned long timeout = 5000; // Espera máxima de 5 segundos
+    unsigned long timeout = 10000; // Espera máxima de 10 segundos
                                     // No hace falta esperar más tiempo porque esta es una comprobación directa del ESP32
                                     // y los mensajes que se pueden recibir "WIFI-OK" o "NO-WIFI" son cortos, por lo que no
                                     // debería tardar demasiado waitResponseFromESP32() en recibirlos.

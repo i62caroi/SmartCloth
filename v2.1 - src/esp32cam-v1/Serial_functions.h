@@ -24,7 +24,7 @@
 
 #define SerialDue Serial1
 
-#define TIMEOUT_MSG_DUE 3000L // Tiempo máximo de espera de mensaje del Due (3 segundos)
+#define TIMEOUT_MSG_DUE 10000L // Tiempo máximo de espera para leer mensaje completo del Due en el loop (10 segundos)
 // ------------------------------
 
 
@@ -87,21 +87,24 @@ void           setupAllSerial();                                                
 #endif
 
 // Comunicación Serial ESP32-Due
-inline bool    hayMsgFromDue() { return SerialDue.available() > 0; }                        // Comprobar si hay mensajes del Due disponibles
-inline bool    isDueSerialEmpty(){ return !hayMsgFromDue(); }                               // Comprobar que el Serial del Due está vacío (no hay mensajes)
-inline void    readMsgFromSerialDue(String &msgFromDue);                                    // Leer mensaje del puerto serie ESP32-Due
-//void           processMsgFromDue(String &msgFromDue);                                       // Procesar mensaje del Due caracter a caracter
-void           waitMsgFromDue(String &msgFromESP32, const unsigned long &timeout);                // Esperar mensaje del Due durante un tiempo determinado
-inline void    sendMsgToDue(const String &msg);                                             // Enviar mensaje al ESP32
+// Recepción Due-->ESP32:
+inline bool     hayMsgFromDue() { return SerialDue.available() > 0; }                        // Comprobar si hay mensajes del Due disponibles
+inline bool     isDueSerialEmpty(){ return !hayMsgFromDue(); }                               // Comprobar que el Serial del Due está vacío (no hay mensajes)
+//inline void    readMsgFromSerialDue(String &msgFromDue);                                    // Leer mensaje del puerto serie ESP32-Due
+void            waitMsgFromDue(String &msgFromESP32, const unsigned long &timeout);          // Esperar mensaje del Due durante un tiempo determinado
+bool            processCharacter(String &tempBuffer, String &msgFromDue);                    // Procesa buffer del SerialDue caracter a caracter hasta completar mensaje con "\n" y comprueba si es válido
+bool            isValidDueMessage(const String &message);                                    // Comprobar si el mensaje del Due es válido, uno de los posibles mensajes esperados
+// Envío ESP32-->Due:
+inline void     clearReceptionBuffer();                                                      // Limpiar buffer de recepción del Due, por si quedan mensajes sin leer del ESP32
+inline void     sendMsgToDue(const String &msg);                                             // Enviar mensaje al ESP32
 
 // Comunicación Serial ESP32-BR
 inline bool     hayMsgFromBR(){ return SerialBR.available() > 0; };                         // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
 inline void     readMsgFromSerialBR(String &msgFromBR);                                     // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
 void            waitForBarcode(String &buffer);                                             // Esperar a que se lea un código de barras
 
-inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout){ return millis() - startTime > timeout; }; // Comprobar si se ha excedido el tiempo de espera
-bool           processCharacterInMsgFromDue(String &tempBuffer, String &msgFromDue);        // Procesa buffer del SerialDue caracter a caracter hasta completar mensaje con "\n"
-bool           isValidDueMessage(const String &message);                                     // Comprobar si el mensaje del Due es válido
+// Comprobar si se ha excedido el tiempo de espera 
+inline bool     isTimeoutExceeded(unsigned long startTime, unsigned long timeout){ return millis() - startTime > timeout; };                              
 /*-----------------------------------------------------------------------------*/
 
 
@@ -168,35 +171,9 @@ void setupAllSerial()
  * @param msgFromDue La variable donde se guardará el mensaje leído.
  */
 /*-----------------------------------------------------------------------------*/
-inline void readMsgFromSerialDue(String &msgFromDue) { 
+/*inline void readMsgFromSerialDue(String &msgFromDue) { 
     msgFromDue = SerialDue.readStringUntil('\n');
     msgFromDue.trim(); // Elimina espacios en blanco al principio y al final
-}
-
-
-/*-----------------------------------------------------------------------------*/
-/**
- * @brief Procesa los mensajes recibidos desde el dispositivo Due.
- * 
- * Utiliza un búfer temporal para almacenar los caracteres del mensaje y llama a la 
- * función processCharacterInMsgFromDue para procesar cada carácter. La función se 
- * detiene cuando se ha procesado un mensaje completo (lee un '\n').
- * 
- * @param msgFromDue Referencia a la cadena donde se almacenará el mensaje completo procesado.
- * 
- * @note Se usa en lugar de leer con readStringUntil('\n') para asegurar que se para a procesar
- * el mensaje completo y no se pierde nada.
- */
-/*-----------------------------------------------------------------------------*/
-/*void processMsgFromDue(String &msgFromDue)
-{
-    String tempBuffer = "";
-
-    while(hayMsgFromDue())
-    {
-        if(processCharacterInMsgFromDue(tempBuffer, msgFromDue)) 
-            return; // Sale cuando se ha procesado un mensaje completo
-    }
 }*/
 
 
@@ -236,7 +213,7 @@ void waitMsgFromDue(String &msgFromDue, const unsigned long &timeout)
     {
         if (hayMsgFromDue())  // Si el Due ha respondido
         {
-            if (processCharacterInMsgFromDue(tempBuffer, msgFromDue)) 
+            if (processCharacter(tempBuffer, msgFromDue)) 
                 return;  // Sale cuando se ha procesado un mensaje completo
         }
         delay(50);  // Evita que el bucle sea demasiado intensivo
@@ -251,6 +228,19 @@ void waitMsgFromDue(String &msgFromDue, const unsigned long &timeout)
 }
 
 
+/*-----------------------------------------------------------------------------*/
+/**
+ * @brief Limpiar buffer de recepción del ESP32
+ *
+ * Esta función limpia el buffer de recepción por si quedaron mensajes del Due sin leer.
+ *
+ */
+/*-----------------------------------------------------------------------------*/
+inline void clearReceptionBuffer()
+{ 
+    while(SerialDue.available() > 0) 
+        SerialDue.read(); 
+} 
 
 /*-----------------------------------------------------------------------------*/
 /**
@@ -264,9 +254,9 @@ void waitMsgFromDue(String &msgFromDue, const unsigned long &timeout)
 /*-----------------------------------------------------------------------------*/
 inline void sendMsgToDue(const String &msg)
 { 
-      //limpiarBufferDue();     // Limpiar buffer con Due
-      SerialDue.println(msg); // Enviar 'msg' del ESP32 al Due
-      delay(50);              // Pequeño retraso para asegurar que el Due tenga tiempo de leer el mensaje
+      clearReceptionBuffer();   // Limpiar solo buffer RX antes de enviar nuevo mensaje
+      SerialDue.println(msg);   // Enviar 'msg' del ESP32 al Due
+      delay(50);                // Pequeño retraso para asegurar que el Due tenga tiempo de leer el mensaje
 }
 
 
@@ -297,7 +287,7 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
  * y el buffer se establece en "-". La función también puede salir si se recibe un mensaje de
  * cancelación de la lectura desde el Due.
  * 
- * Utiliza un buffer temporal para procesar al completo el mensaje recibido del lector (processCharacterInMsgFromDue()), 
+ * Utiliza un buffer temporal para procesar al completo el mensaje recibido del lector (processCharacter()), 
  * aunque esto no solía fallar, pero por seguir la lógica de waitResponseFromESP32().
  * 
  * @param buffer Referencia a un String donde se almacenará el código de barras leído o el mensaje de cancelación.
@@ -330,7 +320,7 @@ void waitForBarcode(String &buffer)
         // ----- CANCELAR LECTURA ---------------------------
         if (hayMsgFromDue()) {  // Si se ha recibido un mensaje del Due
             String msgFromDue;
-            if (processCharacterInMsgFromDue(tempBufferDue, msgFromDue)) {
+            if (processCharacter(tempBufferDue, msgFromDue)) {
                 if (msgFromDue == "CANCEL-BARCODE") {
                     buffer = msgFromDue;  // Sale del while y de la función
                     return;
@@ -358,7 +348,7 @@ void waitForBarcode(String &buffer)
  * @return true si se ha recibido y procesado un mensaje completo, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
-/*bool processCharacterInMsgFromDue(String &tempBuffer, String &msgFromDue) 
+/*bool processCharacter(String &tempBuffer, String &msgFromDue) 
 {
     char c = SerialDue.read();  // Lee un carácter del serial del Due
 
@@ -379,15 +369,15 @@ void waitForBarcode(String &buffer)
     }
     return false;  // Aún no se ha recibido un mensaje completo
 }*/
-bool processCharacterInMsgFromDue(String &tempBuffer, String &msgFromDue) 
+bool processCharacter(String &tempBuffer, String &msgFromDue) 
 {
     char c = SerialDue.read();  // Lee un carácter del serial del ESP32
 
-    #if defined(SM_DEBUG)
+    /*#if defined(SM_DEBUG)
         SerialPC.print("Caracter leido: "); 
         if(c == '\n') SerialPC.println("'\\n'");
         else SerialPC.println(String(c));
-    #endif
+    #endif*/
 
     if (c == '\n') 
     {
@@ -412,9 +402,9 @@ bool processCharacterInMsgFromDue(String &tempBuffer, String &msgFromDue)
     else 
     {
         tempBuffer += c;  // Acumula el carácter en el buffer temporal
-        #if defined(SM_DEBUG)
+       /*#if defined(SM_DEBUG)
             SerialPC.println("Buffer actual: " + tempBuffer);
-        #endif
+        #endif*/
     }
     return false;  // Aún no se ha recibido un mensaje completo válido
 }

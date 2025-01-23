@@ -1288,8 +1288,8 @@ void actStateBarcodeRead()
 {
     if(!doneState)
     {
-        if(state_prev != STATE_Barcode_read)    // ==> Si no se viene del propio STATE_Barcode_read, para evitar que se vuelva a iniciar el proceso de lectura.
-        {                                       // Se vendría de STATE_Barcode_read si al retirar el plato se detectara DECREMENTO antes de LIBERAR,
+        //if(state_prev != STATE_Barcode_read)    // ==> Si no se viene del propio STATE_Barcode_read, para evitar que se vuelva a iniciar el proceso de lectura.
+        //{                                       // Se vendría de STATE_Barcode_read si al retirar el plato se detectara DECREMENTO antes de LIBERAR,
                                                 // que ya llevaría a STATE_Init
 
             #if defined(SM_DEBUG)
@@ -1408,7 +1408,7 @@ void actStateBarcodeRead()
             // --------------------------------------------------------
 
 
-        } // FIN if(state_prev != STATE_Barcode_read)
+        //} // FIN if(state_prev != STATE_Barcode_read)
 
         
         doneState = true;                                                   // Solo realizar una vez las actividades del estado por cada vez que se active y no
