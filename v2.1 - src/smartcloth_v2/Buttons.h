@@ -230,7 +230,8 @@ void checkGrandeButton()
         buttonGrande = buttons[iRow][iCol];
 
         #if defined(SM_DEBUG)
-            SerialPC.print(F("Grupo: ")); SerialPC.println(buttonGrande); 
+            SerialPC.println(F("\n\n----------------------------------------------------------------------------------------------------"));       
+            SerialPC.print(F("Boton pulsado (grupo): ")); SerialPC.println(buttonGrande); 
         #endif 
         
         // ----- ANALIZAR EVENTO --------------
@@ -312,6 +313,11 @@ void checkMainButton()
             case 4:   eventoMain = DELETE_PLATO;    break;  
             case 5:   eventoMain = GUARDAR;         break;  
         }
+
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("\n\n----------------------------------------------------------------------------------------------------"));       
+            SerialPC.print(F("Boton pulsado (accion): ")); printEventName(eventoMain); SerialPC.println();
+        #endif 
         
         addEventToBuffer(eventoMain);
         flagEvent = true;
@@ -337,6 +343,11 @@ void checkBarcodeButton()
 {
     if(barcodeButtonInterruptOccurred()) // Se está pulsando el botón de código de barras
     {
+        #if defined(SM_DEBUG)
+            SerialPC.println(F("\n\n----------------------------------------------------------------------------------------------------"));       
+            SerialPC.println(F("Boton pulsado: BARCODE"));
+        #endif 
+        
         addEventToBuffer(BARCODE);
         flagEvent = true;
 

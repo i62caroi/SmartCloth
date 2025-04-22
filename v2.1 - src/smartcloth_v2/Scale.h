@@ -47,7 +47,7 @@ bool      tarado = false;               // Flag para indicar que se ha tarado la
 
 // ------ VARIABLES DE PESO ------------------------------------------------------------
 float     pesoARetirar      =   0.0;    // Peso que se debe retirar para liberar la báscula (recipiente + alimentos)
-float     pesoBascula       =   0.0;    // Peso utilizado en lugar de 'weight' para no tener en cuenta cambios mínimos
+float     pesoBascula       =   0.0;    // Peso utilizado en lugar de 'actualWeight' para no tener en cuenta cambios mínimos
 float     pesoRecipiente    =   0.0;    // Peso únicamente del recipiente
 float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  alimentos)
 float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
@@ -163,7 +163,7 @@ void checkBascula()
         pesoARetirar = pesoRecipiente + pesoPlato;
 
         lastWeight = newWeight;
-        newWeight = weight;
+        newWeight = actualWeight;
         diffWeight = abs(lastWeight - newWeight);
 
 
@@ -174,7 +174,7 @@ void checkBascula()
         if(tarado)
         {
             #if defined(SM_DEBUG)
-                SerialPC.println(F("\nTARANDO"));
+                SerialPC.println(F("TARANDO"));
             #endif
             eventoBascula = TARAR;
         }
@@ -182,6 +182,10 @@ void checkBascula()
         {
             if(diffWeight > UMBRAL_MIN_CAMBIO_PESO) // Si ha habido una variación de peso de más de 2 gramos y no ha sido causada por una tara --> evento
             {
+                #if defined(SM_DEBUG)       
+                    SerialPC.println(F("\n\n----------------------------------------------------------------------------------------------------"));       
+                #endif
+
                 scaleEventOccurred = true;
                 
                 // 'pesoBascula' representa el peso evitando pequeños saltos en las medidas.
@@ -197,7 +201,7 @@ void checkBascula()
 
                 if(lastWeight < newWeight) // Incremento de peso   
                 {
-                    #if defined(SM_DEBUG)              
+                    #if defined(SM_DEBUG)       
                         SerialPC.print(F("\nINCREMENTO"));
                     #endif
                     eventoBascula = INCREMENTO;

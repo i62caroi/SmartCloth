@@ -70,7 +70,7 @@ volatile bool firstInterruptBarcode = true; // Al encender, por fluctuaciones de
 
 SAMDUE_ISR_Timer ISR_Timer;
 
-volatile float  weight = 0.0;         ///< Peso real tomado por ISR
+volatile float  actualWeight = 0.0;   ///< Peso real tomado por ISR
 volatile bool   pesado = false;       // Flag de haber pesado por ISR
 // ------------------------------------------------------
 
@@ -264,7 +264,7 @@ void TimerHandler() { ISR_Timer.run(); }
  /*-----------------------------------------------------------------------------*/
  void ISR_pesarBascula()
  {  
-    weight = weighScale();
+    actualWeight = weighScale();
     pesado = true; 
 }
 

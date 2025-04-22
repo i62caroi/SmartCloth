@@ -247,9 +247,9 @@ void loop()
                         }
                     }
                     #if defined SM_DEBUG
-                        SerialPC.print(F("\nEstado anterior: "));       printStateName(state_prev);      SerialPC.println();
+                        SerialPC.print(F("\nUltimo estado valido: "));  printStateName(lastValidState);  SerialPC.println();
+                        SerialPC.print(F("Estado anterior: "));         printStateName(state_prev);      SerialPC.println();
                         SerialPC.print(F("Nuevo estado: "));            printStateName(state_new);       SerialPC.println();
-                        SerialPC.print(F("Ultimo estado valido: "));    printStateName(lastValidState);  SerialPC.println();
                         SerialPC.println("--------------------------------------------------");
                         SerialPC.println("--------------------------------------------------\n\n");
                     #endif

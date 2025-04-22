@@ -3,7 +3,7 @@
  * @brief Definiciones de grupos de alimentos
  *
  * @author Irene Casares Rodríguez
- * @date 06/06/24
+ * @date 31/05/25 (update valores nutricionales)
  * @version 1.0
  *
  * Este archivo contiene la definición de los grupos de alimentos y sus características.
@@ -105,35 +105,35 @@ typedef struct {
  * Este array almacena los distintos grupos de alimentos y sus características.
  */               
 /*-----------------------------------------------------------------------------*/                    
-Grupo gruposAlimentos[NUM_GRUPOS] = { {1,COLOR_G1,"Lácteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.7105,0.0378,0.0414,0.0515},
-                                      {2,COLOR_G2,"Lácteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.4729,0.0332,0.0174,0.0495},
-                                      {3,COLOR_G3,"Lácteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.3393,0.0338,0.0028,0.0478},
-                                      {4,COLOR_G4,"Lácteos azucarados","Batidos lácteos de cacao y otros sabores, leche entera fermentada con\n   frutas, yogures enteros de sabores y azucarados, yogures líquidos de\n   sabores y azucarados",0.8598,0.0301,0.0257,0.1316},
-                                      {5,COLOR_G5,"Postres lácteos","Arroz con leche, flan de huevo, flan de vainilla y natillas...",1.8484,0.0356,0.0806,0.2478},
-                                      {6,COLOR_G6,"Frutas frescas, desecadas y zumos","Albaricoque, arándanos, cerezas, ciruelas, dátil seco, fresa, granada,\n   higos, kiwi, mandarina,manzana, melocotón, melón, naranja, pera, piña,\n   plátano, sandía, uvas...",0.4809,0.0082,0.0025,0.1119},
-                                      {7,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.2454,0.0148,0.0037,0.0412},
-                                      {8,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",2.1053,0.0622,0.0142,0.4452},
-                                      {9,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",3.2236,0.2148,0.0327,0.5523},
-                                      {10,COLOR_G10,"Repostería, pastelería y otros","Bizcocho, bollo, croissant, ensaimada, galletas (de cualquier tipo),\n   magdalena, muesli, pan de pasas, tartas, pasteles, bollería industrial...",3.8755,0.0707,0.1883,0.5055},
-                                      {11,COLOR_G11,"Alimentos ricos en grasas saludables","Aceites de cacahuete, de oliva y de hígado de bacalao, aceitunas,\n   aguacate, almendras, avellanas, cacahuetes, pistachos, mayonesa de aceite\n   de oliva, etc.",7.2434,0.0283,0.7874,0.0275},
-                                      {12,COLOR_G12,"Alimentos ricos en grasas vegetales","Aceite de girasol, aceite de maíz, aceite de soja, mayonesa light, nueces,\n   piñones, etc.",8.3561,0.0232,0.9312,0.0066},
-                                      {13,COLOR_G13,"Alimentos ricos en grasas saturadas","Coco fresco o seco, aceite de coco, mantequilla, nata líquida para cocinar\n   o montar, etc.",5.6178,0.0126,0.6115,0.0178},
-                                      {14,COLOR_G14,"Alimentos muy grasos (mezclas)","Margarina light, margarina vegetal enriquecida, manteca y tocino de cerdo",8.2686,0.0107,0.9136,0.0007},
-                                      {15,COLOR_G15,"Azúcares y dulces","Azúcar blanco y moreno, miel, leche condensada, cacao soluble azucarado,\n   confitura de fruta baja en calorías",3.5162,0.0262,0.0247,0.8446},
-                                      {16,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.9947,0.1930,0.0176,0.0101},
-                                      {17,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.3225,0.1814,0.0505,0.0375},
-                                      {18,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.5525,0.1347,0.1126,0.0064},
-                                      {19,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.7904,0.2061,0.2160,0.0},
-                                      {20,COLOR_G20,"Alimentos proteicos muy grasos","Carne picada sazonada, panceta de cerdo, morcilla, mortadela, paté,\n   salami, salchichón, etc.",3.1614,0.1316,0.2817,0.0364},
-                                      {27,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.2282,0.0158,0.0098,0.0235},
-                                      {28,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",0.9617,0.0195,0.0051,0.2375},
-                                      {29,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",1.1762,0.0858,0.0146,0.1868},
-                                      {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.9450,0.1978,0.0131,0.0013},
-                                      {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.6939,0.2269,0.0728,0.0258},
-                                      {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.4769,0.1298,0.1067,0.0064},
-                                      {39,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.8156,0.1869,0.2260,0.0}
+Grupo gruposAlimentos[NUM_GRUPOS] = { 
+                                        {1,COLOR_G1,"Lácteos enteros","Leche entera de vaca (pasteurizada o UHT), de oveja, de cabra, yogurt\n   natural entero, cuajada, etc.",0.69584,0.03576,0.04156,0.04831},
+                                        {2,COLOR_G2,"Lácteos semidesnatados","Leche semidesnatada pasteurizada y UHT",0.4729,0.0332,0.0174,0.0495},
+                                        {3,COLOR_G3,"Lácteos desnatados","Leche desnatada pasteurizada y UHT, natural, con frutas, yogurt desnatado,\n   yogurt desnatado de sabores, etc.",0.3393,0.0338,0.0028,0.0478},
+                                        {4,COLOR_G4,"Lácteos azucarados","Batidos lácteos de cacao y otros sabores, leche entera fermentada con\n   frutas, yogures enteros de sabores y azucarados, yogures líquidos de\n   sabores y azucarados",0.8598,0.0301,0.0257,0.1316},
+                                        {5,COLOR_G5,"Postres lácteos","Arroz con leche, flan de huevo, flan de vainilla y natillas...",1.8484,0.0356,0.0806,0.2478},
+                                        {6,COLOR_G6,"Frutas frescas, desecadas y zumos","Albaricoque, arándanos, cerezas, ciruelas, dátil seco, fresa, granada,\n   higos, kiwi, mandarina,manzana, melocotón, melón, naranja, pera, piña,\n   plátano, sandía, uvas...",0.48055,0.00801,0.002497,0.11196},
+                                        {7,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.2454,0.0148,0.0037,0.0412},
+                                        {8,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",2.1053,0.0622,0.0142,0.4452},
+                                        {9,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",3.2236,0.2148,0.0327,0.5523},
+                                        {10,COLOR_G10,"Repostería, pastelería y otros","Bizcocho, bollo, croissant, ensaimada, galletas (de cualquier tipo),\n   magdalena, muesli, pan de pasas, tartas, pasteles, bollería industrial...",3.8946,0.0728,0.1420,0.5055},
+                                        {11,COLOR_G11,"Alimentos ricos en grasas saludables","Aceites de cacahuete, de oliva y de hígado de bacalao, aceitunas,\n   aguacate, almendras, avellanas, cacahuetes, pistachos, mayonesa de aceite\n   de oliva, etc.",7.2833,0.0289,0.7881,0.0343},
+                                        {12,COLOR_G12,"Alimentos ricos en grasas vegetales","Aceite de girasol, aceite de maíz, aceite de soja, mayonesa light, nueces,\n   piñones, etc.",8.4623,0.0249,0.9329,0.0249},
+                                        {13,COLOR_G13,"Alimentos ricos en grasas saturadas","Coco fresco o seco, aceite de coco, mantequilla, nata líquida para cocinar\n   o montar, etc.",5.6178,0.0126,0.6115,0.0178},
+                                        {14,COLOR_G14,"Alimentos muy grasos (mezclas)","Margarina light, margarina vegetal enriquecida, manteca y tocino de cerdo",8.2686,0.0107,0.9136,0.0007},
+                                        {15,COLOR_G15,"Azúcares y dulces","Azúcar blanco y moreno, miel, leche condensada, cacao soluble azucarado,\n   confitura de fruta baja en calorías",3.5162,0.0262,0.0247,0.8446},
+                                        {16,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.9947,0.1930,0.0176,0.0101},
+                                        {17,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.3896,0.1848,0.0705,0.0044},
+                                        {18,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.4769,0.1298,0.1067,0.0064},
+                                        {19,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.7904,0.2061,0.2160,0.0},
+                                        {20,COLOR_G20,"Alimentos proteicos muy grasos","Carne picada sazonada, panceta de cerdo, morcilla, mortadela, paté,\n   salami, salchichón, etc.",3.1911,0.1335,0.2848,0.0351},
+                                        {27,COLOR_G7,"Verduras y hortalizas","Acelgas, apio, alcachofa, berenjena, brócoli, calabacín, calabaza,\n   champiñones, col, espárragos, espinacas, guisantes, lechuga, judías,\n   pimientos, tomate, zanahoria, etc.",0.2282,0.0158,0.0037,0.0235},
+                                        {28,COLOR_G8,"Cereales y tubérculos","Arroz, avena, boniato, castaña, cereales de desayuno ricos en fibra,\n   copos de maíz, harina, maíz, pan, pasta, patata, sémola de trigo, etc.",0.9617,0.0195,0.0051,0.2375},
+                                        {29,COLOR_G9,"Legumbres","Alubias, garbanzos, lentejas, etc.",1.1762,0.0858,0.0146,0.1868},
+                                        {36,COLOR_G16,"Alimentos proteicos con muy poca grasa","Pavo, pollo, ternera (entrecot y solomillo), jamón cocido, atún natural,\n   pescado no graso, marisco, queso granulado, clara de huevo, etc.",0.9450,0.1978,0.0131,0.0013},
+                                        {37,COLOR_G17,"Alimentos proteicos con poca grasa","Lomo de cerdo, pollo sin piel, bistec de vaca/buey, jamón curado (sin\n   grasa), pescados grasos (atún, sardina, trucha, boquerón...), vísceras, pato\n   sin piel, codorniz, etc.",1.7312,0.2288,0.0838,0.0074},
+                                        {38,COLOR_G18,"Alimentos proteicos semigrasos","Chuletas de cerdo, cordero, anchoas, atún o sardinas en aceite, caballa,\n   salmón, jamón curado con grasa, huevo, queso fresco, requesón, queso en\n   porciones, etc.",1.5525,0.1347,0.1126,0.0064},
+                                        {39,COLOR_G19,"Alimentos proteicos grasos","Chuletas/costillas de cordero, chorizo, salchichas, fuet, quesos (azul,\n   babybel, camembert, cheddar, de cabra, emmental, gouda, gruyer, manchego...)",2.8156,0.1869,0.2260,0.0}
                                     };
-
 
 
 // Grupo de alimentos seleccionado
