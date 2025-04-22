@@ -69,7 +69,7 @@ inline void    sendMsgToDue(const String &msg);                                 
 // Comunicación Serial ESP32-BR
 inline bool     hayMsgFromBR(){ return SerialBR.available() > 0; };                         // Comprobar si hay mensajes del BR (Barcode Reader) disponibles (se ha leído código)
 inline void     readMsgFromSerialBR(String &msgFromBR);    
-void            waitForBarcode_normal(String &buffer);                                 // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
+void            waitForBarcode_noProcessingCharacter(String &buffer);                                 // Leer mensaje del puerto serie ESP32-BR (leer el código de barras)
 void            waitForBarcode(String &buffer);                                             // Esperar a que se lea un código de barras
 
 inline bool    isTimeoutExceeded(unsigned long startTime, unsigned long timeout){ return millis() - startTime > timeout; }; // Comprobar si se ha excedido el tiempo de espera
@@ -231,13 +231,13 @@ inline void readMsgFromSerialBR(String &msgFromBR) {
  * ningún código de barras en ese tiempo, se considera que no se ha leído ningún código de barras
  * y el buffer se establece en "-". 
  * 
- * Utiliza un buffer temporal para procesar al completo el mensaje recibido del lector (processCharacter()), 
- * aunque esto no solía fallar, pero por seguir la lógica de waitResponseFromESP32().
+ * No se hace el procesamiento caracter a caracter como se hace en waitResponseFromESP32() en el Due
+ * porque, en este caso, si se hace ese procesamiento no se detecta el código.
  * 
  * @param buffer Referencia a un String donde se almacenará el código de barras leído o el mensaje de cancelación.
  */
 /*-----------------------------------------------------------------------------*/
-void waitForBarcode_normal(String &buffer) 
+void waitForBarcode_noProcessingCharacter(String &buffer) 
 {
     unsigned long startTime = millis();
 

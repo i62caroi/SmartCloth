@@ -41,7 +41,7 @@ void setup() {
         
         Serial.println("Startup complete...");
 
-        //tft.clearScreen(DARKORANGE);
+        tft.clearScreen(DARKORANGE);
 
         loadPicturesShowHourglass();
         //arranque();
@@ -50,10 +50,6 @@ void setup() {
         Serial.println("Indique pantalla a mostrar: ");
     }
 
-   // setupScreen();
-    
-    //Serial.println("Indique pantalla a mostrar: ");
-    //showAccionRealizada(SAVE_EXECUTED_FULL);
 }
 
 
@@ -204,9 +200,6 @@ void loop() {
             case 50:    drawThickLineWithAngle_2(200, 300, 150, 90, 10, RED);                               break;
             */
 
-
-
-
             // --- PRODUCTO CANCELADO --
             case 66:    showProductoCancelado();                                                            break;  // Producto cancelado
             
@@ -214,6 +207,9 @@ void loop() {
             //case 68:    dashboard(DASH_BARCODE);                                                            break;  // Dashboard de barcode
 
 
+            // --- RETIRAR PLATO SIN AVISAR -----
+            case 67:    preguntarIntencionRemoval();                                                        break;  // Preguntar qué hacer con el plato retirado 
+            case 68:    showBorradoAutomatico();                                                            break;  // Borrado automático del plato retirado por falta de respuesta
 
 
             default:    Serial.println("Opcion desconocida: " + String(input));                            break;

@@ -36,6 +36,9 @@ int SCREEN_HEIGHT; // Y (600)
 #define   SLOW_APPEAR_ANADIR_SUGERENCIA   9
 #define   SLOW_APPEAR_BORRAR_SUGERENCIA   10
 #define   SLOW_APPEAR_GUARDAR_SUGERENCIA  11
+#define   SLOW_APPEAR_ANADIR_SUDDEN_REMOVAL     12
+#define   SLOW_APPEAR_BORRAR_SUDDEN_REMOVAL     13
+#define   SLOW_APPEAR_GUARDAR_SUDDEN_REMOVAL    14
 
 // Lenta aparición/desaparición de imágenes:
 #define   SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO  1   // Desaparecer crudoGra y aparecer cociGra 
@@ -135,6 +138,11 @@ RA8876 tft = RA8876(RA8876_CS, RA8876_RESET);
 /*-----------------------------------------------------------------------------
                            DEFINICIONES FUNCIONES
 -----------------------------------------------------------------------------*/
+// --- RETIRAR PLATO SIN AVISAR ---
+void    preguntarIntencionRemoval();
+void    showBorradoAutomatico();
+
+
 // --- CONVERSIÓN DE TEXTO ---
 void    convertSpecialCharactersToHEX_ref(String &input);       // Convierte a HEX caracteres especiales en una cadena de texto pasada por referencia
 String  convertSpecialCharactersToHEX(String input);            // Convierte a HEX caracteres especiales en una cadena de texto y devuelve la cadena modificada
@@ -225,6 +233,127 @@ void    putRelojGirado6();                  // Girando reloj (6)
 
 
 
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*---------------------------------- RETIRAR PLATO SIN AVISAR -------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------------------
+   preguntarIntencionRemoval(): Indica que se ha retirado el plato sin avisar y pregunta qué se quiere hacer
+                                con él: añadir otro, eliminarlo o guardarlo.
+----------------------------------------------------------------------------------------------------------*/
+void preguntarIntencionRemoval()
+{
+
+    // ----- TEXTO (AVISO DE RETIRADA SIN AVISAR) ----------------------------------------------------------
+    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
+
+    tft.setCursor(30, 40);                                  
+    tft.println(convertSpecialCharactersToHEX("¡PLATO RETIRADO SIN AVISAR!"));
+
+    //tft.selectInternalFont(RA8876_FONT_SIZE_16);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY() - 70); 
+    tft.println(convertSpecialCharactersToHEX("INDIQUE LO QUE QUERÍA HACER"));
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- POSIBLES ACCIONES ----------------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
+    // ----- AÑADIR PLATO -------------------------------------------------
+    // Añadir plato --> anadir (172x130) 
+    tft.setCursor(170, 367);                                       tft.println(convertSpecialCharactersToHEX("AÑADIR"));
+    tft.setCursor(190, tft.getCursorY() + tft.getTextSizeY()-13);   tft.println("OTRO");
+    tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY()-13);   tft.println("PLATO");
+    // Apareciendo y recortando bordes de add
+    slowAppearanceImage(SLOW_APPEAR_ANADIR_SUDDEN_REMOVAL);
+    // ----- ESPERA E INTERRUPCION ----------------
+    delay(100);
+    // --------------------------------------------------------------------
+
+
+    // ----- TEXTO (COMENTARIO ÚLTIMO ALIMENTO) ---------------------------
+    tft.setCursor(150, 520);                                  
+    tft.println(convertSpecialCharactersToHEX("(NO SE GUARDARÁ EL ÚLTIMO ALIMENTO COLOCADO)"));
+    // --------------------------------------------------------------------
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    delay(500);
+
+    // ----- BORRAR PLATO -------------------------------------------------
+    // Borrar plato --> borrar (172x130) 
+    tft.setCursor(430, 367);                                      tft.println("BORRAR");
+    tft.setCursor(445, tft.getCursorY() + tft.getTextSizeY()-13);  tft.println("PLATO");
+    tft.setCursor(420, tft.getCursorY() + tft.getTextSizeY()-13);  tft.println("RETIRADO");
+    // Apareciendo y recortando bordes de add/delete/save
+    slowAppearanceImage(SLOW_APPEAR_BORRAR_SUDDEN_REMOVAL);
+    // ----- ESPERA E INTERRUPCION ----------------
+    delay(500);
+    // --------------------------------------------------------------------
+
+
+    // ----- GUARDAR COMIDA -----------------------------------------------
+    // Guardar comida --> guardar (172x130) 
+    tft.setCursor(703, 367);                                       tft.println("GUARDAR");
+    tft.setCursor(710, tft.getCursorY() + tft.getTextSizeY()-13);   tft.println("COMIDA");
+    // Apareciendo y recortando bordes de save
+    slowAppearanceImage(SLOW_APPEAR_GUARDAR_SUDDEN_REMOVAL);
+    // --------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
+
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   showBorradoAutomatico(): Indica que se ha borrado el plato automáticamente porque no se ha respondido qué
+                            se quería hacer con él tras retirarlo sin avisar (añadir, eliminar o guardar).
+----------------------------------------------------------------------------------------------------------*/
+void showBorradoAutomatico()
+{
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
+
+    // Título principal de la pantalla
+    tft.setCursor(384, 100);    tft.println(convertSpecialCharactersToHEX("¡AVISO!"));                           
+    // ---------------------------------------------------------------------------------------------------
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,286,764,294,3,ROJO_TEXTO_CONFIRM_Y_AVISO); // Cruza la imagen de aviso por detrás
+    // ---------------------------------------------------------------------------------------------------
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Mostrar icono de aviso
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,230,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- TEXTO (PLATO BORRADO POR RETIRAR SIN AVISAR) -------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    tft.setCursor(130, 410);   tft.println("SE HA ELIMINADO EL PLATO PORQUE"); 
+    tft.setCursor(135, tft.getCursorY() + tft.getTextSizeY());      tft.println(convertSpecialCharactersToHEX("NO HA INDICADO QUÉ HACER CON ÉL"));
+    // ----------------------------------------------------------------------------------------------------  
+    
+}
+
+
+
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
 
 
 
@@ -4727,6 +4856,15 @@ void slowAppearanceImage(int option)
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,404,206,158,130); // Mostrar añadir (172x130)
             break;
 
+        case SLOW_APPEAR_ANADIR_SUDDEN_REMOVAL: // añadir tras retirar sin avisar
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar añadir apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,144,216,158,130,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,144,216,158,130); // Mostrar añadir (172x130)
+            break;
+
         case SLOW_APPEAR_BORRAR_SUGERENCIA: // borrar sugerencias
             for(i = 32; i >= 1; i--){
                 // Mostrar borrar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
@@ -4737,6 +4875,15 @@ void slowAppearanceImage(int option)
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130); // Mostrar borrar (172x130) 
             break;
 
+        case SLOW_APPEAR_BORRAR_SUDDEN_REMOVAL: // borrar tras retirar sin avisar
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar borrar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,404,216,158,130,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,404,216,158,130); // Mostrar borrar (172x130) 
+            break;
+
         case SLOW_APPEAR_GUARDAR_SUGERENCIA: // guardar sugerencias
             for(i = 32; i >= 1; i--){
                 // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
@@ -4745,6 +4892,15 @@ void slowAppearanceImage(int option)
                 delay(10);
             }
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,780,206,158,130); // Mostrar guardar (172x130)
+            break;
+
+        case SLOW_APPEAR_GUARDAR_SUDDEN_REMOVAL: // guardar tras retirar sin avisar
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,678,216,158,130,i);
+                delay(10);
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,678,216,158,130); // Mostrar guardar (172x130)  
             break;
 
         

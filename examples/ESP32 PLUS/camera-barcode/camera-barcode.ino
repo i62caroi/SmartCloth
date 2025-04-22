@@ -149,7 +149,7 @@ void loop()
         // ---- OBTENER CÓDIGO DE BARRAS -----------
         String barcode;
         readMsgFromSerialBR(barcode); 
-        SerialPC.println("\n\nBarcode: " + barcode); 
+        SerialPC.println("Barcode: " + barcode); 
         // -----------------------------------------
 
         // ---- COMPROBAR VALIDEZ CODIGO -----------

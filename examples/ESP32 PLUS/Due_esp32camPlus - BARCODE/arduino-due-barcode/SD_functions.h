@@ -74,7 +74,7 @@
 // Los 8 caracteres no incluyen el path hasta el fichero
 
 // --- FICHERO BARCODE ---
-char    fileBarcodes[30] = "data/barcodes.csv";       // Archivo CSV para guardar la información de los barcodes
+char    productsFile[30] = "data/barcodes.csv";       // Archivo CSV para guardar la información de los barcodes
 
 
 
@@ -89,8 +89,8 @@ bool    setupSDcard();              // Inicializar tarjeta SD
 // --------------------
 
 // -- Fichero barcodes --
-bool fileBarcodesExists();                                      // Comprobar si existe el fichero barcodes.csv
-bool writeHeaderFileBarcodes();                                 // Escribir encabezado del archivo barcodes.csv
+bool productsFileExists();                                      // Comprobar si existe el fichero barcodes.csv
+bool writeHeaderProductsFile();                                 // Escribir encabezado del archivo barcodes.csv
 bool searchBarcodeInSD(String &barcode, String &productInfo);   // Buscar barcode en el fichero barcodes.csv
 void writeProductInfoInSD(String &productInfo);                 // Escribir información de un producto en el fichero barcodes.csv
 // ----------------------
@@ -148,9 +148,9 @@ bool setupSDcard()
  * @return true si el fichero existe, false en caso contrario.
  */
 /*-----------------------------------------------------------------------------*/
-bool fileBarcodesExists()
+bool productsFileExists()
 {
-    File file = SD.open(fileBarcodes, FILE_READ);
+    File file = SD.open(productsFile, FILE_READ);
     if (file)
     {
         file.close();
@@ -168,9 +168,9 @@ bool fileBarcodesExists()
  * El encabezado contiene los nombres de las columnas separados por ';'.
  */
 /*-----------------------------------------------------------------------------*/
-bool writeHeaderFileBarcodes() 
+bool writeHeaderProductsFile() 
 {
-    SerialPC.print(F("\n Creando fichero ")); SerialPC.print(fileBarcodes); SerialPC.println(F(" ...\n"));
+    SerialPC.print(F("\n Creando fichero ")); SerialPC.print(productsFile); SerialPC.println(F(" ...\n"));
 
     // Debe separarse por ';' para que Excel abra el fichero csv separando las
     // columnas directamente:
@@ -178,7 +178,7 @@ bool writeHeaderFileBarcodes()
     // La información de los productos viene como "<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
     String header = "barcode;nombre_producto;carb_1g;lip_1g;prot_1g;kcal_1g";
 
-    File myFile = SD.open(fileBarcodes, FILE_WRITE); 
+    File myFile = SD.open(productsFile, FILE_WRITE); 
     if (myFile)
     {
         myFile.println(header);
@@ -204,7 +204,7 @@ bool writeHeaderFileBarcodes()
 /*-----------------------------------------------------------------------------*/
 bool searchBarcodeInSD(String &barcode, String &productInfo)
 {
-    File file = SD.open(fileBarcodes, FILE_READ);
+    File file = SD.open(productsFile, FILE_READ);
     if(!file)
     {
         SerialPC.println(F("Error al abrir el fichero barcodes.csv, puede que no exista"));
@@ -241,9 +241,9 @@ void writeProductInfoInSD(String &productInfo)
 {
     // -- 1. COMPROBAR SI EXISTE EL FICHERO --
     // Si no existe, se crea el fichero y se escribe el encabezado
-    if (!fileBarcodesExists())
+    if (!productsFileExists())
     {
-        if (!writeHeaderFileBarcodes())
+        if (!writeHeaderProductsFile())
         {
             SerialPC.println(F("Error creando el archivo CSV de barcodes con el encabezado!"));
             return;
@@ -255,11 +255,11 @@ void writeProductInfoInSD(String &productInfo)
 
     // La información del producto viene como "PRODUCT:<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>"
     
-    // Eliminar la parte de "PROCUCT:"
+    // Eliminar la parte de "PRODUCT:"
     String productData = productInfo.substring(8);
 
     // Escribir información en el fichero
-    File myFile = SD.open(fileBarcodes, FILE_WRITE); 
+    File myFile = SD.open(productsFile, FILE_WRITE); 
     if (myFile)
     {
         myFile.println(productData); // "<barcode>;<nombreProducto>;<carb_1g>;<lip_1g>;<prot_1g>;<kcal_1g>\n"

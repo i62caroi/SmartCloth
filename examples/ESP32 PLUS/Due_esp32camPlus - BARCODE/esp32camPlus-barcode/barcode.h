@@ -103,7 +103,7 @@ void getBarcode()
     // Tras limpiar el buffer, se dan 30 segundos al usuario para que coloque el producto sobre el lector.
     // Si se recibe "CANCEL-BARCODE" del Due antes de leer código de barras, significa que el usuario ha cancelado la lectura. 
     //waitForBarcode(buffer); // Esperar 30 segundos a que haya algo en el buffer del lector
-    waitForBarcode_normal(buffer);
+    waitForBarcode_noProcessingCharacter(buffer); // Lee todo del buffer, sin procesar caracter a caracter
     // ---------------------------------------------------
     
 

@@ -129,6 +129,7 @@ void setupAllSerial()
 /*-----------------------------------------------------------------------------*/
 inline void readMsgFromSerialBR(String &msgFromBR) { 
     msgFromBR = SerialBR.readStringUntil('\n');
+    Serial.print("Código de barras leído: " + msgFromBR);
     msgFromBR.trim(); // Elimina espacios en blanco al principio y al final
     limpiarBufferBR(); // Limpiar buffer del lector de códigos de barras
 }
