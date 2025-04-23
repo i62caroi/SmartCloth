@@ -53,6 +53,9 @@ float     pesoPlato         =   0.0;    // Peso total del plato (recipiente +  a
 float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
+
+#define SCALE_CALIBRATION_FACTOR 997.4558  // Factor de calibración de la báscula (gramos)
+
 #define UMBRAL_MIN_CAMBIO_PESO 5.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
 #define UMBRAL_RECIPIENTE_RETIRADO 20.0 // Umbral para considerar que se ha retirado todo (recipiente + alimentos) de la báscula
                                         // 20 gramos porque asumimos que un plato no pesará 20 gramos y así es más fácil detectar si se ha retirado todo
@@ -105,12 +108,13 @@ void setupScale()
 
     scale.begin(LOADCELL_DOUT_PIN, LOADCELL_SCK_PIN); // Inicializa la celda de carga con los pines especificados
 
-    scale.set_scale(1005.27); // Establecer escala inicial. Este valor se ajustará para calibrar la báscula.
+    scale.set_scale(SCALE_CALIBRATION_FACTOR); // Establecer escala inicial. Este valor se ajusta al calibrar la báscula.
     //scale.tare();  // Tarar tomando la media de 10 medidas
     scale.tare(5);
 
     #if defined(SM_DEBUG)
         SerialPC.println(F("Scale initialized"));
+        SerialPC.print(F("Using calibration factor: ")); SerialPC.println(SCALE_CALIBRATION_FACTOR, 4);
         SerialPC.println("++++++++++++++++++++++++++++++++++++++++++++++++++\n");
     #endif
 }

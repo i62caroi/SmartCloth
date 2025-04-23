@@ -34,8 +34,11 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios di
 ### Comunicaciones 
 <img src="Docs/Diseño-SmartCloth/Hardware/Diagrama_de_comunicaciones_v2.png" width="600">
 
-### Aspecto externo
+### Aspecto externo v2.0
 <img src="Docs/Diseño-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v2_0.jpeg" width="600">
+
+### Aspecto externo v2.1
+<img src="Docs/Diseño-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v2_1.jpeg" width="600">
 
 ### Montaje del Hardware
 Para ensamblar el hardware de SmartCloth 2.0, por favor consulte el [documento de montaje](./Docs/SmartCloth%20assembly%20document%20V0.2.pdf).

@@ -206,17 +206,20 @@ bool    eventOccurred(); // Comprobar si ha habido interrupciones de botoneras o
 #define   SHOW_RACIONES_ZONA4         1   // Ubicacion en zona 4 de las raciones en showRaciones()
 
 // Lenta aparición de imágenes: 
-#define   SLOW_APPEAR_COCINADO            1
-#define   SLOW_APPEAR_SCALE               2
-#define   SLOW_APPEAR_GRUPO1              3
-#define   SLOW_APPEAR_GRUPO2              4
-#define   SLOW_APPEAR_GRUPO3              5
-#define   SLOW_APPEAR_GRUPO4              6
-#define   SLOW_APPEAR_SCALE_SUGERENCIA    7
-#define   SLOW_APPEAR_GRUPO1_SUGERENCIA   8
-#define   SLOW_APPEAR_ANADIR_SUGERENCIA   9
-#define   SLOW_APPEAR_BORRAR_SUGERENCIA   10
-#define   SLOW_APPEAR_GUARDAR_SUGERENCIA  11
+#define   SLOW_APPEAR_COCINADO                  1
+#define   SLOW_APPEAR_SCALE                     2
+#define   SLOW_APPEAR_GRUPO1                    3
+#define   SLOW_APPEAR_GRUPO2                    4
+#define   SLOW_APPEAR_GRUPO3                    5
+#define   SLOW_APPEAR_GRUPO4                    6
+#define   SLOW_APPEAR_SCALE_SUGERENCIA          7
+#define   SLOW_APPEAR_GRUPO1_SUGERENCIA         8
+#define   SLOW_APPEAR_ANADIR_SUGERENCIA         9
+#define   SLOW_APPEAR_BORRAR_SUGERENCIA         10
+#define   SLOW_APPEAR_GUARDAR_SUGERENCIA        11
+#define   SLOW_APPEAR_ANADIR_SUDDEN_REMOVAL     12
+#define   SLOW_APPEAR_BORRAR_SUDDEN_REMOVAL     13
+#define   SLOW_APPEAR_GUARDAR_SUDDEN_REMOVAL    14
 
 // Lenta aparición/desaparición de imágenes:
 #define   SLOW_DISAPPEAR_CRUDO_APPEAR_COCINADO  1   // Desaparecer crudoGra y aparecer cociGra 
@@ -274,7 +277,8 @@ void    showDashboardStyle2_Barcode();                          // Mostrar dashb
 
 // --- PANTALLAS TRANSITORIAS ---
 // -- Guardando comida ---
-void    showSavingMeal(bool conexion);      // Mostrar pantalla de guardando comida (conexión = true) o solo local (conexión = false)
+void    showSavingMeal_baseScreen();           // Mostrar pantalla de guardando comida (base)
+void    showSavingMeal_connectionState(bool hayConexionInternet); // Mostrar pantalla de guardando comida con mensaje de conexión a internet
 // -- Info para sincronizar ---
 void    showSyncState(byte option);   // Sincronizar memoria de SmartCloth con Web
 // -- Recipiente ---------
@@ -305,8 +309,10 @@ void    pedirConfirmacion(byte option);     // Pregunta de confirmación general
 // -- Acción realizada ---
 void    showAccionRealizada(byte option);   // Mensaje general de confirmación   =>  STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
 // -- Acción cancelada ---
-//void    showAccionCancelada();              // Mensaje general de acción cancelada  => STATE_add_check, STATE_delete_check y STATE_save_check 
 void    showCancel(byte option);            // Mensaje de "Acción cancelada" para add/delete/save o leer barcode, o "Producto cancelado" para el producto buscado
+// --- Plato retirado sin avisar ---
+void    checkIntencionRemoval();        // Pantalla para preguntar qué intención tenía al retirar el plato: "Guardar y crear otro" o "Eliminar"
+void    showBorradoAutomatico();            // Pantalla de borrado automático del plato porque no se ha recibido respuesta de lo que se quería hacer con él
 // -- Fallo crítico en SD ---
 void    showCriticFailureSD();              // Pantalla de fallo crítico al inicializar la SD ("Fallo en la memoria interna de SM")
 // --- Errores o avisos ---
@@ -314,6 +320,8 @@ void    showError(byte option);             // Pantalla de error con mensaje seg
 void    showWarning(byte option);           // Warning de acción innecesaria => STATE_added (option: 1), STATE_deleted (option: 2) y STATE_saved (option: 3)
                                             // o de no haber leído el barcode => STATE_Barcode (option: 4) o de no haber encontrado el producto => STATE_Barcode (option: 5)
                                             // Si no se encuentra el producto, se indica con su código, que está como global en State_Machine.h y se tiene acceso desde Screen.h
+
+
 // -- Aparición/Desaparición imágenes --
 bool    slowAppearanceImage(byte option);                          // Mostrar imagen de cociGra (option = 1) o scale (option = 2)
 bool    slowAppearanceAndDisappareanceProcesamiento(byte option);  // Mostrar crudoGra desapareciendo y cociGra apareciendo (option = 1) o viceversa (option = 2)
@@ -623,9 +631,7 @@ void blinkGrupoyProcesamiento(byte msg_option){
                 tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
                 tft.setCursor(50,50);
                 tft.setTextForegroundColor(WHITE);
-                /*if(msg_option == MSG_SIN_RECIPIENTE) tft.print("NO SE HA COLOCADO NING\xDA""N RECIPIENTE");  // 16x32 escale x1
-                else if(msg_option == MSG_SIN_GRUPO) tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
-                */
+
                 if(msg_option == MSG_SIN_RECIPIENTE) tft.print(convertSpecialCharactersToHEX("NO SE HA COLOCADO NINGÚN RECIPIENTE"));  // 16x32 escale x1
                 else if(msg_option == MSG_SIN_GRUPO) tft.print(convertSpecialCharactersToHEX("NO SE HA SELECCIONADO NINGÚN GRUPO DE ALIMENTOS"));  // 16x32 escale x1
             }
@@ -680,9 +686,6 @@ void blinkGrupoyProcesamiento(byte msg_option){
                 tft.setCursor(50,50);
                 tft.setTextForegroundColor(WHITE);
 
-                /*if(msg_option == MSG_SIN_RECIPIENTE) tft.print("NO SE HA COLOCADO NING\xDA""N RECIPIENTE");  // 16x32 escale x1
-                else if(msg_option == MSG_SIN_GRUPO) tft.print("NO SE HA SELECCIONADO NING\xDA""N GRUPO DE ALIMENTOS");  // 16x32 escale x1
-                */
                 if(msg_option == MSG_SIN_RECIPIENTE) tft.print(convertSpecialCharactersToHEX("NO SE HA COLOCADO NINGÚN RECIPIENTE"));  // 16x32 escale x1
                 else if(msg_option == MSG_SIN_GRUPO) tft.print(convertSpecialCharactersToHEX("NO SE HA SELECCIONADO NINGÚN GRUPO DE ALIMENTOS"));  // 16x32 escale x1
             
@@ -846,8 +849,20 @@ void printZona3(byte show_objeto)
 
     if(show_objeto == SHOW_COMIDA_ACTUAL_ZONA3) // Valores de la comida copiada tras guardar. Al inicio están a 0.
     {
-        valores.setValores(comidaActualCopia.getValoresComida());
-        pesoMostrado = comidaActualCopia.getPesoComida();
+        // Si se acaba de guardar la comida, el objeto 'comidaActual' se habrá restaurado, así que antes lo copiamos
+        // en 'comidaActualCopia' para mostrar los valores guardados bajo "Comida Guardada".
+        // Si no se acaba de guardar, sino que se ha vuelto a STATE_Init tras retirar plato, se mostrará "Comida Actual".
+        if(flagComidaSaved)
+        {
+            valores.setValores(comidaActualCopia.getValoresComida());
+            pesoMostrado = comidaActualCopia.getPesoComida();
+        }
+        else
+        {
+            valores.setValores(comidaActual.getValoresComida());
+            pesoMostrado = comidaActual.getPesoComida();
+        }
+        
     }
     else if(show_objeto == SHOW_ALIMENTO_ACTUAL_ZONA3) // Valores temporales calculados a partir del peso del alimento, que puede variar
     {   
@@ -1018,7 +1033,6 @@ void showValores(ValoresNutricionales &valores, byte zona){
     if(zona == SHOW_RACIONES_ZONA3) tft.setCursor(50,380);
     else if(zona == SHOW_RACIONES_ZONA4) tft.setCursor(540,380);
     tft.setTextForegroundColor(NARANJA_PROT); 
-    //tft.print("PROTE\xCD""NAS: "); tft.print(valores.getProtValores(),1); tft.print("g"); // 16x32 escale x1
     tft.print(convertSpecialCharactersToHEX("PROTEÍNAS: ")); tft.print(valores.getProtValores(),1); tft.print("g"); // 16x32 escale x1
 
     // ------------ Grasas ------------
@@ -2300,8 +2314,6 @@ bool formGraphicsPedirProcesamiento()
         tft.selectInternalFont(RA8876_FONT_SIZE_32);
         tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
         tft.setTextForegroundColor(WHITE); 
-        /*tft.setCursor(230, 185);                                        tft.println("\xBF""EL ALIMENTO EST\xC1""");
-        tft.setCursor(250, tft.getCursorY() + tft.getTextSizeY()-20);   tft.print("COCINADO O CRUDO\x3F"""); */
         tft.setCursor(230, 185);                                        tft.println(convertSpecialCharactersToHEX("¿EL ALIMENTO ESTÁ"));
         tft.setCursor(250, tft.getCursorY() + tft.getTextSizeY()-20);   tft.print(convertSpecialCharactersToHEX("COCINADO O CRUDO?"));
     // ---------------------------------------------------------------------------
@@ -2455,7 +2467,6 @@ void sugerirAccion()
     tft.setTextForegroundColor(WHITE); 
     //tft.ignoreTextBackground();       // Activa la transparencia igual que ==> tft.setTextBackgroundTrans(RA8876_TEXT_TRANS_ON);
     tft.setCursor(80, 50);
-    //tft.println("\xBF""QU\xC9"" QUIERE HACER AHORA\x3F""");
     tft.println(convertSpecialCharactersToHEX("¿QUÉ QUIERE HACER AHORA?"));
     
     // ----- ESPERA E INTERRUPCION ----------------
@@ -2474,8 +2485,6 @@ void sugerirAccion()
 
     // ----- MÁS ALIMENTO -------------------------------------------------
     // Añadir más cantidad de alimento --> scaleG (150x150) 
-    /*tft.setCursor(90, 377);                                       tft.println("A\xD1""ADIR");
-    tft.setCursor(115, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("M\xC1""S");*/
     tft.setCursor(90, 377);                                       tft.println(convertSpecialCharactersToHEX("AÑADIR"));
     tft.setCursor(115, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println(convertSpecialCharactersToHEX("MÁS"));
     tft.setCursor(75, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("ALIMENTO");
@@ -2504,7 +2513,6 @@ void sugerirAccion()
 
     // ----- AÑADIR PLATO -------------------------------------------------
     // Añadir plato --> anadir (172x130) 
-    //tft.setCursor(430, 377);                                       tft.println("A\xD1""ADIR");
     tft.setCursor(430, 377);                                       tft.println(convertSpecialCharactersToHEX("AÑADIR"));
     tft.setCursor(445, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("OTRO");
     tft.setCursor(440, tft.getCursorY() + tft.getTextSizeY()-5);  tft.println("PLATO");
@@ -2562,7 +2570,7 @@ void sugerirAccion()
 // Lo primero que hace es preguntar al ESP32 por WiFi, antes siquiera de poner la pantalla de confirmar. Entonces, si el ESP32 no contesta (se esperan 3 segundos),
 // da la sensación de que no se ha detectado la primera pulsación de GUARDAR, lo que provoca que el usuario vuelva a pulsar y, sin saberlo, directamente confirme
 // la subida. Por eso, creo que es mejor preguntar por WiFi después de confirmar la acción de guardar comida y, entonces, informar de si se guardará en la web o 
-// solo en el SmartCloth. La pantalla de confirmar guardado ya no mostrará "Conectado a Internet" ni "Sin Internet", pero bueno, al guardarlo se le informará.
+// solo en el SmartCloth. La pantalla de confirmar guardado ya no mostrará "Conectado a Internet" ni "Sin Internet", pero al guardarlo se le informará.
 /*void pedirConfirmacion(byte option)
 {
     showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
@@ -2912,17 +2920,20 @@ void showAccionRealizada(byte option)
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
 
-     switch (option)
-     {
-      case ADD_EXECUTED:                    tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO");                 break;  // AÑADIDO
+    // Solo se indica "Retire el plato" si no se viene de STATE_REMOVAL_CHECK porque el plato ya se retiró, es lo que llevó a STATE_REMOVAL_CHECK.
+    // En los propios estados STATE_added, STATE_deleted y STATE_save_check se pasa automáticamente a STATE_Init con GO_TO_INIT para no esperar
+    // un evento LIBERAR que no va a llegar.
+    switch (option)
+    {
+        case ADD_EXECUTED:                    if(state_prev != STATE_REMOVAL_CHECK){ tft.setCursor(240, 388); tft.println("RETIRE EL PLATO PARA COMENZAR OTRO"); }                 break;  // AÑADIDO
 
-      case DELETE_EXECUTED:                 tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO");   break;  // ELIMINADO
-              
-      case SAVE_EXECUTED_FULL:                                                                                                                  // GUARDADO EN LOCAL Y DATABASE
-      case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                                                 // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
-      case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                                                    // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
-      case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                                                    // TIMEOUT EN LA RESPUESTA DEL ESP32
-      case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                                              // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
+        case DELETE_EXECUTED:                 if(state_prev != STATE_REMOVAL_CHECK){ tft.setCursor(160, 388); tft.println("RETIRE EL PLATO ELIMINADO PARA COMENZAR DE NUEVO"); }   break;  // ELIMINADO
+                
+        case SAVE_EXECUTED_FULL:                                                                                                                  // GUARDADO EN LOCAL Y DATABASE
+        case SAVE_EXECUTED_ONLY_LOCAL_ERROR_HTTP:                                                                                                 // GUARDADO SOLO EN LOCAL POR FALLO EN PETICION HTTP
+        case SAVE_EXECUTED_ONLY_LOCAL_NO_WIFI:                                                                                                    // GUARDADO SOLO EN LOCAL POR NO TENER WIFI
+        case SAVE_EXECUTED_ONLY_LOCAL_TIMEOUT:                                                                                                    // TIMEOUT EN LA RESPUESTA DEL ESP32
+        case SAVE_EXECUTED_ONLY_LOCAL_UNKNOWN_ERROR:                                                                                              // GUARDADO SOLO EN LOCAL POR UN ERROR DESCONOCIDO 
                 
                 // Puede ser que se quiera guardar desde el STATE_Init, tras añadir o borrar. Si es así, la báscula estará vacía (pesoARetirar = 0).
                 // No se pone if(pesoARetirar ...) porque aún no ha dado tiempo a actualizar 'pesoARetirar' y puede ser incorrecto
@@ -2934,7 +2945,7 @@ void showAccionRealizada(byte option)
                 else // Si se guarda tras conformar el plato, estando aún en la báscula, indicando que se retire
                 { 
                     tft.setCursor(30, 388); tft.println(convertSpecialCharactersToHEX("LOS VALORES NUTRICIONALES SE HAN AÑADIDO AL ACUMULADO DE HOY"));  
-                    tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); 
+                    if(state_prev != STATE_REMOVAL_CHECK){ tft.setCursor(200,450); tft.println("RETIRE EL PLATO PARA COMENZAR DE NUEVO"); }
                 }
 
                 // --- MENSAJE DE SUBIDA EN ESQUINA --------------
@@ -3030,6 +3041,130 @@ void showCancel(byte option)
 }
 
 
+
+/*-------------------------------------------------------------------------------------------------------*/
+/*---------------------------------- RETIRAR PLATO SIN AVISAR -------------------------------------------*/
+/*-------------------------------------------------------------------------------------------------------*/
+
+
+/*---------------------------------------------------------------------------------------------------------
+   checkIntencionRemoval(): Indica que se ha retirado el plato sin avisar y pregunta qué se quiere hacer
+                                con él: añadir otro, eliminarlo o guardarlo.
+----------------------------------------------------------------------------------------------------------*/
+void checkIntencionRemoval()
+{
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+    // Es una pantalla temporal porque se dan 30 segundos para responder a la pregunta de qué hacer con el plato retirado sin avisar.
+
+    // ----- TEXTO (AVISO DE RETIRADA SIN AVISAR) ----------------------------------------------------------
+    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
+
+    tft.setCursor(30, 40);                                  
+    tft.println(convertSpecialCharactersToHEX("¡PLATO RETIRADO SIN AVISAR!"));
+
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+    tft.setCursor(150, tft.getCursorY() + tft.getTextSizeY() - 70); 
+    tft.println(convertSpecialCharactersToHEX("INDIQUE LO QUE QUERÍA HACER"));
+
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(200)) return; 
+    // ----------------------------------------------------------------------------------------------------
+
+
+    // ----- POSIBLES ACCIONES ----------------------------------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_16);
+
+    // ----- AÑADIR PLATO -------------------------------------------------
+    // Añadir plato --> anadir (172x130) 
+    tft.setCursor(170, 367);                                        tft.println(convertSpecialCharactersToHEX("AÑADIR"));
+    tft.setCursor(190, tft.getCursorY() + tft.getTextSizeY()-13);   tft.println("OTRO");
+    tft.setCursor(180, tft.getCursorY() + tft.getTextSizeY()-13);   tft.println("PLATO");
+    // Apareciendo y recortando bordes de add
+    if(slowAppearanceImage(SLOW_APPEAR_ANADIR_SUDDEN_REMOVAL)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(200)) return;
+    // --------------------------------------------------------------------
+
+
+    // ----- TEXTO (COMENTARIO ÚLTIMO ALIMENTO) ---------------------------
+    tft.setCursor(150, 520);                                  
+    tft.println(convertSpecialCharactersToHEX("(NO SE GUARDARÁ EL ÚLTIMO ALIMENTO COLOCADO)"));
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(500)) return;
+    // --------------------------------------------------------------------
+
+
+    // ----- BORRAR PLATO -------------------------------------------------
+    // Borrar plato --> borrar (172x130) 
+    tft.setCursor(430, 367);                                       tft.println("BORRAR");
+    tft.setCursor(445, tft.getCursorY() + tft.getTextSizeY()-13);  tft.println("PLATO");
+    tft.setCursor(420, tft.getCursorY() + tft.getTextSizeY()-13);  tft.println("RETIRADO");
+    // Apareciendo y recortando bordes de add/delete/save
+    if(slowAppearanceImage(SLOW_APPEAR_BORRAR_SUDDEN_REMOVAL)) return;
+    // ----- ESPERA E INTERRUPCION ----------------
+    if(doubleDelayAndCheckInterrupt(500)) return;
+    // --------------------------------------------------------------------
+
+
+    // ----- GUARDAR COMIDA -----------------------------------------------
+    // Guardar comida --> guardar (172x130) 
+    tft.setCursor(703, 367);                                        tft.println("GUARDAR");
+    tft.setCursor(710, tft.getCursorY() + tft.getTextSizeY()-13);   tft.println("COMIDA");
+    // Apareciendo y recortando bordes de save
+    if(slowAppearanceImage(SLOW_APPEAR_GUARDAR_SUDDEN_REMOVAL)) return;
+    // --------------------------------------------------------------------
+    // ----------------------------------------------------------------------------------------------------
+
+}
+
+
+
+/*---------------------------------------------------------------------------------------------------------
+   showBorradoAutomatico(): Indica que se ha borrado el plato automáticamente porque no se ha respondido qué
+                            se quería hacer con él tras retirarlo sin avisar (añadir, eliminar o guardar).
+----------------------------------------------------------------------------------------------------------*/
+void showBorradoAutomatico()
+{
+    showingTemporalScreen = true; // Activar flag de estar mostrando pantalla temporal/transitoria
+
+    // ----- TEXTO (AVISO) -------------------------------------------------------------------------------
+    tft.clearScreen(AMARILLO_CONFIRM_Y_AVISO); // Fondo amarillo en PAGE1
+
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
+    tft.setTextForegroundColor(ROJO_TEXTO_CONFIRM_Y_AVISO); 
+
+    // Título principal de la pantalla
+    tft.setCursor(384, 100);    tft.println(convertSpecialCharactersToHEX("¡AVISO!"));                           
+    // ---------------------------------------------------------------------------------------------------
+
+    // ------------ LINEA --------------------------------------------------------------------------------
+    tft.fillRoundRect(252,286,764,294,3,ROJO_TEXTO_CONFIRM_Y_AVISO); // Cruza la imagen de aviso por detrás
+    // ---------------------------------------------------------------------------------------------------
+
+    // ------------ ADVERTENCIA ---------------------------------------------------------------------------
+    // Mostrar icono de aviso
+    tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,115,293,PAGE1_START_ADDR,SCREEN_WIDTH,445,230,135,112); // Mostrar aviso2 (135x113) en PAGE1
+    // ----------------------------------------------------------------------------------------------------
+
+    // ----- TEXTO (PLATO BORRADO POR RETIRAR SIN AVISAR) -------------------------------------------------
+    tft.selectInternalFont(RA8876_FONT_SIZE_24);
+    tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
+
+    tft.setCursor(130, 410);   tft.println("SE HA ELIMINADO EL PLATO PORQUE"); 
+    tft.setCursor(135, tft.getCursorY() + tft.getTextSizeY());      tft.println(convertSpecialCharactersToHEX("NO HA INDICADO QUÉ HACER CON ÉL"));
+    // ----------------------------------------------------------------------------------------------------   
+    
+}
+
+
+
+
+
 /*-------------------------------------------------------------------------------------------------------*/
 /*---------------------------------- AVISOS POR OBJETO VACÍO --------------------------------------------*/
 /*-------------------------------------------------------------------------------------------------------*/
@@ -3055,10 +3190,10 @@ void showWarning(byte option)
     // Título principal de la pantalla
     switch(option)
     {
-        case WARNING_BARCODE_NOT_READ:      tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO NO DETECTADO!"));           break;
-        case WARNING_PRODUCT_NOT_FOUND:     tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO NO ENCONTRADO!"));          break;
-        case WARNING_MEALS_LEFT:            tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡SINCRONIZACIÓN PARCIAL!"));     break;
-        case WARNING_NO_INTERNET_NO_BARCODE:           tft.setCursor(70, 100);    tft.println(convertSpecialCharactersToHEX("¡SIN CONEXIÓN A INTERNET!"));    break;
+        case WARNING_BARCODE_NOT_READ:          tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO NO DETECTADO!"));      break;
+        case WARNING_PRODUCT_NOT_FOUND:         tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡PRODUCTO NO ENCONTRADO!"));     break;
+        case WARNING_MEALS_LEFT:                tft.setCursor(100, 100);    tft.println(convertSpecialCharactersToHEX("¡SINCRONIZACIÓN PARCIAL!"));     break;
+        case WARNING_NO_INTERNET_NO_BARCODE:    tft.setCursor(70, 100);     tft.println(convertSpecialCharactersToHEX("¡SIN CONEXIÓN A INTERNET!"));    break;
         
         // ADD, DELETE, SAVE, RAW_COOKED_NOT_NEEDED
         default:                            tft.setCursor(384, 100);    tft.println(convertSpecialCharactersToHEX("¡AVISO!"));                           break;
@@ -3159,7 +3294,6 @@ void showCriticFailureSD()
     tft.setTextForegroundColor(WHITE); 
     //tft.setCursor(60, 258);  
     tft.setCursor(200, 158);  
-    //tft.println("\xA1""FALLO EN MEMORIA\x21"""); // 12x24 escalado x3
     tft.println(convertSpecialCharactersToHEX("¡FALLO EN MEMORIA!")); // 12x24 escalado x3
     // ------ LINEA ---------
     tft.fillRoundRect(252,270,764,278,3,WHITE);
@@ -3209,7 +3343,6 @@ void showError(byte option)
     tft.setTextScale(RA8876_TEXT_W_SCALE_X3, RA8876_TEXT_H_SCALE_X3); 
     tft.setTextForegroundColor(WHITE); 
     tft.setCursor(170, 100);
-    //tft.println("\xA1""ACCI\xD3""N INCORRECTA\x21""");
     tft.println(convertSpecialCharactersToHEX("¡ACCIÓN INCORRECTA!"));
     // ----------------------------------------------------------------------------------------------------
 
@@ -3229,69 +3362,78 @@ void showError(byte option)
 
     switch (option){
       case ERROR_STATE_INIT: // Init
-              tft.setCursor(250, 420);                                     tft.println("COLOQUE UN RECIPIENTE"); 
-              break;
+            tft.setCursor(250, 420);                                     tft.println("COLOQUE UN RECIPIENTE"); 
+            break;
 
       case ERROR_STATE_PLATO: // Plato
-              tft.setCursor(160, 420);                                     tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
-              // Los errores que se pueden cometer en STATE_PLATO son pulsar crudo, cocinado, añadir, borrar o guardar antes de escoger grupo.
-              // Modificar el mensaje para que indique "No puede realizar esa acción. Seleccione grupo y después crudo/cocinado"??
-              // Puede que el mensaje actual no sea lo suficiente claro porque no indica específicamente qué se ha hecho mal.
-              break;
+            tft.setCursor(160, 420);                                     tft.println("SELECCIONE GRUPO DE ALIMENTOS"); 
+            // Los errores que se pueden cometer en STATE_PLATO son pulsar crudo, cocinado, añadir, borrar o guardar antes de escoger grupo.
+            // Modificar el mensaje para que indique "No puede realizar esa acción. Seleccione grupo y después crudo/cocinado"??
+            // Puede que el mensaje actual no sea lo suficiente claro porque no indica específicamente qué se ha hecho mal.
+            break;
 
       case ERROR_STATE_GROUP: // Grupos (grupoA o groupB)
-              tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
-              /*if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
-                  tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  
-              }
-              else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar). 
-                  tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
-              }*/
-              break;
+            tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
+            /*if(keepErrorScreen){ // Se ha colocado peso sin crudo/cocinado. Se mantiene la pantalla de error hasta que se retire el plato entero
+                tft.setCursor(80, 420); tft.println("HA OLVIDADO ESCOGER COCINADO O CRUDO");  
+            }
+            else{ // Se ha pulsado botón que no toca (añadir, borrar o guardar). 
+                tft.setCursor(190, 420);                                     tft.println("SELECCIONE COCINADO O CRUDO"); 
+            }*/
+            break;
 
       case ERROR_STATE_PROCESAMIENTO: // Crudo o Cocinado
-              tft.setCursor(100, 450);                                      tft.println(convertSpecialCharactersToHEX("COLOQUE UN ALIMENTO SOBRE LA BÁSCULA"));  
-              break;
+            tft.setCursor(100, 450);                                      tft.println(convertSpecialCharactersToHEX("COLOQUE UN ALIMENTO SOBRE LA BÁSCULA"));  
+            break;
 
       case ERROR_STATE_WEIGHTED: // Pesado
-              tft.setCursor(140, 420);                                      tft.println("ESCOJA GRUPO PARA OTRO ALIMENTO,"); 
-              tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print(convertSpecialCharactersToHEX("AÑADA OTRO PLATO O GUARDE LA COMIDA")); 
-              break;
+            tft.setCursor(140, 420);                                      tft.println("ESCOJA GRUPO PARA OTRO ALIMENTO,"); 
+            tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print(convertSpecialCharactersToHEX("AÑADA OTRO PLATO O GUARDE LA COMIDA")); 
+            break;
 
       case ERROR_STATE_ADD_CHECK: // add_check
-              tft.setCursor(70, 420);                                       tft.println(convertSpecialCharactersToHEX("PULSE \"AÑADIR\" DE NUEVO PARA CONFIRMAR")); 
-              tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
-              break;
+            tft.setCursor(70, 420);                                       tft.println(convertSpecialCharactersToHEX("PULSE \"AÑADIR\" DE NUEVO PARA CONFIRMAR")); 
+            tft.setCursor(100, tft.getCursorY() + tft.getTextSizeY());    tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
+            break;
       
       case ERROR_STATE_ADDED: // Added
-              tft.setCursor(50, 450);                                       tft.println("RETIRE EL PLATO PARA COMENZAR UNO NUEVO");  
-              break;
+            // Si el plato ya fue retirado, no mostrar mensaje de retirar plato
+            if (!plateWasRemovedBeforeAction) {
+                tft.setCursor(50, 450);                                   tft.println("RETIRE EL PLATO PARA COMENZAR UNO NUEVO");  
+            }
+            break;
 
       case ERROR_STATE_DELETE_CHECK: // delete_check
-              tft.setCursor(60, 420);                                       tft.println("PULSE \"BORRAR\" DE NUEVO PARA CONFIRMAR"); 
-              tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
-              break;
+            tft.setCursor(60, 420);                                       tft.println("PULSE \"BORRAR\" DE NUEVO PARA CONFIRMAR"); 
+            tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
+            break;
 
       case ERROR_STATE_DELETED: // Deleted
-              tft.setCursor(130, 450);                                      tft.println("RETIRE EL PLATO QUE HA ELIMINADO"); 
-              break;
+            // Si el plato ya fue retirado, no mostrar mensaje de retirar plato
+            if (!plateWasRemovedBeforeAction) {
+                tft.setCursor(130, 450);                                  tft.println("RETIRE EL PLATO QUE HA ELIMINADO"); 
+            }
+            break;
 
       case ERROR_STATE_SAVE_CHECK: // save_check
-              tft.setCursor(50, 420);                                       tft.println("PULSE \"GUARDAR\" DE NUEVO PARA CONFIRMAR"); 
-              tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
-              break;
+            tft.setCursor(50, 420);                                       tft.println("PULSE \"GUARDAR\" DE NUEVO PARA CONFIRMAR"); 
+            tft.setCursor(90, tft.getCursorY() + tft.getTextSizeY());     tft.print(convertSpecialCharactersToHEX("O CUALQUIER OTRO BOTÓN PARA CANCELAR")); 
+            break;
 
       case ERROR_STATE_SAVED: // Saved
-              tft.setCursor(155, 450);                                      tft.println("RETIRE EL PLATO PARA CONTINUAR");  
-              break;
+            // Si el plato ya fue retirado, no mostrar mensaje de retirar plato
+            if (!plateWasRemovedBeforeAction) {
+                tft.setCursor(155, 450);                                  tft.println("RETIRE EL PLATO PARA CONTINUAR");  
+            }
+            break;
       
       case ERROR_STATE_CANCEL: // Cancelado
-              tft.setCursor(90, 450);                                      tft.println(convertSpecialCharactersToHEX("ESPERE A QUE TERMINE LA CANCELACIÓN"));  
-              break;
+            tft.setCursor(90, 450);                                       tft.println(convertSpecialCharactersToHEX("ESPERE A QUE TERMINE LA CANCELACIÓN"));  
+            break;
 
       case ERROR_STATE_AVISO: // Aviso
-              tft.setCursor(155, 450);                                      tft.println("ESPERE A QUE TERMINE EL AVISO");  
-              break;
+            tft.setCursor(155, 450);                                      tft.println("ESPERE A QUE TERMINE EL AVISO");  
+            break;
 
       default: break; // La opción ERROR_GENERAL entraría aquí (Barcode_read, Barcode_search, Barcode_check y Barcode)
     }
@@ -3473,6 +3615,22 @@ bool slowAppearanceImage(byte option)
             break;
 
 
+        case SLOW_APPEAR_ANADIR_SUDDEN_REMOVAL: // añadir tras retirar sin avisar
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar añadir apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,144,216,158,130,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,652,0,PAGE1_START_ADDR,SCREEN_WIDTH,144,216,158,130); // Mostrar añadir (172x130)
+  
+            // ----- INT -------------------
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+
         case SLOW_APPEAR_BORRAR_SUGERENCIA: // borrar sugerencias
             for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
                 // Mostrar borrar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
@@ -3482,6 +3640,22 @@ bool slowAppearanceImage(byte option)
                 if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
             }
             tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,592,206,158,130); // Mostrar borrar (172x130) 
+  
+            // ----- INT -------------------
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
+        
+        case SLOW_APPEAR_BORRAR_SUDDEN_REMOVAL: // borrar tras retirar sin avisar
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar borrar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,404,216,158,130,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,825,0,PAGE1_START_ADDR,SCREEN_WIDTH,404,216,158,130); // Mostrar borrar (172x130) 
   
             // ----- INT -------------------
             if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
@@ -3504,6 +3678,22 @@ bool slowAppearanceImage(byte option)
   
             break;
 
+        
+        case SLOW_APPEAR_GUARDAR_SUDDEN_REMOVAL: // guardar tras retirar sin avisar
+            for(i = 32; i >= 1; i--){ // i = 16 --> RA8876_ALPHA_OPACITY_16
+                // Mostrar guardar apareciendo con opacidad a nivel i/32. Utiliza el propio fondo verde de la page1 como S1.
+                tft.bteMemoryCopyWithOpacity(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,873,450,PAGE1_START_ADDR,SCREEN_WIDTH,678,216,158,130,i);
+                delay(10);
+                // ----- INT -------------------
+                if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+            }
+            tft.bteMemoryCopy(PAGE3_START_ADDR,SCREEN_WIDTH,7,131,PAGE1_START_ADDR,SCREEN_WIDTH,678,216,158,130); // Mostrar guardar (172x130)
+  
+            // ----- INT -------------------
+            if(eventOccurred()) return true; // Evento de interrupción (botonera o báscula)
+  
+            break;
+
 
         default: break;
     }
@@ -3511,6 +3701,7 @@ bool slowAppearanceImage(byte option)
     return false; // Si no ha ocurrido ninguna interrupción mientras aparecía la imagen,
                   // se continúa con la función que llamó a esta.
 }
+
 
 
 /*---------------------------------------------------------------------------------------------------------
@@ -3590,8 +3781,8 @@ void pedirConfirmacion_DELETE_FILES()
     tft.setTextScale(RA8876_TEXT_W_SCALE_X2, RA8876_TEXT_H_SCALE_X2); 
     tft.setTextForegroundColor(WHITE); 
     tft.setCursor(220, 200);  
-    //tft.println("\xBF""BORRAR FICHERO CSV\x3F"""); // 12x24 escalado x3
     tft.println(convertSpecialCharactersToHEX("¿BORRAR FICHEROS USUARIO?")); // 12x24 escalado x3
+
     tft.selectInternalFont(RA8876_FONT_SIZE_32);
     tft.setTextScale(RA8876_TEXT_W_SCALE_X1, RA8876_TEXT_H_SCALE_X1); 
     tft.setCursor(270, tft.getCursorY() + tft.getTextSizeY()+50); tft.println("GRUPO 20 PARA CONFIRMAR");

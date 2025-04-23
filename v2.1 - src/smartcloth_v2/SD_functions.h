@@ -294,6 +294,14 @@ byte saveComida(bool &hayConexionWifi)
     }    
     // -----------------------------------------------
 
+
+
+    // No debería llegar aquí, pero por cubrir todos los casos de retorno:
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nEnd of non-void function. Asumimos error de que no se pudo guardar en CSV ni database\n"));
+    #endif
+    return ERROR_SAVING_DATA; 
+
 }
 
 
@@ -980,6 +988,13 @@ byte sendMealsFileToESP32ToUpdateWeb()
 
         return ERROR_READING_MEALS_FILE; // Error al abrir el archivo data-ESP.txt
     }
+
+
+    // No debería llegar aquí, pero por cubrir todos los casos de retorno:
+    #if defined(SM_DEBUG)
+        SerialPC.println(F("\nEnd of non-void function. Asumimos error al abrir el archivo data-ESP.txt (comidas no guardadas en database)\n"));
+    #endif
+    return ERROR_READING_MEALS_FILE; 
 
 }
 

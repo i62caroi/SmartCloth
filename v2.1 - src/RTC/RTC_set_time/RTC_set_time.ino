@@ -3,15 +3,15 @@
 //
 
 #include <DS3231.h>
-#include <DueFlashStorage.h> // Para guardar una flag si se está en horario de verano o invierno
+//#include <DueFlashStorage.h> // Para guardar una flag si se está en horario de verano o invierno
 
 // ------ OBJETO RTC --------------
 DS3231  rtc(SDA, SCL); // SDA y SCL ya están definidos como 20 y 21 en la librería
 // --------------------------------
 
 // ----- FLAG VERANO/INVIERNO -----
-DueFlashStorage dueFlashStorage; // Crear objeto para guardar en la flash
-#define SUMMER_TIME_FLAG_ADDRESS 0 // Dirección en la flash para la bandera del horario de verano
+//DueFlashStorage dueFlashStorage; // Crear objeto para guardar en la flash
+//#define SUMMER_TIME_FLAG_ADDRESS 0 // Dirección en la flash para la bandera del horario de verano
 // --------------------------------
 
 

@@ -104,7 +104,7 @@ void setup()
     // -----------------------------------------
 
     // ------ FICHERO TXT ----------------------
-    bool dataToUpload;
+    bool dataToUpload = false; // Variable para saber si hay data para subir a la base de datos
     if(!falloCriticoSD){ // Si falló la SD, no se puede chequear el fichero txt
         dataToUpload = !isMealsFileEmpty(); // Si el fichero no está vacío, hay data para subir
         if(dataToUpload) {
