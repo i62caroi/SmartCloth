@@ -4181,6 +4181,9 @@ void actState_REMOVAL_CHECK()
                 SerialPC.println(F("\nHa retirado el plato sin avisar, pero estaba vacío. Paso automático a STATE_Init...")); 
             #endif
 
+            recipienteRetirado();
+            delay(1000);
+
             addEventToBuffer(GO_TO_INIT);
             flagEvent = true;
         }
