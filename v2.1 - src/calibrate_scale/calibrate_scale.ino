@@ -31,7 +31,7 @@ HX711 scale;
 
 // Parámetros de calibración
 const float PESO_CONOCIDO = 226.0;          // Peso del objeto de referencia en gramos (p.ej. mi móvil pesa 226gr)
-float ESCALA_ACTUAL = 856.4875;            // Escala inicial (este valor inicial en realidad no importa)
+float ESCALA_ACTUAL = 1054.03;            // Escala inicial (este valor inicial en realidad no importa)
 const int   MUESTRAS_CALIBRACION = 5;       // Número de muestras para calibrar
 const int   TIEMPO_ENTRE_MEDICIONES = 500;  // Tiempo entre mediciones en ms
 
@@ -188,7 +188,7 @@ void calcularNuevaEscala()
   Serial.print("Media de las medidas: ");   Serial.print(media);              Serial.println(" g");
   Serial.print("Escala anterior: ");        Serial.println(ESCALA_ACTUAL);
   Serial.print("Nueva escala calculada: "); Serial.println(nueva_escala, 4); // Mostrar 4 decimales
-  Serial.println("Para aplicar esta calibración, actualiza la constante ESCALA_ACTUAL con este valor");
+  Serial.println("Para aplicar esta calibración, actualiza la constante SCALE_CALIBRATION_FACTOR en scale.h de smartcloth__v2 con este valor");
   
   // Aplicar la nueva escala para las siguientes mediciones
   ESCALA_ACTUAL = nueva_escala;

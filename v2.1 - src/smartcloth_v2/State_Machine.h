@@ -31,7 +31,7 @@
  * @note Si este valor pasa de 255, hay que cambiar el tipo de dato de 'byte' a 'int' en la función checkStateConditions().
  */
 #ifdef BORRADO_INFO_USUARIO
-#define RULES 214
+#define RULES 215
 #else
 #define RULES 201 
 #endif
@@ -283,6 +283,7 @@ static transition_rule rules[RULES] =
                                         {STATE_Plato,STATE_Grupo,TIPO_A},               // Escogido grupo de alimentos de tipo A
                                         {STATE_Plato,STATE_Grupo,TIPO_B},               // Escogido grupo de alimentos de tipo B
                                         {STATE_Plato,STATE_Barcode_read,BARCODE},       // Pulsado botón de barcode para iniciar lectura
+                                        {STATE_Plato,STATE_Plato,TARAR},
                                         {STATE_Plato,STATE_ERROR,ERROR},                // Acción incorrecta             
                                         // ---------------------------
                                         

@@ -179,10 +179,10 @@ void setup()
     // -----------------------------------------
 
     // ------ COMUNICACION ESP32 ---------------
-    SerialPC.println("4) Comprobando comunicacion con ESP32...");
+    /*SerialPC.println("4) Comprobando comunicacion con ESP32...");
     if(initScreen){tft.setCursor(50,430); tft.println("4) COMPROBANDO COMUNICACION CON ESP32..."); }
     pingESP32();
-    delay(2000);
+    delay(2000);*/
     // -----------------------------------------
 
     

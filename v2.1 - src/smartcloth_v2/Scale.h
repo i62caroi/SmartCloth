@@ -54,12 +54,12 @@ float     pesoLastAlimento  =   0.0;    // Peso del último alimento colocado
 // ------ FIN VARIABLES DE PESO --------------------------------------------------------
 
 
-#define SCALE_CALIBRATION_FACTOR 997.4558  // Factor de calibración de la báscula (gramos)
+#define SCALE_CALIBRATION_FACTOR 1032.6858  // Factor de calibración de la báscula (gramos)
 
 #define UMBRAL_MIN_CAMBIO_PESO 5.0      // Cambio mínimo del peso para considerar que se ha colocado/retirado algo de la báscula
 #define UMBRAL_RECIPIENTE_RETIRADO 20.0 // Umbral para considerar que se ha retirado todo (recipiente + alimentos) de la báscula
                                         // 20 gramos porque asumimos que un plato no pesará 20 gramos y así es más fácil detectar si se ha retirado todo
-
+#define UMBRAL_BASCULA_VACIA 3.0 // Umbral para considerar que la báscula está vacía, pero no se taró antes, así que no baja a negativo
 
 
 #include "State_Machine.h" // Debajo de las variables para que estén disponibles en su ámbito
@@ -212,7 +212,14 @@ void checkBascula()
                 }
                 else  // Decremento de peso 
                 {
-                    if(abs(abs(newWeight) - pesoARetirar) < UMBRAL_RECIPIENTE_RETIRADO) //Nuevo peso (negativo) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
+                    if(newWeight > UMBRAL_BASCULA_VACIA) // Se están retirando elementos de la báscula, pero aún no se ha liberado
+                    {                                    // O se ha liberado pero no había nada en el plato, así que newWeight es 0.0 y pesoARetirar es 0.0
+                        #if defined(SM_DEBUG)
+                            SerialPC.print(F("\nDECREMENTO"));
+                        #endif
+                        eventoBascula = DECREMENTO;
+                    }
+                    else if(abs(abs(newWeight) - pesoARetirar) < UMBRAL_RECIPIENTE_RETIRADO) // Nuevo peso (negativo o 0.0) es contrario (-X = +X) al peso del plato + recipiente ==> se ha quitado todo
                     {
                         #if defined(SM_DEBUG)
                             SerialPC.print(F("\nLIBERADA"));
@@ -220,13 +227,7 @@ void checkBascula()
                         eventoBascula = LIBERAR;
                         flagRecipienteRetirado = true; // Se ha retirado el plato completo --> pantalla recipienteRetirado()
                     }
-                    else // Se están retirando elementos de la báscula pero aún no se ha liberado
-                    {
-                        #if defined(SM_DEBUG)
-                            SerialPC.print(F("\nDECREMENTO"));
-                        #endif
-                        eventoBascula = DECREMENTO;
-                    }
+
                 }
 
 

@@ -52,7 +52,7 @@ volatile bool pulsandoGrande  = false;
 
 // Flag de botón pulsado en Barcode
 volatile bool pulsandoBarcode = false;
-volatile bool firstInterruptBarcode = true; // Al encender, por fluctuaciones de voltaje se detecta una pulsación fantasma
+//volatile bool firstInterruptBarcode = true; // Al encender, por fluctuaciones de voltaje se detecta una pulsación fantasma
 // -----------------------------------------------
 
 
@@ -237,7 +237,7 @@ void ISR_barcode()
 
     // Ignorar la primera pulsación (fantasma) era necesario al testear los SMs, pero no creo que sea necesario en
     // el programa final. De hecho, creo que está haciendo que se ignore la primera pulsación real.
-    if (firstInterruptBarcode) { firstInterruptBarcode = false; return; } // Descartar la primera interrupción por fluctuaciones de voltaje
+    //if (firstInterruptBarcode) { firstInterruptBarcode = false; return; } // Descartar la primera interrupción por fluctuaciones de voltaje
     
     if ((interrupt_time - last_interrupt_time) > DEBOUNCE_TIME) pulsandoBarcode = true;
     last_interrupt_time = interrupt_time;

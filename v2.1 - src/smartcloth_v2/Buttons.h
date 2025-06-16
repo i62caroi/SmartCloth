@@ -102,6 +102,11 @@ byte  buttonGrande = 0;                  //Botón pulsado en la botonera grande 
 // ------------------------------------------------------
 
 
+// Flag para ignorar los eventos en los primeros 2 segundos
+bool systemStabilized = false;
+unsigned long startupTime = 0;
+
+
 // Debajo de la declaración de buttonGrande para que esté en el ámbito de State_Machine.h 
 #include "ISR.h" 
 #include "State_Machine.h"  
@@ -153,6 +158,19 @@ void            checkBarcodeButton();
 /*-----------------------------------------------------------------------------*/
 void checkAllButtons()
 {
+    // ----- TIEMPO DE ESTABILIZACIÓN ------
+    // Ignorar todas las pulsaciones durante los primeros 0.5 segundos tras el setup 
+    if (!systemStabilized && (millis() - startupTime < 500)) {
+        // Reiniciar todos los botones
+        buttonMain = 0;
+        pulsandoBarcode = false;
+        pulsandoGrande = false;
+        return; // No procesar ningún botón durante el periodo de estabilización
+    } else if (!systemStabilized) {
+        systemStabilized = true; // Marcar el sistema como estabilizado después del periodo inicial
+    }
+    // -------------------------------------
+
     // ----- TECLADO MAIN -------
     checkMainButton();
     // --------------------------
