@@ -40,7 +40,7 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios di
 <img src="Docs/Diseño-SmartCloth/Interfaz/Aspecto_externo/SmartCloth_v2_1.jpeg" width="600">
 
 ### Montaje del Hardware
-Para ensamblar el hardware de SmartCloth 2.0, por favor consulte el [documento de montaje](./Docs/SmartCloth%20assembly%20document%20V0.2.pdf).
+Para ensamblar el hardware de SmartCloth 2.1, por favor consulte el [documento de montaje](./Docs/SmartCloth%20assembly%20document%20V0.2.pdf).
 
 ### Programación del dispositivo
 1. Guardar imágenes en SD ([contenido_SD](v2.1%20-%20src/contenido_SD)) manteniendo la estructura de ficheros
