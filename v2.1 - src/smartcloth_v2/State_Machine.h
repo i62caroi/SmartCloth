@@ -191,8 +191,8 @@ typedef enum
 typedef enum 
 {
               NONE                              =   (0),    
-              TIPO_A                            =   (1),    // Botonera Grande (7,8,9,16,17,18)
-              TIPO_B                            =   (2),    // Botonera Grande (1,2,3,4,5,6,10,11,12,13,14,15,19,20)
+              TIPO_A                            =   (1),    // Botonera Grande (7,8,9,16,17,18,19)
+              TIPO_B                            =   (2),    // Botonera Grande (1,2,3,4,5,6,10,11,12,13,14,15,20)
               BARCODE                           =   (3),    // Botón Barcode
               BARCODE_R                         =   (4),    // Barcode leído
               BARCODE_F                         =   (5),    // Producto encontrado

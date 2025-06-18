@@ -6,9 +6,7 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios di
 
 ## SmartCloth 1.0
 ### Características Principales 
-
 - **Seguimiento Nutricional:** SmartCloth utiliza sensores integrados para pesar los alimentos y calcular su valor nutricional.
-- **Conectividad Wi-Fi:** El dispositivo puede conectarse a Internet para almacenar datos en la nube y acceder a información actualizada sobre alimentos.
 - **Interfaz de Usuario Intuitiva:** La interfaz de usuario proporciona una experiencia fácil de usar para los usuarios, con opciones claras y accesibles.
 
 ### Comunicaciones
@@ -30,6 +28,7 @@ SmartCloth es un dispositivo inteligente diseñado para ayudar a los usuarios di
 ## SmartCloth 2.0
 ### Características adicionales
 - **Lectura de códigos de barras:** Utiliza un lector de códigos de barras para procesar alimentos precocinados o envasados.
+- **Conectividad Wi-Fi:** El dispositivo puede conectarse a Internet para almacenar información de las comidas en la base de datos y acceder a información actualizada sobre productos comerciales.
 
 ### Comunicaciones 
 <img src="Docs/Diseño-SmartCloth/Hardware/Diagrama_de_comunicaciones_v2.png" width="600">
@@ -53,12 +52,6 @@ Para ensamblar el hardware de SmartCloth 2.0, por favor consulte el [documento d
    4. Modificar programa Arduino con nueva escala calculada ([scale.set_scale(escala)](https://github.com/i62caroi/SmartCloth/blob/main/v2.1%20-%20src/smartcloth_v2/Scale.h#L87) en la función [setupScale()](https://github.com/i62caroi/SmartCloth/blob/main/v2.1%20-%20src/smartcloth_v2/Scale.h#L68)) del programa del Arduino
 4. Programar Arduino ([smartcloth_v2](v2.1%20-%20src/smartcloth_v2/smartcloth_v2.ino))
 5. Programar ESP32 ([esp32cam-v1](v2.1%20-%20src/esp32cam-v1/esp32cam-v1.ino)) y añadir MAC del ESP32 a la database
-
-#### Post testeo de cada dispositivo:
-1) Comentar `#define SM_DEBUG` en los programas de Arduino ([v2.1 - src/smartcloth_v2/debug.h](./v2.1%20-%20src/smartcloth_v2/debug.h)) y ESP32 ([v2.1 - src/esp32cam-v1/debug.h](./v2.1%20-%20src/esp32cam-v1/debug.h))
-2) Eliminar menú oculto para borrar el fichero CSV y TXT entre pruebas de usuarios
-3) Cambiar credenciales WiFi (nombre y contraseña) en programa ESP32 ([v2.1 - src/esp32cam-v1/wifi_functions.h](./v2.1%20-%20src/esp32cam-v1/wifi_functions.h))
-4) Reprogramar Arduino y ESP32
 
 ## Contacto
 Para obtener más información, visite nuestro sitio web oficial en [smartcloth.org](https://smartcloth.org).

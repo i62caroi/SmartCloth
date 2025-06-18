@@ -309,8 +309,8 @@ void checkMainButton()
     // es crudo, mientras que su correspondiente cocinado es el grupo 27. Por eso, si es un grupo de TIPO_A y se marca COCINADO, se hace (buttonGrande+20),
     // para acceder a los valores de ese grupo pero cocinado.
     //
-    // Los grupos de TIPO_A son: 7 (27), 8 (28), 9 (29), 16 (36), 17 (37) y 18 (38)
-    // Los grupos de TIPO_B son: 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 19 y 20
+    // Los grupos de TIPO_A son: 7 (27), 8 (28), 9 (29), 16 (36), 17 (37), 18 (38) y 19 (39)
+    // Los grupos de TIPO_B son: 1, 2, 3, 4, 5, 6, 10, 11, 12, 13, 14, 15 y 20
     //
     // El usuario puede escoger crudo o cocinado independientemente del grupo seleccionado y así se mostrará en pantalla, pero solo afectará
     // a los valores si el grupo es de TIPO_A. Esto se hace porque el usuario no tiene por qué saber para qué grupos cambian los valores según
