@@ -162,9 +162,9 @@ typedef enum
                 STATE_AVISO             =   (19),   // Estado ficticio de Aviso                                                 -->     Estado transitorio
 
                 #ifdef BORRADO_INFO_USUARIO
-                STATE_DELETE_CSV_CHECK    =   (20),   // COMPROBAR QUE SE QUIERE BORRAR EL CSV. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.       -->     Estado transitorio
-                STATE_DELETED_CSV         =   (21),   // FICHERO CSV BORRADO. EL USUARIO NO DEBRÍA ACCEDER. SOLO PARA LAS PRUEBAS.                          -->     Estado transitorio
-                                                      //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE PACIENTE
+                STATE_DELETE_FILES_CHECK    =   (20),   // COMPROBAR QUE SE QUIERE BORRAR LOS FICHEROS. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS. -->     Estado transitorio
+                STATE_DELETED_FILES         =   (21),   // FICHEROS BORRADOS. EL USUARIO NO DEBERÍA ACCEDER. SOLO PARA LAS PRUEBAS.                          -->     Estado transitorio
+                                                      //  --> PARA LIMPIAR EL ACUMULADO DEL DÍA, DEJÁNDOLO LISTO PARA EL SIGUIENTE USUARIO
                 #endif
 
                 STATE_CRITIC_FAILURE_SD   =   (22),     // La SD ha fallado en el setup o no se encuentra --> no se permite usar SM                         -->     Estado transitorio
@@ -517,7 +517,7 @@ static transition_rule rules[RULES] =
                                         {STATE_CANCEL,STATE_ERROR,ERROR},               // Acción incorrecta. No suele ocurrir, pero si ocurre y no se gestiona, se quedaría 
                                                                                         // en bucle marcando error.    
                                         #ifdef BORRADO_INFO_USUARIO
-                                        {STATE_CANCEL,STATE_DELETE_CSV_CHECK,DELETE_FILES},  // INICIAR BORRADO DE FICHEROS USUARIO (se marca DELETE_FILES pulsando botón grupo 1 durante cancelación)
+                                        {STATE_CANCEL,STATE_DELETE_FILES_CHECK,DELETE_FILES},  // INICIAR BORRADO DE FICHEROS USUARIO (se marca DELETE_FILES pulsando botón grupo 1 durante cancelación)
                                         #endif
                                         // -----------------------
 
@@ -531,22 +531,22 @@ static transition_rule rules[RULES] =
                                         // -----------------------
 
 
-                                         // --- CHECK DELETE CSV ---
+                                         // --- CHECK DELETE FILES ---
                                          #ifdef BORRADO_INFO_USUARIO
-                                        {STATE_DELETE_CSV_CHECK,STATE_DELETED_CSV,DELETE_FILES},    // CONFIRMAR BORRAR FICHEROS DEL USUARIO (se marca DELETE_FILES pulsando botón grupo 20)
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,TIPO_A},               // Cancelar borrar ficheros del usuario pulsando botón de grupo tipoA.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,TIPO_B},               // Cancelar borrar ficheros del usuario pulsando botón de grupo tipoB (excepto grupo 20).
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,BARCODE},              // Cancelar borrar ficheros del usuario pulsando botón de BARCODE.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,CRUDO},                // Cancelar borrar ficheros del usuario pulsando botón de CRUDO.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,COCINADO},             // Cancelar borrar ficheros del usuario pulsando botón de COCINADO.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,ADD_PLATO},            // Cancelar borrar ficheros del usuario pulsando botón de AÑADIR PLATO.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,DELETE_PLATO},         // Cancelar borrar ficheros del usuario pulsando botón de BORRAR PLATO.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,GUARDAR},              // Cancelar borrar ficheros del usuario pulsando botón de GUARDAR.
-                                        {STATE_DELETE_CSV_CHECK,STATE_CANCEL,CANCELAR},             // Cancelar automáticamente el borrar ficheros del usuario tras 5 segundos de inactividad.
+                                        {STATE_DELETE_FILES_CHECK,STATE_DELETED_FILES,DELETE_FILES},    // CONFIRMAR BORRAR FICHEROS DEL USUARIO (se marca DELETE_FILES pulsando botón grupo 20)
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,TIPO_A},               // Cancelar borrar ficheros del usuario pulsando botón de grupo tipoA.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,TIPO_B},               // Cancelar borrar ficheros del usuario pulsando botón de grupo tipoB (excepto grupo 20).
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,BARCODE},              // Cancelar borrar ficheros del usuario pulsando botón de BARCODE.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,CRUDO},                // Cancelar borrar ficheros del usuario pulsando botón de CRUDO.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,COCINADO},             // Cancelar borrar ficheros del usuario pulsando botón de COCINADO.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,ADD_PLATO},            // Cancelar borrar ficheros del usuario pulsando botón de AÑADIR PLATO.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,DELETE_PLATO},         // Cancelar borrar ficheros del usuario pulsando botón de BORRAR PLATO.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,GUARDAR},              // Cancelar borrar ficheros del usuario pulsando botón de GUARDAR.
+                                        {STATE_DELETE_FILES_CHECK,STATE_CANCEL,CANCELAR},             // Cancelar automáticamente el borrar ficheros del usuario tras 5 segundos de inactividad.
                                         // --------------------------
 
-                                        // --- FICHERO CSV BORRADO ---
-                                        {STATE_DELETED_CSV,STATE_Init,GO_TO_INIT},         // Regresar a STATE_Init tras BORRAR FICHEROS USUARIO (siempre iniciado desde STATE_Init)
+                                        // --- FICHEROS BORRADOS ---
+                                        {STATE_DELETED_FILES,STATE_Init,GO_TO_INIT},         // Regresar a STATE_Init tras BORRAR FICHEROS USUARIO (siempre iniciado desde STATE_Init)
                                         #endif // BORRADO_INFO_USUARIO
                                         // ---------------------
 
@@ -615,7 +615,7 @@ bool    showingTemporalScreen   = false;    // Flag para saber que se está most
 
 bool    flagComidaSaved         = false;    // Flag para saber que se ha guardado la comida
 #ifdef BORRADO_INFO_USUARIO
-bool    flagFicheroCSVBorrado   = false;    // Flag para saber que se ha borrado el fichero csv
+bool    flagFicherosBorrados   = false;    // Flag para saber que se hna borrado los ficheros del usuario (csv de histórico, txt de comidas pendientes y csv de barcodes)
 #endif
 bool    flagRecipienteRetirado  = false;    // Flag para saber que se ha retirado el plato completo
 
@@ -686,8 +686,8 @@ void    actStateCANCEL();                               // Actividades STATE_CAN
 void    actStateAVISO();                                // Actividades STATE_AVISO
 
 #ifdef BORRADO_INFO_USUARIO
-void    actState_DELETE_CSV_CHECK();                    // Actividades STATE_DELETE_CSV_CHECK
-void    actState_DELETED_CSV();                         // Actividades STATE_DELETED_CSV
+void    actState_DELETE_FILES_CHECK();                    // Actividades STATE_DELETE_FILES_CHECK
+void    actState_DELETED_FILES();                         // Actividades STATE_DELETED_FILES
 #endif
 
 void    actState_CRITIC_FAILURE_SD();                   // Actividades STATE_CRITIC_FAILURE_SD
@@ -814,8 +814,8 @@ void printStateName(state_t state)
         case STATE_AVISO:               SerialPC.print(F("STATE_AVISO"));                break;
 
         #ifdef BORRADO_INFO_USUARIO
-        case STATE_DELETE_CSV_CHECK:    SerialPC.print(F("STATE_DELETE_CSV_CHECK"));     break;
-        case STATE_DELETED_CSV:         SerialPC.print(F("STATE_DELETED_CSV"));          break;
+        case STATE_DELETE_FILES_CHECK:    SerialPC.print(F("STATE_DELETE_FILES_CHECK"));     break;
+        case STATE_DELETED_FILES:         SerialPC.print(F("STATE_DELETED_FILES"));          break;
         #endif
 
         case STATE_CRITIC_FAILURE_SD:   SerialPC.print(F("STATE_CRITIC_FAILURE_SD"));    break;
@@ -966,12 +966,12 @@ void actStateInit()
             #endif
             // -----------------------------------------------------------
 
-            // ----- RESETEAR COPIA SI SE HA BORRADO CSV -----------------
+            // ----- RESETEAR COPIA SI SE HAN BORRADO FICHEROS -----------
             #ifdef BORRADO_INFO_USUARIO
-            if(flagFicheroCSVBorrado)
+            if(flagFicherosBorrados)
             {
                 comidaActualCopia.restoreComida();   
-                flagFicheroCSVBorrado = false;
+                flagFicherosBorrados = false;
                 flagComidaSaved = false; // Por si he hecho el borrado justo tras guardar
             } 
             #endif
@@ -2665,7 +2665,7 @@ void actStateSaved()
                                  //     Si no se hiciera este delay, no daría tiempo al usuario a entender que se está guardando la comida porque, por lo general, el guardado en 
                                  //     el CSV es instantáneo.
                                  // Se podría crear un estado intermedio STATE_saving entre STATE_save_check y STATE_saved, para dividir la funcionalidad de STATE_saved entre
-                                 // las acciones de estar guardando y las de haber guardado, pero no es necesario. Posible futura mejor.
+                                 // las acciones de estar guardando y las de haber guardado, pero no es necesario. Posible futura mejora.
                                                             
                 #if defined(SM_DEBUG)
                     if(typeOfSavingDone != SAVE_EXECUTED_FULL) // Si no se ha guardado en la database, mostrar por terminal el fichero con la comida por guardar
@@ -3720,9 +3720,9 @@ void actStateCANCEL()
         // cancelable (add/delete/save, leer barcode o borrar CSV/TXT).
         switch (lastValidState)
         {
-            case STATE_Init: // Las acciones cancelables que se pueden iniciar en STATE_Init son guardar la comida o borrar el CSV/TXT de comidas     
+            case STATE_Init: // Las acciones cancelables que se pueden iniciar en STATE_Init son guardar la comida o borrar los ficheros de usuario (CSV histórico de comidas, TXT comidas pendientes y CSV barcodes)     
                                 #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a Init tras CANCELACION de guardar comida o borrar CSV..."));       
+                                    SerialPC.println(F("\nRegreso a Init tras CANCELACION de guardar comida o borrar FICHEROS..."));       
                                 #endif 
                                 addEventToBuffer(GO_TO_INIT);       break;  // Init
 
@@ -3744,21 +3744,21 @@ void actStateCANCEL()
                                 #endif 
                                 addEventToBuffer(GO_TO_BARCODE);       break;  // Grupo
 
-            case STATE_raw:   // Las acciones cancelables que se pueden iniciar en STATE_raw son add/delete/save, leer barcode o borrar el CSV/TXT de comidas     
+            case STATE_raw:   // Las acciones cancelables que se pueden iniciar en STATE_raw son add/delete/save, leer barcode o borrar los ficheros de usuario (CSV histórico de comidas, TXT comidas pendientes y CSV barcodes)    
                                 #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a raw tras CANCELACION de add/delete/save, lectura de barcode o borrar CSV..."));         
+                                    SerialPC.println(F("\nRegreso a raw tras CANCELACION de add/delete/save, lectura de barcode o borrar FICHEROS..."));         
                                 #endif 
                                 addEventToBuffer(GO_TO_RAW);         break;  // Crudo
 
-            case STATE_cooked: // Las acciones cancelables que se pueden iniciar en STATE_cooked son add/delete/save, leer barcode o borrar el CSV/TXT de comidas   
+            case STATE_cooked: // Las acciones cancelables que se pueden iniciar en STATE_cooked son add/delete/save, leer barcode o borrar los ficheros de usuario (CSV histórico de comidas, TXT comidas pendientes y CSV barcodes)     
                                 #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a cooked tras CANCELACION de add/delete/save, lectura de barcode o borrar CSV..."));      
+                                    SerialPC.println(F("\nRegreso a cooked tras CANCELACION de add/delete/save, lectura de barcode o borrar FICHEROS..."));      
                                 #endif 
                                 addEventToBuffer(GO_TO_COOKED);      break;  // Cocinado
 
-            case STATE_weighted: // Las acciones cancelables que se pueden iniciar en STATE_weighted son add/delete/save, leer barcode o borrar el CSV/TXT de comidas
+            case STATE_weighted: // Las acciones cancelables que se pueden iniciar en STATE_weighted son add/delete/save, leer barcode o borrar los ficheros de usuario (CSV histórico de comidas, TXT comidas pendientes y CSV barcodes)   
                                 #if defined(SM_DEBUG)
-                                    SerialPC.println(F("\nRegreso a weighted tras CANCELACION de add/delete/save, lectura de barcode o borrar CSV..."));    
+                                    SerialPC.println(F("\nRegreso a weighted tras CANCELACION de add/delete/save, lectura de barcode o borrar FICHEROS..."));    
                                 #endif 
                                 addEventToBuffer(GO_TO_WEIGHTED);    break;  // Pesado
 
@@ -3905,20 +3905,25 @@ void actStateAVISO()
 
 
 /*---------------------------------------------------------------------------------------------------------
-   actState_DELETE_CSV_CHECK(): Acciones del STATE_DELETE_CSV_CHECK
+   actState_DELETE_FILES_CHECK(): Acciones del STATE_DELETE_FILES_CHECK
 ----------------------------------------------------------------------------------------------------------*/
 #ifdef BORRADO_INFO_USUARIO
-void actState_DELETE_CSV_CHECK()
+void actState_DELETE_FILES_CHECK()
 { 
     // ------------ FUNCIONAMIENTO BORRADO FICHEROS DEL USUARIO --------------------------------------------
     //
     // Durante la pantalla de "Acción cancelada", que solo se muestra durante 1 segundo, los usuarios no deberían hacer nada.
-    // Aprovechando esto, se va a introducir una función escondida para borrar el contenido del fichero csv que guarda la info
-    // de las comidas. Así, el "Acumulado hoy" quedará vacío para el próximo paciente. 
+    // Aprovechando esto, se va a introducir una función escondida para borrar el contenido de los ficheros del usuario para que
+    // el "Acumulado hoy" quede vacío para el próximo paciente/usuario. 
+    //
+    // Estos ficheros son:
+    //  - CSV histórico de comidas (data/data-sc.csv)
+    //  - TXT comidas pendientes (data-esp.txt)
+    //  - CSV barcodes (data/barcodes.csv)
     //
     // ESTO SOLO SE VA A REALIZAR EN LAS PRUEBAS, PARA AGILIZAR EL RESETEO DEL FICHERO ENTRE UN PACIENTE Y OTRO.
     // 
-    // La idea es, durante la pantalla de cancelación, pulsar el botón de grupo1, accediendo a STATE_DELETE_CSV_CHECK donde se
+    // La idea es, durante la pantalla de cancelación, pulsar el botón de grupo1, accediendo a STATE_DELETE_FILES_CHECK donde se
     // pide confirmar la acción pulsando grupo20. Si no se confirma en 5 segundos, se regresa a donde se estuviera.
     // De esta forma, si algún usuario entrara sin querer a este menú, solo tendría que dejar pasar esos 5 seg para continuar.
     //
@@ -3937,7 +3942,7 @@ void actState_DELETE_CSV_CHECK()
             SerialPC.println(F("\n¿SEGURO QUE QUIERE BORRAR LOS FICHEROS DEL USUARIO? PULSE GRUPO 20 PARA CONFIRMAR")); 
         #endif
         
-        pedirConfirmacion_DELETE_FILES();       // Mostrar pregunta de confirmación para BORRAR FICHEROS
+        pedirConfirmacion_DELETE_FILES();     // Mostrar pregunta de confirmación para BORRAR FICHEROS
                                               //    No se ha incluido esta pantalla en pedirConfirmacion(option) porque interesa
                                               //    tenerlo separado para ocutarlo a los usuarios
 
@@ -3968,16 +3973,19 @@ void actState_DELETE_CSV_CHECK()
 
 
 /*---------------------------------------------------------------------------------------------------------
-   actState_DELETED_CSV(): Acciones del STATE_DELETED_CSV
+   actState_DELETED_FILES(): Acciones del STATE_DELETED_FILES
 ----------------------------------------------------------------------------------------------------------*/
-void actState_DELETED_CSV()
+void actState_DELETED_FILES()
 { 
 
-    // ------------ FUNCIONAMIENTO BORRADO FICHERO CSV ----------------------------------------------------
+    // ------------ FUNCIONAMIENTO BORRADO FICHEROS DEL USUARIO --------------------------------------------
     //
     // ESTO SOLO SE VA A REALIZAR EN LAS PRUEBAS, PARA AGILIZAR EL RESETEO DEL FICHERO ENTRE UN PACIENTE Y OTRO.
     // 
-    // Ya se ha confirmado la acción en STATE_DELETE_CSV_CHECK. Ahora se realiza el borrado.
+    // Ya se ha confirmado la acción en STATE_DELETE_FILES_CHECK. Ahora se realiza el borrado de estos ficheros:
+    //  - CSV histórico de comidas (data/data-sc.csv)
+    //  - TXT comidas pendientes (data-esp.txt)
+    //  - CSV barcodes (data/barcodes.csv)
     //
     // -----------------------------------------------------------------------------------------------------
 
@@ -4001,7 +4009,7 @@ void actState_DELETED_CSV()
             showAcumuladoBorrado(FILES_NOT_DELETED); 
         // -----------------------------------
 
-        flagFicheroCSVBorrado = true;  // Da igual que falle el borrado, esta flag solo sirve para en STATE_Init reiniciar la copia de la comida
+        flagFicherosBorrados = true;  // Da igual que falle el borrado, esta flag solo sirve para en STATE_Init reiniciar la copia de la comida
 
         doneState = true;               // Solo realizar una vez las actividades del estado por cada vez que se active y no
                                         // cada vez que se entre a esta función debido al loop de Arduino.
@@ -4283,8 +4291,8 @@ void doStateActions()
         case STATE_AVISO:               actStateAVISO();            break;  // AVISO
 
         #ifdef BORRADO_INFO_USUARIO
-        case STATE_DELETE_CSV_CHECK:  actState_DELETE_CSV_CHECK();   break; // delete_csv_check
-        case STATE_DELETED_CSV:       actState_DELETED_CSV();        break; // deleted_csv
+        case STATE_DELETE_FILES_CHECK:  actState_DELETE_FILES_CHECK();   break; // delete_csv_check
+        case STATE_DELETED_FILES:       actState_DELETED_FILES();        break; // deleted_csv
         #endif
 
         case STATE_CRITIC_FAILURE_SD: actState_CRITIC_FAILURE_SD();  break; // Fallo crítico en SD

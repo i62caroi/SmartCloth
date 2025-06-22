@@ -257,12 +257,12 @@ void checkGrandeButton()
         // TIPO_B (no necesita crudo/cocinado): [1, 6], [10, 15] o [20] 
         // DELETE_FILES (borrar ficheros del usuario):  1 y 20, pero solo en determinados casos
 
-        if(((state_actual == STATE_CANCEL) && (buttonGrande == 1)) || ((state_actual == STATE_DELETE_CSV_CHECK) && (buttonGrande == 20)))
+        if(((state_actual == STATE_CANCEL) && (buttonGrande == 1)) || ((state_actual == STATE_DELETE_FILES_CHECK) && (buttonGrande == 20)))
         {
             addEventToBuffer(DELETE_FILES); // Evento de borrar ficheros del usuario
         }
         else // Si estamos en STATE_CANCEL y se pulsa otra cosa, saltará error porque no hay regla para eso, pero externamente no se verá, solo en debug
-        {    // Si estamos en STATE_DELETE_CSV_CHECK y se pulsa grupo distinto de 20, se marcará TIPO_A o TIPO_B y se cancelará el borrado, como marcan las reglas de transición
+        {    // Si estamos en STATE_DELETE_FILES_CHECK y se pulsa grupo distinto de 20, se marcará TIPO_A o TIPO_B y se cancelará el borrado, como marcan las reglas de transición
             if (isButtonGrandeTipoA()) eventoGrande = TIPO_A; // Grupo A (necesita crudo/cocinado)
             else eventoGrande = TIPO_B;  // Grupo B (no necesita crudo/cocinado pero se permite "escoger" de forma ficticia)  
             
