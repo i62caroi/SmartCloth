@@ -27,17 +27,27 @@
     STATE_Plato:
         - Si lo último escrito no es "INICIO-PLATO", se escribe. Se comprueba para no volver a escribirlo mientras se coloca el plato.
 
-    STATE_groupA/B:
-        - Escribir "ALIMENTO,<grupoAnterior>,<pesoBascula>" al incluir alimento anterior en plato
+    STATE_Grupo:
+        - Escribir "ALIMENTO,<grupoAnterior>,<pesoBascula>" o "ALIMENTO,<grupoAnterior>,<pesoBascula>,<ean>" al incluir en plato el alimento 
+          que se acaba de pesar (se hace aquí para permitir variaciones de peso en STATE_Weighted y aquí ya tomar el peso definitivo, por eso 
+          se toma grupoAnterior, porque al entrar aquí ya ha cambiado).
+
+    STATE_Barcode_read:
+        - Escribir "ALIMENTO,<grupoActual>,<pesoBascula>" o "ALIMENTO,<grupoActual>,<pesoBascula>,<ean>" al incluir en plato el alimento que 
+          se acaba de pesar (se hace aquí para permitir variaciones de peso en STATE_Weighted y aquí ya tomar el peso definitivo. En este caso 
+          se toma grupoActual porque en este estado aún no se ha cambiado el grupo seleccionado (aún no se ha leído y confirmado un producto)).
 
     STATE_added:
-        - Al actualizar plato actual previo al nuevo plato, escribir "ALIMENTO,<grupoActual>,<pesoBascula>"
+        - Al actualizar plato actual previo al nuevo plato, escribir "ALIMENTO,<grupoActual>,<pesoBascula>" o "ALIMENTO,<grupoActual>,<pesoBascula>,<ean>" 
+          (grupoActual porque aún se tiene activo el último grupo seleccionado)
 
     STATE_deleted:
-        - Borra todas las lineas finales de la lista hasta la última aparición de "INICIO-PLATO", inclusive.
+        - Borra todas las lineas finales de la lista hasta la última aparición de "INICIO-PLATO", inclusive, para borrar el último plato 
+          (grupoActual porque aún se tiene activo el último grupo seleccionado)
 
     STATE_saved:
-        - Al actualizar plato actual previo a guardar comida, escribir "ALIMENTO,<grupoActual>,<pesoBascula>"
+        - Al actualizar plato actual previo a guardar comida, escribir "ALIMENTO,<grupoActual>,<pesoBascula>" o "ALIMENTO,<grupoActual>,<pesoBascula>,<ean>" 
+          (grupoActual porque aún se tiene activo el último grupo seleccionado)
         - Si se llega a guardar porque la comida no está vacía, escribir "FIN-COMIDA,<fecha>,<hora>"" en la lista, 
         copiar la lista en el fichero y limpiar la lista.
 */

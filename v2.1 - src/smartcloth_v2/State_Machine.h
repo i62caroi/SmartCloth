@@ -1520,7 +1520,7 @@ void actStateBarcodeSearch()
             // --- HAY INTERNET ---
             if(checkWifiConnection()) // Hay WiFi
             {
-                // ----- LEER BARCODE -----------------------------
+                // ----- BUSCAR PRODUCTO -----------------------------
                 byte resultFromGettingProductInfo = getProductInfo(barcode, productInfo); // Buscar info del producto en OpenFoodFacts en guardarla en 'productInfo'. 
                                                                                         // Se va a quedar aquí hasta 10.5 segundos esperando respuesta del ESP32.
                 switch(resultFromGettingProductInfo)
