@@ -78,7 +78,7 @@ Para obtener más información, visita nuestro sitio web oficial en [smartcloth.
 | ✅ v1.0.0  | 18-07-2023  | Primera versión funcional. Incluye pesaje, selección de grupo, estado de cocción,<br>almacenamiento local en CSV.<br>Validada con usuarios en julio 2023. |
 | 🔧 v1.0.1  | 21-09-2023  | Mejoras tras las pruebas: mensajes, lógica de errores, ajustes de interfaz. |
 | 🌐 v2.0.0  | 29-04-2024  | Integración del ESP32: conexión WiFi, sincronización con base de datos,<br>nuevo protocolo de comunicación Due-ESP32. |
-| 📷 v2.1.0  | 12-07-2024  | Sistema completo con lector de códigos de barras, búsqueda en OpenFoodFacts,<br>pantallas de sincronización.<br>Validada con usuarios en julio 2024. |
+| 📷 v2.1.0  | 12-07-2024  | Sistema completo con lector de códigos de barras,<br>búsqueda en OpenFoodFacts, pantallas de sincronización.<br>Validada con usuarios en julio 2024. |
 | 🛠 v2.1.1  | 09-10-2024  | Ajustes tras las pruebas: validación de códigos de barras, feedback visual,<br>soporte del plato, mejora comunicación Due-ESP32. |
 | 💾 v2.1.2  | 23-01-2025  | Mejora de usabilidad: almacenamiento local de productos escaneados<br>(caché de productos recurrentes). |
 | 🔁 v2.1.3  | 24-04-2025  | Refuerzo de lógica de interacción: detección de retirada sin aviso y flujo alternativo. |
