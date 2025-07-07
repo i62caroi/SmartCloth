@@ -71,7 +71,7 @@ Para obtener más información, visita nuestro sitio web oficial en [smartcloth.
 
 ---
 
-# Historial de versiones del código
+# Historial de releases
 
 | Versión   | Fecha       | Descripción |
 |-----------|-------------|-------------|
